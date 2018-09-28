@@ -14,8 +14,8 @@ export class View extends BaseView
 		this.routes   = [];
 
 		this.keyboard = new Keyboard;
-		this.speed    = 1;
-		this.maxSpeed = 14;
+		this.speed    = 16;
+		this.maxSpeed = 16;
 
 		this.args.fps = 0;
 		this.args.sps = 0;
@@ -31,15 +31,16 @@ export class View extends BaseView
 
 		let fThen = 0;
 		let sThen = 0;
-
 		const simulate = (now) => {
+			window.requestAnimationFrame(simulate);
+
 			now = now / 1000;
 
 			const delta = now - sThen;
 
 			sThen = now;
 
-			this.args.sps = (1 / delta).toFixed(2).padStart(6, ' ');
+			this.args._sps = (1 / delta).toFixed(2).padStart(6, ' ');
 
 			this.keyboard.update();
 
@@ -80,30 +81,38 @@ export class View extends BaseView
 			}
 			else if(this.speed > 0)
 			{
-				this.speed--;
+				// this.speed--;
 			}
 		};
 
 		const update = (now) =>{
+			window.requestAnimationFrame(update);
+
 			now = now / 1000;
 
 			const delta = now - fThen;
 
 			fThen = now;
 
-			this.args.fps = (1 / delta).toFixed(2).padStart(6, ' ');
+			this.args._fps = (1 / delta).toFixed(2).padStart(6, ' ');
 
 			this.gl2d.update();
-
-			window.requestAnimationFrame(update);
 		};
 
 		this.resize();
 
+		setInterval(()=>{
+			this.args.sps = this.args._sps;
+			this.args.fps = this.args._fps;
+		}, 333);
 
+		/**/
+		window.requestAnimationFrame(simulate);
+		/*/
 		setInterval(()=>{
 			simulate((new Date()).getTime());
-		}, 7);
+		}, 16);
+		/**/
 
 		/**/
 		window.requestAnimationFrame(update);

@@ -44,7 +44,7 @@ export class Gl2d
 			, '/player_standing_south.png'
 			, '/player_walking_south.png'
 		);
-		// const sprite2 = new Sprite(this, '/floorTile.png');
+
 		const floor   = new Floor(this, '/floorTile.png');
 
 		this.sprites = [
