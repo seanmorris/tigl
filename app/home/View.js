@@ -11,12 +11,10 @@ export class View extends BaseView
 	{
 		super(args);
 		this.template = require('./view.tmp');
-
-		this.routes = [];
+		this.routes   = [];
 
 		this.keyboard = new Keyboard;
-
-		this.speed = 16;
+		this.speed    = 16;
 
 		this.args.fps = 0;
 		this.args.sps = 0;
@@ -40,7 +38,7 @@ export class View extends BaseView
 
 			sThen = now;
 
-			this.args.sps = (1 / delta).toFixed(2);
+			this.args.sps = (1 / delta).toFixed(2).padStart(6, ' ');
 
 			this.keyboard.update();
 
@@ -72,7 +70,7 @@ export class View extends BaseView
 
 			fThen = now;
 
-			this.args.fps = (1 / delta).toFixed(2);
+			this.args.fps = (1 / delta).toFixed(2).padStart(6, ' ');
 
 			this.gl2d.update();
 
@@ -81,15 +79,18 @@ export class View extends BaseView
 
 		this.resize();
 
-		window.requestAnimationFrame(update);
 
 		setInterval(()=>{
 			simulate((new Date()).getTime());
-		}, 16);
+		}, 15);
 
-		// setInterval(()=>{
-		// 	update((new Date()).getTime());
-		// }, 500);
+		/**/
+		window.requestAnimationFrame(update);
+		/*/
+		setInterval(()=>{
+			update((new Date()).getTime());
+		}, 15);
+		/**/
 	}
 
 	resize()

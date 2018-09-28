@@ -1,7 +1,5 @@
-require('../layer/square.vert');
-require('../layer/green.frag');
-
 import { Sprite } from './Sprite';
+import { Floor  } from '../world/Floor';
 
 export class Gl2d
 {
@@ -42,12 +40,11 @@ export class Gl2d
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 		this.sprite   = new Sprite(this, '/player_standing_south.png');
-		const sprite2 = new Sprite(this, '/noodles-03.jpg')
-
-		sprite2.width = 48;
+		// const sprite2 = new Sprite(this, '/floorTile.png');
+		const floor   = new Floor(this, '/floorTile.png');
 
 		this.sprites = [
-			sprite2
+			floor
 			, this.sprite
 		];
 	}
