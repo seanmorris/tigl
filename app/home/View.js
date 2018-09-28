@@ -103,7 +103,7 @@ export class View extends BaseView
 
 		setInterval(()=>{
 			simulate((new Date()).getTime());
-		}, 16);
+		}, 7);
 
 		/**/
 		window.requestAnimationFrame(update);
@@ -116,8 +116,8 @@ export class View extends BaseView
 
 	resize()
 	{
-		this.tags.canvas.element.width  = document.body.clientWidth;
-		this.tags.canvas.element.height = document.body.clientHeight;
+		this.args.width  = this.tags.canvas.element.width  = document.body.clientWidth;
+		this.args.height = this.tags.canvas.element.height = document.body.clientHeight;
 
 		this.gl2d.resize();
 	}
