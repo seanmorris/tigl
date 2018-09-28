@@ -1,0 +1,7 @@
+.hud.fps {
+	position:absolute;
+	bottom:0px;
+	right:0px;
+	background-color: white;
+	font-family: monospace;
+}
