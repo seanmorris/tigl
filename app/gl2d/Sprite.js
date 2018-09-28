@@ -1,13 +1,14 @@
-import { Bindable } from 'curvature/base/Bindable';
+import { Bindable    } from 'curvature/base/Bindable';
+import { SpriteSheet } from './SpriteSheet';
 
 export class Sprite
 {
-	constructor(gl2d, imageSrc)
+	constructor(gl2d, imageSrc, altImageSrc = null)
 	{
 		this.gl2d   = gl2d;
 
-		this.x      = 0;
-		this.y      = 0;
+		this.x      = 256;
+		this.y      = 256;
 
 		this.width  = 32;
 		this.height = 48;
@@ -32,10 +33,43 @@ export class Sprite
 
 		Sprite.loadTexture(gl2d, imageSrc).then((args)=>{
 			this.texture = args.texture;
+			this.texture1 = args.texture;
 
 			this.width  = args.image.width;
 			this.height = args.image.height;
 		});
+
+		if(altImageSrc)
+		{
+			Sprite.loadTexture(gl2d, altImageSrc).then((args)=>{
+				this.texture2 = args.texture;
+
+				this.width  = args.image.width;
+				this.height = args.image.height;
+			});
+
+			const spriteSheet = new SpriteSheet((sheet)=>{
+				Sprite.loadTexture(
+					gl2d
+					, sheet.getFrame('player_standing_north.png')
+				).then((args)=>{
+					this.texture2 = args.texture;
+
+					this.width  = args.image.width;
+					this.height = args.image.height;
+				});
+			});
+		}
+
+		setInterval(()=>{
+			if(!this.texture2)
+			{
+				return;
+			}
+			this.texture = Math.random() > 0.5
+				? this.texture1
+				: this.texture2;
+		}, 5);
 	}
 
 	draw()
