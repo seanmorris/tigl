@@ -1,4 +1,5 @@
 import { Bindable    } from 'curvature/base/Bindable';
+import { Keyboard    } from 'curvature/input/Keyboard'
 import { SpriteSheet } from './SpriteSheet';
 
 export class Sprite
@@ -12,6 +13,77 @@ export class Sprite
 
 		this.width  = 32;
 		this.height = 48;
+
+		this.frames       = [];
+		this.frameDelay   = 2;
+		this.currentDelay = this.frameDelay;
+		this.currentFrame = 0;
+
+		this.speed    = 0;
+		this.maxSpeed = 16;
+
+		this.moving = false;
+
+		this.RIGHT	= 0;
+		this.DOWN	= 1;
+		this.LEFT	= 2;
+		this.UP		= 3;
+
+		this.EAST	= this.RIGHT;
+		this.SOUTH	= this.DOWN;
+		this.WEST	= this.LEFT;
+		this.NORTH	= this.UP;
+
+		this.standing = {
+			'north': [
+				'player_standing_north.png'
+			]
+			, 'south': [
+				'player_standing_south.png'
+			]
+			, 'west': [
+				'player_standing_west.png'
+			]
+			, 'east': [
+				'player_standing_east.png'
+			]
+		};
+
+		this.walking = {
+			'north': [
+				'player_walking_north.png'
+				, 'player_walking_north.png'
+				, 'player_standing_north.png'
+				, 'player_walking_north2.png'
+				, 'player_walking_north2.png'
+				, 'player_standing_north.png'
+			]
+			, 'south': [
+				'player_walking_south.png'
+				, 'player_walking_south.png'
+				, 'player_standing_south.png'
+				, 'player_walking_south2.png'
+				, 'player_walking_south2.png'
+				, 'player_standing_south.png'
+
+			]
+			, 'west': [
+				'player_walking_west.png'
+				, 'player_walking_west.png'
+				, 'player_standing_west.png'
+				, 'player_walking_west2.png'
+				, 'player_walking_west2.png'
+				, 'player_standing_west.png'
+			]
+			, 'east': [
+				'player_walking_east.png'
+				, 'player_walking_east.png'
+				, 'player_standing_east.png'
+				, 'player_walking_east2.png'
+				, 'player_walking_east2.png'
+				, 'player_standing_east.png'
+			]
+		};
 
 		const gl = gl2d.context;
 
@@ -41,6 +113,12 @@ export class Sprite
 
 		if(altImageSrc)
 		{
+			this.keyboard = new Keyboard;
+
+			this.keyboard.keys.bindTo((v,k)=>{
+				this.keyPress(k,v);
+			});
+
 			Sprite.loadTexture(gl2d, altImageSrc).then((args)=>{
 				this.texture2 = args.texture;
 
@@ -48,32 +126,47 @@ export class Sprite
 				this.height = args.image.height;
 			});
 
-			const spriteSheet = new SpriteSheet((sheet)=>{
-				Sprite.loadTexture(
-					gl2d
-					, sheet.getFrame('player_standing_north.png')
-				).then((args)=>{
-					this.texture2 = args.texture;
-
-					this.width  = args.image.width;
-					this.height = args.image.height;
-				});
-			});
+			this.spriteSheet = new SpriteSheet();
 		}
-
-		setInterval(()=>{
-			if(!this.texture2)
-			{
-				return;
-			}
-			this.texture = Math.random() > 0.5
-				? this.texture1
-				: this.texture2;
-		}, 5);
 	}
 
 	draw()
 	{
+		if(this.moving == false && this.spriteSheet)
+		{
+			this.setFrames(this.standing.south);
+		}
+
+		if(this.currentDelay == 0)
+		{
+			this.currentDelay = this.frameDelay;
+			this.currentFrame++;
+		}
+		else
+		{
+			this.currentDelay--;
+		}
+
+		if(this.currentFrame > this.frames.length)
+		{
+			this.currentFrame = 0;
+		}
+
+		const frame = this.frames[ this.currentFrame ];
+
+		if(frame)
+		{
+			this.texture = frame.texture;
+
+			this.width  = frame.width;
+			this.height = frame.height;
+		}
+
+		if(this.keyboard)
+		{
+			this.keyboard.update();
+		}
+
 		const gl = this.gl2d.context;
 
 		gl.useProgram(this.gl2d.program);
@@ -117,6 +210,29 @@ export class Sprite
         gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
+	setFrames(frameSelector)
+	{
+		this.spriteSheet.ready.then((sheet)=>{
+
+			const frames = sheet.getFrames(frameSelector).map((frame)=>{
+
+				return Sprite.loadTexture(this.gl2d, frame).then((args)=>({
+					texture:  args.texture
+					, width:  args.image.width
+					, height: args.image.height
+				}));
+
+			});
+
+			Promise.all(frames).then((frames)=>{
+				console.log(frames);
+
+				this.frames = frames;
+			});
+
+		});
+	}
+
 	static loadTexture(gl2d, imageSrc)
 	{
 		const gl = gl2d.context;
@@ -130,8 +246,6 @@ export class Sprite
 		{
 			return this.promises[imageSrc];
 		}
-
-		console.log(imageSrc);
 
 		this.promises[imageSrc] = Sprite.loadImage(imageSrc).then((image)=>{
 			const texture = gl.createTexture();
@@ -199,7 +313,35 @@ export class Sprite
 		]), gl.STREAM_DRAW);
 	}
 
-	randomInt(range) {
-		return Math.floor(Math.random() * range);
+	keyPress(key, value)
+	{
+		if(!value || value <= 0)
+		{
+			this.moving = false;
+			return;
+		}
+
+		if(this.moving && this.moving !== key)
+		{
+			return;
+		}
+
+		switch(key)
+		{
+			case 'ArrowRight':
+				this.setFrames(this.walking.east);
+				break;
+			case 'ArrowDown':
+				this.setFrames(this.walking.south);
+				break;
+			case 'ArrowLeft':
+				this.setFrames(this.walking.west);
+				break;
+			case 'ArrowUp':
+				this.setFrames(this.walking.north);
+				break;
+		}
+
+		this.moving = key;
 	}
 }

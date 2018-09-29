@@ -9,6 +9,7 @@ export class Floor
 
 		this.resize(60, 34);
 		// this.resize(16, 16);
+		// this.resize(60*2, 34*2);
 	}
 
 	resize(width, height)

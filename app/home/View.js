@@ -14,11 +14,13 @@ export class View extends BaseView
 		this.routes   = [];
 
 		this.keyboard = new Keyboard;
-		this.speed    = 16;
-		this.maxSpeed = 16;
+		this.speed    = 8;
+		this.maxSpeed = this.speed;
 
 		this.args.fps = 0;
 		this.args.sps = 0;
+
+		this.simulationLock = 60;
 	}
 
 	postRender()
@@ -31,12 +33,20 @@ export class View extends BaseView
 
 		let fThen = 0;
 		let sThen = 0;
+
 		const simulate = (now) => {
 			window.requestAnimationFrame(simulate);
 
 			now = now / 1000;
 
 			const delta = now - sThen;
+
+
+			if(delta < 1/(this.simulationLock+1))
+			{
+				console.log(delta);
+				return;
+			}
 
 			sThen = now;
 
@@ -102,9 +112,12 @@ export class View extends BaseView
 		this.resize();
 
 		setInterval(()=>{
-			this.args.sps = this.args._sps;
 			this.args.fps = this.args._fps;
-		}, 333);
+		}, 227);
+
+		setInterval(()=>{
+			this.args.sps = this.args._sps;
+		}, 231);
 
 		/**/
 		window.requestAnimationFrame(simulate);
