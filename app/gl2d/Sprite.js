@@ -20,7 +20,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 4;
+		this.maxSpeed = 8;
 
 		this.moving = false;
 
@@ -115,8 +115,8 @@ export class Sprite
 		{
 			this.keyboard = new Keyboard;
 
-			this.keyboard.keys.bindTo((v,k)=>{
-				this.keyPress(k,v);
+			this.keyboard.keys.bindTo((v,k,t,d)=>{
+				this.keyPress(k,v,t[k]);
 			});
 
 			Sprite.loadTexture(gl2d, altImageSrc).then((args)=>{
@@ -136,6 +136,8 @@ export class Sprite
 		{
 			this.setFrames(this.standing.south);
 		}
+
+		this.frameDelay = this.speed;
 
 		if(this.currentDelay == 0)
 		{
@@ -225,8 +227,6 @@ export class Sprite
 			});
 
 			Promise.all(frames).then((frames)=>{
-				console.log(frames);
-
 				this.frames = frames;
 			});
 
@@ -313,7 +313,7 @@ export class Sprite
 		]), gl.STREAM_DRAW);
 	}
 
-	keyPress(key, value)
+	keyPress(key, value, prev)
 	{
 		if(value == -1)
 		{
@@ -330,6 +330,11 @@ export class Sprite
 		if(this.moving && this.moving !== key)
 		{
 			return;
+		}
+
+		if(prev < 0 && prev > -10)
+		{
+			this.speed = this.maxSpeed;
 		}
 
 		switch(key)
@@ -352,7 +357,10 @@ export class Sprite
 				break;
 		}
 
-		this.speed++;
+		if(value % 8 == 0)
+		{
+			this.speed++;			
+		}
 
 		if(this.speed >= this.maxSpeed)
 		{
