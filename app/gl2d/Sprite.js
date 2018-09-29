@@ -141,7 +141,7 @@ export class Sprite
 
 		if(this.currentDelay == 0)
 		{
-			this.currentDelay = this.frameDelay;
+			this.currentDelay = this.frameDelay || 2;
 			this.currentFrame++;
 		}
 		else
