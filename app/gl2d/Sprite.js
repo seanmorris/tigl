@@ -20,7 +20,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 16;
+		this.maxSpeed = 4;
 
 		this.moving = false;
 
@@ -315,9 +315,15 @@ export class Sprite
 
 	keyPress(key, value)
 	{
-		if(!value || value <= 0)
+		if(value == -1)
 		{
+			this.speed  = 0;
 			this.moving = false;
+			return;
+		}
+
+		if(!value || value < 0)
+		{
 			return;
 		}
 
@@ -330,16 +336,27 @@ export class Sprite
 		{
 			case 'ArrowRight':
 				this.setFrames(this.walking.east);
+				this.x += this.speed;;
 				break;
 			case 'ArrowDown':
 				this.setFrames(this.walking.south);
+				this.y += this.speed;
 				break;
 			case 'ArrowLeft':
 				this.setFrames(this.walking.west);
+				this.x -= this.speed;
 				break;
 			case 'ArrowUp':
 				this.setFrames(this.walking.north);
+				this.y -= this.speed;
 				break;
+		}
+
+		this.speed++;
+
+		if(this.speed >= this.maxSpeed)
+		{
+			this.speed = this.maxSpeed;
 		}
 
 		this.moving = key;

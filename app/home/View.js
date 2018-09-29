@@ -53,46 +53,6 @@ export class View extends BaseView
 			this.args._sps = (1 / delta).toFixed(2).padStart(6, ' ');
 
 			this.keyboard.update();
-
-			if(this.keyboard.getKey('ArrowUp') > 0)
-			{
-				this.gl2d.sprite.y -= this.speed;
-
-				if(this.speed < this.maxSpeed)
-				{
-					this.speed++;
-				}
-			}
-			else if(this.keyboard.getKey('ArrowDown') > 0)
-			{
-				this.gl2d.sprite.y += this.speed;
-
-				if(this.speed < this.maxSpeed)
-				{
-					this.speed++;
-				}
-			}
-			else if(this.keyboard.getKey('ArrowLeft') > 0)
-			{
-				this.gl2d.sprite.x -= this.speed;
-
-				if(this.speed < this.maxSpeed)
-				{
-					this.speed++;
-				}
-			}
-			else if(this.keyboard.getKey('ArrowRight') > 0)
-			{
-				this.gl2d.sprite.x += this.speed;
-				if(this.speed < this.maxSpeed)
-				{
-					this.speed++;
-				}
-			}
-			else if(this.speed > 0)
-			{
-				// this.speed--;
-			}
 		};
 
 		const update = (now) =>{
