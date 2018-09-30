@@ -41,7 +41,7 @@ export class View extends BaseView
 
 			if(delta < 1/(this.simulationLock+1))
 			{
-				console.log(delta);
+				return;
 			}
 
 			sThen = now;
