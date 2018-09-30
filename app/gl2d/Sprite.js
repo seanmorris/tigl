@@ -129,6 +129,8 @@ export class Sprite
 			});
 
 			this.spriteSheet = new SpriteSheet();
+
+			this.gl2d.moveCamera(this.x, this.y);
 		}
 	}
 
@@ -143,7 +145,7 @@ export class Sprite
 
 		if(this.currentDelay == 0)
 		{
-			this.currentDelay = this.frameDelay || 2;
+			this.currentDelay = this.frameDelay || 1;
 			this.currentFrame++;
 		}
 		else
@@ -184,7 +186,6 @@ export class Sprite
 		);
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-
 		gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 		gl.vertexAttribPointer(
@@ -197,8 +198,8 @@ export class Sprite
 		);
 
 		this.setRectangle(
-			this.x
-			, this.y
+			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
+			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2))
 			, this.width
 			, this.height
 		);
@@ -370,5 +371,7 @@ export class Sprite
 		}
 
 		this.moving = key;
+
+		this.gl2d.moveCamera(this.x, this.y);
 	}
 }

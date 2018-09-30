@@ -8,6 +8,13 @@ export class Gl2d
 		this.element = element;
 		this.context = element.getContext('webgl');
 
+		this.camera  = {
+			x:        0
+			, y:      0
+			, width:  0
+			, height: 0
+		};
+
 		const gl = this.context;
 
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -63,6 +70,15 @@ export class Gl2d
 			, this.element.width
 			, this.element.height
 		);
+
+		this.camera.width  = this.element.width;
+		this.camera.height = this.element.height;
+	}
+
+	moveCamera(x, y)
+	{
+		this.camera.x = x;
+		this.camera.y = y;
 	}
 
 	update()

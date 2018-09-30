@@ -7,9 +7,9 @@ export class Floor
 		this.gl2d   = gl2d;
 		this.sprites = [];
 
-		this.resize(60, 34);
+		// this.resize(60, 34);
 		// this.resize(16, 16);
-		// this.resize(60*2, 34*2);
+		this.resize(60*2, 34*2);
 	}
 
 	resize(width, height)
