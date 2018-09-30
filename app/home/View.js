@@ -20,7 +20,7 @@ export class View extends BaseView
 		this.args.fps = 0;
 		this.args.sps = 0;
 
-		this.simulationLock = 60;
+		this.simulationLock = 15;
 	}
 
 	postRender()
@@ -35,17 +35,13 @@ export class View extends BaseView
 		let sThen = 0;
 
 		const simulate = (now) => {
-			window.requestAnimationFrame(simulate);
-
 			now = now / 1000;
 
 			const delta = now - sThen;
 
-
 			if(delta < 1/(this.simulationLock+1))
 			{
 				console.log(delta);
-				return;
 			}
 
 			sThen = now;
@@ -56,6 +52,10 @@ export class View extends BaseView
 		};
 
 		const update = (now) =>{
+			simulate(now);
+
+			this.gl2d.update();
+
 			window.requestAnimationFrame(update);
 
 			now = now / 1000;
@@ -65,8 +65,6 @@ export class View extends BaseView
 			fThen = now;
 
 			this.args._fps = (1 / delta).toFixed(2).padStart(6, ' ');
-
-			this.gl2d.update();
 		};
 
 		this.resize();
@@ -79,21 +77,7 @@ export class View extends BaseView
 			this.args.sps = this.args._sps;
 		}, 231);
 
-		/**/
-		window.requestAnimationFrame(simulate);
-		/*/
-		setInterval(()=>{
-			simulate((new Date()).getTime());
-		}, 16);
-		/**/
-
-		/**/
 		window.requestAnimationFrame(update);
-		/*/
-		setInterval(()=>{
-			update((new Date()).getTime());
-		}, 15);
-		/**/
 	}
 
 	resize()

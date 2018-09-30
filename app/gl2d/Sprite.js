@@ -137,7 +137,7 @@ export class Sprite
 			this.setFrames(this.standing.south);
 		}
 
-		this.frameDelay = this.speed;
+		this.frameDelay = this.maxSpeed - this.speed;
 
 		if(this.currentDelay == 0)
 		{
@@ -337,6 +337,16 @@ export class Sprite
 			this.speed = this.maxSpeed;
 		}
 
+		if(value % 8 == 0)
+		{
+			this.speed++;			
+		}
+
+		if(this.speed >= this.maxSpeed)
+		{
+			this.speed = this.maxSpeed;
+		}
+
 		switch(key)
 		{
 			case 'ArrowRight':
@@ -355,16 +365,6 @@ export class Sprite
 				this.setFrames(this.walking.north);
 				this.y -= this.speed;
 				break;
-		}
-
-		if(value % 8 == 0)
-		{
-			this.speed++;			
-		}
-
-		if(this.speed >= this.maxSpeed)
-		{
-			this.speed = this.maxSpeed;
 		}
 
 		this.moving = key;
