@@ -33,7 +33,7 @@ export class SpriteSheet
 	
 	processImage()
 	{
-		if(!this.boxes.frames)
+		if(!this.boxes || !this.boxes.frames)
 		{
 			return;
 		}

@@ -22,7 +22,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 8;
+		this.maxSpeed = 15;
 
 		this.moving = false;
 
@@ -73,16 +73,20 @@ export class Sprite
 				'player_walking_west.png'
 				, 'player_walking_west.png'
 				, 'player_standing_west.png'
+				, 'player_standing_west.png'
 				, 'player_walking_west2.png'
 				, 'player_walking_west2.png'
+				, 'player_standing_west.png'
 				, 'player_standing_west.png'
 			]
 			, 'east': [
 				'player_walking_east.png'
 				, 'player_walking_east.png'
 				, 'player_standing_east.png'
+				, 'player_standing_east.png'
 				, 'player_walking_east2.png'
 				, 'player_walking_east2.png'
+				, 'player_standing_east.png'
 				, 'player_standing_east.png'
 			]
 		};

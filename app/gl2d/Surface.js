@@ -6,11 +6,11 @@ export class Surface
 		this.x       = 0;
 		this.y       = 0;
 
-		this.xSize   = 24;
-		this.ySize   = 24;
+		this.xSize   = 40;
+		this.ySize   = 20;
 
-		this.xSize   = 60;
-		this.ySize   = 34;
+		// this.xSize   = 8;
+		// this.ySize   = 4;
 
 		this.width   = this.xSize*32;
 		this.height  = this.ySize*32;
@@ -25,6 +25,8 @@ export class Surface
 		const gl     = gl2d.context;
 
 		this.texture = gl.createTexture();
+
+		this.loaded = false;
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
@@ -68,6 +70,8 @@ export class Surface
 			// this.texVertices.push(this.spriteSheet.getVertices('alien_plant_2.png'));
 
 			this.assemble();
+
+			this.loaded = true;
 		});
 
 		this.pane = gl.createTexture();
@@ -160,6 +164,8 @@ export class Surface
 			, this.width
 			, this.height
 		);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
@@ -254,7 +260,6 @@ export class Surface
 
 				gl.drawArrays(gl.TRIANGLES, 0, 6);
 			}
-
 		}
 	}
 
@@ -285,6 +290,6 @@ export class Surface
 			x1, y2,
 			x2, y1,
 			x2, y2,
-		]), gl.STREAM_DRAW);
+		]), gl.STATIC_DRAW);
 	}
 }

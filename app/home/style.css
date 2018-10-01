@@ -1,12 +1,11 @@
 .hud.fps {
 	font-family: monospace;
 	white-space: pre;
-	position:absolute;
+	position:fixed;
 	top:0px;
 	left:0px;
 	/*background-color: rgba(255,255,255,0.5);*/
-	text-shadow: 1px 1px 0px white;
-	color: black;
-	font-weight: bold;
-	transform: translate(50%, 50%) scale(2,2);
+	background-color: rgba(0,0,0,0.666);
+	text-shadow: 1px 1px 0px black;
+	color: lime;
 }

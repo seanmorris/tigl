@@ -48,7 +48,7 @@ export class View extends BaseView
 
 			sThen = now;
 
-			this.args._sps = (1 / delta).toFixed(2).padStart(6, ' ');
+			this.args._sps = (1 / delta).toFixed(2).padStart(5, ' ');
 		};
 
 		const update = (now) =>{
@@ -70,7 +70,7 @@ export class View extends BaseView
 
 			fThen = now;
 
-			this.args._fps = (1 / delta).toFixed(2).padStart(6, ' ');
+			this.args._fps = (1 / delta).toFixed(2).padStart(5, ' ');
 
 			this.args.camX = this.gl2d.camera.x;
 			this.args.camY = this.gl2d.camera.y;
@@ -84,7 +84,7 @@ export class View extends BaseView
 
 		setInterval(()=>{
 			this.args.sps = this.args._sps;
-		}, 231);
+		}, 231/2);
 
 		window.requestAnimationFrame(update);
 	}

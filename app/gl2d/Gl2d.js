@@ -1,3 +1,5 @@
+import { Bindable    } from 'curvature/base/Bindable';
+import { Background  } from './Background';
 import { Sprite      } from './Sprite';
 import { SpriteSheet } from './SpriteSheet';
 import { Surface     } from './Surface';
@@ -10,12 +12,14 @@ export class Gl2d
 		this.element = element;
 		this.context = element.getContext('webgl');
 
-		this.camera  = {
+		this.camera = {
 			x:        0
 			, y:      0
 			, width:  0
 			, height: 0
 		};
+
+		this.camera = Bindable.makeBindable(this.camera);
 
 		const gl = this.context;
 
@@ -54,11 +58,12 @@ export class Gl2d
 			, '/player_walking_south.png'
 		);
 
-		const surface = new Surface(this, new SpriteSheet);
-		const floor   = new Floor(this, '/floorTile.png');
+		const background = new Background(this);
+		const surface    = new Surface(this, new SpriteSheet);
+		const floor      = new Floor(this, '/floorTile.png');
 
 		this.sprites = [
-			surface
+			background
 			, this.sprite
 		];
 	}
@@ -93,7 +98,7 @@ export class Gl2d
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clearColor(0, 0, 0, 1);
-		gl.clearColor(1, 1, 1, 1);
+		// gl.clearColor(1, 1, 1, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 
