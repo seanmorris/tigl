@@ -45,6 +45,8 @@ export class Surface
 		);
 
 		this.spriteSheet.ready.then((sheet)=>{
+			console.log(sheet.image);
+
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -63,7 +65,9 @@ export class Surface
 
 			for(let i = 0; i < this.xSize*this.ySize; i++)
 			{
-				this.texVertices.push(this.spriteSheet.getVertices('floorTile.png'));
+				const vertices = this.spriteSheet.getVertices('floorTile.png');
+
+				this.texVertices.push(vertices);
 			}
 
 			// this.texVertices.push(this.spriteSheet.getVertices('alien_plant_1.png'));
@@ -230,6 +234,11 @@ export class Surface
 		{
 			for(let i in this.texVertices)
 			{
+				if(!this.texVertices[i])
+				{
+					continue;
+				}
+
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([

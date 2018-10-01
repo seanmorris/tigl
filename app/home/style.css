@@ -9,3 +9,11 @@
 	text-shadow: 1px 1px 0px black;
 	color: lime;
 }
+
+.reticle {
+	position:fixed;
+	top:50%;
+	left:50%;
+	height:1px;
+	width:1px;
+}

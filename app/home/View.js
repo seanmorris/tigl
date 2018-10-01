@@ -10,20 +10,20 @@ export class View extends BaseView
 	constructor(args)
 	{
 		super(args);
-		this.template = require('./view.tmp');
-		this.routes   = [];
+		this.template  = require('./view.tmp');
+		this.routes    = [];
 
 		// this.keyboard = new Keyboard;
-		this.speed    = 8;
-		this.maxSpeed = this.speed;
+		this.speed     = 8;
+		this.maxSpeed  = this.speed;
 
-		this.args.fps = 0;
-		this.args.sps = 0;
+		this.args.fps  = 0;
+		this.args.sps  = 0;
 
 		this.args.camX = 0;
 		this.args.camY = 0;
 
-		this.frameLock      = 60;
+		this.frameLock      = 30;
 		this.simulationLock = 60;
 	}
 
@@ -38,6 +38,11 @@ export class View extends BaseView
 		let fThen = 0;
 		let sThen = 0;
 
+		let fSamples = [];
+		let sSamples = [];
+
+		let maxSamples = 10;
+
 		const simulate = (now) => {
 			const delta = now - sThen;
 
@@ -46,9 +51,18 @@ export class View extends BaseView
 				return;
 			}
 
+			this.gl2d.simulate();
+
 			sThen = now;
 
-			this.args._sps = (1 / delta).toFixed(2).padStart(5, ' ');
+			this.args._sps = (1 / delta);
+
+			sSamples.push(this.args._sps);
+
+			while(sSamples.length > maxSamples)
+			{
+				sSamples.shift();
+			}
 		};
 
 		const update = (now) =>{
@@ -64,13 +78,20 @@ export class View extends BaseView
 				return;
 			}
 
-			this.gl2d.update();
+			this.gl2d.draw();
 
 			window.requestAnimationFrame(update);
 
 			fThen = now;
 
-			this.args._fps = (1 / delta).toFixed(2).padStart(5, ' ');
+			this.args._fps = (1 / delta);
+
+			fSamples.push(this.args._fps);
+
+			while(fSamples.length > maxSamples)
+			{
+				fSamples.shift();
+			}
 
 			this.args.camX = this.gl2d.camera.x;
 			this.args.camY = this.gl2d.camera.y;
@@ -78,12 +99,16 @@ export class View extends BaseView
 
 		this.resize();
 
-		setInterval(()=>{
-			this.args.fps = this.args._fps;
-		}, 227);
+		//
 
 		setInterval(()=>{
-			this.args.sps = this.args._sps;
+			const fps = fSamples.reduce((a,b)=>a+b, 0) / fSamples.length;
+			this.args.fps = fps.toFixed(3).padStart(5, ' ');
+		}, 227/4);
+
+		setInterval(()=>{
+			const sps = sSamples.reduce((a,b)=>a+b, 0) / sSamples.length;
+			this.args.sps = sps.toFixed(3).padStart(5, ' ');
 		}, 231/2);
 
 		window.requestAnimationFrame(update);

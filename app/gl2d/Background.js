@@ -120,8 +120,6 @@ export class Background
 		{
 			pane = new Surface(this.gl2d, this.spriteSheet);
 
-			console.log(x,y,this.paneWidth);
-
 			pane.x = x * this.paneWidth;
 			pane.y = y * this.paneHeight;
 
@@ -147,5 +145,10 @@ export class Background
 				this.renderPane(range[x], range[y]);
 			}
 		}
+	}
+
+	simulate()
+	{
+		
 	}
 }

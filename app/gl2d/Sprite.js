@@ -340,6 +340,8 @@ export class Sprite
 
 	keyPress(key, value, prev)
 	{
+		// console.log(key, value);
+
 		if(value == -1)
 		{
 			this.speed  = 0;
@@ -370,6 +372,11 @@ export class Sprite
 		if(this.speed >= this.maxSpeed)
 		{
 			this.speed = this.maxSpeed;
+		}
+
+		if(this.speed <= -this.maxSpeed)
+		{
+			this.speed = -this.maxSpeed;
 		}
 
 		switch(key)

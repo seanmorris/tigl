@@ -85,11 +85,11 @@ export class Gl2d
 
 	moveCamera(x, y)
 	{
-		this.camera.x = x;
-		this.camera.y = y;
+		this.camera.x = x + 16;
+		this.camera.y = y + 48;
 	}
 
-	update()
+	draw()
 	{
 		const gl = this.context;
 
@@ -103,6 +103,11 @@ export class Gl2d
 
 
 		this.sprites.map(s => s.draw());
+	}
+
+	simulate()
+	{
+		this.sprites.map(s => s.simulate());
 	}
 
 	cleanup()
