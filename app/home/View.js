@@ -23,7 +23,7 @@ export class View extends BaseView
 		this.args.camX = 0;
 		this.args.camY = 0;
 
-		this.frameLock      = 30;
+		this.frameLock      = 60;
 		this.simulationLock = 60;
 	}
 
