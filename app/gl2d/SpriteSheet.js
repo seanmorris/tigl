@@ -23,12 +23,14 @@ export class SpriteSheet
 			this.image        = new Image();
 			this.image.src    = this.imageUrl;
 			this.image.onload = ()=>{
-				this.processImage();
 				accept();
 			};
 		});
 
-		this.ready = Promise.all([sheetLoader, imageLoader]).then(()=>this);
+		this.ready = Promise.all([sheetLoader, imageLoader]).then(()=>{
+			this.processImage();
+			return this;
+		});
 	}
 	
 	processImage()
@@ -79,6 +81,8 @@ export class SpriteSheet
 				u1,v1,u2,v2
 			};
 		}
+
+		return true;
 	}
 
 	getVertices(filename)

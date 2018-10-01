@@ -45,8 +45,6 @@ export class Surface
 		);
 
 		this.spriteSheet.ready.then((sheet)=>{
-			console.log(sheet.image);
-
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
