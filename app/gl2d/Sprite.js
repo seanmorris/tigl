@@ -10,6 +10,8 @@ export class Sprite
 
 		this.x      = 960;
 		this.y      = 548;
+		this.x      = 0;
+		this.y      = 0;
 
 		this.width  = 32;
 		this.height = 48;
