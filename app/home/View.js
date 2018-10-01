@@ -13,14 +13,18 @@ export class View extends BaseView
 		this.template = require('./view.tmp');
 		this.routes   = [];
 
-		this.keyboard = new Keyboard;
+		// this.keyboard = new Keyboard;
 		this.speed    = 8;
 		this.maxSpeed = this.speed;
 
 		this.args.fps = 0;
 		this.args.sps = 0;
 
-		this.simulationLock = 15;
+		this.args.camX = 0;
+		this.args.camY = 0;
+
+		this.frameLock      = 60;
+		this.simulationLock = 60;
 	}
 
 	postRender()
@@ -35,11 +39,9 @@ export class View extends BaseView
 		let sThen = 0;
 
 		const simulate = (now) => {
-			now = now / 1000;
-
 			const delta = now - sThen;
 
-			if(delta < 1/(this.simulationLock+1))
+			if(delta < 1/this.simulationLock)
 			{
 				return;
 			}
@@ -47,24 +49,31 @@ export class View extends BaseView
 			sThen = now;
 
 			this.args._sps = (1 / delta).toFixed(2).padStart(6, ' ');
-
-			this.keyboard.update();
 		};
 
 		const update = (now) =>{
+			now = now / 1000;
+
 			simulate(now);
+
+			const delta = now - fThen;
+
+			if(delta < 1/this.frameLock)
+			{
+				window.requestAnimationFrame(update);
+				return;
+			}
 
 			this.gl2d.update();
 
 			window.requestAnimationFrame(update);
 
-			now = now / 1000;
-
-			const delta = now - fThen;
-
 			fThen = now;
 
 			this.args._fps = (1 / delta).toFixed(2).padStart(6, ' ');
+
+			this.args.camX = this.gl2d.camera.x;
+			this.args.camY = this.gl2d.camera.y;
 		};
 
 		this.resize();

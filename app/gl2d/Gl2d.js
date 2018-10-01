@@ -1,4 +1,6 @@
 import { Sprite      } from './Sprite';
+import { SpriteSheet } from './SpriteSheet';
+import { Surface     } from './Surface';
 import { Floor       } from '../world/Floor';
 
 export class Gl2d
@@ -52,10 +54,11 @@ export class Gl2d
 			, '/player_walking_south.png'
 		);
 
+		const surface = new Surface(this, new SpriteSheet);
 		const floor   = new Floor(this, '/floorTile.png');
 
 		this.sprites = [
-			floor
+			surface
 			, this.sprite
 		];
 	}

@@ -1,13 +1,15 @@
 export class SpriteSheet 
 {
-	constructor(ready)
+	constructor()
 	{
 		this.imageUrl = '/spritesheet.png';
 		this.boxesUrl = '/spritesheet.json';
+		this.vertices = {};
+		this.frames   = {};
+		this.width    = 0;
+		this.height   = 0;
 
-		this.frames = {};
-
-		let request = new Request(this.boxesUrl);
+		let request   = new Request(this.boxesUrl);
 
 		let sheetLoader = fetch(request).then((response)=>{
 			return response.json().then((boxes)=>{
@@ -22,7 +24,6 @@ export class SpriteSheet
 			this.image.src    = this.imageUrl;
 			this.image.onload = ()=>{
 				this.processImage();
-				
 				accept();
 			};
 		});
@@ -64,7 +65,25 @@ export class SpriteSheet
 			), 0, 0);
 
 			this.frames[this.boxes.frames[i].filename] = subCanvas.toDataURL();
+
+			let u1 = this.boxes.frames[i].frame.x / this.image.width;
+			let v1 = this.boxes.frames[i].frame.y / this.image.height;
+
+			let u2 = (this.boxes.frames[i].frame.x + this.boxes.frames[i].frame.w)
+				/ this.image.width;
+
+			let v2 = (this.boxes.frames[i].frame.y + this.boxes.frames[i].frame.h)
+				/ this.image.height;
+
+			this.vertices[this.boxes.frames[i].filename] = {
+				u1,v1,u2,v2
+			};
 		}
+	}
+
+	getVertices(filename)
+	{
+		return this.vertices[filename];
 	}
 
 	getFrame(filename)

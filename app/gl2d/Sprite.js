@@ -8,8 +8,8 @@ export class Sprite
 	{
 		this.gl2d   = gl2d;
 
-		this.x      = 256;
-		this.y      = 256;
+		this.x      = 960;
+		this.y      = 548;
 
 		this.width  = 32;
 		this.height = 48;
@@ -134,7 +134,7 @@ export class Sprite
 		}
 	}
 
-	draw()
+	simulate()
 	{
 		if(this.moving == false && this.spriteSheet)
 		{
@@ -172,6 +172,11 @@ export class Sprite
 		{
 			this.keyboard.update();
 		}
+	}
+
+	draw()
+	{
+		this.simulate();
 
 		const gl = this.gl2d.context;
 
@@ -188,6 +193,7 @@ export class Sprite
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+
 		gl.vertexAttribPointer(
 			this.gl2d.texCoordLocation
 			, 2
@@ -196,6 +202,16 @@ export class Sprite
 			, 0
 			, 0
 		);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0.0,  0.0,
+			1.0,  0.0,
+			0.0,  1.0,
+			0.0,  1.0,
+			1.0,  0.0,
+			1.0,  1.0,
+		]), gl.STREAM_DRAW);
 
 		this.setRectangle(
 			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
@@ -354,7 +370,7 @@ export class Sprite
 		{
 			case 'ArrowRight':
 				this.setFrames(this.walking.east);
-				this.x += this.speed;;
+				this.x += this.speed;
 				break;
 			case 'ArrowDown':
 				this.setFrames(this.walking.south);
