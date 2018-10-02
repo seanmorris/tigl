@@ -15,7 +15,7 @@ export class View extends BaseView
 		this.template  = require('./view.tmp');
 		this.routes    = [];
 
-		// this.keyboard = new Keyboard;
+		this.keyboard = new Keyboard;
 		this.speed     = 8;
 		this.maxSpeed  = this.speed;
 
@@ -27,6 +27,44 @@ export class View extends BaseView
 
 		this.frameLock      = 60;
 		this.simulationLock = 60;
+
+		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.frameLock++;
+			}
+		});
+
+		this.keyboard.keys.bindTo('End', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.frameLock--;
+
+				if(this.frameLock < 0)
+				{
+					this.frameLock = 0;
+				}
+			}
+		});
+
+		this.keyboard.keys.bindTo('PageUp', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.simulationLock++;
+			}
+		});
+
+		this.keyboard.keys.bindTo('PageDown', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.simulationLock--;
+
+				if(this.simulationLock < 0)
+				{
+					this.simulationLock = 0;
+				}
+			}
+		});
 	}
 
 	postRender()
@@ -52,6 +90,8 @@ export class View extends BaseView
 			{
 				return;
 			}
+
+			this.keyboard.update();
 
 			this.gl2d.simulate();
 

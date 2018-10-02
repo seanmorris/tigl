@@ -17,7 +17,7 @@ export class Sprite
 		this.height = 48;
 
 		this.frames       = [];
-		this.frameDelay   = 2;
+		this.frameDelay   = 4;
 		this.currentDelay = this.frameDelay;
 		this.currentFrame = 0;
 
@@ -30,6 +30,8 @@ export class Sprite
 		this.DOWN	= 1;
 		this.LEFT	= 2;
 		this.UP		= 3;
+
+		this.director = this.DOWN;
 
 		this.EAST	= this.RIGHT;
 		this.SOUTH	= this.DOWN;
@@ -147,11 +149,18 @@ export class Sprite
 			this.setFrames(this.standing.south);
 		}
 
-		this.frameDelay = this.maxSpeed - this.speed;
+		// this.frameDelay = this.maxSpeed - this.speed;
+
+		// if(this.frameDelay > 8)
+		// {
+		// 	this.frameDelay = 8;
+		// }
+
+		// console.log(this.frameDelay);
 
 		if(this.currentDelay == 0)
 		{
-			this.currentDelay = this.frameDelay || 1;
+			this.currentDelay = this.frameDelay || 2;
 			this.currentFrame++;
 		}
 		else
@@ -159,7 +168,7 @@ export class Sprite
 			this.currentDelay--;
 		}
 
-		if(this.currentFrame > this.frames.length)
+		if(this.currentFrame >= this.frames.length)
 		{
 			this.currentFrame = 0;
 		}
@@ -172,6 +181,15 @@ export class Sprite
 
 			this.width  = frame.width;
 			this.height = frame.height;
+		}
+
+		if(this.direction == this.UP || this.direction == this.DOWN)
+		{
+			this.y += this.speed;
+		}
+		if(this.direction == this.LEFT || this.direction == this.RIGHT)
+		{
+			this.x += this.speed;
 		}
 
 		if(this.keyboard)
@@ -340,7 +358,7 @@ export class Sprite
 
 	keyPress(key, value, prev)
 	{
-		// console.log(key, value);
+		// console.log(this.speed);
 
 		if(value == -1)
 		{
@@ -364,11 +382,6 @@ export class Sprite
 			this.speed = this.maxSpeed;
 		}
 
-		if(value % 8 == 0)
-		{
-			this.speed++;			
-		}
-
 		if(this.speed >= this.maxSpeed)
 		{
 			this.speed = this.maxSpeed;
@@ -383,19 +396,35 @@ export class Sprite
 		{
 			case 'ArrowRight':
 				this.setFrames(this.walking.east);
-				this.x += this.speed;
+				this.direction = this.RIGHT;
+				if(value % 8 == 0)
+				{
+					this.speed++;
+				}
 				break;
 			case 'ArrowDown':
 				this.setFrames(this.walking.south);
-				this.y += this.speed;
+				this.direction = this.DOWN;
+				if(value % 8 == 0)
+				{
+					this.speed++;
+				}
 				break;
 			case 'ArrowLeft':
 				this.setFrames(this.walking.west);
-				this.x -= this.speed;
+				this.direction = this.LEFT;
+				if(value % 8 == 0)
+				{
+					this.speed--;
+				}
 				break;
 			case 'ArrowUp':
 				this.setFrames(this.walking.north);
-				this.y -= this.speed;
+				this.direction = this.UP;
+				if(value % 8 == 0)
+				{
+					this.speed--;
+				}
 				break;
 		}
 
