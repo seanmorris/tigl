@@ -1,3 +1,5 @@
+import { Config } from 'Config';
+
 import { View as BaseView } from 'curvature/base/View';
 
 import { Gl2d } from '../gl2d/Gl2d';
@@ -105,6 +107,10 @@ export class View extends BaseView
 			const fps = fSamples.reduce((a,b)=>a+b, 0) / fSamples.length;
 			this.args.fps = fps.toFixed(3).padStart(5, ' ');
 		}, 227/4);
+
+		setInterval(()=>{
+			document.title = `${Config.title} ${this.args.fps} FPS`;
+		}, 227);
 
 		setInterval(()=>{
 			const sps = sSamples.reduce((a,b)=>a+b, 0) / sSamples.length;

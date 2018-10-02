@@ -1,16 +1,13 @@
 export class Surface
 {
-	constructor(gl2d, spriteSheet)
+	constructor(gl2d, spriteSheet, xSize = 2, ySize = 2)
 	{
 		this.gl2d    = gl2d;
 		this.x       = 0;
 		this.y       = 0;
 
-		this.xSize   = 40;
-		this.ySize   = 20;
-
-		// this.xSize   = 8;
-		// this.ySize   = 4;
+		this.xSize   = xSize;
+		this.ySize   = ySize;
 
 		this.width   = this.xSize*32;
 		this.height  = this.ySize*32;

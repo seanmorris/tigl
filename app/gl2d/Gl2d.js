@@ -55,15 +55,21 @@ export class Gl2d
 		this.sprite   = new Sprite(
 			this
 			, '/player_standing_south.png'
-			, '/player_walking_south.png'
+			, '/barrel.png'
 		);
 
-		const background = new Background(this);
-		const surface    = new Surface(this, new SpriteSheet);
-		const floor      = new Floor(this, '/floorTile.png');
+		const barrel   = new Sprite(
+			this
+			, '/barrel.png'
+		);
 
+		barrel.x = -32;
+
+		this.background = new Background(this);
+		
 		this.sprites = [
-			background
+			this.background
+			, barrel
 			, this.sprite
 		];
 	}
@@ -81,6 +87,20 @@ export class Gl2d
 
 		this.camera.width  = this.element.width;
 		this.camera.height = this.element.height;
+
+		// if(this.resizeTime)
+		// {
+		// 	clearTimeout(this.resizeTime);
+		// }
+
+		// this.resizeTime = setTimeout(()=>{
+		// 	console.log(parseInt(this.camera.width/32), parseInt(this.camera.height/32));
+
+		// 	this.background.resize(
+		// 		parseInt(this.camera.width/32)
+		// 		, parseInt(this.camera.height/32)
+		// 	);
+		// }, 10);
 	}
 
 	moveCamera(x, y)
