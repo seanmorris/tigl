@@ -1,19 +1,19 @@
 export class Surface
 {
-	constructor(gl2d, spriteSheet, xSize = 2, ySize = 2)
+	constructor(gl2d, spriteSheet, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0)
 	{
 		this.gl2d    = gl2d;
-		this.x       = 0;
-		this.y       = 0;
+		this.x       = xOffset;
+		this.y       = yOffset;
 
 		this.xSize   = xSize;
 		this.ySize   = ySize;
 
-		this.width   = this.xSize*32;
-		this.height  = this.ySize*32;
-
 		this.tileWidth  = 32;
 		this.tileHeight = 32;
+
+		this.width   = this.xSize * this.tileWidth;
+		this.height  = this.ySize * this.tileHeight;
 
 		this.spriteSheet = spriteSheet;
 
@@ -21,7 +21,8 @@ export class Surface
 
 		const gl     = gl2d.context;
 
-		this.texture = gl.createTexture();
+		this.texture     = gl.createTexture();
+		this.subTextures = {};
 
 		this.loaded = false;
 
@@ -58,19 +59,51 @@ export class Surface
 				, sheet.image
 			);
 
+			let texturePromises = [];
+
 			for(let i = 0; i < this.xSize*this.ySize; i++)
 			{
-				const vertices = this.spriteSheet.getVertices('floorTile.png');
+				let vertices;
 
-				this.texVertices.push(vertices);
+				// vertices = this.spriteSheet.getVertices('floorTile.png');
+
+				let frame = this.spriteSheet.getFrame('floorTile.png');
+
+				texturePromises.push(this.spriteSheet.constructor.loadTexture(gl2d, frame).then((args)=>{
+					this.subTextures[i] = args.texture;
+
+					return Promise.resolve();
+				}));
+
+				// let localX  = i % this.xSize;
+				// let offsetX = Math.ceil(this.x / this.tileWidth);
+				// let globalX = localX + offsetX;
+
+				// let localY  = Math.floor(i / this.ySize);
+				// let offsetY = Math.ceil(this.y / this.tileHeight);
+				// let globalY = localY + offsetY;
+
+				// let split = 5;
+
+				// if((globalX % split === 0) && (globalY % split === 0))
+				// {
+				// 	vertices = this.spriteSheet.getVertices('barrel_hole.png');
+
+				// 	if(Math.abs(globalX) > 3)
+				// 	{
+				// 		vertices = this.spriteSheet.getVertices('alien_plant_1.png');
+				// 	}
+				// }
+
+				// this.texVertices.push(vertices);
 			}
 
-			// this.texVertices.push(this.spriteSheet.getVertices('alien_plant_1.png'));
-			// this.texVertices.push(this.spriteSheet.getVertices('alien_plant_2.png'));
+			Promise.all(texturePromises).then(()=>{
+				this.assemble();
 
-			this.assemble();
+				this.loaded = true;
+			});
 
-			this.loaded = true;
 		});
 
 		this.pane = gl.createTexture();
@@ -154,12 +187,8 @@ export class Surface
 		]), gl.STATIC_DRAW);
 
 		this.setRectangle(
-			this.x   - (
-				this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2)
-			)
-			, this.y - (
-				this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2)
-			)
+			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
+			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2))
 			, this.width
 			, this.height
 		);
@@ -211,60 +240,92 @@ export class Surface
 			, 0
 		);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-
-		// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-		// 	0.0,  0.0,
-		// 	1.0,  0.0,
-		// 	0.0,  1.0,
-		// 	0.0,  1.0,
-		// 	1.0,  0.0,
-		// 	1.0,  1.0,
-		// ]), gl.STATIC_DRAW);
-
 		let x = 0;
 		let y = 0;
 
-		if(this.texVertices)
+		for(let i in this.subTextures)
 		{
-			for(let i in this.texVertices)
+			gl.bindTexture(gl.TEXTURE_2D, this.subTextures[i]);
+			// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+
+			gl.vertexAttribPointer(
+			this.gl2d.texCoordLocation
+				, 2
+				, gl.FLOAT
+				, false
+				, 0
+				, 0
+			);
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+				0.0,  0.0,
+				1.0,  0.0,
+				0.0,  1.0,
+				0.0,  1.0,
+				1.0,  0.0,
+				1.0,  1.0,
+			]), gl.STREAM_DRAW);
+
+			this.setRectangle(
+				x
+				, y
+				, this.tileWidth
+				, this.tileHeight
+			);
+
+			x += this.tileWidth;
+
+			if(x >= this.width)
 			{
-				if(!this.texVertices[i])
-				{
-					continue;
-				}
-
-				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-					this.texVertices[i].u1,  this.texVertices[i].v1,
-					this.texVertices[i].u2,  this.texVertices[i].v1,
-					this.texVertices[i].u1,  this.texVertices[i].v2,
-
-					this.texVertices[i].u1,  this.texVertices[i].v2,
-					this.texVertices[i].u2,  this.texVertices[i].v1,
-					this.texVertices[i].u2,  this.texVertices[i].v2,
-					
-				]), gl.STATIC_DRAW);
-
-				this.setRectangle(
-					x
-					, y
-					, this.tileWidth
-					, this.tileHeight
-				);
-
-				x += this.tileWidth;
-
-				if(x >= this.width)
-				{
-					x = 0;
-					y += this.tileHeight;
-				}
-
-				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				x = 0;
+				y += this.tileHeight;
 			}
+
+			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
+
+		// if(this.texVertices)
+		// {
+		// 	for(let i in this.texVertices)
+		// 	{
+		// 		if(!this.texVertices[i])
+		// 		{
+		// 			continue;
+		// 		}
+
+		// 		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+
+		// 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+		// 			this.texVertices[i].u1,  this.texVertices[i].v2,
+		// 			this.texVertices[i].u2,  this.texVertices[i].v2,
+		// 			this.texVertices[i].u1,  this.texVertices[i].v1,
+
+		// 			this.texVertices[i].u1,  this.texVertices[i].v1,
+		// 			this.texVertices[i].u2,  this.texVertices[i].v2,
+		// 			this.texVertices[i].u2,  this.texVertices[i].v1,
+					
+		// 		]), gl.STATIC_DRAW);
+
+		// 		this.setRectangle(
+		// 			x
+		// 			, y
+		// 			, this.tileWidth
+		// 			, this.tileHeight
+		// 		);
+
+		// 		x += this.tileWidth;
+
+		// 		if(x >= this.width)
+		// 		{
+		// 			x = 0;
+		// 			y += this.tileHeight;
+		// 		}
+
+		// 		gl.drawArrays(gl.TRIANGLES, 0, 6);
+		// 	}
+		// }
 	}
 
 	setRectangle(x, y, width, height)
@@ -288,12 +349,12 @@ export class Surface
 		var y2 = y + height;
 		
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1, y1,
-			x2, y1,
 			x1, y2,
-			x1, y2,
-			x2, y1,
 			x2, y2,
+			x1, y1,
+			x1, y1,
+			x2, y2,
+			x2, y1,
 		]), gl.STATIC_DRAW);
 	}
 }

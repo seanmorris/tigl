@@ -1,8 +1,10 @@
 import { Bindable    } from 'curvature/base/Bindable';
-import { Background  } from './Background';
-import { Sprite      } from './Sprite';
-import { SpriteSheet } from './SpriteSheet';
-import { Surface     } from './Surface';
+
+import { Background  } from '../sprite/Background';
+import { Sprite      } from '../sprite/Sprite';
+import { SpriteSheet } from '../sprite/SpriteSheet';
+import { Surface     } from '../sprite/Surface';
+
 import { Floor       } from '../world/Floor';
 
 export class Gl2d
@@ -11,67 +13,6 @@ export class Gl2d
 	{
 		this.element = element;
 		this.context = element.getContext('webgl');
-
-		this.camera = {
-			x:        0
-			, y:      0
-			, width:  0
-			, height: 0
-		};
-
-		this.camera = Bindable.makeBindable(this.camera);
-
-		const gl = this.context;
-
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-		gl.enable(gl.BLEND);
-
-		this.program = this.createProgram(
-			this.createShader('./texture.vert')
-			, this.createShader('./texture.frag')
-		);
-
-		this.positionLocation   = gl.getAttribLocation(this.program, "a_position");
-		this.texCoordLocation   = gl.getAttribLocation(this.program, "a_texCoord");
-
-		this.resolutionLocation = gl.getUniformLocation(this.program, "u_resolution");
-		this.colorLocation      = gl.getUniformLocation(this.program, "u_color");
-
-		this.positionBuffer = gl.createBuffer();
-		this.texCoordBuffer = gl.createBuffer();
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0,  0.0,
-			1.0,  0.0,
-			0.0,  1.0,
-			0.0,  1.0,
-			1.0,  0.0,
-			1.0,  1.0,
-		]), gl.STATIC_DRAW);
-
-		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-		this.sprite   = new Sprite(
-			this
-			, '/player_standing_south.png'
-			, '/barrel.png'
-		);
-
-		const barrel   = new Sprite(
-			this
-			, '/barrel.png'
-		);
-
-		barrel.x = -32;
-
-		this.background = new Background(this);
-		
-		this.sprites = [
-			this.background
-			, barrel
-			, this.sprite
-		];
 	}
 
 	resize()
@@ -87,27 +28,7 @@ export class Gl2d
 
 		this.camera.width  = this.element.width;
 		this.camera.height = this.element.height;
-
-		// if(this.resizeTime)
-		// {
-		// 	clearTimeout(this.resizeTime);
-		// }
-
-		// this.resizeTime = setTimeout(()=>{
-		// 	console.log(parseInt(this.camera.width/32), parseInt(this.camera.height/32));
-
-		// 	this.background.resize(
-		// 		parseInt(this.camera.width/32)
-		// 		, parseInt(this.camera.height/32)
-		// 	);
-		// }, 10);
-	}
-
-	moveCamera(x, y)
-	{
-		this.camera.x = x + 16;
-		this.camera.y = y + 48;
-	}
+	}	
 
 	draw()
 	{
@@ -120,14 +41,6 @@ export class Gl2d
 		gl.clearColor(0, 0, 0, 1);
 		// gl.clearColor(1, 1, 1, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT);
-
-
-		this.sprites.map(s => s.draw());
-	}
-
-	simulate()
-	{
-		this.sprites.map(s => s.simulate());
 	}
 
 	cleanup()

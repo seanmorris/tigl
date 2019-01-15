@@ -9,6 +9,8 @@ export class SpriteSheet
 		this.width    = 0;
 		this.height   = 0;
 
+
+
 		let request   = new Request(this.boxesUrl);
 
 		let sheetLoader = fetch(request).then((response)=>{
@@ -120,5 +122,67 @@ export class SpriteSheet
 		}
 
 		return frames;
+	}
+
+	static loadTexture(gl2d, imageSrc)
+	{
+		const gl = gl2d.context;
+
+		if(!this.texturePromises)
+		{
+			this.texturePromises = {};
+		}
+
+		if(this.texturePromises[imageSrc])
+		{
+			return this.texturePromises[imageSrc];
+		}
+
+		this.texturePromises[imageSrc] = this.loadImage(imageSrc).then((image)=>{
+			const texture = gl.createTexture();
+
+			gl.bindTexture(gl.TEXTURE_2D, texture);
+
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+			gl.texImage2D(
+				gl.TEXTURE_2D
+				, 0
+				, gl.RGBA
+				, gl.RGBA
+				, gl.UNSIGNED_BYTE
+				, image
+			);
+
+			return {image, texture}
+		});
+
+		return this.texturePromises[imageSrc];
+	}
+
+	static loadImage(src)
+	{
+		if(!this.imagePromises)
+		{
+			this.imagePromises = {};
+		}
+
+		if(this.imagePromises[src])
+		{
+			return this.imagePromises[src];
+		}
+
+		this.imagePromises[src] = new Promise((accept, reject)=>{
+			const image = new Image();
+			image.src   = src;
+			image.addEventListener('load', (event)=>{
+				accept(image);
+			});
+		});
+
+		return this.imagePromises[src];
 	}
 }

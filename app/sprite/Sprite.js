@@ -22,7 +22,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 15;
+		this.maxSpeed = 29;
 
 		this.moving = false;
 
@@ -200,9 +200,9 @@ export class Sprite
 
 	draw()
 	{
-		this.simulate();
-
 		const gl = this.gl2d.context;
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 		gl.useProgram(this.gl2d.program);
 
@@ -239,7 +239,7 @@ export class Sprite
 
 		this.setRectangle(
 			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
-			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2))
+			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2)) - (this.height /2)
 			, this.width
 			, this.height
 		);
@@ -379,7 +379,14 @@ export class Sprite
 
 		if(prev < 0 && prev > -10)
 		{
-			this.speed = this.maxSpeed;
+			// if(this.speed > 0)
+			// {
+			// 	this.speed = this.maxSpeed;
+			// }
+			// else
+			// {
+			// 	this.speed = -this.maxSpeed;
+			// }
 		}
 
 		if(this.speed >= this.maxSpeed)

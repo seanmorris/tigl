@@ -1,11 +1,13 @@
-import { Config } from 'Config';
+import { Config }           from 'Config';
 
 import { View as BaseView } from 'curvature/base/View';
 
-import { Gl2d } from '../gl2d/Gl2d';
-import { Sprite } from '../gl2d/Sprite';
+// import { Gl2d }             from '../gl2d/Gl2d';
 
-import { Keyboard } from 'curvature/input/Keyboard'
+// import { Sprite }           from '../sprite/Sprite';
+import { SpriteBoard }      from '../sprite/SpriteBoard';
+
+import { Keyboard }         from 'curvature/input/Keyboard'
 
 export class View extends BaseView
 {
@@ -69,7 +71,7 @@ export class View extends BaseView
 
 	postRender()
 	{
-		this.gl2d = new Gl2d(this.tags.canvas.element);
+		this.spriteBoard = new SpriteBoard(this.tags.canvas.element);
 
 		window.addEventListener('resize', () => {
 			this.resize();
@@ -81,9 +83,13 @@ export class View extends BaseView
 		let fSamples = [];
 		let sSamples = [];
 
-		let maxSamples = 10;
+		let maxSamples = 2;
 
 		const simulate = (now) => {
+			// return;
+
+			now = now / 1000;
+
 			const delta = now - sThen;
 
 			if(delta < 1/this.simulationLock)
@@ -93,7 +99,7 @@ export class View extends BaseView
 
 			this.keyboard.update();
 
-			this.gl2d.simulate();
+			this.spriteBoard.simulate();
 
 			sThen = now;
 
@@ -120,7 +126,7 @@ export class View extends BaseView
 				return;
 			}
 
-			this.gl2d.draw();
+			this.spriteBoard.draw();
 
 			window.requestAnimationFrame(update);
 
@@ -135,13 +141,17 @@ export class View extends BaseView
 				fSamples.shift();
 			}
 
-			this.args.camX = this.gl2d.camera.x;
-			this.args.camY = this.gl2d.camera.y;
+			this.args.camX = this.spriteBoard.camera.x;
+			this.args.camY = this.spriteBoard.camera.y;
 		};
 
 		this.resize();
 
 		//
+
+		setInterval(()=>{
+			simulate(performance.now());
+		}, 0);
 
 		setInterval(()=>{
 			const fps = fSamples.reduce((a,b)=>a+b, 0) / fSamples.length;
@@ -165,6 +175,6 @@ export class View extends BaseView
 		this.args.width  = this.tags.canvas.element.width  = document.body.clientWidth;
 		this.args.height = this.tags.canvas.element.height = document.body.clientHeight;
 
-		this.gl2d.resize();
+		this.spriteBoard.resize();
 	}
 }

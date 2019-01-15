@@ -16,5 +16,3 @@ exports.watcher = {
     awaitWriteFinish: true,
     usePolling: true
 }
-
-exports.sourceMaps = 'absoluteUrl';

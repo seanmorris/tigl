@@ -1,4 +1,4 @@
-import { Sprite } from '../gl2d/Sprite';
+import { Sprite } from '../sprite/Sprite';
 
 export class Floor
 {
