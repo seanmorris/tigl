@@ -28,7 +28,7 @@ export class View extends BaseView
 		this.args.camY = 0;
 
 		this.args.frameLock      = 60;
-		this.args.simulationLock = 120;
+		this.args.simulationLock = 60;
 
 		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
 			if(v > 0)
