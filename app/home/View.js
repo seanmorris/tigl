@@ -27,24 +27,24 @@ export class View extends BaseView
 		this.args.camX = 0;
 		this.args.camY = 0;
 
-		this.frameLock      = 60;
-		this.simulationLock = 60;
+		this.args.frameLock      = 60;
+		this.args.simulationLock = 120;
 
 		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
 			if(v > 0)
 			{
-				this.frameLock++;
+				this.args.frameLock++;
 			}
 		});
 
 		this.keyboard.keys.bindTo('End', (v,k,t,d)=>{
 			if(v > 0)
 			{
-				this.frameLock--;
+				this.args.frameLock--;
 
-				if(this.frameLock < 0)
+				if(this.args.frameLock < 0)
 				{
-					this.frameLock = 0;
+					this.args.frameLock = 0;
 				}
 			}
 		});
@@ -52,18 +52,18 @@ export class View extends BaseView
 		this.keyboard.keys.bindTo('PageUp', (v,k,t,d)=>{
 			if(v > 0)
 			{
-				this.simulationLock++;
+				this.args.simulationLock++;
 			}
 		});
 
 		this.keyboard.keys.bindTo('PageDown', (v,k,t,d)=>{
 			if(v > 0)
 			{
-				this.simulationLock--;
+				this.args.simulationLock--;
 
-				if(this.simulationLock < 0)
+				if(this.args.simulationLock < 0)
 				{
-					this.simulationLock = 0;
+					this.args.simulationLock = 0;
 				}
 			}
 		});
@@ -83,25 +83,27 @@ export class View extends BaseView
 		let fSamples = [];
 		let sSamples = [];
 
-		let maxSamples = 2;
+		let maxSamples = 5;
 
 		const simulate = (now) => {
 			// return;
+
+			now = Math.round(now * 10)/10;
 
 			now = now / 1000;
 
 			const delta = now - sThen;
 
-			if(delta < 1/this.simulationLock)
+			if(delta < 1/(this.args.simulationLock+10))
 			{
 				return;
 			}
 
+			sThen = now;
+
 			this.keyboard.update();
 
 			this.spriteBoard.simulate();
-
-			sThen = now;
 
 			this.args._sps = (1 / delta);
 
@@ -116,11 +118,11 @@ export class View extends BaseView
 		const update = (now) =>{
 			now = now / 1000;
 
-			simulate(now);
-
 			const delta = now - fThen;
 
-			if(delta < 1/this.frameLock)
+			console.log('u', now);
+
+			if(delta < 1/this.args.frameLock)
 			{
 				window.requestAnimationFrame(update);
 				return;
@@ -132,8 +134,6 @@ export class View extends BaseView
 
 			fThen = now;
 
-			this.args._fps = (1 / delta);
-
 			fSamples.push(this.args._fps);
 
 			while(fSamples.length > maxSamples)
@@ -143,6 +143,8 @@ export class View extends BaseView
 
 			this.args.camX = this.spriteBoard.camera.x;
 			this.args.camY = this.spriteBoard.camera.y;
+
+			this.args._fps = (1 / delta);
 		};
 
 		this.resize();
