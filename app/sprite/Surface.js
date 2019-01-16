@@ -156,12 +156,6 @@ export class Surface
 
 		gl.enableVertexAttribArray(this.gl2d.positionLocation);
 
-		gl.uniform2f(
-			this.gl2d.resolutionLocation
-			, gl.canvas.width
-			, gl.canvas.height
-		);
-
 		gl.bindTexture(gl.TEXTURE_2D, this.pane);
 		gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);

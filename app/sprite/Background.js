@@ -28,18 +28,6 @@ export class Background
 		if(this.panes.length >= this.maxPanes)
 		{
 			let deadPane = this.panes.pop();
-
-			// if(!this.panesXY[deadPane.x])
-			// {
-			// 	this.panesXY[deadPane.x] = {};
-			// }
-
-			// delete this.panesXY[deadPane.x][deadPane.y];
-
-			// if(!Object.keys(this.panesXY[deadPane.x]).length)
-			// {
-			// 	delete this.panesXY[deadPane.x];
-			// }
 		}
 
 		this.panes.unshift(pane);

@@ -18,6 +18,11 @@ export class SpriteBoard extends Gl2d
 			, height: 0
 		};
 
+		this.mouse = {
+			x:        0
+			, y:      0
+		};
+
 		this.camera = Bindable.makeBindable(this.camera);
 
 		this.camera.width  = this.element.width;
@@ -33,11 +38,20 @@ export class SpriteBoard extends Gl2d
 			, this.createShader('sprite/texture.frag')
 		);
 
+		this.overlayProgram = this.createProgram(
+			this.createShader('overlay/overlay.vert')
+			, this.createShader('overlay/overlay.frag')
+		);
+
 		this.positionLocation   = gl.getAttribLocation(this.program, "a_position");
 		this.texCoordLocation   = gl.getAttribLocation(this.program, "a_texCoord");
 
 		this.resolutionLocation = gl.getUniformLocation(this.program, "u_resolution");
 		this.colorLocation      = gl.getUniformLocation(this.program, "u_color");
+
+		this.overlayPosition   = gl.getAttribLocation(this.overlayProgram, "a_position");
+		this.overlayResolution = gl.getUniformLocation(this.overlayProgram, "u_resolution");
+		this.overlayColor      = gl.getUniformLocation(this.overlayProgram, "u_color");
 
 		this.positionBuffer = gl.createBuffer();
 		this.texCoordBuffer = gl.createBuffer();
@@ -79,6 +93,13 @@ export class SpriteBoard extends Gl2d
 			, barrel
 			, this.sprite
 		];
+
+		document.addEventListener(
+			'mousemove', ()=>{
+				this.mouse.x = event.clientX;
+				this.mouse.y = event.clientY;
+			}
+		);
 	}
 
 	moveCamera(x, y)
@@ -89,9 +110,17 @@ export class SpriteBoard extends Gl2d
 
 	draw()
 	{
-		this.sprites.map(s => s.z = s.y);
+		const gl = this.context;
 
 		super.draw();
+
+		gl.uniform2f(
+			this.resolutionLocation
+			, gl.canvas.width
+			, gl.canvas.height
+		);
+
+		this.sprites.map(s => s.z = s.y);
 
 		this.sprites.sort((a,b)=>{
 			if(b.z === undefined)
@@ -102,6 +131,37 @@ export class SpriteBoard extends Gl2d
 		});
 
 		this.sprites.map(s => s.draw());
+
+		gl.useProgram(this.overlayProgram);
+
+		gl.uniform2f(
+			this.overlayResolution
+			, gl.canvas.width
+			, gl.canvas.height
+		);
+
+		this.setRectangle(
+			(Math.floor(
+					(this.mouse.x
+						+ (this.camera.x % 32)
+						- (Math.floor(this.camera.width /2) % 32)
+					) / 32) * 32
+			)
+				- (this.camera.x % 32)
+				+ (Math.floor(this.camera.width /2) % 32)
+			, (Math.floor(
+					(this.mouse.y
+						+ (this.camera.y % 32)
+						- (Math.floor(this.camera.height /2) % 32)
+					) / 32) * 32
+			)
+				- (this.camera.y % 32)
+				+ (Math.floor(this.camera.height /2) % 32)
+			, 32
+			, 32
+		);
+
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
 	simulate()
@@ -113,19 +173,39 @@ export class SpriteBoard extends Gl2d
 	{
 		super.resize();
 
-		// this.background.resizePanes(64, 64);
-		// this.background.resizePanes(32, 32);
-		// this.background.resizePanes(128, 128);
-		// let a = 1;
-		// this.background.resizePanes(64, 64);
-		// this.background.resizePanes(160, 64);
-
-		// console.log(Math.floor(this.element.width / 2 + 32));
-
 		this.background.resize(
-			Math.floor(this.element.width / 2 + 32)
-			, Math.floor(this.element.height / 2 + 32)
+			Math.round(this.element.width / 2 + 32)
+			, Math.round(this.element.height / 2 + 32)
+		);
+	}
+
+	setRectangle(x, y, width, height)
+	{
+		const gl = this.context;
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+
+		gl.vertexAttribPointer(
+			this.overlayPosition
+			, 2
+			, gl.FLOAT
+			, false
+			, 0
+			, 0
 		);
 
+		var x1 = x;
+		var x2 = x + width;
+		var y1 = y;
+		var y2 = y + height;
+		
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			x1, y1,
+			x2, y1,
+			x1, y2,
+			x1, y2,
+			x2, y1,
+			x2, y2,
+		]), gl.STREAM_DRAW);
 	}
 }
