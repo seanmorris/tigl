@@ -53,9 +53,10 @@ export class Controller extends View
 
 			if(event.touches && event.touches[0])
 			{
+				event.preventDefault();
 				pos = event.touches[0];
 			}
-		
+
 			this.args.xx = pos.clientX - this.dragStart.x;
 			this.args.yy = pos.clientY - this.dragStart.y;
 
