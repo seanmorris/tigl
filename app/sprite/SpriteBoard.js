@@ -71,7 +71,7 @@ export class SpriteBoard extends Gl2d
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
 		document.addEventListener(
-			'mousemove', ()=>{
+			'mousemove', (event)=>{
 				this.mouse.x = event.clientX;
 				this.mouse.y = event.clientY;
 			}
@@ -85,7 +85,7 @@ export class SpriteBoard extends Gl2d
 		};
 
 		this.element.addEventListener(
-			'click', ()=>{
+			'click', (event)=>{
 				this.mouse.clickX = event.clientX;
 				this.mouse.clickY = event.clientY;
 			}
