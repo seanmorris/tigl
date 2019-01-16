@@ -1,0 +1,64 @@
+div.controller {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	position: absolute;
+	top: 2em;
+	left: 50%;
+	transform: translateX(-50%);
+
+	/*width: 550px;
+	height: 220px;*/
+	background-color: white;
+
+	opacity: 0.75;
+
+	user-select: none;
+}
+
+div.controller div.joystick {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100px;
+	height: 100px;
+	background-color: black;
+	border-radius: 5%;
+
+	overflow: hidden;
+
+	margin: 1em;
+	margin-right: 0em;
+}
+
+div.controller div.joystick div.pad {
+	width: 33px;
+	height: 33px;
+	background-color: red;
+	border-radius: 50%;
+}
+
+div.controller div.button {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 33px;
+	height: 33px;
+	background-color: black;
+	border-radius: 50%;
+
+	color: white;
+
+	margin: 1em;
+}
+
+div.controller div.button:not(:last-child) {
+	margin-right: 0em;
+}
+
+div.controller div.button:active {
+	background-color: red;
+}
