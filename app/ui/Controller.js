@@ -19,6 +19,14 @@ export class Controller extends View
 		window.addEventListener('mouseup', (event) => {
 			this.dropStick(event);
 		});
+
+		window.addEventListener('touchmove', (event) => {
+			this.moveStick(event);
+		});
+
+		window.addEventListener('touchend', (event) => {
+			this.dropStick(event);
+		});
 	}
 
 	dragStick(event)
