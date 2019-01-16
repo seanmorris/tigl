@@ -10,6 +10,7 @@ export class Sprite
 
 		this.x      = 960;
 		this.y      = 548;
+		this.z      = 0;
 		this.x      = 0;
 		this.y      = 0;
 

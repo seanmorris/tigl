@@ -89,7 +89,18 @@ export class SpriteBoard extends Gl2d
 
 	draw()
 	{
+		this.sprites.map(s => s.z = s.y);
+
 		super.draw();
+
+		this.sprites.sort((a,b)=>{
+			if(b.z === undefined)
+			{
+				return 0;
+			}
+			return a.z - b.z;
+		});
+
 		this.sprites.map(s => s.draw());
 	}
 

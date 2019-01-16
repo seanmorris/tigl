@@ -120,8 +120,6 @@ export class View extends BaseView
 
 			const delta = now - fThen;
 
-			console.log('u', now);
-
 			if(delta < 1/this.args.frameLock)
 			{
 				window.requestAnimationFrame(update);
