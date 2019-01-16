@@ -23,7 +23,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 29;
+		this.maxSpeed = 8;
 
 		this.moving = false;
 
@@ -38,6 +38,12 @@ export class Sprite
 		this.SOUTH	= this.DOWN;
 		this.WEST	= this.LEFT;
 		this.NORTH	= this.UP;
+
+		if(!imageSrc)
+		{
+			this.spriteSheet = new SpriteSheet();
+		}
+
 
 		this.standing = {
 			'north': [
@@ -126,9 +132,9 @@ export class Sprite
 		{
 			this.keyboard = new Keyboard;
 
-			this.keyboard.keys.bindTo((v,k,t,d)=>{
-				this.keyPress(k,v,t[k]);
-			});
+			// this.keyboard.keys.bindTo((v,k,t,d)=>{
+			// 	this.keyPress(k,v,t[k]);
+			// });
 
 			Sprite.loadTexture(gl2d, altImageSrc).then((args)=>{
 				this.texture2 = args.texture;
@@ -136,8 +142,6 @@ export class Sprite
 				this.width  = args.image.width;
 				this.height = args.image.height;
 			});
-
-			this.spriteSheet = new SpriteSheet();
 
 			this.gl2d.moveCamera(this.x, this.y);
 		}
@@ -351,87 +355,87 @@ export class Sprite
 		]), gl.STREAM_DRAW);
 	}
 
-	keyPress(key, value, prev)
-	{
-		// console.log(this.speed);
+	// keyPress(key, value, prev)
+	// {
+	// 	// console.log(this.speed);
 
-		if(value == -1)
-		{
-			this.speed  = 0;
-			this.moving = false;
-			return;
-		}
+	// 	if(value == -1)
+	// 	{
+	// 		this.speed  = 0;
+	// 		this.moving = false;
+	// 		return;
+	// 	}
 
-		if(!value || value < 0)
-		{
-			return;
-		}
+	// 	if(!value || value < 0)
+	// 	{
+	// 		return;
+	// 	}
 
-		if(this.moving && this.moving !== key)
-		{
-			return;
-		}
+	// 	if(this.moving && this.moving !== key)
+	// 	{
+	// 		return;
+	// 	}
 
-		if(prev < 0 && prev > -10)
-		{
-			// if(this.speed > 0)
-			// {
-			// 	this.speed = this.maxSpeed;
-			// }
-			// else
-			// {
-			// 	this.speed = -this.maxSpeed;
-			// }
-		}
+	// 	if(prev < 0 && prev > -10)
+	// 	{
+	// 		// if(this.speed > 0)
+	// 		// {
+	// 		// 	this.speed = this.maxSpeed;
+	// 		// }
+	// 		// else
+	// 		// {
+	// 		// 	this.speed = -this.maxSpeed;
+	// 		// }
+	// 	}
 
-		if(this.speed >= this.maxSpeed)
-		{
-			this.speed = this.maxSpeed;
-		}
+	// 	if(this.speed >= this.maxSpeed)
+	// 	{
+	// 		this.speed = this.maxSpeed;
+	// 	}
 
-		if(this.speed <= -this.maxSpeed)
-		{
-			this.speed = -this.maxSpeed;
-		}
+	// 	if(this.speed <= -this.maxSpeed)
+	// 	{
+	// 		this.speed = -this.maxSpeed;
+	// 	}
 
-		switch(key)
-		{
-			case 'ArrowRight':
-				this.setFrames(this.walking.east);
-				this.direction = this.RIGHT;
-				if(value % 8 == 0)
-				{
-					this.speed++;
-				}
-				break;
-			case 'ArrowDown':
-				this.setFrames(this.walking.south);
-				this.direction = this.DOWN;
-				if(value % 8 == 0)
-				{
-					this.speed++;
-				}
-				break;
-			case 'ArrowLeft':
-				this.setFrames(this.walking.west);
-				this.direction = this.LEFT;
-				if(value % 8 == 0)
-				{
-					this.speed--;
-				}
-				break;
-			case 'ArrowUp':
-				this.setFrames(this.walking.north);
-				this.direction = this.UP;
-				if(value % 8 == 0)
-				{
-					this.speed--;
-				}
-				break;
-		}
+	// 	switch(key)
+	// 	{
+	// 		case 'ArrowRight':
+	// 			this.setFrames(this.walking.east);
+	// 			this.direction = this.RIGHT;
+	// 			if(value % 8 == 0)
+	// 			{
+	// 				this.speed++;
+	// 			}
+	// 			break;
+	// 		case 'ArrowDown':
+	// 			this.setFrames(this.walking.south);
+	// 			this.direction = this.DOWN;
+	// 			if(value % 8 == 0)
+	// 			{
+	// 				this.speed++;
+	// 			}
+	// 			break;
+	// 		case 'ArrowLeft':
+	// 			this.setFrames(this.walking.west);
+	// 			this.direction = this.LEFT;
+	// 			if(value % 8 == 0)
+	// 			{
+	// 				this.speed--;
+	// 			}
+	// 			break;
+	// 		case 'ArrowUp':
+	// 			this.setFrames(this.walking.north);
+	// 			this.direction = this.UP;
+	// 			if(value % 8 == 0)
+	// 			{
+	// 				this.speed--;
+	// 			}
+	// 			break;
+	// 	}
 
-		this.moving = key;
+	// 	this.moving = key;
 
-		this.gl2d.moveCamera(this.x, this.y);
-	}
+	// 	this.gl2d.moveCamera(this.x, this.y);
+	// }
 }

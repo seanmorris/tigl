@@ -70,32 +70,6 @@ export class SpriteBoard extends Gl2d
 
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-		this.sprite   = new Sprite(
-			this
-			, '/player_standing_south.png'
-			, '/barrel.png'
-		);
-
-		const barrel   = new Sprite(
-			this
-			, '/barrel.png'
-		);
-
-		barrel.x = 32;
-
-		this.background = new Background(this);
-
-		// this.background.resize(
-		// 	this.element.width / 1
-		// 	, this.element.height / 1
-		// );
-		
-		this.sprites = [
-			this.background
-			, barrel
-			, this.sprite
-		];
-
 		document.addEventListener(
 			'mousemove', ()=>{
 				this.mouse.x = event.clientX;
@@ -110,7 +84,7 @@ export class SpriteBoard extends Gl2d
 			, globalY: null
 		};
 
-		document.addEventListener(
+		this.element.addEventListener(
 			'click', ()=>{
 				this.mouse.clickX = event.clientX;
 				this.mouse.clickY = event.clientY;
