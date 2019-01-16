@@ -2,7 +2,7 @@
 	font-family: monospace;
 	white-space: pre;
 	position:fixed;
-	bottom:0px;
+	top:0px;
 	right:0px;
 	/*background-color: rgba(255,255,255,0.5);*/
 	background-color: rgba(0,0,0,0.666);
@@ -16,4 +16,8 @@
 	left:50%;
 	height:1px;
 	width:1px;
+}
+
+html {
+	user-select: none;
 }
