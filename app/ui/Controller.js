@@ -49,8 +49,6 @@ export class Controller extends View
 
 	moveStick(event)
 	{
-		event.preventDefault();
-
 		if(this.args.dragging)
 		{
 			let pos = event;
