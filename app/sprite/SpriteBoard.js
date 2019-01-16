@@ -21,6 +21,8 @@ export class SpriteBoard extends Gl2d
 		this.mouse = {
 			x:        0
 			, y:      0
+			, clickX: 0
+			, clickY: 0
 		};
 
 		this.camera = Bindable.makeBindable(this.camera);
@@ -110,15 +112,22 @@ export class SpriteBoard extends Gl2d
 
 		document.addEventListener(
 			'click', ()=>{
-				console.log(this.selected);
+				this.mouse.clickX = event.clientX;
+				this.mouse.clickY = event.clientY;
 			}
 		);
 	}
 
 	moveCamera(x, y)
 	{
+		let originalX = this.camera.x;
+		let originalY = this.camera.y;
+
 		this.camera.x = x;
 		this.camera.y = y;
+
+		this.mouse.clickX += (originalX - this.camera.x);
+		this.mouse.clickY += (originalY - this.camera.y);
 	}
 
 	draw()
@@ -153,12 +162,12 @@ export class SpriteBoard extends Gl2d
 			, gl.canvas.height
 		);
 
-		this.selected.localX = Math.floor((this.mouse.x
+		this.selected.localX = Math.floor((this.mouse.clickX
 			+ (this.camera.x % 32)
 			- (Math.floor(this.camera.width /2) % 32)
 		) / 32);
 
-		this.selected.localY = Math.floor((this.mouse.y
+		this.selected.localY = Math.floor((this.mouse.clickY
 			+ (this.camera.y % 32)
 			- (Math.floor(this.camera.height /2) % 32)
 		) / 32);

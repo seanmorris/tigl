@@ -105,6 +105,11 @@ export class View extends BaseView
 
 			this.spriteBoard.simulate();
 
+			this.args.localX  = this.spriteBoard.selected.localX;
+			this.args.localY  = this.spriteBoard.selected.localY;
+			this.args.globalX = this.spriteBoard.selected.globalX;
+			this.args.globalY = this.spriteBoard.selected.globalY;
+
 			this.args._sps = (1 / delta);
 
 			sSamples.push(this.args._sps);
