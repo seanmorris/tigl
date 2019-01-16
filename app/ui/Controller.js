@@ -33,6 +33,8 @@ export class Controller extends View
 	{
 		let pos = event;
 
+		event.preventDefault();
+
 		if(event.touches && event.touches[0])
 		{
 			pos = event.touches[0];
@@ -47,13 +49,14 @@ export class Controller extends View
 
 	moveStick(event)
 	{
+		event.preventDefault();
+
 		if(this.args.dragging)
 		{
 			let pos = event;
 
 			if(event.touches && event.touches[0])
 			{
-				event.preventDefault();
 				pos = event.touches[0];
 			}
 
