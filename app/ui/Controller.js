@@ -31,10 +31,17 @@ export class Controller extends View
 
 	dragStick(event)
 	{
+		let pos = event;
+
+		if(event.touches && event.touches[0])
+		{
+			pos = event.touches[0];
+		}
+
 		this.args.dragging = true;
 		this.dragStart     = {
-			x:   event.clientX
-			, y: event.clientY
+			x:   pos.clientX
+			, y: pos.clientY
 		};
 	}
 
@@ -42,8 +49,15 @@ export class Controller extends View
 	{
 		if(this.args.dragging)
 		{
-			this.args.xx = event.clientX - this.dragStart.x;
-			this.args.yy = event.clientY - this.dragStart.y;
+			let pos = event;
+
+			if(event.touches && event.touches[0])
+			{
+				pos = event.touches[0];
+			}
+		
+			this.args.xx = pos.clientX - this.dragStart.x;
+			this.args.yy = pos.clientY - this.dragStart.y;
 
 			const limit = 50;
 
