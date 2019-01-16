@@ -100,6 +100,19 @@ export class SpriteBoard extends Gl2d
 				this.mouse.y = event.clientY;
 			}
 		);
+
+		this.selected = {
+			localX:    null
+			, localY:  null
+			, globalX: null
+			, globalY: null
+		};
+
+		document.addEventListener(
+			'click', ()=>{
+				console.log(this.selected);
+			}
+		);
 	}
 
 	moveCamera(x, y)
@@ -140,21 +153,37 @@ export class SpriteBoard extends Gl2d
 			, gl.canvas.height
 		);
 
-		this.setRectangle(
-			(Math.floor(
-					(this.mouse.x
-						+ (this.camera.x % 32)
-						- (Math.floor(this.camera.width /2) % 32)
-					) / 32) * 32
+		this.selected.localX = Math.floor((this.mouse.x
+			+ (this.camera.x % 32)
+			- (Math.floor(this.camera.width /2) % 32)
+		) / 32);
+
+		this.selected.localY = Math.floor((this.mouse.y
+			+ (this.camera.y % 32)
+			- (Math.floor(this.camera.height /2) % 32)
+		) / 32);
+
+		this.selected.globalX = (this.selected.localX
+			- Math.floor(Math.floor(this.camera.width /2) / 32)
+			+ (this.camera.x < 0
+				? Math.ceil(this.camera.x /32)
+				: Math.floor(this.camera.x /32)
 			)
+		);
+
+		this.selected.globalY = (this.selected.localY
+			- Math.floor(Math.floor(this.camera.height /2) / 32)
+			+ (this.camera.y < 0
+				? Math.ceil(this.camera.y /32)
+				: Math.floor(this.camera.y /32)
+			)
+		);
+
+		this.setRectangle(
+			this.selected.localX * 32
 				- (this.camera.x % 32)
 				+ (Math.floor(this.camera.width /2) % 32)
-			, (Math.floor(
-					(this.mouse.y
-						+ (this.camera.y % 32)
-						- (Math.floor(this.camera.height /2) % 32)
-					) / 32) * 32
-			)
+			, this.selected.localY * 32
 				- (this.camera.y % 32)
 				+ (Math.floor(this.camera.height /2) % 32)
 			, 32
