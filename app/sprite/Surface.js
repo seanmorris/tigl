@@ -69,33 +69,32 @@ export class Surface
 
 				let frame = this.spriteSheet.getFrame('floorTile.png');
 
+				let localX  = i % this.xSize;
+				let offsetX = Math.floor(this.x / this.tileWidth);
+				let globalX = localX + offsetX;
+
+				let localY  = Math.floor(i / this.xSize);
+				let offsetY = Math.floor(this.y / this.tileHeight);
+				let globalY = localY + offsetY;
+
+				let split = 4;
+
+				// if((localX % split === 0) && (localY % split === 0))
+				if((globalX % split === 0) && (globalY % split === 0))
+				{
+					frame = this.spriteSheet.getFrame('barrel_hole.png');
+
+					if(Math.abs(globalX) > 10 && Math.abs(globalY) > 10)
+					{
+						frame = this.spriteSheet.getFrame('box_face.png');
+					}
+				}
+
 				texturePromises.push(this.spriteSheet.constructor.loadTexture(gl2d, frame).then((args)=>{
 					this.subTextures[i] = args.texture;
 
 					return Promise.resolve();
 				}));
-
-				// let localX  = i % this.xSize;
-				// let offsetX = Math.ceil(this.x / this.tileWidth);
-				// let globalX = localX + offsetX;
-
-				// let localY  = Math.floor(i / this.ySize);
-				// let offsetY = Math.ceil(this.y / this.tileHeight);
-				// let globalY = localY + offsetY;
-
-				// let split = 5;
-
-				// if((globalX % split === 0) && (globalY % split === 0))
-				// {
-				// 	vertices = this.spriteSheet.getVertices('barrel_hole.png');
-
-				// 	if(Math.abs(globalX) > 3)
-				// 	{
-				// 		vertices = this.spriteSheet.getVertices('alien_plant_1.png');
-				// 	}
-				// }
-
-				// this.texVertices.push(vertices);
 			}
 
 			Promise.all(texturePromises).then(()=>{
@@ -254,12 +253,12 @@ export class Surface
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-				0.0,  0.0,
-				1.0,  0.0,
 				0.0,  1.0,
-				0.0,  1.0,
-				1.0,  0.0,
 				1.0,  1.0,
+				0.0,  0.0,
+				0.0,  0.0,
+				1.0,  1.0,
+				1.0,  0.0,
 			]), gl.STREAM_DRAW);
 
 			this.setRectangle(
@@ -279,47 +278,6 @@ export class Surface
 
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
-
-		// if(this.texVertices)
-		// {
-		// 	for(let i in this.texVertices)
-		// 	{
-		// 		if(!this.texVertices[i])
-		// 		{
-		// 			continue;
-		// 		}
-
-		// 		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-
-		// 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-		// 			this.texVertices[i].u1,  this.texVertices[i].v2,
-		// 			this.texVertices[i].u2,  this.texVertices[i].v2,
-		// 			this.texVertices[i].u1,  this.texVertices[i].v1,
-
-		// 			this.texVertices[i].u1,  this.texVertices[i].v1,
-		// 			this.texVertices[i].u2,  this.texVertices[i].v2,
-		// 			this.texVertices[i].u2,  this.texVertices[i].v1,
-					
-		// 		]), gl.STATIC_DRAW);
-
-		// 		this.setRectangle(
-		// 			x
-		// 			, y
-		// 			, this.tileWidth
-		// 			, this.tileHeight
-		// 		);
-
-		// 		x += this.tileWidth;
-
-		// 		if(x >= this.width)
-		// 		{
-		// 			x = 0;
-		// 			y += this.tileHeight;
-		// 		}
-
-		// 		gl.drawArrays(gl.TRIANGLES, 0, 6);
-		// 	}
-		// }
 	}
 
 	setRectangle(x, y, width, height)

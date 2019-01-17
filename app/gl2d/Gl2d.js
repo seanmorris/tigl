@@ -15,19 +15,17 @@ export class Gl2d
 		this.context = element.getContext('webgl');
 	}
 
-	resize()
+	resize(x, y)
 	{
+		x = x ||this.element.width;
+		y = y ||this.element.height;
+
 		const gl = this.context;
 
-		gl.viewport(
-			0
-			, 0
-			, this.element.width
-			, this.element.height
-		);
+		gl.viewport(0, 0, x, y);
 
-		this.camera.width  = this.element.width;
-		this.camera.height = this.element.height;
+		this.camera.width  = x;
+		this.camera.height = y;
 	}	
 
 	draw()

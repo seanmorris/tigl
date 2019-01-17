@@ -224,7 +224,13 @@ export class View extends BaseView
 
 			const delta = now - sThen;
 
-			if(delta < 1/(this.args.simulationLock+10))
+			if(this.args.simulationLock == 0)
+			{
+				sSamples = [0];
+				return;
+			}
+
+			if(delta < 1/(this.args.simulationLock+(10 * (this.args.simulationLock/60))))
 			{
 				return;
 			}
@@ -257,7 +263,14 @@ export class View extends BaseView
 
 			const delta = now - fThen;
 
-			if(delta < 1/(this.args.frameLock+10))
+			if(this.args.frameLock == 0)
+			{
+				window.requestAnimationFrame(update);
+				fSamples = [0];
+				return;
+			}
+
+			if(delta < 1/(this.args.frameLock+(10 * (this.args.frameLock/60))))
 			{
 				window.requestAnimationFrame(update);
 				return;
