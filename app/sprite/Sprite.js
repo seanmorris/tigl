@@ -23,7 +23,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 8;
+		this.maxSpeed = 6;
 
 		this.moving = false;
 
@@ -143,7 +143,7 @@ export class Sprite
 				this.height = args.image.height;
 			});
 
-			this.gl2d.moveCamera(this.x, this.y);
+			// this.gl2d.moveCamera(this.x, this.y);
 		}
 	}
 
@@ -154,14 +154,12 @@ export class Sprite
 			this.setFrames(this.standing.south);
 		}
 
-		// this.frameDelay = this.maxSpeed - this.speed;
+		this.frameDelay = (this.maxSpeed + 2) - this.speed;
 
-		// if(this.frameDelay > 8)
-		// {
-		// 	this.frameDelay = 8;
-		// }
-
-		// console.log(this.frameDelay);
+		if(this.frameDelay > this.maxSpeed)
+		{
+			this.frameDelay = this.maxSpeed;
+		}
 
 		if(this.currentDelay == 0)
 		{

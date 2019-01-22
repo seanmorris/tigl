@@ -7,9 +7,11 @@ import { Gl2d } from '../gl2d/Gl2d';
 
 export class SpriteBoard extends Gl2d
 {
-	constructor(element)
+	constructor(element, map)
 	{
 		super(element);
+
+		this.map = map;
 
 		this.camera = {
 			x:        0
@@ -82,24 +84,39 @@ export class SpriteBoard extends Gl2d
 			, localY:  null
 			, globalX: null
 			, globalY: null
+			, startGlobalX: null
+			, startGlobalY: null
 		};
 
+		this.selected = Bindable.makeBindable(this.selected);
+
+		let selecting = false;
+
 		this.element.addEventListener(
-			'click', (event)=>{
+			'mousedown', (event)=>{
+				if(this.unselect())
+				{
+					selecting = false;
+					return;
+				}
+				selecting = true;
 				this.mouse.clickX = event.clientX;
 				this.mouse.clickY = event.clientY;
 
-				this.selected.localX = Math.floor((this.mouse.clickX
+				let localX = Math.floor((this.mouse.clickX
 					+ (this.camera.x % 32)
 					- (Math.floor(this.camera.width /2) % 32)
 				) / 32);
 
-				this.selected.localY = Math.floor((this.mouse.clickY
+				let localY = Math.floor((this.mouse.clickY
 					+ (this.camera.y % 32)
 					- (Math.floor(this.camera.height /2) % 32)
 				) / 32);
 
-				this.selected.globalX = (this.selected.localX
+				this.selected.startLocalX = localX;
+				this.selected.startLocalY = localY;
+
+				this.selected.startGlobalX = (this.selected.startLocalX
 					- Math.floor(Math.floor(this.camera.width /2) / 32)
 					+ (this.camera.x < 0
 						? Math.ceil(this.camera.x /32)
@@ -107,15 +124,76 @@ export class SpriteBoard extends Gl2d
 					)
 				);
 
-				this.selected.globalY = (this.selected.localY
+				this.selected.startGlobalY = (this.selected.startLocalY
 					- Math.floor(Math.floor(this.camera.height /2) / 32)
 					+ (this.camera.y < 0
 						? Math.ceil(this.camera.y /32)
 						: Math.floor(this.camera.y /32)
 					)
-				);				
+				);
 			}
 		);
+
+		this.element.addEventListener(
+			'mouseup', (event)=>{
+				if(!selecting)
+				{
+					selecting = false;
+					return;
+				}
+
+				this.mouse.clickX = event.clientX;
+				this.mouse.clickY = event.clientY;
+
+				let localX = Math.floor((this.mouse.clickX
+					+ (this.camera.x % 32)
+					- (Math.floor(this.camera.width /2) % 32)
+				) / 32);
+
+				let localY = Math.floor((this.mouse.clickY
+					+ (this.camera.y % 32)
+					- (Math.floor(this.camera.height /2) % 32)
+				) / 32);
+
+				let globalX = (localX
+					- Math.floor(Math.floor(this.camera.width /2) / 32)
+					+ (this.camera.x < 0
+						? Math.ceil(this.camera.x /32)
+						: Math.floor(this.camera.x /32)
+					)
+				);
+
+				let globalY = (localY
+					- Math.floor(Math.floor(this.camera.height /2) / 32)
+					+ (this.camera.y < 0
+						? Math.ceil(this.camera.y /32)
+						: Math.floor(this.camera.y /32)
+					)
+				);
+
+				this.selected.localX  = localX;
+				this.selected.globalX = globalX;
+				this.selected.localY  = localY;
+				this.selected.globalY = globalY;
+
+				selecting = false;
+			}
+		);
+	}
+
+	unselect()
+	{
+		if(this.selected.localX === null)
+		{
+			return false;
+		}
+
+		this.selected.localX  = null;
+		this.selected.localY  = null;
+		this.selected.globalX = null;
+		this.selected.globalY = null;
+
+		return true;
 	}
 
 	moveCamera(x, y)
@@ -123,8 +201,8 @@ export class SpriteBoard extends Gl2d
 		let originalX = this.camera.x;
 		let originalY = this.camera.y;
 
-		this.camera.x = x;
-		this.camera.y = y;
+		this.camera.x = x + 16;
+		this.camera.y = y + 16;
 
 		this.mouse.clickX += (originalX - this.camera.x);
 		this.mouse.clickY += (originalY - this.camera.y);
@@ -145,9 +223,13 @@ export class SpriteBoard extends Gl2d
 		this.sprites.map(s => s.z = s.y);
 
 		this.sprites.sort((a,b)=>{
+			if(a.z === undefined)
+			{
+				return -1;
+			}
 			if(b.z === undefined)
 			{
-				return 0;
+				return 1;
 			}
 			return a.z - b.z;
 		});
@@ -167,15 +249,36 @@ export class SpriteBoard extends Gl2d
 			, gl.canvas.height
 		);
 
+		let minX = this.selected.startGlobalX;
+		let maxX = this.selected.globalX;
+
+		if(this.selected.globalX < minX)
+		{
+			minX = this.selected.globalX;
+			maxX = this.selected.startGlobalX;
+		}
+
+		let minY = this.selected.startGlobalY;
+		let maxY = this.selected.globalY;
+
+		if(this.selected.globalY < minY)
+		{
+			minY = this.selected.globalY;
+			maxY = this.selected.startGlobalY;
+		}
+
+		maxX += 1;
+		maxY += 1;
+
 		this.setRectangle(
-			this.selected.globalX * 32
+			minX * 32
 				- this.camera.x
 				+ Math.floor(this.camera.width /2)
-			, this.selected.globalY * 32
+			, minY * 32
 				- this.camera.y
 				+ Math.floor(this.camera.height /2)
-			, 32
-			, 32
+			, (maxX - minX) * 32
+			, (maxY - minY) * 32
 		);
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -190,7 +293,6 @@ export class SpriteBoard extends Gl2d
 	{
 		x = x || this.element.width;
 		y = y || this.element.height;
-
 
 		this.background.resize(
 			Math.round(x / 2 + 32)
@@ -219,7 +321,7 @@ export class SpriteBoard extends Gl2d
 		var x2 = x + width;
 		var y1 = y;
 		var y2 = y + height;
-		
+
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			x1, y1,
 			x2, y1,

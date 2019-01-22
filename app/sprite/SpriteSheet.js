@@ -9,8 +9,6 @@ export class SpriteSheet
 		this.width    = 0;
 		this.height   = 0;
 
-
-
 		let request   = new Request(this.boxesUrl);
 
 		let sheetLoader = fetch(request).then((response)=>{
@@ -30,8 +28,9 @@ export class SpriteSheet
 		});
 
 		this.ready = Promise.all([sheetLoader, imageLoader]).then(()=>{
-			this.processImage();
-			return this;
+			return this.processImage().then(()=>{
+				return this;				
+			});
 		});
 	}
 	
@@ -53,6 +52,8 @@ export class SpriteSheet
 
 		context.drawImage(this.image, 0, 0);
 
+		let framePromises = [];
+
 		for(let i in this.boxes.frames)
 		{
 			let subCanvas    = document.createElement('canvas');
@@ -68,23 +69,30 @@ export class SpriteSheet
 				, this.boxes.frames[i].frame.h
 			), 0, 0);
 
-			this.frames[this.boxes.frames[i].filename] = subCanvas.toDataURL();
+			framePromises.push(new Promise((accept)=>{
+				subCanvas.toBlob((blob)=>{
+					this.frames[this.boxes.frames[i].filename] = URL.createObjectURL(blob);
 
-			let u1 = this.boxes.frames[i].frame.x / this.image.width;
-			let v1 = this.boxes.frames[i].frame.y / this.image.height;
+					accept(this.frames[this.boxes.frames[i].filename]);
+				});
+			}));
 
-			let u2 = (this.boxes.frames[i].frame.x + this.boxes.frames[i].frame.w)
-				/ this.image.width;
 
-			let v2 = (this.boxes.frames[i].frame.y + this.boxes.frames[i].frame.h)
-				/ this.image.height;
+			// let u1 = this.boxes.frames[i].frame.x / this.image.width;
+			// let v1 = this.boxes.frames[i].frame.y / this.image.height;
 
-			this.vertices[this.boxes.frames[i].filename] = {
-				u1,v1,u2,v2
-			};
+			// let u2 = (this.boxes.frames[i].frame.x + this.boxes.frames[i].frame.w)
+			// 	/ this.image.width;
+
+			// let v2 = (this.boxes.frames[i].frame.y + this.boxes.frames[i].frame.h)
+			// 	/ this.image.height;
+
+			// this.vertices[this.boxes.frames[i].filename] = {
+			// 	u1,v1,u2,v2
+			// };
 		}
 
-		return true;
+		return Promise.all(framePromises);
 	}
 
 	getVertices(filename)

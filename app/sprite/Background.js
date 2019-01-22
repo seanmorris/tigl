@@ -5,7 +5,7 @@ import { SpriteSheet } from './SpriteSheet';
 
 export class Background
 {
-	constructor(gl2d)
+	constructor(gl2d, map)
 	{
 		Bindable.makeBindable(this);
 
@@ -21,6 +21,8 @@ export class Background
 
 		this.tileWidth   = 32;
 		this.tileHeight  = 32;
+
+		this.map         = map;
 	}
 
 	cachePane(pane, x, y)
@@ -50,9 +52,10 @@ export class Background
 
 		if(!(this.panesXY[paneX] && this.panesXY[paneX][paneY]))
 		{
+			// console.log('render.');
 			pane = new Surface(
 				gl2d
-				, this.spriteSheet
+				, this.map
 				, this.surfaceX
 				, this.surfaceY
 				, paneX

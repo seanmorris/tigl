@@ -1,0 +1,67 @@
+div.mapEditor {
+	max-height: calc(100% - 4em);
+	overflow-y: auto;
+	transition: 0.2s ease-in all;
+	/*opacity: 0;*/
+	transform: translate(-50%, 0px);
+	/*pointer-events: none;*/
+
+	position: absolute;
+	top: 2em;
+	left: 50%;
+
+	background-color: rgba(255,255,255,0.75);
+
+	user-select: none;
+
+	box-shadow: 0px 5px 5px rgba(0,0,0,0.75);
+	border-radius: 5px;
+
+	width: 50%;
+}
+
+div.mapEditor div.tiles {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+div.mapEditor div.tiles img {
+	margin: 0.5em;
+	border: 1px solid rgba(0,0,0,0.25);
+	min-width: 32px;
+}
+
+div.mapEditor div.selected {
+	padding: 0.5em;
+	display: flex;
+	flex-direction: column;
+}
+
+div.mapEditor img.current {
+	margin-top: 0.5em;
+	width: 64px;
+	height: 64px;
+	border: 1px solid black;
+}
+
+div.tab-page {
+	display: flex;
+	flex-direction: column;
+}
+
+div.tab-page > div.tabs {
+	display: flex;
+	flex-shrink: 0;
+	flex-wrap: nowrap;
+	justify-content: center;
+	align-items: center;
+	flex-direction: row;
+	border-bottom: 1px black solid;
+}
+
+div.tab-page > div.tabs > div {
+	flex: 1;
+	padding: 1em;
+	text-align: center;
+}

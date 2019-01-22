@@ -4,13 +4,16 @@ import { View as BaseView } from 'curvature/base/View';
 
 // import { Gl2d }     from '../gl2d/Gl2d';
 
-// import { Sprite }   from '../sprite/Sprite';
+import { Map         } from '../world/Map';
+
+import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
 
 import { Sprite      } from '../sprite/Sprite';
 import { Background  } from '../sprite/Background';
 
 import { Controller  } from '../ui/Controller';
+import { MapEditor   } from '../ui/MapEditor';
 
 import { Keyboard }    from 'curvature/input/Keyboard'
 
@@ -22,7 +25,7 @@ export class View extends BaseView
 		this.template  = require('./view.tmp');
 		this.routes    = [];
 
-		this.keyboard = new Keyboard;
+		this.keyboard  = new Keyboard;
 		this.speed     = 8;
 		this.maxSpeed  = this.speed;
 
@@ -35,7 +38,28 @@ export class View extends BaseView
 		this.args.frameLock      = 60;
 		this.args.simulationLock = 60;
 
-		this.args.controller = new Controller;
+		this.args.showEditor = false;
+
+		this.keyboard.keys.bindTo('`', (v,k,t,d)=>{
+			if(v === -1)
+			{
+				console.log(k);
+			}
+		});
+
+		this.keyboard.keys.bindTo('e', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.map.export();
+			}
+		});
+
+		this.keyboard.keys.bindTo('Escape', (v,k,t,d)=>{
+			if(v === -1)
+			{
+				this.spriteBoard.unselect();
+			}
+		});
 
 		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
 			if(v > 0)
@@ -74,24 +98,97 @@ export class View extends BaseView
 				}
 			}
 		});
+
+		this.spriteSheet = new SpriteSheet;
+		this.map         = new Map;
+
+		this.map.import();
+
+		this.args.controller = new Controller;
+		this.args.mapEditor  = new MapEditor({
+			spriteSheet: this.spriteSheet
+			, map:       this.map
+		});
 	}
 
 	postRender()
 	{
-		this.spriteBoard = new SpriteBoard(this.tags.canvas.element);
+		this.spriteBoard = new SpriteBoard(
+			this.tags.canvas.element
+			, this.map
+		);
 
 		const sprite = new Sprite(this.spriteBoard);
-		const barrel = new Sprite(this.spriteBoard, '/barrel.png');
+		const barrel = new Sprite(this.spriteBoard, 'barrel.png');
 
-		barrel.x = 32;
+		barrel.x = 32;		
 
-		this.spriteBoard.background = new Background(this.spriteBoard);
+		this.spriteBoard.background = new Background(
+			this.spriteBoard
+			, this.map
+		);
 
 		this.spriteBoard.sprites = [
-			this.spriteBoard.background
-			, barrel
+			barrel
 			, sprite
+			, this.spriteBoard.background
 		];
+
+		this.args.mapEditor.args.bindTo('selectedGraphic', (v)=>{
+			if(!v || this.spriteBoard.selected.globalX == null)
+			{
+				return;
+			}
+
+			this.args.showEditor = false;
+
+			let i  = this.spriteBoard.selected.startGlobalX;
+			let ii = this.spriteBoard.selected.globalX;
+
+			if(ii < i)
+			{
+				[ii, i] = [i, ii];
+			}
+
+			for(; i<= ii; i++)
+			{
+				let j  = this.spriteBoard.selected.startGlobalY;
+				let jj = this.spriteBoard.selected.globalY;
+				if(jj < j)
+				{
+					[jj, j] = [j, jj];
+				}
+				for(; j <= jj; j++)
+				{
+					this.map.setTile(i, j, v);
+				}
+			}
+
+			this.map.setTile(
+				this.spriteBoard.selected.globalX
+				, this.spriteBoard.selected.globalY
+				, v
+			);
+
+			this.spriteBoard.resize();
+			this.spriteBoard.unselect();
+		});
+
+		this.spriteBoard.selected.bindTo((v,k,t,d,p)=>{
+			if(this.spriteBoard.selected.localX == null)
+			{
+				this.args.showEditor = false;
+				return
+			}
+
+			this.args.mapEditor.select(this.spriteBoard.selected);
+
+			this.args.showEditor = true;
+
+			this.spriteBoard.resize();
+		},{wait:0});
+
+		this.args.showEditor = true;
 
 		this.keyboard.keys.bindTo((v,k,t,d)=>{
 			if(v === -1)
@@ -118,7 +215,8 @@ export class View extends BaseView
 					sprite.direction = sprite.RIGHT;
 					if(v % 8 == 0)
 					{
-						sprite.speed++;
+						// sprite.speed++;
+						sprite.speed = sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowDown':
@@ -126,7 +224,8 @@ export class View extends BaseView
 					sprite.direction = sprite.DOWN;
 					if(v % 8 == 0)
 					{
-						sprite.speed++;
+						// sprite.speed++;
+						sprite.speed = sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowLeft':
@@ -134,7 +233,8 @@ export class View extends BaseView
 					sprite.direction = sprite.LEFT;
 					if(v % 8 == 0)
 					{
-						sprite.speed--;
+						// sprite.speed--;
+						sprite.speed = -sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowUp':
@@ -142,9 +242,19 @@ export class View extends BaseView
 					sprite.direction = sprite.UP;
 					if(v % 8 == 0)
 					{
-						sprite.speed--;
+						// sprite.speed--;
+						sprite.speed = -sprite.maxSpeed;
 					}
 					break;
+			}
+
+			if(sprite.speed > sprite.maxSpeed)
+			{
+				sprite.speed = sprite.maxSpeed;
+			}
+			else if(sprite.speed < -sprite.maxSpeed)
+			{
+				sprite.speed = -sprite.maxSpeed;
 			}
 
 			sprite.moving = k;
@@ -204,6 +314,7 @@ export class View extends BaseView
 		});
 
 		window.addEventListener('resize', () => {
+			// this.resize(256, 256);
 			this.resize();
 		});
 
@@ -216,10 +327,6 @@ export class View extends BaseView
 		let maxSamples = 5;
 
 		const simulate = (now) => {
-			// return;
-
-			now = Math.round(now * 10)/10;
-
 			now = now / 1000;
 
 			const delta = now - sThen;
@@ -260,7 +367,7 @@ export class View extends BaseView
 
 		const update = (now) =>{
 			now = now / 1000;
-
+			
 			const delta = now - fThen;
 
 			if(this.args.frameLock == 0)
@@ -295,9 +402,8 @@ export class View extends BaseView
 			this.args._fps = (1 / delta);
 		};
 
+		// this.resize(256, 256);
 		this.resize();
-
-		//
 
 		setInterval(()=>{
 			simulate(performance.now());
@@ -306,11 +412,11 @@ export class View extends BaseView
 		setInterval(()=>{
 			const fps = fSamples.reduce((a,b)=>a+b, 0) / fSamples.length;
 			this.args.fps = fps.toFixed(3).padStart(5, ' ');
-		}, 227/4);
+		}, 227);
 
 		setInterval(()=>{
 			document.title = `${Config.title} ${this.args.fps} FPS`;
-		}, 227);
+		}, 227/3);
 
 		setInterval(()=>{
 			const sps = sSamples.reduce((a,b)=>a+b, 0) / sSamples.length;
@@ -320,10 +426,10 @@ export class View extends BaseView
 		window.requestAnimationFrame(update);
 	}
 
-	resize()
+	resize(x, y)
 	{
-		this.args.width  = this.tags.canvas.element.width  = document.body.clientWidth;
-		this.args.height = this.tags.canvas.element.height = document.body.clientHeight;
+		this.args.width  = this.tags.canvas.element.width  = x || document.body.clientWidth;
+		this.args.height = this.tags.canvas.element.height = y || document.body.clientHeight;
 
 		this.spriteBoard.resize();
 	}

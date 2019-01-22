@@ -1,6 +1,6 @@
 export class Surface
 {
-	constructor(gl2d, spriteSheet, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0)
+	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0)
 	{
 		this.gl2d    = gl2d;
 		this.x       = xOffset;
@@ -15,7 +15,7 @@ export class Surface
 		this.width   = this.xSize * this.tileWidth;
 		this.height  = this.ySize * this.tileHeight;
 
-		this.spriteSheet = spriteSheet;
+		this.map = map;
 
 		this.texVertices = [];
 
@@ -42,7 +42,7 @@ export class Surface
 			, new Uint8Array([r(), r(), 0, 255])
 		);
 
-		this.spriteSheet.ready.then((sheet)=>{
+		this.map.spriteSheet.ready.then((sheet)=>{
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -65,10 +65,6 @@ export class Surface
 			{
 				let vertices;
 
-				// vertices = this.spriteSheet.getVertices('floorTile.png');
-
-				let frame = this.spriteSheet.getFrame('floorTile.png');
-
 				let localX  = i % this.xSize;
 				let offsetX = Math.floor(this.x / this.tileWidth);
 				let globalX = localX + offsetX;
@@ -77,24 +73,17 @@ export class Surface
 				let offsetY = Math.floor(this.y / this.tileHeight);
 				let globalY = localY + offsetY;
 
-				let split = 4;
+				let frame = this.map.getTile(globalX, globalY);
 
-				// if((localX % split === 0) && (localY % split === 0))
-				if((globalX % split === 0) && (globalY % split === 0))
-				{
-					frame = this.spriteSheet.getFrame('barrel_hole.png');
+				texturePromises.push(
+					this.map.spriteSheet.constructor.loadTexture(gl2d, frame).then(
+						(args)=>{
+							this.subTextures[i] = args.texture;
 
-					if(Math.abs(globalX) > 10 && Math.abs(globalY) > 10)
-					{
-						frame = this.spriteSheet.getFrame('box_face.png');
-					}
-				}
-
-				texturePromises.push(this.spriteSheet.constructor.loadTexture(gl2d, frame).then((args)=>{
-					this.subTextures[i] = args.texture;
-
-					return Promise.resolve();
-				}));
+							return Promise.resolve();
+						}
+					)
+				);
 			}
 
 			Promise.all(texturePromises).then(()=>{
@@ -243,7 +232,7 @@ export class Surface
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
 			gl.vertexAttribPointer(
-			this.gl2d.texCoordLocation
+				this.gl2d.texCoordLocation
 				, 2
 				, gl.FLOAT
 				, false

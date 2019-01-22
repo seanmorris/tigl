@@ -12,10 +12,11 @@
 
 .reticle {
 	position:fixed;
-	top:50%;
-	left:50%;
-	height:1px;
-	width:1px;
+	top:calc(50% - 1px);
+	left:calc(50% - 1px);
+	height:3px;
+	width:3px;
+	/*background-color: rgba(0,255,255,1);*/
 }
 
 html {

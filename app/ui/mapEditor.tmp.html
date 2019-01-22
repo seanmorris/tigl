@@ -1,0 +1,34 @@
+<div class = "tab-page mapEditor">
+	<div class = "tabs">
+		<div>Tile</div>
+		<div>Object</div>
+		<div>Trigger</div>
+		<div>Map</div>
+	</div>
+
+	<div class = "tile">
+		<div class = "selected">
+			<div cv-if = "!multiSelect">
+				<p style = "font-size: large">
+					([[selection.globalX]], [[selection.globalY]])
+				</p>
+				<p --cv-each = "selectedImages:selectedImage:sI">
+					<button>-</button>
+					<img class = "current" cv-attr = "src:selectedImage">
+				</p>
+				<button>+</button>
+			</div>
+			<div cv-if = "multiSelect">
+				<p style = "font-size: large">
+					([[selection.startGlobalX]], [[selection.startGlobalY]]) - ([[selection.globalX]], [[selection.globalY]])
+				</p>
+			</div>
+		</div>
+		<div class = "tiles" cv-each = "tiles:tile:t">
+			<img cv-attr = "src:tile,title:t" cv-on = "click:selectGraphic(t);">
+		</div>
+	</div>
+	<!-- <div class = "tile">OBJECT MODE</div>
+	<div class = "tile">TRIGGER MODE</div>
+	<div class = "tile">MAP MODE</div> -->
+</div>
