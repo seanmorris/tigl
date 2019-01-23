@@ -370,12 +370,15 @@ export class View extends BaseView
 			
 			const delta = now - fThen;
 
+			fThen = now;
+
 			if(this.args.frameLock == 0)
 			{
 				window.requestAnimationFrame(update);
 				fSamples = [0];
 				return;
 			}
+
 
 			if(delta < 1/(this.args.frameLock+(10 * (this.args.frameLock/60))))
 			{
@@ -386,8 +389,6 @@ export class View extends BaseView
 			this.spriteBoard.draw();
 
 			window.requestAnimationFrame(update);
-
-			fThen = now;
 
 			fSamples.push(this.args._fps);
 

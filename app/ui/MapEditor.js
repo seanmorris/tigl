@@ -43,9 +43,9 @@ export class MapEditor extends View
 
 		if(!this.args.multiSelect)
 		{
-			this.args.selectedImage = this.args.map.getTile(selection.globalX, selection.globalY);
+			this.args.selectedImages = this.args.map.getTile(selection.globalX, selection.globalY);
 		}
 
-		console.log(this.args.selectedImage);
+		console.log(this.args.selectedImages);
 	}
 }

@@ -9,30 +9,29 @@ export class Map
 		this.tiles = {};
 	}
 
-	getTile(x, y)
+	getTile(x, y, layer = 0)
 	{
-		if(this.tiles[`${x},${y}`])
+		if(this.tiles[`${x},${y}--${layer}`])
 		{
-			return this.spriteSheet.getFrame(this.tiles[`${x},${y}`]);
+			return this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`]);
 		}
 
-		// let split = 4;
+		let split = 4;
+		let second = 'rock_4.png';
 
-		// if((x % split === 0) && (y % split === 0))
-		// {
-		// 	if(Math.abs(x) > 10 && Math.abs(y) > 10)
-		// 	{
-		// 		return this.spriteSheet.getFrame('box_face.png');
-		// 	}
-
-		// 	return this.spriteSheet.getFrame('barrel_hole.png');
-		// }
-		return this.spriteSheet.getFrame('floorTile.png');
+		if((x % split === 0) && (y % split === 0))
+		{
+			second = 'cheese.png'
+		}
+		return [
+			this.spriteSheet.getFrame('floorTile.png')
+			, this.spriteSheet.getFrame(second)
+		];
 	}
 
-	setTile(x, y, image)
+	setTile(x, y, image, layer = 0)
 	{
-		this.tiles[`${x},${y}`] = image;
+		this.tiles[`${x},${y}--${layer}`] = image;
 	}
 
 	export()

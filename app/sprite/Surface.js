@@ -73,17 +73,38 @@ export class Surface
 				let offsetY = Math.floor(this.y / this.tileHeight);
 				let globalY = localY + offsetY;
 
-				let frame = this.map.getTile(globalX, globalY);
+				let frames = this.map.getTile(globalX, globalY);
 
-				texturePromises.push(
-					this.map.spriteSheet.constructor.loadTexture(gl2d, frame).then(
-						(args)=>{
-							this.subTextures[i] = args.texture;
+				if(Array.isArray(frames))
+				{
+					let j = 0;
+					this.subTextures[i] = [];
+					texturePromises.push(
+						Promise.all(frames.map((frame)=>
+							this.map.spriteSheet.constructor.loadTexture(gl2d, frame).then(
+								(args)=>{
+									j++;
+									this.subTextures[i][j] = args.texture;
 
-							return Promise.resolve();
-						}
-					)
-				);
+									return Promise.resolve();
+								}
+							)
+						))
+					);
+				}
+				else
+				{
+					texturePromises.push(
+						this.map.spriteSheet.constructor.loadTexture(gl2d, frames).then(
+							(args)=>{
+								this.subTextures[i] = args.texture;
+
+								return Promise.resolve();
+							}
+						)
+					);
+				}
+
 			}
 
 			Promise.all(texturePromises).then(()=>{
@@ -227,36 +248,45 @@ export class Surface
 
 		for(let i in this.subTextures)
 		{
-			gl.bindTexture(gl.TEXTURE_2D, this.subTextures[i]);
-			// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+			if(!Array.isArray(this.subTextures[i]))
+			{
+				this.subTextures[i] = [this.subTextures[i]];
+			}
 
-			gl.vertexAttribPointer(
-				this.gl2d.texCoordLocation
-				, 2
-				, gl.FLOAT
-				, false
-				, 0
-				, 0
-			);
+			for(let j in this.subTextures[i])
+			{
+				gl.bindTexture(gl.TEXTURE_2D, this.subTextures[i][j]);
+				// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-				0.0,  1.0,
-				1.0,  1.0,
-				0.0,  0.0,
-				0.0,  0.0,
-				1.0,  1.0,
-				1.0,  0.0,
-			]), gl.STREAM_DRAW);
+				gl.vertexAttribPointer(
+					this.gl2d.texCoordLocation
+					, 2
+					, gl.FLOAT
+					, false
+					, 0
+					, 0
+				);
 
-			this.setRectangle(
-				x
-				, y
-				, this.tileWidth
-				, this.tileHeight
-			);
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+					0.0,  1.0,
+					1.0,  1.0,
+					0.0,  0.0,
+					0.0,  0.0,
+					1.0,  1.0,
+					1.0,  0.0,
+				]), gl.STREAM_DRAW);
 
+				this.setRectangle(
+					x
+					, y
+					, this.tileWidth
+					, this.tileHeight
+				);
+
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+			}
 			x += this.tileWidth;
 
 			if(x >= this.width)
@@ -264,8 +294,6 @@ export class Surface
 				x = 0;
 				y += this.tileHeight;
 			}
-
-			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 	}
 

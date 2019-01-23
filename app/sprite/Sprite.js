@@ -154,7 +154,7 @@ export class Sprite
 			this.setFrames(this.standing.south);
 		}
 
-		this.frameDelay = (this.maxSpeed + 2) - this.speed;
+		this.frameDelay = (this.maxSpeed) - Math.abs(this.speed);
 
 		if(this.frameDelay > this.maxSpeed)
 		{
