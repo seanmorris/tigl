@@ -76,6 +76,11 @@ export class SpriteBoard extends Gl2d
 			'mousemove', (event)=>{
 				this.mouse.x = event.clientX;
 				this.mouse.y = event.clientY;
+
+				// this.moveCamera(
+				// 	-this.mouse.x + gl.canvas.width/2
+				// 	, -this.mouse.y + gl.canvas.height/2
+				// );
 			}
 		);
 

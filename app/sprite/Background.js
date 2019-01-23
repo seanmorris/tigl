@@ -14,8 +14,8 @@ export class Background
 		this.panesXY     = {};
 		this.maxPanes    = 9;
 
-		this.surfaceX    = 10;
-		this.surfaceY    = 10;
+		this.surfaceX    = 5;
+		this.surfaceY    = 5;
 
 		this.spriteSheet = new SpriteSheet;
 
@@ -23,23 +23,6 @@ export class Background
 		this.tileHeight  = 32;
 
 		this.map         = map;
-	}
-
-	cachePane(pane, x, y)
-	{
-		if(this.panes.length >= this.maxPanes)
-		{
-			let deadPane = this.panes.pop();
-		}
-
-		this.panes.unshift(pane);
-
-		if(!this.panesXY[x])
-		{
-			this.panesXY[x] = {};
-		}
-
-		this.panesXY[x][y] = pane;
 	}
 
 	renderPane(x, y, forceUpdate)
@@ -50,9 +33,12 @@ export class Background
 		let paneX  = x * (this.tileWidth * this.surfaceX);
 		let paneY  = y * (this.tileHeight * this.surfaceY);
 
-		if(!(this.panesXY[paneX] && this.panesXY[paneX][paneY]))
+		if(this.panesXY[paneX] && this.panesXY[paneX][paneY])
 		{
-			// console.log('render.');
+			pane = this.panesXY[paneX][paneY];
+		}
+		else
+		{
 			pane = new Surface(
 				gl2d
 				, this.map
@@ -61,13 +47,24 @@ export class Background
 				, paneX
 				, paneY
 			);
-		}
-		else
-		{
-			pane = this.panesXY[paneX][paneY];
+
+			if(!this.panesXY[paneX])
+			{
+				this.panesXY[paneX] = {};
+			}
+
+			if(!this.panesXY[paneX][paneY])
+			{
+				this.panesXY[paneX][paneY] = pane;
+			}
 		}
 
-		this.cachePane(pane, paneX, paneY);
+		this.panes.unshift(pane);
+
+		if(this.panes.length > this.maxPanes)
+		{
+			this.panes.pop();
+		}
 	}
 
 	draw()
@@ -101,8 +98,15 @@ export class Background
 			}
 		}
 
+		while(this.panes.length)
+		{
+			this.panes.pop();
+		}
+
 		this.surfaceX = Math.ceil(x / this.tileWidth);
 		this.surfaceY = Math.ceil(y / this.tileHeight);
+
+		this.draw();
 	}
 
 	simulate()

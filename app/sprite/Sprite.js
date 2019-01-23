@@ -23,7 +23,7 @@ export class Sprite
 		this.currentFrame = 0;
 
 		this.speed    = 0;
-		this.maxSpeed = 6;
+		this.maxSpeed = 8;
 
 		this.moving = false;
 
@@ -149,43 +149,6 @@ export class Sprite
 
 	simulate()
 	{
-		if(this.moving == false && this.spriteSheet)
-		{
-			this.setFrames(this.standing.south);
-		}
-
-		this.frameDelay = (this.maxSpeed) - Math.abs(this.speed);
-
-		if(this.frameDelay > this.maxSpeed)
-		{
-			this.frameDelay = this.maxSpeed;
-		}
-
-		if(this.currentDelay == 0)
-		{
-			this.currentDelay = this.frameDelay || 2;
-			this.currentFrame++;
-		}
-		else
-		{
-			this.currentDelay--;
-		}
-
-		if(this.currentFrame >= this.frames.length)
-		{
-			this.currentFrame = 0;
-		}
-
-		const frame = this.frames[ this.currentFrame ];
-
-		if(frame)
-		{
-			this.texture = frame.texture;
-
-			this.width  = frame.width;
-			this.height = frame.height;
-		}
-
 		if(this.direction == this.UP || this.direction == this.DOWN)
 		{
 			this.y += this.speed;
@@ -203,6 +166,43 @@ export class Sprite
 
 	draw()
 	{
+		if(this.moving == false && this.spriteSheet)
+		{
+			this.setFrames(this.standing.south);
+		}
+
+		this.frameDelay = (this.maxSpeed * 1.5) - Math.abs(this.speed);
+
+		if(this.frameDelay > this.maxSpeed)
+		{
+			this.frameDelay = this.maxSpeed;
+		}
+
+		if(this.currentDelay <= 0)
+		{
+			this.currentDelay = this.frameDelay;
+			this.currentFrame++;
+		}
+		else
+		{
+			this.currentDelay--;
+		}
+
+		if(this.currentFrame >= this.frames.length)
+		{
+			this.currentFrame = this.currentFrame - this.frames.length;
+		}
+
+		const frame = this.frames[ this.currentFrame ];
+
+		if(frame)
+		{
+			this.texture = frame.texture;
+
+			this.width  = frame.width;
+			this.height = frame.height;
+		}
+
 		const gl = this.gl2d.context;
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);

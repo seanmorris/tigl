@@ -316,6 +316,7 @@ export class View extends BaseView
 		window.addEventListener('resize', () => {
 			// this.resize(256, 256);
 			this.resize();
+			update();
 		});
 
 		let fThen = 0;
@@ -348,10 +349,10 @@ export class View extends BaseView
 
 			this.spriteBoard.simulate();
 
-			this.args.localX  = this.spriteBoard.selected.localX;
-			this.args.localY  = this.spriteBoard.selected.localY;
-			this.args.globalX = this.spriteBoard.selected.globalX;
-			this.args.globalY = this.spriteBoard.selected.globalY;
+			// this.args.localX  = this.spriteBoard.selected.localX;
+			// this.args.localY  = this.spriteBoard.selected.localY;
+			// this.args.globalX = this.spriteBoard.selected.globalX;
+			// this.args.globalY = this.spriteBoard.selected.globalY;
 
 			this.args._sps = (1 / delta);
 
@@ -370,6 +371,12 @@ export class View extends BaseView
 			
 			const delta = now - fThen;
 
+			if(delta < 1/(this.args.frameLock+(10 * (this.args.frameLock/60))))
+			{
+				window.requestAnimationFrame(update);
+				return;
+			}
+
 			fThen = now;
 
 			if(this.args.frameLock == 0)
@@ -379,12 +386,6 @@ export class View extends BaseView
 				return;
 			}
 
-
-			if(delta < 1/(this.args.frameLock+(10 * (this.args.frameLock/60))))
-			{
-				window.requestAnimationFrame(update);
-				return;
-			}
 
 			this.spriteBoard.draw();
 
@@ -397,14 +398,15 @@ export class View extends BaseView
 				fSamples.shift();
 			}
 
+			this.args._fps = (1 / delta);
+
 			this.args.camX = this.spriteBoard.camera.x;
 			this.args.camY = this.spriteBoard.camera.y;
-
-			this.args._fps = (1 / delta);
 		};
 
 		// this.resize(256, 256);
 		this.resize();
+
 
 		setInterval(()=>{
 			simulate(performance.now());

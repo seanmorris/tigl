@@ -45,19 +45,19 @@ export class Surface
 		this.map.spriteSheet.ready.then((sheet)=>{
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-			gl.texImage2D(
-				gl.TEXTURE_2D
-				, 0
-				, gl.RGBA
-				, gl.RGBA
-				, gl.UNSIGNED_BYTE
-				, sheet.image
-			);
+			// gl.texImage2D(
+			// 	gl.TEXTURE_2D
+			// 	, 0
+			// 	, gl.RGBA
+			// 	, gl.RGBA
+			// 	, gl.UNSIGNED_BYTE
+			// 	, sheet.image
+			// );
 
 			let texturePromises = [];
 
@@ -136,6 +136,7 @@ export class Surface
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 		this.frameBuffer = gl.createFramebuffer();
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 
 		const attachmentPoint = gl.COLOR_ATTACHMENT0;
@@ -155,39 +156,39 @@ export class Surface
 
 		gl.useProgram(this.gl2d.program);
 
-		gl.uniform4f(
-			this.gl2d.colorLocation
-			, 1
-			, 0
-			, 0
-			, 1
-		);
+		// gl.uniform4f(
+		// 	this.gl2d.colorLocation
+		// 	, 1
+		// 	, 0
+		// 	, 0
+		// 	, 1
+		// );
 
-		gl.enableVertexAttribArray(this.gl2d.positionLocation);
+		// gl.enableVertexAttribArray(this.gl2d.positionLocation);
 
 		gl.bindTexture(gl.TEXTURE_2D, this.pane);
-		gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+		// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
+		// gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
-		gl.vertexAttribPointer(
-			this.gl2d.texCoordLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
+		// gl.vertexAttribPointer(
+		// 	this.gl2d.texCoordLocation
+		// 	, 2
+		// 	, gl.FLOAT
+		// 	, false
+		// 	, 0
+		// 	, 0
+		// );
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+		// gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0,  0.0,
-			1.0,  0.0,
-			0.0,  1.0,
-			0.0,  1.0,
-			1.0,  0.0,
-			1.0,  1.0,
-		]), gl.STATIC_DRAW);
+		// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+		// 	0.0,  0.0,
+		// 	1.0,  0.0,
+		// 	0.0,  1.0,
+		// 	0.0,  1.0,
+		// 	1.0,  0.0,
+		// 	1.0,  1.0,
+		// ]), gl.STATIC_DRAW);
 
 		this.setRectangle(
 			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
@@ -256,7 +257,7 @@ export class Surface
 			for(let j in this.subTextures[i])
 			{
 				gl.bindTexture(gl.TEXTURE_2D, this.subTextures[i][j]);
-				// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
+				gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 
 				gl.vertexAttribPointer(
@@ -270,19 +271,19 @@ export class Surface
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-					0.0,  1.0,
-					1.0,  1.0,
 					0.0,  0.0,
-					0.0,  0.0,
-					1.0,  1.0,
 					1.0,  0.0,
+					0.0,  1.0,
+					0.0,  1.0,
+					1.0,  0.0,
+					1.0,  1.0,
 				]), gl.STREAM_DRAW);
 
 				this.setRectangle(
 					x
-					, y
+					, y + this.tileHeight
 					, this.tileWidth
-					, this.tileHeight
+					, - this.tileHeight
 				);
 
 				gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -295,6 +296,8 @@ export class Surface
 				y += this.tileHeight;
 			}
 		}
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 
 	setRectangle(x, y, width, height)

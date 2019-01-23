@@ -23,6 +23,11 @@ export class Map
 		{
 			second = 'cheese.png'
 		}
+
+		return [
+			this.spriteSheet.getFrame('floorTile.png')
+		];
+
 		return [
 			this.spriteSheet.getFrame('floorTile.png')
 			, this.spriteSheet.getFrame(second)
