@@ -1,9 +1,13 @@
-<canvas cv-ref = "canvas:curvature/base/Tag"></canvas>
+<canvas
+	cv-ref = "canvas:curvature/base/Tag"
+	cv-on  = "wheel:scroll(event);"
+></canvas>
 <div class = "hud fps">
  [[sps]] simulations/s / [[simulationLock]] 
  [[fps]] frames/s      / [[frameLock]] 
 
- Res [[width]] x [[height]]
+ Res [[rwidth]] x [[rheight]]
+     [[width]] x [[height]]
  Pos [[camX]] x [[camY]]
 
  δ Sim: Pg Up/Dn

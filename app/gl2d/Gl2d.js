@@ -11,14 +11,15 @@ export class Gl2d
 {
 	constructor(element)
 	{
-		this.element = element;
-		this.context = element.getContext('webgl');
+		this.element   = element;
+		this.context   = element.getContext('webgl');
+		this.zoomLevel = 1;
 	}
 
 	resize(x, y)
 	{
-		x = x ||this.element.width;
-		y = y ||this.element.height;
+		x = (x ||this.element.width)  * (1 / this.zoomLevel);
+		y = (y ||this.element.height) * (1 / this.zoomLevel);
 
 		const gl = this.context;
 
@@ -36,7 +37,7 @@ export class Gl2d
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.clearColor(0, 0, 0, 1);
+		// gl.clearColor(0, 0, 0, 1);
 		// gl.clearColor(1, 1, 1, 1);
 		// gl.clear(gl.COLOR_BUFFER_BIT);
 	}

@@ -27,6 +27,8 @@ export class SpriteBoard extends Gl2d
 			, clickY: null
 		};
 
+		this.sprites = [];
+
 		this.camera = Bindable.makeBindable(this.camera);
 
 		this.camera.width  = this.element.width;
@@ -96,44 +98,55 @@ export class SpriteBoard extends Gl2d
 		this.selected = Bindable.makeBindable(this.selected);
 
 		let selecting = false;
+		let tileSize  = 32;
 
 		this.element.addEventListener(
 			'mousedown', (event)=>{
+				let modSize   = tileSize * this.zoomLevel;
+
 				if(this.unselect())
 				{
 					selecting = false;
 					return;
 				}
+
+				// console.log(
+				// 	event.clientX
+				// 	, event.clientY
+				// );
+
 				selecting = true;
 				this.mouse.clickX = event.clientX;
 				this.mouse.clickY = event.clientY;
 
 				let localX = Math.floor((this.mouse.clickX
-					+ (this.camera.x % 32)
-					- (Math.floor(this.camera.width /2) % 32)
-				) / 32);
+					+ (this.camera.x % modSize)
+					- (Math.floor(this.element.width /2) % modSize)
+					+ 16  * this.zoomLevel
+				) / modSize);
 
 				let localY = Math.floor((this.mouse.clickY
-					+ (this.camera.y % 32)
-					- (Math.floor(this.camera.height /2) % 32)
-				) / 32);
+					+ (this.camera.y % modSize)
+					- (Math.floor(this.element.height /2) % modSize)
+					+ 16  * this.zoomLevel
+				) / modSize);
 
 				this.selected.startLocalX = localX;
 				this.selected.startLocalY = localY;
 
 				this.selected.startGlobalX = (this.selected.startLocalX
-					- Math.floor(Math.floor(this.camera.width /2) / 32)
+					- Math.floor(Math.floor(this.element.width /2) / modSize)
 					+ (this.camera.x < 0
-						? Math.ceil(this.camera.x /32)
-						: Math.floor(this.camera.x /32)
+						? Math.ceil(this.camera.x /modSize)
+						: Math.floor(this.camera.x /modSize)
 					)
 				);
 
 				this.selected.startGlobalY = (this.selected.startLocalY
-					- Math.floor(Math.floor(this.camera.height /2) / 32)
+					- Math.floor(Math.floor(this.element.height /2) / modSize)
 					+ (this.camera.y < 0
-						? Math.ceil(this.camera.y /32)
-						: Math.floor(this.camera.y /32)
+						? Math.ceil(this.camera.y /modSize)
+						: Math.floor(this.camera.y /modSize)
 					)
 				);
 			}
@@ -141,40 +154,55 @@ export class SpriteBoard extends Gl2d
 
 		this.element.addEventListener(
 			'mouseup', (event)=>{
+				let modSize   = tileSize * this.zoomLevel;
+
 				if(!selecting)
 				{
 					selecting = false;
 					return;
 				}
 
+				console.log(
+					event.clientX
+					, event.clientY
+				);
+
 				this.mouse.clickX = event.clientX;
 				this.mouse.clickY = event.clientY;
 
 				let localX = Math.floor((this.mouse.clickX
-					+ (this.camera.x % 32)
-					- (Math.floor(this.camera.width /2) % 32)
-				) / 32);
+					+ (this.camera.x % modSize)
+					- (Math.floor(this.element.width /2) % modSize)
+					+ 16  * this.zoomLevel
+				) / modSize);
 
 				let localY = Math.floor((this.mouse.clickY
-					+ (this.camera.y % 32)
-					- (Math.floor(this.camera.height /2) % 32)
-				) / 32);
+					+ (this.camera.y % modSize)
+					- (Math.floor(this.element.height /2) % modSize)
+					+ 16  * this.zoomLevel
+				) / modSize);
+
+				console.log(localX, localY);
 
 				let globalX = (localX
-					- Math.floor(Math.floor(this.camera.width /2) / 32)
+					- Math.floor(Math.floor(this.element.width /2) / modSize)
 					+ (this.camera.x < 0
-						? Math.ceil(this.camera.x /32)
-						: Math.floor(this.camera.x /32)
+						? Math.ceil(this.camera.x /modSize)
+						: Math.floor(this.camera.x /modSize)
 					)
 				);
 
 				let globalY = (localY
-					- Math.floor(Math.floor(this.camera.height /2) / 32)
+					- Math.floor(Math.floor(this.element.height /2) / modSize)
 					+ (this.camera.y < 0
-						? Math.ceil(this.camera.y /32)
-						: Math.floor(this.camera.y /32)
+						? Math.ceil(this.camera.y /modSize)
+						: Math.floor(this.camera.y /modSize)
 					)
 				);
+
+				console.log(globalX, globalY);
+
+				console.log(this.element.width, this.element.height);
 
 				this.selected.localX  = localX;
 				this.selected.globalX = globalX;
@@ -184,6 +212,22 @@ export class SpriteBoard extends Gl2d
 				selecting = false;
 			}
 		);
+
+		this.background = new Background(this, map);
+		this.background1 = new Background(this, map, 1);
+
+		const sprite = new Sprite(this);
+		const barrel = new Sprite(this, 'barrel.png');
+
+		barrel.x = 32;
+		barrel.y = 32;
+
+		this.sprites = [
+			barrel
+			, sprite
+			, this.background
+			, this.background1
+		];
 	}
 
 	unselect()
@@ -206,8 +250,8 @@ export class SpriteBoard extends Gl2d
 		let originalX = this.camera.x;
 		let originalY = this.camera.y;
 
-		this.camera.x = x + 16;
-		this.camera.y = y + 16;
+		this.camera.x = x;
+		this.camera.y = y;
 
 		this.mouse.clickX += (originalX - this.camera.x);
 		this.mouse.clickY += (originalY - this.camera.y);
@@ -221,11 +265,18 @@ export class SpriteBoard extends Gl2d
 
 		gl.uniform2f(
 			this.resolutionLocation
-			, gl.canvas.width
-			, gl.canvas.height
+			, this.camera.width
+			, this.camera.height
 		);
 
-		this.sprites.map(s => s.z = s.y);
+		this.sprites.map(s => {
+			s.z = s.y
+
+			if(s instanceof Background)
+			{
+				s.z = -s.layer - 100;
+			}
+		});
 
 		this.sprites.sort((a,b)=>{
 			if(a.z === undefined)
@@ -275,16 +326,25 @@ export class SpriteBoard extends Gl2d
 		maxX += 1;
 		maxY += 1;
 
+		let tileSize = 32;
+		let modSize  = tileSize * this.zoomLevel;
+
+		// console.log(minX, minY);
+
 		this.setRectangle(
-			minX * 32
+			(minX * modSize)
 				- this.camera.x
-				+ Math.floor(this.camera.width /2)
-			, minY * 32
+				+ (this.element.width /2)
+				- (modSize /2)
+			, (minY * modSize)
 				- this.camera.y
-				+ Math.floor(this.camera.height /2)
-			, (maxX - minX) * 32
-			, (maxY - minY) * 32
+				+ (this.element.height /2)
+				- (modSize /2)
+			, (maxX - minX) * modSize
+			, (maxY - minY) * modSize
 		);
+
+		console.log();
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
@@ -300,8 +360,13 @@ export class SpriteBoard extends Gl2d
 		y = y || this.element.height;
 
 		this.background.resize(
-			Math.round(x / 2 + 32)
-			, Math.round(y / 2 + 32)
+			Math.round(x / 2 + 32)   * (1 / this.zoomLevel)
+			, Math.round(y / 2 + 32) * (1 / this.zoomLevel)
+		);
+
+		this.background1.resize(
+			Math.round(x / 2 + 32)   * (1 / this.zoomLevel)
+			, Math.round(y / 2 + 32) * (1 / this.zoomLevel)
 		);
 
 		super.resize(x, y);

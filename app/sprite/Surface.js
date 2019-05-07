@@ -1,10 +1,11 @@
 export class Surface
 {
-	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0)
+	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0, layer = 0)
 	{
 		this.gl2d    = gl2d;
 		this.x       = xOffset;
 		this.y       = yOffset;
+		this.layer   = layer;
 
 		this.xSize   = xSize;
 		this.ySize   = ySize;
@@ -73,7 +74,7 @@ export class Surface
 				let offsetY = Math.floor(this.y / this.tileHeight);
 				let globalY = localY + offsetY;
 
-				let frames = this.map.getTile(globalX, globalY);
+				let frames = this.map.getTile(globalX, globalY, this.layer);
 
 				if(Array.isArray(frames))
 				{
@@ -131,9 +132,14 @@ export class Surface
 			, null
 		);
 
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
 		this.frameBuffer = gl.createFramebuffer();
 
@@ -191,8 +197,8 @@ export class Surface
 		// ]), gl.STATIC_DRAW);
 
 		this.setRectangle(
-			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
-			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2))
+			this.x   - (this.gl2d.camera.x - (this.gl2d.camera.width  /2)) - 16
+			, this.y - (this.gl2d.camera.y - (this.gl2d.camera.height /2)) - 16
 			, this.width
 			, this.height
 		);
@@ -212,8 +218,8 @@ export class Surface
 
 		gl.viewport(0, 0, this.width, this.height);
 
-		gl.clearColor(0, 0, 1, 1);   // clear to blue
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		// gl.clearColor(0, 0, 1, 1);   // clear to blue
+		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 		gl.uniform4f(
 			this.gl2d.colorLocation

@@ -5,7 +5,7 @@ import { SpriteSheet } from './SpriteSheet';
 
 export class Background
 {
-	constructor(gl2d, map)
+	constructor(gl2d, map, layer = 0)
 	{
 		Bindable.makeBindable(this);
 
@@ -23,6 +23,7 @@ export class Background
 		this.tileHeight  = 32;
 
 		this.map         = map;
+		this.layer       = layer;
 	}
 
 	renderPane(x, y, forceUpdate)
@@ -46,6 +47,7 @@ export class Background
 				, this.surfaceY
 				, paneX
 				, paneY
+				, this.layer
 			);
 
 			if(!this.panesXY[paneX])
@@ -69,8 +71,12 @@ export class Background
 
 	draw()
 	{
-		const centerX = Math.floor(this.gl2d.camera.x / (this.surfaceX * this.tileWidth));
-		const centerY = Math.floor(this.gl2d.camera.y / (this.surfaceY * this.tileHeight));
+		const centerX = Math.floor(
+			this.gl2d.camera.x / (this.surfaceX * this.tileWidth)
+		);
+		const centerY = Math.floor(
+			this.gl2d.camera.y / (this.surfaceY * this.tileHeight)
+		);
 
 		let range = [-1,0,1];
 		// let range = [-2,-1,0,1,2];

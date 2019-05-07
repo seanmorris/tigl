@@ -235,8 +235,15 @@ export class Sprite
 		]), gl.STREAM_DRAW);
 
 		this.setRectangle(
-			this.x   - (this.gl2d.camera.x - parseInt(this.gl2d.camera.width  /2))
-			, this.y - (this.gl2d.camera.y - parseInt(this.gl2d.camera.height /2)) - (this.height /2)
+			this.x   - (
+				this.gl2d.camera.x
+				- this.gl2d.camera.width  /2
+			) - 16
+			, this.y - (
+				this.gl2d.camera.y
+				- this.gl2d.camera.height /2
+			) - (this.height /2) - 16
+
 			, this.width
 			, this.height
 		);

@@ -9,8 +9,8 @@ import { Map         } from '../world/Map';
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
 
-import { Sprite      } from '../sprite/Sprite';
-import { Background  } from '../sprite/Background';
+// import { Sprite      } from '../sprite/Sprite';
+// import { Background  } from '../sprite/Background';
 
 import { Controller  } from '../ui/Controller';
 import { MapEditor   } from '../ui/MapEditor';
@@ -118,21 +118,21 @@ export class View extends BaseView
 			, this.map
 		);
 
-		const sprite = new Sprite(this.spriteBoard);
-		const barrel = new Sprite(this.spriteBoard, 'barrel.png');
+		// const sprite = new Sprite(this.spriteBoard);
+		// const barrel = new Sprite(this.spriteBoard, 'barrel.png');
 
-		barrel.x = 32;		
+		// barrel.x = 32;		
 
-		this.spriteBoard.background = new Background(
-			this.spriteBoard
-			, this.map
-		);
+		// this.spriteBoard.background = new Background(
+		// 	this.spriteBoard
+		// 	, this.map
+		// );
 
-		this.spriteBoard.sprites = [
-			barrel
-			, sprite
-			, this.spriteBoard.background
-		];
+		// this.spriteBoard.sprites = [
+		// 	barrel
+		// 	, sprite
+		// 	, this.spriteBoard.background
+		// ];
 
 		this.args.mapEditor.args.bindTo('selectedGraphic', (v)=>{
 			if(!v || this.spriteBoard.selected.globalX == null)
@@ -193,15 +193,15 @@ export class View extends BaseView
 		this.keyboard.keys.bindTo((v,k,t,d)=>{
 			if(v === -1)
 			{
-				sprite.moving = false;
-				sprite.speed  = 0;
+				// sprite.moving = false;
+				// sprite.speed  = 0;
 				return;
 			}
 
-			if(sprite.moving && sprite.moving !== k)
-			{
-				return;
-			}
+			// if(sprite.moving && sprite.moving !== k)
+			// {
+			// 	return;
+			// }
 
 			if(!v || v < 0)
 			{
@@ -211,60 +211,56 @@ export class View extends BaseView
 			switch(k)
 			{
 				case 'ArrowRight':
-					sprite.setFrames(sprite.walking.east);
-					sprite.direction = sprite.RIGHT;
+					// sprite.setFrames(sprite.walking.east);
+					// sprite.direction = sprite.RIGHT;
 					if(v % 8 == 0)
 					{
-						// sprite.speed++;
-						sprite.speed = sprite.maxSpeed;
+						// sprite.speed = sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowDown':
-					sprite.setFrames(sprite.walking.south);
-					sprite.direction = sprite.DOWN;
+					// sprite.setFrames(sprite.walking.south);
+					// sprite.direction = sprite.DOWN;
 					if(v % 8 == 0)
 					{
-						// sprite.speed++;
-						sprite.speed = sprite.maxSpeed;
+						// sprite.speed = sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowLeft':
-					sprite.setFrames(sprite.walking.west);
-					sprite.direction = sprite.LEFT;
+					// sprite.setFrames(sprite.walking.west);
+					// sprite.direction = sprite.LEFT;
 					if(v % 8 == 0)
 					{
-						// sprite.speed--;
-						sprite.speed = -sprite.maxSpeed;
+						// sprite.speed = -sprite.maxSpeed;
 					}
 					break;
 				case 'ArrowUp':
-					sprite.setFrames(sprite.walking.north);
-					sprite.direction = sprite.UP;
+					// sprite.setFrames(sprite.walking.north);
+					// sprite.direction = sprite.UP;
 					if(v % 8 == 0)
 					{
-						// sprite.speed--;
-						sprite.speed = -sprite.maxSpeed;
+						// sprite.speed = -sprite.maxSpeed;
 					}
 					break;
 			}
 
-			if(sprite.speed > sprite.maxSpeed)
-			{
-				sprite.speed = sprite.maxSpeed;
-			}
-			else if(sprite.speed < -sprite.maxSpeed)
-			{
-				sprite.speed = -sprite.maxSpeed;
-			}
+			// if(sprite.speed > sprite.maxSpeed)
+			// {
+			// 	sprite.speed = sprite.maxSpeed;
+			// }
+			// else if(sprite.speed < -sprite.maxSpeed)
+			// {
+			// 	sprite.speed = -sprite.maxSpeed;
+			// }
 
-			sprite.moving = k;
+			// sprite.moving = k;
 		});
 
 		this.args.controller.args.bindTo((v,k,t,d,p)=>{
 			if(v === 0)
 			{
-				sprite.moving = false;
-				sprite.speed  = 0;
+				// sprite.moving = false;
+				// sprite.speed  = 0;
 				return;
 			}
 
@@ -284,33 +280,33 @@ export class View extends BaseView
 
 			if(horizontal && magnitude > 0)
 			{
-				sprite.setFrames(sprite.walking.east);
-				sprite.direction = sprite.RIGHT;
+				// sprite.setFrames(sprite.walking.east);
+				// sprite.direction = sprite.RIGHT;
 			}
 			else if(horizontal && magnitude < 0)
 			{
-				sprite.setFrames(sprite.walking.west);
-				sprite.direction = sprite.LEFT;
+				// sprite.setFrames(sprite.walking.west);
+				// sprite.direction = sprite.LEFT;
 			}
 			else if(magnitude > 0){
-				sprite.setFrames(sprite.walking.south);
-				sprite.direction = sprite.DOWN;
+				// sprite.setFrames(sprite.walking.south);
+				// sprite.direction = sprite.DOWN;
 			}
 			else if(magnitude < 0){
-				sprite.setFrames(sprite.walking.north);
-				sprite.direction = sprite.UP;
+				// sprite.setFrames(sprite.walking.north);
+				// sprite.direction = sprite.UP;
 			}
 
 			magnitude = Math.round(magnitude / 6.125);
 
-			sprite.speed = magnitude < 8 ? magnitude : 8;
+			// sprite.speed = magnitude < 8 ? magnitude : 8;
 
 			if(magnitude < -8)
 			{
 				sprite.speed = -8;
 			}
 
-			sprite.moving = !!magnitude;
+			// sprite.moving = !!magnitude;
 		});
 
 		window.addEventListener('resize', () => {
@@ -363,7 +359,7 @@ export class View extends BaseView
 				sSamples.shift();
 			}
 
-			this.spriteBoard.moveCamera(sprite.x, sprite.y);
+			// this.spriteBoard.moveCamera(sprite.x, sprite.y);
 		};
 
 		const update = (now) =>{
@@ -431,9 +427,38 @@ export class View extends BaseView
 
 	resize(x, y)
 	{
-		this.args.width  = this.tags.canvas.element.width  = x || document.body.clientWidth;
-		this.args.height = this.tags.canvas.element.height = y || document.body.clientHeight;
+		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;
+		this.args.height = this.tags.canvas.element.height  = y || document.body.clientHeight;
+
+		this.args.rwidth  = Math.floor(
+			(x || document.body.clientWidth)  / this.spriteBoard.zoomLevel
+		);
+
+		this.args.rheight = Math.floor(
+			(y || document.body.clientHeight) / this.spriteBoard.zoomLevel
+		);
 
 		this.spriteBoard.resize();
+	}
+
+	scroll(event)
+	{
+		let min   = 0.20;
+		let step  = 0.10;
+		let delta = event.deltaY > 0 ? -1 : (
+			event.deltaY < 0 ? 1 : 0
+		);
+
+		if(delta > 0 || delta < 0 && this.spriteBoard.zoomLevel > min)
+		{
+			this.spriteBoard.zoomLevel += (delta * step);
+			this.resize();
+		}
+		else
+		{
+			this.spriteBoard.zoomLevel = min;
+			this.resize();
+		}
+
 	}
 }

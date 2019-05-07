@@ -45,7 +45,5 @@ export class MapEditor extends View
 		{
 			this.args.selectedImages = this.args.map.getTile(selection.globalX, selection.globalY);
 		}
-
-		console.log(this.args.selectedImages);
 	}
 }

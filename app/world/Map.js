@@ -13,7 +13,9 @@ export class Map
 	{
 		if(this.tiles[`${x},${y}--${layer}`])
 		{
-			return this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`]);
+			return [
+				this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
+			];
 		}
 
 		let split = 4;

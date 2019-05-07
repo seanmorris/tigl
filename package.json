@@ -10,7 +10,7 @@
     "build": "brunch build --production"
   },
   "dependencies": {
-    "curvature": "^0.0.13"
+    "curvature": "^0.0.29"
   },
   "devDependencies": {
     "auto-reload-brunch": "^2",
