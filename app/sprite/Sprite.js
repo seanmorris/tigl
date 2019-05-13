@@ -16,8 +16,9 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		this.x      = 0;
 		this.y      = 0;
 
-		this.width  = 32;
-		this.height = 48;
+		this.width  = 0;
+		this.height = 0;
+		this.scale  = 2;
 
 		this.frames        = [];
 		this.frameDelay    = 4;
@@ -126,8 +127,8 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 			this.texture = args.texture;
 			this.texture1 = args.texture;
 
-			this.width  = args.image.width;
-			this.height = args.image.height;
+			this.width  = args.image.width * this.scale;
+			this.height = args.image.height * this.scale;
 		});
 
 		if(altImageSrc)
@@ -141,8 +142,8 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 			Sprite.loadTexture(this.Gl2d, altImageSrc).then((args)=>{
 				this.texture2 = args.texture;
 
-				this.width  = args.image.width;
-				this.height = args.image.height;
+				this.width  = args.image.width * this.scale;
+				this.height = args.image.height * this.scale;
 			});
 
 			// this.Gl2d.moveCamera(this.x, this.y);
@@ -184,8 +185,8 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		{
 			this.texture = frame.texture;
 
-			this.width  = frame.width;
-			this.height = frame.height;
+			this.width  = frame.width * this.scale;
+			this.height = frame.height * this.scale;
 		}
 
 		const gl = this.Gl2d.context;
@@ -222,12 +223,12 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		this.setRectangle(
 			this.x   - (
 				this.Camera.x
-				- this.Camera.width  /2
-			) - 16
+				- this.Camera.width / 2
+			) - (16 * this.scale)
 			, this.y - (
 				this.Camera.y
 				- this.Camera.height /2
-			) - (this.height /2) - 16
+			) - (this.height /2) - (16 * this.scale)
 
 			, this.width
 			, this.height

@@ -136,16 +136,16 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 				this.selected.startGlobalX = (this.selected.startLocalX
 					- Math.floor(Math.floor(this.element.width /2) / modSize)
 					+ (this.Camera.x < 0
-						? Math.ceil(this.Camera.x /modSize)
-						: Math.floor(this.Camera.x /modSize)
+						? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
+						: Math.floor(this.Camera.x * this.zoomLevel / modSize)
 					)
 				);
 
 				this.selected.startGlobalY = (this.selected.startLocalY
 					- Math.floor(Math.floor(this.element.height /2) / modSize)
 					+ (this.Camera.y < 0
-						? Math.ceil(this.Camera.y /modSize)
-						: Math.floor(this.Camera.y /modSize)
+						? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
+						: Math.floor(this.Camera.y * this.zoomLevel / modSize)
 					)
 				);
 			}
@@ -186,22 +186,18 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 				let globalX = (localX
 					- Math.floor(Math.floor(this.element.width /2) / modSize)
 					+ (this.Camera.x < 0
-						? Math.ceil(this.Camera.x /modSize)
-						: Math.floor(this.Camera.x /modSize)
+						? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
+						: Math.floor(this.Camera.x * this.zoomLevel / modSize)
 					)
 				);
 
 				let globalY = (localY
 					- Math.floor(Math.floor(this.element.height /2) / modSize)
 					+ (this.Camera.y < 0
-						? Math.ceil(this.Camera.y /modSize)
-						: Math.floor(this.Camera.y /modSize)
+						? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
+						: Math.floor(this.Camera.y * this.zoomLevel /  modSize)
 					)
 				);
-
-				console.log(globalX, globalY);
-
-				console.log(this.element.width, this.element.height);
 
 				this.selected.localX  = localX;
 				this.selected.globalX = globalX;
@@ -217,18 +213,15 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 
 		const barrel = new Sprite('barrel.png');
 
-		const sprite = new Sprite;
-		const entity = new (Entity.inject({
-			Gl2d: this
-			, sprite: sprite
-		}));
-
 		barrel.x = 32;
 		barrel.y = 32;
 
 		this.sprites.add(this.background);
 		this.sprites.add(this.background1);
+
 		this.sprites.add(barrel);
+		// this.sprites.add(new Sprite('player_standing_south.png'));
+
 	}
 
 	unselect()
@@ -244,18 +237,6 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 		this.selected.globalY = null;
 
 		return true;
-	}
-
-	moveCamera(x, y)
-	{
-		let originalX = this.Camera.x;
-		let originalY = this.Camera.y;
-
-		this.Camera.x = x;
-		this.Camera.y = y;
-
-		this.mouse.clickX += (originalX - this.Camera.x);
-		this.mouse.clickY += (originalY - this.Camera.y);
 	}
 
 	draw()
@@ -341,11 +322,11 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 
 		this.setRectangle(
 			(minX * modSize)
-				- this.Camera.x
+				- this.Camera.x * this.zoomLevel
 				+ (this.element.width /2)
 				- (modSize /2)
 			, (minY * modSize)
-				- this.Camera.y
+				- this.Camera.y * this.zoomLevel
 				+ (this.element.height /2)
 				- (modSize /2)
 			, (maxX - minX) * modSize

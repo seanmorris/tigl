@@ -13,13 +13,14 @@ import { SpriteBoard } from '../sprite/SpriteBoard';
 // import { Sprite      } from '../sprite/Sprite';
 // import { Background  } from '../sprite/Background';
 
-import { Controller  } from '../ui/Controller';
+import { Controller as OnScreenJoyPad } from '../ui/Controller';
 import { MapEditor   } from '../ui/MapEditor';
 
 import { Keyboard }    from 'curvature/input/Keyboard'
 
 import { Entity } from '../model/Entity';
 // import { Sprite } from '../sprite/Sprite';
+import { Injectable } from '../inject/Injectable';
 
 export class View extends BaseView
 {
@@ -34,6 +35,11 @@ export class View extends BaseView
 		this.speed     = 8;
 		this.maxSpeed  = this.speed;
 
+		let injection = new (Injectable.inject({
+			OnScreenJoyPad
+		}));
+
+		this.args.controller = injection.OnScreenJoyPad;
 
 		this.args.fps  = 0;
 		this.args.sps  = 0;
@@ -110,7 +116,6 @@ export class View extends BaseView
 
 		this.map.import();
 
-		this.args.controller = new Controller;
 		this.args.mapEditor  = new MapEditor({
 			spriteSheet: this.spriteSheet
 			, map:       this.map
@@ -124,7 +129,7 @@ export class View extends BaseView
 			, this.map
 		);
 
-		const entity = new (Entity.inject({Gl2d: this.spriteBoard}));
+		const entity = new Entity;
 
 		this.entities.add(entity);
 

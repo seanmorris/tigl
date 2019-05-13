@@ -4,8 +4,8 @@ import { Controller } from './Controller';
 import { Camera     } from '../sprite/Camera';
 
 export class Entity extends Injectable.inject({
-	controller: Controller
-	, sprite:   Sprite
+	sprite:   Sprite
+	, Controller
 	, Camera
 }) {
 	constructor()
@@ -19,31 +19,68 @@ export class Entity extends Injectable.inject({
 	{
 	}
 
-	draw()
-	{
-		this.sprite.draw();
-	}
-
 	simulate()
 	{
-		let speed = 8;
+		let speed = 4;
 
-		if(this.controller.axis[0])
+		let xAxis = this.Controller.axis[0] || 0;
+		let yAxis = this.Controller.axis[1] || 0;
+
+		for(let t in this.Controller.triggers)
+		{
+			if(!this.Controller.triggers[t])
+			{
+				continue;
+			}
+
+			console.log(t);
+		}
+
+		if(xAxis > 1)
+		{
+			xAxis = 1;
+		}
+
+		if(yAxis > 1)
+		{
+			yAxis = 1;
+		}
+
+		this.sprite.x += xAxis > 0
+			? Math.ceil(speed * xAxis)
+			: Math.floor(speed * xAxis);
+
+		this.sprite.y += yAxis > 0
+			? Math.ceil(speed * yAxis)
+			: Math.floor(speed * yAxis);
+
+		this.Camera.x = this.sprite.x;
+		this.Camera.y = this.sprite.y;
+
+		let horizontal = false;
+
+		if(Math.abs(xAxis) > Math.abs(yAxis))
+		{
+			horizontal = true;
+		}
+
+		if(horizontal)
 		{
 			this.direction = 'west';
 
-			if(this.controller.axis[0] > 0)
+			if(xAxis > 0)
 			{
 				this.direction = 'east';
 			}
 
 			this.state = 'walking';
+			
 		}
-		else if(this.controller.axis[1])
+		else if(yAxis)
 		{
 			this.direction = 'north';
 
-			if(this.controller.axis[1] > 0)
+			if(yAxis > 0)
 			{
 				this.direction = 'south';
 			}
@@ -55,15 +92,12 @@ export class Entity extends Injectable.inject({
 			this.state = 'standing';
 		}
 
-		this.sprite.x += speed * (this.controller.axis[0] || 0);
-		this.sprite.y += speed * (this.controller.axis[1] || 0);
+		let frames;
 
-		this.Camera.x = this.sprite.x;
-		this.Camera.y = this.sprite.y;
-
-		let frames = this.sprite[this.state][this.direction];
-
-		this.sprite.setFrames(frames);
+		if(frames = this.sprite[this.state][this.direction])
+		{
+			this.sprite.setFrames(frames);
+		}
 	}
 
 	destroy()

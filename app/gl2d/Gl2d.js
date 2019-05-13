@@ -7,9 +7,11 @@ export class Gl2d extends Injectable
 	{
 		super();
 
+		new (Injectable.inject({Gl2d: this}));
+
 		this.element   = element;// || document.createElement('canvas');
 		this.context   = this.element.getContext('webgl');
-		this.zoomLevel = 1;
+		this.zoomLevel = 2;
 	}
 
 	resize(x, y)

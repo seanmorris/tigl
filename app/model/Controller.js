@@ -2,14 +2,18 @@ import { Bindable   } from 'curvature/base/Bindable';
 import { Injectable } from '../inject/Injectable';
 import { Keyboard   } from 'curvature/input/Keyboard'
 
-export class Controller extends Injectable.inject({Keyboard})
-{
+import { Controller as OnScreenJoyPad } from '../ui/Controller';
+
+export class Controller extends Injectable.inject({
+	Keyboard
+	, OnScreenJoyPad
+
+	, triggers: Bindable.makeBindable({})
+	, axis:     Bindable.makeBindable({})
+}) {
 	constructor()
 	{
 		super();
-
-		this.axis     = Bindable.makeBindable({});
-		this.triggers = Bindable.makeBindable({});
 
 		this.Keyboard.keys.bindTo((v,k,t,d)=>{
 			if(v > 0)
@@ -20,13 +24,21 @@ export class Controller extends Injectable.inject({Keyboard})
 
 			this.keyRelease(k,v,t[k]);
 		});
+
+		this.OnScreenJoyPad.args.bindTo('x', (v) => {
+			this.axis[0] = v / 50;
+		});
+
+		this.OnScreenJoyPad.args.bindTo('y', (v) => {
+			this.axis[1] = v / 50;
+		});
 	}
 
 	keyPress(key, value, prev)
 	{
 		if(/^[0-9]$/.test(key))
 		{
-			triggers[key] = true;
+			this.triggers[key] = true;
 			return;
 		}
 
@@ -51,7 +63,7 @@ export class Controller extends Injectable.inject({Keyboard})
 	{
 		if(/^[0-9]$/.test(key))
 		{
-			triggers[key] = false;
+			this.triggers[key] = false;
 			return;
 		}
 
