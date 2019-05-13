@@ -1,32 +1,25 @@
-import { Bindable    } from 'curvature/base/Bindable';
+import { Bindable   } from 'curvature/base/Bindable';
+import { Injectable } from '../inject/Injectable';
 
-import { Background  } from '../sprite/Background';
-import { Sprite      } from '../sprite/Sprite';
-import { SpriteSheet } from '../sprite/SpriteSheet';
-import { Surface     } from '../sprite/Surface';
-
-import { Floor       } from '../world/Floor';
-
-export class Gl2d
+export class Gl2d extends Injectable
 {
 	constructor(element)
 	{
-		this.element   = element;
-		this.context   = element.getContext('webgl');
+		super();
+
+		this.element   = element;// || document.createElement('canvas');
+		this.context   = this.element.getContext('webgl');
 		this.zoomLevel = 1;
 	}
 
 	resize(x, y)
 	{
-		x = (x ||this.element.width)  * (1 / this.zoomLevel);
-		y = (y ||this.element.height) * (1 / this.zoomLevel);
+		x = (x ||this.element.width)  / this.zoomLevel;
+		y = (y ||this.element.height) / this.zoomLevel;
 
 		const gl = this.context;
 
 		gl.viewport(0, 0, x, y);
-
-		this.camera.width  = x;
-		this.camera.height = y;
 	}	
 
 	draw()
@@ -37,9 +30,9 @@ export class Gl2d
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		// gl.clearColor(0, 0, 0, 1);
-		// gl.clearColor(1, 1, 1, 1);
-		// gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.clearColor(0, 0, 0, 0);
+		gl.clearColor(1, 1, 1, 1);
+		gl.clear(gl.COLOR_BUFFER_BIT);
 	}
 
 	cleanup()

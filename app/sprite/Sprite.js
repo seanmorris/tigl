@@ -2,14 +2,16 @@ import { Bindable    } from 'curvature/base/Bindable';
 import { Keyboard    } from 'curvature/input/Keyboard'
 import { SpriteSheet } from './SpriteSheet';
 
-export class Sprite
-{
-	constructor(gl2d, imageSrc, altImageSrc = null)
-	{
-		this.gl2d   = gl2d;
+import { Gl2d        } from '../gl2d/Gl2d';
+import { Injectable  } from '../inject/Injectable';
+import { Camera      } from './Camera';
 
-		this.x      = 960;
-		this.y      = 548;
+export class Sprite extends Injectable.inject({Gl2d, Camera})
+{
+	constructor(imageSrc, altImageSrc = null)
+	{
+		super();
+
 		this.z      = 0;
 		this.x      = 0;
 		this.y      = 0;
@@ -17,10 +19,11 @@ export class Sprite
 		this.width  = 32;
 		this.height = 48;
 
-		this.frames       = [];
-		this.frameDelay   = 4;
-		this.currentDelay = this.frameDelay;
-		this.currentFrame = 0;
+		this.frames        = [];
+		this.frameDelay    = 4;
+		this.currentDelay  = this.frameDelay;
+		this.currentFrame  = 0;
+		this.currentFrames = '';
 
 		this.speed    = 0;
 		this.maxSpeed = 8;
@@ -32,7 +35,7 @@ export class Sprite
 		this.LEFT	= 2;
 		this.UP		= 3;
 
-		this.director = this.DOWN;
+		this.director = this.UP;
 
 		this.EAST	= this.RIGHT;
 		this.SOUTH	= this.DOWN;
@@ -43,7 +46,6 @@ export class Sprite
 		{
 			this.spriteSheet = new SpriteSheet();
 		}
-
 
 		this.standing = {
 			'north': [
@@ -100,7 +102,7 @@ export class Sprite
 			]
 		};
 
-		const gl = gl2d.context;
+		const gl = this.Gl2d.context;
 
 		this.texture = gl.createTexture();
 
@@ -120,7 +122,7 @@ export class Sprite
 			, new Uint8Array([r(), r(), 0, 255])
 		);
 
-		Sprite.loadTexture(gl2d, imageSrc).then((args)=>{
+		Sprite.loadTexture(this.Gl2d, imageSrc).then((args)=>{
 			this.texture = args.texture;
 			this.texture1 = args.texture;
 
@@ -136,40 +138,23 @@ export class Sprite
 			// 	this.keyPress(k,v,t[k]);
 			// });
 
-			Sprite.loadTexture(gl2d, altImageSrc).then((args)=>{
+			Sprite.loadTexture(this.Gl2d, altImageSrc).then((args)=>{
 				this.texture2 = args.texture;
 
 				this.width  = args.image.width;
 				this.height = args.image.height;
 			});
 
-			// this.gl2d.moveCamera(this.x, this.y);
-		}
-	}
-
-	simulate()
-	{
-		if(this.direction == this.UP || this.direction == this.DOWN)
-		{
-			this.y += this.speed;
-		}
-		if(this.direction == this.LEFT || this.direction == this.RIGHT)
-		{
-			this.x += this.speed;
-		}
-
-		if(this.keyboard)
-		{
-			this.keyboard.update();
+			// this.Gl2d.moveCamera(this.x, this.y);
 		}
 	}
 
 	draw()
 	{
-		if(this.moving == false && this.spriteSheet)
-		{
-			this.setFrames(this.standing.south);
-		}
+		// if(this.moving == false && this.spriteSheet)
+		// {
+		// 	this.setFrames(this.standing.south);
+		// }
 
 		this.frameDelay = (this.maxSpeed * 1.5) - Math.abs(this.speed);
 
@@ -203,20 +188,20 @@ export class Sprite
 			this.height = frame.height;
 		}
 
-		const gl = this.gl2d.context;
+		const gl = this.Gl2d.context;
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		gl.useProgram(this.gl2d.program);
+		gl.useProgram(this.Gl2d.program);
 
-		gl.enableVertexAttribArray(this.gl2d.positionLocation);
+		gl.enableVertexAttribArray(this.Gl2d.positionLocation);
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+		gl.enableVertexAttribArray(this.Gl2d.texCoordLocation);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.texCoordBuffer);
 
 		gl.vertexAttribPointer(
-			this.gl2d.texCoordLocation
+			this.Gl2d.texCoordLocation
 			, 2
 			, gl.FLOAT
 			, false
@@ -224,7 +209,7 @@ export class Sprite
 			, 0
 		);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.texCoordBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			0.0,  0.0,
 			1.0,  0.0,
@@ -236,12 +221,12 @@ export class Sprite
 
 		this.setRectangle(
 			this.x   - (
-				this.gl2d.camera.x
-				- this.gl2d.camera.width  /2
+				this.Camera.x
+				- this.Camera.width  /2
 			) - 16
 			, this.y - (
-				this.gl2d.camera.y
-				- this.gl2d.camera.height /2
+				this.Camera.y
+				- this.Camera.height /2
 			) - (this.height /2) - 16
 
 			, this.width
@@ -249,7 +234,7 @@ export class Sprite
 		);
 
 		gl.uniform4f(
-			this.gl2d.colorLocation
+			this.Gl2d.colorLocation
 			, 1
 			, 0
 			, 0
@@ -261,11 +246,20 @@ export class Sprite
 
 	setFrames(frameSelector)
 	{
+		let framesId = frameSelector.join(' ');
+
+		if(this.currentFrames === framesId)
+		{
+			return;
+		}
+
+		this.currentFrames = framesId;
+
 		this.spriteSheet.ready.then((sheet)=>{
 
 			const frames = sheet.getFrames(frameSelector).map((frame)=>{
 
-				return Sprite.loadTexture(this.gl2d, frame).then((args)=>({
+				return Sprite.loadTexture(this.Gl2d, frame).then((args)=>({
 					texture:  args.texture
 					, width:  args.image.width
 					, height: args.image.height
@@ -332,12 +326,12 @@ export class Sprite
 
 	setRectangle(x, y, width, height)
 	{
-		const gl = this.gl2d.context;
+		const gl = this.Gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.positionBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.positionBuffer);
 
 		gl.vertexAttribPointer(
-			this.gl2d.positionLocation
+			this.Gl2d.positionLocation
 			, 2
 			, gl.FLOAT
 			, false
@@ -441,6 +435,6 @@ export class Sprite
 
 	// 	this.moving = key;
 
-	// 	this.gl2d.moveCamera(this.x, this.y);
+	// 	this.Gl2d.moveCamera(this.x, this.y);
 	// }
 }

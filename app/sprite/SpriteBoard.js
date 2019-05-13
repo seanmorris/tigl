@@ -1,11 +1,17 @@
+import { Bag         } from 'curvature/base/Bag';
 import { Bindable    } from 'curvature/base/Bindable';
 
 import { Sprite      } from './Sprite';
+import { Entity      } from '../model/Entity';
 import { Background  } from './Background';
+
+import { Injectable  } from '../inject/Injectable';
 
 import { Gl2d } from '../gl2d/Gl2d';
 
-export class SpriteBoard extends Gl2d
+import { Camera } from './Camera';
+
+export class SpriteBoard extends Gl2d.inject({Camera})
 {
 	constructor(element, map)
 	{
@@ -13,12 +19,7 @@ export class SpriteBoard extends Gl2d
 
 		this.map = map;
 
-		this.camera = {
-			x:        0
-			, y:      0
-			, width:  0
-			, height: 0
-		};
+		new (Injectable.inject({Gl2d: this}));
 
 		this.mouse = {
 			x:        null
@@ -27,12 +28,10 @@ export class SpriteBoard extends Gl2d
 			, clickY: null
 		};
 
-		this.sprites = [];
+		this.sprites = new Bag;
 
-		this.camera = Bindable.makeBindable(this.camera);
-
-		this.camera.width  = this.element.width;
-		this.camera.height = this.element.height;
+		this.Camera.width  = this.element.width;
+		this.Camera.height = this.element.height;
 
 		const gl = this.context;
 
@@ -120,13 +119,13 @@ export class SpriteBoard extends Gl2d
 				this.mouse.clickY = event.clientY;
 
 				let localX = Math.floor((this.mouse.clickX
-					+ (this.camera.x % modSize)
+					+ (this.Camera.x % modSize)
 					- (Math.floor(this.element.width /2) % modSize)
 					+ 16  * this.zoomLevel
 				) / modSize);
 
 				let localY = Math.floor((this.mouse.clickY
-					+ (this.camera.y % modSize)
+					+ (this.Camera.y % modSize)
 					- (Math.floor(this.element.height /2) % modSize)
 					+ 16  * this.zoomLevel
 				) / modSize);
@@ -136,17 +135,17 @@ export class SpriteBoard extends Gl2d
 
 				this.selected.startGlobalX = (this.selected.startLocalX
 					- Math.floor(Math.floor(this.element.width /2) / modSize)
-					+ (this.camera.x < 0
-						? Math.ceil(this.camera.x /modSize)
-						: Math.floor(this.camera.x /modSize)
+					+ (this.Camera.x < 0
+						? Math.ceil(this.Camera.x /modSize)
+						: Math.floor(this.Camera.x /modSize)
 					)
 				);
 
 				this.selected.startGlobalY = (this.selected.startLocalY
 					- Math.floor(Math.floor(this.element.height /2) / modSize)
-					+ (this.camera.y < 0
-						? Math.ceil(this.camera.y /modSize)
-						: Math.floor(this.camera.y /modSize)
+					+ (this.Camera.y < 0
+						? Math.ceil(this.Camera.y /modSize)
+						: Math.floor(this.Camera.y /modSize)
 					)
 				);
 			}
@@ -171,13 +170,13 @@ export class SpriteBoard extends Gl2d
 				this.mouse.clickY = event.clientY;
 
 				let localX = Math.floor((this.mouse.clickX
-					+ (this.camera.x % modSize)
+					+ (this.Camera.x % modSize)
 					- (Math.floor(this.element.width /2) % modSize)
 					+ 16  * this.zoomLevel
 				) / modSize);
 
 				let localY = Math.floor((this.mouse.clickY
-					+ (this.camera.y % modSize)
+					+ (this.Camera.y % modSize)
 					- (Math.floor(this.element.height /2) % modSize)
 					+ 16  * this.zoomLevel
 				) / modSize);
@@ -186,17 +185,17 @@ export class SpriteBoard extends Gl2d
 
 				let globalX = (localX
 					- Math.floor(Math.floor(this.element.width /2) / modSize)
-					+ (this.camera.x < 0
-						? Math.ceil(this.camera.x /modSize)
-						: Math.floor(this.camera.x /modSize)
+					+ (this.Camera.x < 0
+						? Math.ceil(this.Camera.x /modSize)
+						: Math.floor(this.Camera.x /modSize)
 					)
 				);
 
 				let globalY = (localY
 					- Math.floor(Math.floor(this.element.height /2) / modSize)
-					+ (this.camera.y < 0
-						? Math.ceil(this.camera.y /modSize)
-						: Math.floor(this.camera.y /modSize)
+					+ (this.Camera.y < 0
+						? Math.ceil(this.Camera.y /modSize)
+						: Math.floor(this.Camera.y /modSize)
 					)
 				);
 
@@ -213,21 +212,23 @@ export class SpriteBoard extends Gl2d
 			}
 		);
 
-		this.background = new Background(this, map);
+		this.background  = new Background(this, map);
 		this.background1 = new Background(this, map, 1);
 
-		const sprite = new Sprite(this);
-		const barrel = new Sprite(this, 'barrel.png');
+		const barrel = new Sprite('barrel.png');
+
+		const sprite = new Sprite;
+		const entity = new (Entity.inject({
+			Gl2d: this
+			, sprite: sprite
+		}));
 
 		barrel.x = 32;
 		barrel.y = 32;
 
-		this.sprites = [
-			barrel
-			, sprite
-			, this.background
-			, this.background1
-		];
+		this.sprites.add(this.background);
+		this.sprites.add(this.background1);
+		this.sprites.add(barrel);
 	}
 
 	unselect()
@@ -247,14 +248,14 @@ export class SpriteBoard extends Gl2d
 
 	moveCamera(x, y)
 	{
-		let originalX = this.camera.x;
-		let originalY = this.camera.y;
+		let originalX = this.Camera.x;
+		let originalY = this.Camera.y;
 
-		this.camera.x = x;
-		this.camera.y = y;
+		this.Camera.x = x;
+		this.Camera.y = y;
 
-		this.mouse.clickX += (originalX - this.camera.x);
-		this.mouse.clickY += (originalY - this.camera.y);
+		this.mouse.clickX += (originalX - this.Camera.x);
+		this.mouse.clickY += (originalY - this.Camera.y);
 	}
 
 	draw()
@@ -265,20 +266,27 @@ export class SpriteBoard extends Gl2d
 
 		gl.uniform2f(
 			this.resolutionLocation
-			, this.camera.width
-			, this.camera.height
+			, this.Camera.width
+			, this.Camera.height
 		);
 
-		this.sprites.map(s => {
-			s.z = s.y
+		let sprites = this.sprites.items();
 
-			if(s instanceof Background)
-			{
-				s.z = -s.layer - 100;
-			}
+		sprites.map(s => {
+			s.z = s.y
 		});
 
-		this.sprites.sort((a,b)=>{
+		sprites.sort((a,b)=>{
+			if((a instanceof Background) && !(b instanceof Background))
+			{
+				return -1;
+			}
+
+			if((b instanceof Background) && !(a instanceof Background))
+			{
+				return 1;
+			}
+
 			if(a.z === undefined)
 			{
 				return -1;
@@ -290,7 +298,7 @@ export class SpriteBoard extends Gl2d
 			return a.z - b.z;
 		});
 
-		this.sprites.map(s => s.draw());
+		sprites.map(s => s.draw());
 
 		if(this.selected.localX === null)
 		{
@@ -333,11 +341,11 @@ export class SpriteBoard extends Gl2d
 
 		this.setRectangle(
 			(minX * modSize)
-				- this.camera.x
+				- this.Camera.x
 				+ (this.element.width /2)
 				- (modSize /2)
 			, (minY * modSize)
-				- this.camera.y
+				- this.Camera.y
 				+ (this.element.height /2)
 				- (modSize /2)
 			, (maxX - minX) * modSize
@@ -349,15 +357,13 @@ export class SpriteBoard extends Gl2d
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
-	simulate()
-	{
-		this.sprites.map(s => s.simulate());
-	}
-
 	resize(x, y)
 	{
 		x = x || this.element.width;
 		y = y || this.element.height;
+
+		this.Camera.width  = x;
+		this.Camera.height = y;
 
 		this.background.resize(
 			Math.round(x / 2 + 32)   * (1 / this.zoomLevel)
@@ -370,6 +376,9 @@ export class SpriteBoard extends Gl2d
 		);
 
 		super.resize(x, y);
+
+		this.Camera.width  =  x / this.zoomLevel;
+		this.Camera.height =  y / this.zoomLevel;
 	}
 
 	setRectangle(x, y, width, height)

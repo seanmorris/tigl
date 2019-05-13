@@ -1,5 +1,6 @@
 import { Config }           from 'Config';
 
+import { Bag              } from 'curvature/base/Bag';
 import { View as BaseView } from 'curvature/base/View';
 
 // import { Gl2d }     from '../gl2d/Gl2d';
@@ -17,6 +18,9 @@ import { MapEditor   } from '../ui/MapEditor';
 
 import { Keyboard }    from 'curvature/input/Keyboard'
 
+import { Entity } from '../model/Entity';
+// import { Sprite } from '../sprite/Sprite';
+
 export class View extends BaseView
 {
 	constructor(args)
@@ -25,9 +29,11 @@ export class View extends BaseView
 		this.template  = require('./view.tmp');
 		this.routes    = [];
 
+		this.entities  = new Bag;
 		this.keyboard  = new Keyboard;
 		this.speed     = 8;
 		this.maxSpeed  = this.speed;
+
 
 		this.args.fps  = 0;
 		this.args.sps  = 0;
@@ -118,21 +124,32 @@ export class View extends BaseView
 			, this.map
 		);
 
-		// const sprite = new Sprite(this.spriteBoard);
-		// const barrel = new Sprite(this.spriteBoard, 'barrel.png');
+		const entity = new (Entity.inject({Gl2d: this.spriteBoard}));
 
-		// barrel.x = 32;		
+		this.entities.add(entity);
 
-		// this.spriteBoard.background = new Background(
-		// 	this.spriteBoard
-		// 	, this.map
-		// );
+		this.spriteBoard.sprites.add(entity.sprite);
 
-		// this.spriteBoard.sprites = [
-		// 	barrel
-		// 	, sprite
-		// 	, this.spriteBoard.background
-		// ];
+		this.keyboard.keys.bindTo('=', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.zoom(1);
+			}
+		});
+
+		this.keyboard.keys.bindTo('+', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.zoom(1);
+			}
+		});
+
+		this.keyboard.keys.bindTo('-', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.zoom(-1);
+			}
+		});
 
 		this.args.mapEditor.args.bindTo('selectedGraphic', (v)=>{
 			if(!v || this.spriteBoard.selected.globalX == null)
@@ -190,124 +207,58 @@ export class View extends BaseView
 
 		this.args.showEditor = true;
 
-		this.keyboard.keys.bindTo((v,k,t,d)=>{
-			if(v === -1)
-			{
-				// sprite.moving = false;
-				// sprite.speed  = 0;
-				return;
-			}
+		// this.args.controller.args.bindTo((v,k,t,d,p)=>{
+		// 	if(v === 0)
+		// 	{
+		// 		// sprite.moving = false;
+		// 		// sprite.speed  = 0;
+		// 		return;
+		// 	}
 
-			// if(sprite.moving && sprite.moving !== k)
-			// {
-			// 	return;
-			// }
+		// 	if(k !== 'x' && k !== 'y')
+		// 	{
+		// 		return;
+		// 	}
 
-			if(!v || v < 0)
-			{
-				return;
-			}
+		// 	let horizontal = false;
+		// 	let magnitude  = t['y'];
 
-			switch(k)
-			{
-				case 'ArrowRight':
-					// sprite.setFrames(sprite.walking.east);
-					// sprite.direction = sprite.RIGHT;
-					if(v % 8 == 0)
-					{
-						// sprite.speed = sprite.maxSpeed;
-					}
-					break;
-				case 'ArrowDown':
-					// sprite.setFrames(sprite.walking.south);
-					// sprite.direction = sprite.DOWN;
-					if(v % 8 == 0)
-					{
-						// sprite.speed = sprite.maxSpeed;
-					}
-					break;
-				case 'ArrowLeft':
-					// sprite.setFrames(sprite.walking.west);
-					// sprite.direction = sprite.LEFT;
-					if(v % 8 == 0)
-					{
-						// sprite.speed = -sprite.maxSpeed;
-					}
-					break;
-				case 'ArrowUp':
-					// sprite.setFrames(sprite.walking.north);
-					// sprite.direction = sprite.UP;
-					if(v % 8 == 0)
-					{
-						// sprite.speed = -sprite.maxSpeed;
-					}
-					break;
-			}
+		// 	if(Math.abs(t['x']) > Math.abs(t['y']))
+		// 	{
+		// 		horizontal = true;
+		// 		magnitude  = t['x'];
+		// 	}
 
-			// if(sprite.speed > sprite.maxSpeed)
-			// {
-			// 	sprite.speed = sprite.maxSpeed;
-			// }
-			// else if(sprite.speed < -sprite.maxSpeed)
-			// {
-			// 	sprite.speed = -sprite.maxSpeed;
-			// }
+		// 	if(horizontal && magnitude > 0)
+		// 	{
+		// 		// sprite.setFrames(sprite.walking.east);
+		// 		// sprite.direction = sprite.RIGHT;
+		// 	}
+		// 	else if(horizontal && magnitude < 0)
+		// 	{
+		// 		// sprite.setFrames(sprite.walking.west);
+		// 		// sprite.direction = sprite.LEFT;
+		// 	}
+		// 	else if(magnitude > 0){
+		// 		// sprite.setFrames(sprite.walking.south);
+		// 		// sprite.direction = sprite.DOWN;
+		// 	}
+		// 	else if(magnitude < 0){
+		// 		// sprite.setFrames(sprite.walking.north);
+		// 		// sprite.direction = sprite.UP;
+		// 	}
 
-			// sprite.moving = k;
-		});
+		// 	magnitude = Math.round(magnitude / 6.125);
 
-		this.args.controller.args.bindTo((v,k,t,d,p)=>{
-			if(v === 0)
-			{
-				// sprite.moving = false;
-				// sprite.speed  = 0;
-				return;
-			}
+		// 	// sprite.speed = magnitude < 8 ? magnitude : 8;
 
-			if(k !== 'x' && k !== 'y')
-			{
-				return;
-			}
+		// 	if(magnitude < -8)
+		// 	{
+		// 		sprite.speed = -8;
+		// 	}
 
-			let horizontal = false;
-			let magnitude  = t['y'];
-
-			if(Math.abs(t['x']) > Math.abs(t['y']))
-			{
-				horizontal = true;
-				magnitude  = t['x'];
-			}
-
-			if(horizontal && magnitude > 0)
-			{
-				// sprite.setFrames(sprite.walking.east);
-				// sprite.direction = sprite.RIGHT;
-			}
-			else if(horizontal && magnitude < 0)
-			{
-				// sprite.setFrames(sprite.walking.west);
-				// sprite.direction = sprite.LEFT;
-			}
-			else if(magnitude > 0){
-				// sprite.setFrames(sprite.walking.south);
-				// sprite.direction = sprite.DOWN;
-			}
-			else if(magnitude < 0){
-				// sprite.setFrames(sprite.walking.north);
-				// sprite.direction = sprite.UP;
-			}
-
-			magnitude = Math.round(magnitude / 6.125);
-
-			// sprite.speed = magnitude < 8 ? magnitude : 8;
-
-			if(magnitude < -8)
-			{
-				sprite.speed = -8;
-			}
-
-			// sprite.moving = !!magnitude;
-		});
+		// 	// sprite.moving = !!magnitude;
+		// });
 
 		window.addEventListener('resize', () => {
 			// this.resize(256, 256);
@@ -343,7 +294,11 @@ export class View extends BaseView
 
 			this.keyboard.update();
 
-			this.spriteBoard.simulate();
+			Object.values(this.entities.items()).map((e)=>{
+				e.simulate();
+			});
+
+			// this.spriteBoard.simulate();
 
 			// this.args.localX  = this.spriteBoard.selected.localX;
 			// this.args.localY  = this.spriteBoard.selected.localY;
@@ -396,13 +351,11 @@ export class View extends BaseView
 
 			this.args._fps = (1 / delta);
 
-			this.args.camX = this.spriteBoard.camera.x;
-			this.args.camY = this.spriteBoard.camera.y;
+			this.args.camX = this.spriteBoard.Camera.x;
+			this.args.camY = this.spriteBoard.Camera.y;
 		};
 
-		// this.resize(256, 256);
 		this.resize();
-
 
 		setInterval(()=>{
 			simulate(performance.now());
@@ -443,11 +396,17 @@ export class View extends BaseView
 
 	scroll(event)
 	{
-		let min   = 0.20;
-		let step  = 0.10;
 		let delta = event.deltaY > 0 ? -1 : (
 			event.deltaY < 0 ? 1 : 0
 		);
+
+		this.zoom(delta);
+	}
+
+	zoom(delta)
+	{
+		let min   = 0.35;
+		let step  = 0.05;		
 
 		if(delta > 0 || delta < 0 && this.spriteBoard.zoomLevel > min)
 		{
@@ -459,6 +418,5 @@ export class View extends BaseView
 			this.spriteBoard.zoomLevel = min;
 			this.resize();
 		}
-
 	}
 }

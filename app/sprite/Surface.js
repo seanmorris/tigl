@@ -1,7 +1,13 @@
-export class Surface
+import { Injectable } from '../inject/Injectable';
+import { Camera     } from './Camera';
+import { Gl2d       } from '../gl2d/Gl2d';
+
+export class Surface extends Injectable.inject({Gl2d, Camera})
 {
 	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0, layer = 0)
 	{
+		super();
+
 		this.gl2d    = gl2d;
 		this.x       = xOffset;
 		this.y       = yOffset;
@@ -197,8 +203,8 @@ export class Surface
 		// ]), gl.STATIC_DRAW);
 
 		this.setRectangle(
-			this.x   - (this.gl2d.camera.x - (this.gl2d.camera.width  /2)) - 16
-			, this.y - (this.gl2d.camera.y - (this.gl2d.camera.height /2)) - 16
+			this.x   - (this.Camera.x - (this.Camera.width  /2)) - 16
+			, this.y - (this.Camera.y - (this.Camera.height /2)) - 16
 			, this.width
 			, this.height
 		);

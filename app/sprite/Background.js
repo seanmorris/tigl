@@ -1,15 +1,19 @@
 import { Bindable    } from 'curvature/base/Bindable';
+import { Gl2d        } from '../gl2d/Gl2d';
+import { Injectable  } from '../inject/Injectable';
 
 import { Surface     } from './Surface';
+import { Camera      } from './Camera';
 import { SpriteSheet } from './SpriteSheet';
 
-export class Background
+export class Background extends Injectable.inject({Gl2d, Camera})
 {
 	constructor(gl2d, map, layer = 0)
 	{
+		super();
+
 		Bindable.makeBindable(this);
 
-		this.gl2d        = gl2d;
 		this.panes       = [];
 		this.panesXY     = {};
 		this.maxPanes    = 9;
@@ -29,7 +33,7 @@ export class Background
 	renderPane(x, y, forceUpdate)
 	{
 		let pane;
-		const gl2d = this.gl2d;
+		const gl2d = this.Gl2d;
 
 		let paneX  = x * (this.tileWidth * this.surfaceX);
 		let paneY  = y * (this.tileHeight * this.surfaceY);
@@ -72,10 +76,10 @@ export class Background
 	draw()
 	{
 		const centerX = Math.floor(
-			this.gl2d.camera.x / (this.surfaceX * this.tileWidth)
+			this.Camera.x / (this.surfaceX * this.tileWidth)
 		);
 		const centerY = Math.floor(
-			this.gl2d.camera.y / (this.surfaceY * this.tileHeight)
+			this.Camera.y / (this.surfaceY * this.tileHeight)
 		);
 
 		let range = [-1,0,1];
