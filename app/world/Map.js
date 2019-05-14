@@ -1,10 +1,11 @@
 import { SpriteSheet } from '../sprite/SpriteSheet';
+import { Injectable  } from '../inject/Injectable';
 
-export class Map
+export class Map extends Injectable.inject({SpriteSheet})
 {
 	constructor()
 	{
-		this.spriteSheet = new SpriteSheet;
+		super();
 
 		this.tiles = {};
 	}
@@ -14,7 +15,7 @@ export class Map
 		if(this.tiles[`${x},${y}--${layer}`])
 		{
 			return [
-				this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
+				this.SpriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
 			];
 		}
 
@@ -27,12 +28,12 @@ export class Map
 		}
 
 		return [
-			this.spriteSheet.getFrame('floorTile.png')
+			this.SpriteSheet.getFrame('floorTile.png')
 		];
 
 		return [
-			this.spriteSheet.getFrame('floorTile.png')
-			, this.spriteSheet.getFrame(second)
+			this.SpriteSheet.getFrame('floorTile.png')
+			, this.SpriteSheet.getFrame(second)
 		];
 	}
 

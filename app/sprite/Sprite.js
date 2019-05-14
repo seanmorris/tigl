@@ -6,9 +6,9 @@ import { Gl2d        } from '../gl2d/Gl2d';
 import { Injectable  } from '../inject/Injectable';
 import { Camera      } from './Camera';
 
-export class Sprite extends Injectable.inject({Gl2d, Camera})
+export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 {
-	constructor(imageSrc, altImageSrc = null)
+	constructor(imageSrc)
 	{
 		super();
 
@@ -18,7 +18,7 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 
 		this.width  = 0;
 		this.height = 0;
-		this.scale  = 2;
+		this.scale  = 1;
 
 		this.frames        = [];
 		this.frameDelay    = 4;
@@ -42,11 +42,6 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		this.SOUTH	= this.DOWN;
 		this.WEST	= this.LEFT;
 		this.NORTH	= this.UP;
-
-		if(!imageSrc)
-		{
-			this.spriteSheet = new SpriteSheet();
-		}
 
 		this.standing = {
 			'north': [
@@ -123,31 +118,21 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 			, new Uint8Array([r(), r(), 0, 255])
 		);
 
-		Sprite.loadTexture(this.Gl2d, imageSrc).then((args)=>{
-			this.texture = args.texture;
-			this.texture1 = args.texture;
+		this.SpriteSheet.ready.then((sheet)=>{
+			const frame = this.SpriteSheet.getFrame(imageSrc);
 
-			this.width  = args.image.width * this.scale;
-			this.height = args.image.height * this.scale;
+			if(frame)
+			{
+				Sprite.loadTexture(this.Gl2d, this.SpriteSheet, frame).then((args)=>{
+					this.texture = args.texture;
+					this.width   = args.image.width * this.scale;
+					this.height  = args.image.height * this.scale;
+				});
+			}
 		});
 
-		if(altImageSrc)
-		{
-			this.keyboard = new Keyboard;
 
-			// this.keyboard.keys.bindTo((v,k,t,d)=>{
-			// 	this.keyPress(k,v,t[k]);
-			// });
 
-			Sprite.loadTexture(this.Gl2d, altImageSrc).then((args)=>{
-				this.texture2 = args.texture;
-
-				this.width  = args.image.width * this.scale;
-				this.height = args.image.height * this.scale;
-			});
-
-			// this.Gl2d.moveCamera(this.x, this.y);
-		}
 	}
 
 	draw()
@@ -256,15 +241,17 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 
 		this.currentFrames = framesId;
 
-		this.spriteSheet.ready.then((sheet)=>{
+		this.SpriteSheet.ready.then((sheet)=>{
 
 			const frames = sheet.getFrames(frameSelector).map((frame)=>{
 
-				return Sprite.loadTexture(this.Gl2d, frame).then((args)=>({
-					texture:  args.texture
-					, width:  args.image.width
-					, height: args.image.height
-				}));
+				return Sprite.loadTexture(this.Gl2d, this.SpriteSheet, frame).then((args)=>{
+					return {
+						texture:  args.texture
+						, width:  args.image.width
+						, height: args.image.height
+					}
+				});
 
 			});
 
@@ -275,7 +262,7 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		});
 	}
 
-	static loadTexture(gl2d, imageSrc)
+	static loadTexture(gl2d, spriteSheet, imageSrc)
 	{
 		const gl = gl2d.context;
 
@@ -288,6 +275,8 @@ export class Sprite extends Injectable.inject({Gl2d, Camera})
 		{
 			return this.promises[imageSrc];
 		}
+
+		console.log(imageSrc);
 
 		this.promises[imageSrc] = Sprite.loadImage(imageSrc).then((image)=>{
 			const texture = gl.createTexture();

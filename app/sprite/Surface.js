@@ -1,8 +1,9 @@
-import { Injectable } from '../inject/Injectable';
-import { Camera     } from './Camera';
-import { Gl2d       } from '../gl2d/Gl2d';
+import { Injectable  } from '../inject/Injectable';
+import { SpriteSheet } from '../sprite/SpriteSheet';
+import { Camera      } from './Camera';
+import { Gl2d        } from '../gl2d/Gl2d';
 
-export class Surface extends Injectable.inject({Gl2d, Camera})
+export class Surface extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 {
 	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0, layer = 0)
 	{
@@ -49,7 +50,7 @@ export class Surface extends Injectable.inject({Gl2d, Camera})
 			, new Uint8Array([r(), r(), 0, 255])
 		);
 
-		this.map.spriteSheet.ready.then((sheet)=>{
+		this.SpriteSheet.ready.then((sheet)=>{
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -86,12 +87,13 @@ export class Surface extends Injectable.inject({Gl2d, Camera})
 				{
 					let j = 0;
 					this.subTextures[i] = [];
+
 					texturePromises.push(
 						Promise.all(frames.map((frame)=>
-							this.map.spriteSheet.constructor.loadTexture(gl2d, frame).then(
+							this.SpriteSheet.constructor.loadTexture(gl2d, frame).then(
 								(args)=>{
-									j++;
 									this.subTextures[i][j] = args.texture;
+									j++;
 
 									return Promise.resolve();
 								}
@@ -102,7 +104,7 @@ export class Surface extends Injectable.inject({Gl2d, Camera})
 				else
 				{
 					texturePromises.push(
-						this.map.spriteSheet.constructor.loadTexture(gl2d, frames).then(
+						this.SpriteSheet.constructor.loadTexture(gl2d, frames).then(
 							(args)=>{
 								this.subTextures[i] = args.texture;
 

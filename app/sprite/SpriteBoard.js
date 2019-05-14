@@ -2,14 +2,14 @@ import { Bag         } from 'curvature/base/Bag';
 import { Bindable    } from 'curvature/base/Bindable';
 
 import { Sprite      } from './Sprite';
+import { SpriteSheet } from './SpriteSheet';
 import { Entity      } from '../model/Entity';
 import { Background  } from './Background';
 
 import { Injectable  } from '../inject/Injectable';
 
-import { Gl2d } from '../gl2d/Gl2d';
-
-import { Camera } from './Camera';
+import { Gl2d        } from '../gl2d/Gl2d';
+import { Camera      } from './Camera';
 
 export class SpriteBoard extends Gl2d.inject({Camera})
 {
