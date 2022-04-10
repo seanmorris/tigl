@@ -15,14 +15,19 @@ export class Controller extends Injectable.inject({
 	{
 		super();
 
-		this.Keyboard.keys.bindTo((v,k,t,d)=>{
+		Keyboard.get().keys.bindTo((v,k,t,d)=>{
 			if(v > 0)
 			{
 				this.keyPress(k,v,t[k]);
 				return;
 			}
 
-			this.keyRelease(k,v,t[k]);
+			if(v === -1)
+			{
+				this.keyRelease(k,v,t[k]);
+				return;
+			}
+
 		});
 
 		this.OnScreenJoyPad.args.bindTo('x', (v) => {
@@ -47,12 +52,15 @@ export class Controller extends Injectable.inject({
 			case 'ArrowRight':
 				this.axis[0] = 1;
 				break;
+			
 			case 'ArrowDown':
 				this.axis[1] = 1;
 				break;
+			
 			case 'ArrowLeft':
 				this.axis[0] = -1;
 				break;
+			
 			case 'ArrowUp':
 				this.axis[1] = -1;
 				break;
@@ -70,12 +78,30 @@ export class Controller extends Injectable.inject({
 		switch(key)
 		{
 			case 'ArrowRight':
-			case 'ArrowLeft':
+				if(this.axis[0] > 0)
+				{
+					this.axis[0] = 0;
+				}
 				this.axis[0] = 0;
+			
+			case 'ArrowLeft':
+				if(this.axis[0] < 0)
+				{
+					this.axis[0] = 0;
+				}
 				break;
+			
 			case 'ArrowDown':
+				if(this.axis[1] > 0)
+				{
+					this.axis[1] = 0;
+				}
+			
 			case 'ArrowUp':
-				this.axis[1] = 0;
+				if(this.axis[1] < 0)
+				{
+					this.axis[1] = 0;
+				}
 				break;
 		}
 	}

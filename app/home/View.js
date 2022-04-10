@@ -3,23 +3,17 @@ import { Config }           from 'Config';
 import { Bag              } from 'curvature/base/Bag';
 import { View as BaseView } from 'curvature/base/View';
 
-// import { Gl2d }     from '../gl2d/Gl2d';
-
 import { Map         } from '../world/Map';
 
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
-
-// import { Sprite      } from '../sprite/Sprite';
-// import { Background  } from '../sprite/Background';
 
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
 import { MapEditor   } from '../ui/MapEditor';
 
 import { Keyboard }    from 'curvature/input/Keyboard'
 
-import { Entity } from '../model/Entity';
-// import { Sprite } from '../sprite/Sprite';
+import { Entity }     from '../model/Entity';
 import { Injectable } from '../inject/Injectable';
 
 export class View extends BaseView
@@ -31,7 +25,7 @@ export class View extends BaseView
 		this.routes    = [];
 
 		this.entities  = new Bag;
-		this.keyboard  = new Keyboard;
+		this.keyboard  = Keyboard.get();
 		this.speed     = 8;
 		this.maxSpeed  = this.speed;
 
@@ -51,6 +45,8 @@ export class View extends BaseView
 		this.args.simulationLock = 60;
 
 		this.args.showEditor = false;
+
+		this.keyboard.listening = true;
 
 		this.keyboard.keys.bindTo('`', (v,k,t,d)=>{
 			if(v === -1)
@@ -122,7 +118,7 @@ export class View extends BaseView
 		});
 	}
 
-	postRender()
+	onRendered()
 	{
 		this.spriteBoard = new SpriteBoard(
 			this.tags.canvas.element
@@ -266,7 +262,6 @@ export class View extends BaseView
 		// });
 
 		window.addEventListener('resize', () => {
-			// this.resize(256, 256);
 			this.resize();
 			update();
 		});
