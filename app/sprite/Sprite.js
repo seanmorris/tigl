@@ -276,7 +276,7 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 			return this.promises[imageSrc];
 		}
 
-		console.log(imageSrc);
+		// console.log(imageSrc);
 
 		this.promises[imageSrc] = Sprite.loadImage(imageSrc).then((image)=>{
 			const texture = gl.createTexture();

@@ -99,114 +99,110 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 		let selecting = false;
 		let tileSize  = 32;
 
-		this.element.addEventListener(
-			'mousedown', (event)=>{
-				let modSize   = tileSize * this.zoomLevel;
+		// this.element.addEventListener('mousedown', (event)=>{
+		// 	let modSize   = tileSize * this.zoomLevel;
 
-				if(this.unselect())
-				{
-					selecting = false;
-					return;
-				}
+		// 	if(this.unselect())
+		// 	{
+		// 		selecting = false;
+		// 		return;
+		// 	}
 
-				// console.log(
-				// 	event.clientX
-				// 	, event.clientY
-				// );
+		// 	// console.log(
+		// 	// 	event.clientX
+		// 	// 	, event.clientY
+		// 	// );
 
-				selecting = true;
-				this.mouse.clickX = event.clientX;
-				this.mouse.clickY = event.clientY;
+		// 	selecting = true;
+		// 	this.mouse.clickX = event.clientX;
+		// 	this.mouse.clickY = event.clientY;
 
-				let localX = Math.floor((this.mouse.clickX
-					+ (this.Camera.x % modSize)
-					- (Math.floor(this.element.width /2) % modSize)
-					+ 16  * this.zoomLevel
-				) / modSize);
+		// 	let localX = Math.floor((this.mouse.clickX
+		// 		+ (this.Camera.x % modSize)
+		// 		- (Math.floor(this.element.width /2) % modSize)
+		// 		+ 16  * this.zoomLevel
+		// 	) / modSize);
 
-				let localY = Math.floor((this.mouse.clickY
-					+ (this.Camera.y % modSize)
-					- (Math.floor(this.element.height /2) % modSize)
-					+ 16  * this.zoomLevel
-				) / modSize);
+		// 	let localY = Math.floor((this.mouse.clickY
+		// 		+ (this.Camera.y % modSize)
+		// 		- (Math.floor(this.element.height /2) % modSize)
+		// 		+ 16  * this.zoomLevel
+		// 	) / modSize);
 
-				this.selected.startLocalX = localX;
-				this.selected.startLocalY = localY;
+		// 	this.selected.startLocalX = localX;
+		// 	this.selected.startLocalY = localY;
 
-				this.selected.startGlobalX = (this.selected.startLocalX
-					- Math.floor(Math.floor(this.element.width /2) / modSize)
-					+ (this.Camera.x < 0
-						? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
-						: Math.floor(this.Camera.x * this.zoomLevel / modSize)
-					)
-				);
+		// 	this.selected.startGlobalX = (this.selected.startLocalX
+		// 		- Math.floor(Math.floor(this.element.width /2) / modSize)
+		// 		+ (this.Camera.x < 0
+		// 			? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
+		// 			: Math.floor(this.Camera.x * this.zoomLevel / modSize)
+		// 		)
+		// 	);
 
-				this.selected.startGlobalY = (this.selected.startLocalY
-					- Math.floor(Math.floor(this.element.height /2) / modSize)
-					+ (this.Camera.y < 0
-						? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
-						: Math.floor(this.Camera.y * this.zoomLevel / modSize)
-					)
-				);
-			}
-		);
+		// 	this.selected.startGlobalY = (this.selected.startLocalY
+		// 		- Math.floor(Math.floor(this.element.height /2) / modSize)
+		// 		+ (this.Camera.y < 0
+		// 			? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
+		// 			: Math.floor(this.Camera.y * this.zoomLevel / modSize)
+		// 		)
+		// 	);
+		// });
 
-		this.element.addEventListener(
-			'mouseup', (event)=>{
-				let modSize   = tileSize * this.zoomLevel;
+		// this.element.addEventListener('mouseup', (event)=>{
+		// 		let modSize   = tileSize * this.zoomLevel;
 
-				if(!selecting)
-				{
-					selecting = false;
-					return;
-				}
+		// 		if(!selecting)
+		// 		{
+		// 			selecting = false;
+		// 			return;
+		// 		}
 
-				console.log(
-					event.clientX
-					, event.clientY
-				);
+		// 		console.log(
+		// 			event.clientX
+		// 			, event.clientY
+		// 		);
 
-				this.mouse.clickX = event.clientX;
-				this.mouse.clickY = event.clientY;
+		// 		this.mouse.clickX = event.clientX;
+		// 		this.mouse.clickY = event.clientY;
 
-				let localX = Math.floor((this.mouse.clickX
-					+ (this.Camera.x % modSize)
-					- (Math.floor(this.element.width /2) % modSize)
-					+ 16  * this.zoomLevel
-				) / modSize);
+		// 		let localX = Math.floor((this.mouse.clickX
+		// 			+ (this.Camera.x % modSize)
+		// 			- (Math.floor(this.element.width /2) % modSize)
+		// 			+ 16  * this.zoomLevel
+		// 		) / modSize);
 
-				let localY = Math.floor((this.mouse.clickY
-					+ (this.Camera.y % modSize)
-					- (Math.floor(this.element.height /2) % modSize)
-					+ 16  * this.zoomLevel
-				) / modSize);
+		// 		let localY = Math.floor((this.mouse.clickY
+		// 			+ (this.Camera.y % modSize)
+		// 			- (Math.floor(this.element.height /2) % modSize)
+		// 			+ 16  * this.zoomLevel
+		// 		) / modSize);
 
-				console.log(localX, localY);
+		// 		console.log(localX, localY);
 
-				let globalX = (localX
-					- Math.floor(Math.floor(this.element.width /2) / modSize)
-					+ (this.Camera.x < 0
-						? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
-						: Math.floor(this.Camera.x * this.zoomLevel / modSize)
-					)
-				);
+		// 		let globalX = (localX
+		// 			- Math.floor(Math.floor(this.element.width /2) / modSize)
+		// 			+ (this.Camera.x < 0
+		// 				? Math.ceil(this.Camera.x * this.zoomLevel / modSize)
+		// 				: Math.floor(this.Camera.x * this.zoomLevel / modSize)
+		// 			)
+		// 		);
 
-				let globalY = (localY
-					- Math.floor(Math.floor(this.element.height /2) / modSize)
-					+ (this.Camera.y < 0
-						? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
-						: Math.floor(this.Camera.y * this.zoomLevel /  modSize)
-					)
-				);
+		// 		let globalY = (localY
+		// 			- Math.floor(Math.floor(this.element.height /2) / modSize)
+		// 			+ (this.Camera.y < 0
+		// 				? Math.ceil(this.Camera.y * this.zoomLevel / modSize)
+		// 				: Math.floor(this.Camera.y * this.zoomLevel /  modSize)
+		// 			)
+		// 		);
 
-				this.selected.localX  = localX;
-				this.selected.globalX = globalX;
-				this.selected.localY  = localY;
-				this.selected.globalY = globalY;
+		// 		this.selected.localX  = localX;
+		// 		this.selected.globalX = globalX;
+		// 		this.selected.localY  = localY;
+		// 		this.selected.globalY = globalY;
 
-				selecting = false;
-			}
-		);
+		// 		selecting = false;
+		// });
 
 		this.background  = new Background(this, map);
 		this.background1 = new Background(this, map, 1);

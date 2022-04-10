@@ -3,7 +3,7 @@ import { Config }           from 'Config';
 import { Bag              } from 'curvature/base/Bag';
 import { View as BaseView } from 'curvature/base/View';
 
-import { Map         } from '../world/Map';
+import { Map as WorldMap } from '../world/Map';
 
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
@@ -47,13 +47,6 @@ export class View extends BaseView
 		this.args.showEditor = false;
 
 		this.keyboard.listening = true;
-
-		this.keyboard.keys.bindTo('`', (v,k,t,d)=>{
-			if(v === -1)
-			{
-				console.log(k);
-			}
-		});
 
 		this.keyboard.keys.bindTo('e', (v,k,t,d)=>{
 			if(v > 0)
@@ -108,7 +101,7 @@ export class View extends BaseView
 		});
 
 		this.spriteSheet = new SpriteSheet;
-		this.map         = new Map;
+		this.map         = new WorldMap;
 
 		this.map.import();
 
