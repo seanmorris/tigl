@@ -1,5 +1,5 @@
 import { Injectable  } from '../inject/Injectable';
-import { SpriteSheet } from '../sprite/SpriteSheet';
+import { SpriteSheet } from './SpriteSheet';
 import { Camera      } from './Camera';
 import { Gl2d        } from '../gl2d/Gl2d';
 
@@ -27,7 +27,7 @@ export class Surface extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 		this.texVertices = [];
 
-		const gl     = gl2d.context;
+		const gl  = gl2d.context;
 
 		this.texture     = gl.createTexture();
 		this.subTextures = {};

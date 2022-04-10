@@ -13,12 +13,19 @@
     "curvature": "^0.0.29"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.0.0",
     "auto-reload-brunch": "^2",
-    "babel-brunch": "^6.1.1",
-    "babel-preset-latest": "^6",
-    "brunch": "^2.10.17",
-    "clean-css-brunch": "^2",
+    "babel-brunch": "^7.0.1",
+    "babel-minify": "^0.5.1",
+    "babel-plugin-macros": "^2.8.0",
+    "brunch": "^4",
+    "clean-css-brunch": "^3",
     "raw-brunch": "^1.0.2",
-    "uglify-js-brunch": "^2"
+    "rawquire": "^0.0.1",
+    "terser-brunch": "^4",
+    "uglify-es-brunch": "^1"
   }
 }

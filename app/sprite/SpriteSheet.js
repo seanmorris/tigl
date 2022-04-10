@@ -1,4 +1,4 @@
-export class SpriteSheet 
+export class SpriteSheet
 {
 	constructor()
 	{
@@ -29,11 +29,11 @@ export class SpriteSheet
 
 		this.ready = Promise.all([sheetLoader, imageLoader]).then(()=>{
 			return this.processImage().then(()=>{
-				return this;				
+				return this;
 			});
 		});
 	}
-	
+
 	processImage()
 	{
 		if(!this.boxes || !this.boxes.frames)
@@ -41,33 +41,54 @@ export class SpriteSheet
 			return;
 		}
 
-		let canvas, context;
-
-		canvas        = document.createElement('canvas');
+		const canvas  = document.createElement('canvas');
 
 		canvas.width  = this.image.width;
 		canvas.height = this.image.height;
 
-		context       = canvas.getContext("2d");
+		const context = canvas.getContext("2d");
 
 		context.drawImage(this.image, 0, 0);
 
-		let framePromises = [];
+		const framePromises = [];
 
 		for(let i in this.boxes.frames)
 		{
-			let subCanvas    = document.createElement('canvas');
+			const subCanvas    = document.createElement('canvas');
+
 			subCanvas.width  = this.boxes.frames[i].frame.w;
 			subCanvas.height = this.boxes.frames[i].frame.h;
 
-			let subContext = subCanvas.getContext("2d");
+			const subContext = subCanvas.getContext("2d");
 
-			subContext.putImageData(context.getImageData(
-				this.boxes.frames[i].frame.x
-				, this.boxes.frames[i].frame.y
-				, this.boxes.frames[i].frame.w
-				, this.boxes.frames[i].frame.h
-			), 0, 0);
+			if(this.boxes.frames[i].frame)
+			{
+				subContext.putImageData(context.getImageData(
+					this.boxes.frames[i].frame.x
+					, this.boxes.frames[i].frame.y
+					, this.boxes.frames[i].frame.w
+					, this.boxes.frames[i].frame.h
+				), 0, 0);
+			}
+
+			if(this.boxes.frames[i].text)
+			{
+				subContext.fillStyle = this.boxes.frames[i].color || 'white';
+
+				subContext.font = this.boxes.frames[i].font
+					|| `${this.boxes.frames[i].frame.h}px sans-serif`;
+				subContext.textAlign = 'center';
+
+				subContext.fillText(
+					this.boxes.frames[i].text
+					, this.boxes.frames[i].frame.w / 2
+					, this.boxes.frames[i].frame.h
+					, this.boxes.frames[i].frame.w
+				);
+
+				subContext.textAlign = null;
+				subContext.font      = null;
+			}
 
 			framePromises.push(new Promise((accept)=>{
 				subCanvas.toBlob((blob)=>{
