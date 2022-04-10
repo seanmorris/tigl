@@ -1,20 +1,25 @@
-// See http://brunch.io for documentation.
-exports.files = {
-  javascripts: {joinTo: 'app.js'},
-  stylesheets: {joinTo: 'app.css'}
-};
+module.exports = {  
+  sourceMaps: 'inline'
+  , watcher: { awaitWriteFinish: true }
+  , paths:   { public: './docs' }
 
-exports.plugins = {
-  babel: {presets: ['latest']},
-  raw: {
-    pattern: /\.(html|vert|frag)$/,
-    wrapper: content => `module.exports = ${JSON.stringify(content)}`
+  , modules: {
+  }
+  
+  , files:   {
+    stylesheets: {joinTo: 'app.css'}
+    , javascripts: {joinTo: 'app.js'}
+  }
+  
+  , plugins: {
+    preval:  { tokens: { BUILD_TIME: ()=> Date.now() } }
+    , raw: {
+      pattern: /\.(html|svg)$/,
+      wrapper: content => `module.exports = ${JSON.stringify(content)}`
+    }
+    , babel: {
+      plugins:   ["@babel/plugin-proposal-class-properties", "macros"]
+      , presets: ['@babel/preset-env']
+    }
   }
 };
-
-exports.watcher = {
-    awaitWriteFinish: true,
-    usePolling: true
-}
-
-exports.sourceMaps = 'inline';
