@@ -14,7 +14,7 @@ module.exports = {
   , plugins: {
     preval:  { tokens: { BUILD_TIME: ()=> Date.now() } }
     , raw: {
-      pattern: /\.(html|svg)$/,
+      pattern: /\.(html|svg|frag|vert)$/,
       wrapper: content => `module.exports = ${JSON.stringify(content)}`
     }
     , babel: {
