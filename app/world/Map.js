@@ -1,7 +1,8 @@
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { Injectable  } from '../inject/Injectable';
 
-export class Map extends Injectable.inject({SpriteSheet})
+export  class Map
+extends Injectable.inject({SpriteSheet})
 {
 	constructor()
 	{

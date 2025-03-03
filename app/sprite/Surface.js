@@ -3,7 +3,8 @@ import { SpriteSheet } from './SpriteSheet';
 import { Camera      } from './Camera';
 import { Gl2d        } from '../gl2d/Gl2d';
 
-export class Surface extends Injectable.inject({Gl2d, Camera, SpriteSheet})
+export  class Surface
+extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 {
 	constructor(gl2d, map, xSize = 2, ySize = 2, xOffset = 0, yOffset = 0, layer = 0)
 	{
@@ -170,39 +171,7 @@ export class Surface extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 		gl.useProgram(this.gl2d.program);
 
-		// gl.uniform4f(
-		// 	this.gl2d.colorLocation
-		// 	, 1
-		// 	, 0
-		// 	, 0
-		// 	, 1
-		// );
-
-		// gl.enableVertexAttribArray(this.gl2d.positionLocation);
-
 		gl.bindTexture(gl.TEXTURE_2D, this.pane);
-		// gl.enableVertexAttribArray(this.gl2d.texCoordLocation);
-		// gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-
-		// gl.vertexAttribPointer(
-		// 	this.gl2d.texCoordLocation
-		// 	, 2
-		// 	, gl.FLOAT
-		// 	, false
-		// 	, 0
-		// 	, 0
-		// );
-
-		// gl.bindBuffer(gl.ARRAY_BUFFER, this.gl2d.texCoordBuffer);
-
-		// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-		// 	0.0,  0.0,
-		// 	1.0,  0.0,
-		// 	0.0,  1.0,
-		// 	0.0,  1.0,
-		// 	1.0,  0.0,
-		// 	1.0,  1.0,
-		// ]), gl.STATIC_DRAW);
 
 		this.setRectangle(
 			this.x   - (this.Camera.x - (this.Camera.width  /2)) - 16

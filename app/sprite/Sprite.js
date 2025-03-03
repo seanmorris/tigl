@@ -1,5 +1,3 @@
-import { Bindable    } from 'curvature/base/Bindable';
-import { Keyboard    } from 'curvature/input/Keyboard'
 import { SpriteSheet } from './SpriteSheet';
 
 import { Gl2d        } from '../gl2d/Gl2d';
@@ -35,8 +33,6 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 		this.DOWN	= 1;
 		this.LEFT	= 2;
 		this.UP		= 3;
-
-		this.director = this.UP;
 
 		this.EAST	= this.RIGHT;
 		this.SOUTH	= this.DOWN;
@@ -100,6 +96,15 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 		const gl = this.Gl2d.context;
 
+		gl.vertexAttribPointer(
+			this.Gl2d.positionLocation
+			, 2
+			, gl.FLOAT
+			, false
+			, 0
+			, 0
+		);
+
 		this.texture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -130,20 +135,11 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 				});
 			}
 		});
-
-
-
 	}
 
 	draw()
 	{
-		// if(this.moving == false && this.spriteSheet)
-		// {
-		// 	this.setFrames(this.standing.south);
-		// }
-
-		this.frameDelay = (this.maxSpeed * 1.5) - Math.abs(this.speed);
-
+		this.frameDelay = this.maxSpeed - Math.abs(this.speed);
 		if(this.frameDelay > this.maxSpeed)
 		{
 			this.frameDelay = this.maxSpeed;
@@ -320,15 +316,6 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.positionBuffer);
 
-		gl.vertexAttribPointer(
-			this.Gl2d.positionLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
-
 		var x1 = x;
 		var x2 = x + width;
 		var y1 = y;
@@ -343,88 +330,4 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 			x2, y2,
 		]), gl.STREAM_DRAW);
 	}
-
-	// keyPress(key, value, prev)
-	// {
-	// 	// console.log(this.speed);
-
-	// 	if(value == -1)
-	// 	{
-	// 		this.speed  = 0;
-	// 		this.moving = false;
-	// 		return;
-	// 	}
-
-	// 	if(!value || value < 0)
-	// 	{
-	// 		return;
-	// 	}
-
-	// 	if(this.moving && this.moving !== key)
-	// 	{
-	// 		return;
-	// 	}
-
-	// 	if(prev < 0 && prev > -10)
-	// 	{
-	// 		// if(this.speed > 0)
-	// 		// {
-	// 		// 	this.speed = this.maxSpeed;
-	// 		// }
-	// 		// else
-	// 		// {
-	// 		// 	this.speed = -this.maxSpeed;
-	// 		// }
-	// 	}
-
-	// 	if(this.speed >= this.maxSpeed)
-	// 	{
-	// 		this.speed = this.maxSpeed;
-	// 	}
-
-	// 	if(this.speed <= -this.maxSpeed)
-	// 	{
-	// 		this.speed = -this.maxSpeed;
-	// 	}
-
-	// 	switch(key)
-	// 	{
-	// 		case 'ArrowRight':
-	// 			this.setFrames(this.walking.east);
-	// 			this.direction = this.RIGHT;
-	// 			if(value % 8 == 0)
-	// 			{
-	// 				this.speed++;
-	// 			}
-	// 			break;
-	// 		case 'ArrowDown':
-	// 			this.setFrames(this.walking.south);
-	// 			this.direction = this.DOWN;
-	// 			if(value % 8 == 0)
-	// 			{
-	// 				this.speed++;
-	// 			}
-	// 			break;
-	// 		case 'ArrowLeft':
-	// 			this.setFrames(this.walking.west);
-	// 			this.direction = this.LEFT;
-	// 			if(value % 8 == 0)
-	// 			{
-	// 				this.speed--;
-	// 			}
-	// 			break;
-	// 		case 'ArrowUp':
-	// 			this.setFrames(this.walking.north);
-	// 			this.direction = this.UP;
-	// 			if(value % 8 == 0)
-	// 			{
-	// 				this.speed--;
-	// 			}
-	// 			break;
-	// 	}
-
-	// 	this.moving = key;
-
-	// 	this.Gl2d.moveCamera(this.x, this.y);
-	// }
 }

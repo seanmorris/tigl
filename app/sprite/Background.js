@@ -6,7 +6,8 @@ import { Surface     } from './Surface';
 import { Camera      } from './Camera';
 import { SpriteSheet } from './SpriteSheet';
 
-export class Background extends Injectable.inject({Gl2d, Camera})
+export  class Background
+extends Injectable.inject({Gl2d, Camera})
 {
 	constructor(gl2d, map, layer = 0)
 	{

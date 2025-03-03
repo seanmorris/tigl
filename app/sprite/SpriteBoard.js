@@ -207,15 +207,22 @@ export class SpriteBoard extends Gl2d.inject({Camera})
 		this.background  = new Background(this, map);
 		this.background1 = new Background(this, map, 1);
 
-		const barrel = new Sprite('barrel.png');
+		const w = 1280;
 
-		barrel.x = 32;
-		barrel.y = 32;
+		for(const i in Array(6).fill())
+		{
+			const barrel = new Sprite('barrel.png');
+			
+			barrel.x = (i * 32) % w;
+			barrel.y = Math.trunc((i * 32) / w) * 32;
+	
+			this.sprites.add(this.background);
+			this.sprites.add(this.background1);
+	
+			this.sprites.add(barrel);
+		}
 
-		this.sprites.add(this.background);
-		this.sprites.add(this.background1);
 
-		this.sprites.add(barrel);
 		// this.sprites.add(new Sprite('player_standing_south.png'));
 
 	}

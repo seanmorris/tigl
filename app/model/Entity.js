@@ -3,11 +3,8 @@ import { Sprite     } from '../sprite/Sprite';
 import { Controller } from './Controller';
 import { Camera     } from '../sprite/Camera';
 
-export class Entity extends Injectable.inject({
-	sprite:   Sprite
-	, Controller
-	, Camera
-}) {
+export class Entity extends Injectable.inject({sprite: Sprite, Controller, Camera})
+{
 	constructor()
 	{
 		super();
@@ -36,15 +33,8 @@ export class Entity extends Injectable.inject({
 			console.log(t);
 		}
 
-		if(xAxis > 1)
-		{
-			xAxis = 1;
-		}
-
-		if(yAxis > 1)
-		{
-			yAxis = 1;
-		}
+		xAxis = Math.min(1, Math.max(xAxis, -1));
+		yAxis = Math.min(1, Math.max(yAxis, -1));
 
 		this.sprite.x += xAxis > 0
 			? Math.ceil(speed * xAxis)
@@ -91,6 +81,11 @@ export class Entity extends Injectable.inject({
 		{
 			this.state = 'standing';
 		}
+
+		// if(!xAxis && !yAxis)
+		// {
+		// 	this.direction = 'south';
+		// }
 
 		let frames;
 

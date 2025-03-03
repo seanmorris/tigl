@@ -11,13 +11,9 @@ export class SpriteSheet
 
 		let request   = new Request(this.boxesUrl);
 
-		let sheetLoader = fetch(request).then((response)=>{
-			return response.json().then((boxes)=>{
-				this.boxes = boxes;
-
-				return true;
-			});
-		});
+		let sheetLoader = fetch(request)
+		.then((response)=>response.json())
+		.then((boxes) => this.boxes = boxes);
 
 		let imageLoader = new Promise((accept)=>{
 			this.image        = new Image();
@@ -27,11 +23,9 @@ export class SpriteSheet
 			};
 		});
 
-		this.ready = Promise.all([sheetLoader, imageLoader]).then(()=>{
-			return this.processImage().then(()=>{
-				return this;
-			});
-		});
+		this.ready = Promise.all([sheetLoader, imageLoader])
+		.then(() => this.processImage())
+		.then(() => this);
 	}
 
 	processImage()
@@ -54,7 +48,7 @@ export class SpriteSheet
 
 		for(let i in this.boxes.frames)
 		{
-			const subCanvas    = document.createElement('canvas');
+			const subCanvas  = document.createElement('canvas');
 
 			subCanvas.width  = this.boxes.frames[i].frame.w;
 			subCanvas.height = this.boxes.frames[i].frame.h;
@@ -167,7 +161,8 @@ export class SpriteSheet
 			return this.texturePromises[imageSrc];
 		}
 
-		this.texturePromises[imageSrc] = this.loadImage(imageSrc).then((image)=>{
+		return this.texturePromises[imageSrc] = this.loadImage(imageSrc)
+		.then((image)=>{
 			const texture = gl.createTexture();
 
 			gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -188,8 +183,6 @@ export class SpriteSheet
 
 			return {image, texture}
 		});
-
-		return this.texturePromises[imageSrc];
 	}
 
 	static loadImage(src)

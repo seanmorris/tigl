@@ -4,13 +4,13 @@ import { Keyboard   } from 'curvature/input/Keyboard'
 
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
 
-export class Controller extends Injectable.inject({
+export  class Controller
+extends Injectable.inject({
 	Keyboard
 	, OnScreenJoyPad
-
 	, triggers: Bindable.makeBindable({})
 	, axis:     Bindable.makeBindable({})
-}) {
+}){
 	constructor()
 	{
 		super();

@@ -1,7 +1,8 @@
-import { Config }           from 'Config';
-
-import { Bag              } from 'curvature/base/Bag';
 import { View as BaseView } from 'curvature/base/View';
+import { Keyboard } from 'curvature/input/Keyboard'
+import { Bag } from 'curvature/base/Bag';
+
+import { Config } from 'Config';
 
 import { Map as WorldMap } from '../world/Map';
 
@@ -11,10 +12,13 @@ import { SpriteBoard } from '../sprite/SpriteBoard';
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
 import { MapEditor   } from '../ui/MapEditor';
 
-import { Keyboard }    from 'curvature/input/Keyboard'
-
 import { Entity }     from '../model/Entity';
 import { Injectable } from '../inject/Injectable';
+
+const Application = {};
+
+Application.onScreenJoyPad = new OnScreenJoyPad;
+Application.keyboard = Keyboard.get();
 
 export class View extends BaseView
 {
@@ -25,15 +29,11 @@ export class View extends BaseView
 		this.routes    = [];
 
 		this.entities  = new Bag;
-		this.keyboard  = Keyboard.get();
-		this.speed     = 8;
+		this.keyboard  = Application.keyboard;
+		this.speed     = 24;
 		this.maxSpeed  = this.speed;
 
-		let injection = new (Injectable.inject({
-			OnScreenJoyPad
-		}));
-
-		this.args.controller = injection.OnScreenJoyPad;
+		this.args.controller = Application.onScreenJoyPad;
 
 		this.args.fps  = 0;
 		this.args.sps  = 0;
@@ -119,9 +119,7 @@ export class View extends BaseView
 		);
 
 		const entity = new Entity;
-
 		this.entities.add(entity);
-
 		this.spriteBoard.sprites.add(entity.sprite);
 
 		this.keyboard.keys.bindTo('=', (v,k,t,d)=>{
