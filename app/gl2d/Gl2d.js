@@ -1,40 +1,11 @@
-import { Bindable   } from 'curvature/base/Bindable';
-import { Injectable } from '../inject/Injectable';
-
-export class Gl2d extends Injectable
+export class Gl2d
 {
 	constructor(element)
 	{
-		super();
-
-		new (Injectable.inject({Gl2d: this}));
-
-		this.element   = element;// || document.createElement('canvas');
+		this.element   = element || document.createElement('canvas');
 		this.context   = this.element.getContext('webgl');
+		this.screenScale = 1;
 		this.zoomLevel = 1;
-	}
-
-	resize(x, y)
-	{
-		x = (x ||this.element.width)  / this.zoomLevel;
-		y = (y ||this.element.height) / this.zoomLevel;
-
-		const gl = this.context;
-
-		gl.viewport(0, 0, x, y);
-	}	
-
-	draw()
-	{
-		const gl = this.context;
-
-		gl.useProgram(this.program);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.clearColor(0, 0, 0, 0);
-		gl.clearColor(1, 1, 1, 1);
-		gl.clear(gl.COLOR_BUFFER_BIT);
 	}
 
 	cleanup()

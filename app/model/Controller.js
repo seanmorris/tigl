@@ -1,21 +1,13 @@
-import { Bindable   } from 'curvature/base/Bindable';
-import { Injectable } from '../inject/Injectable';
-import { Keyboard   } from 'curvature/input/Keyboard'
-
-import { Controller as OnScreenJoyPad } from '../ui/Controller';
+import { Bindable } from 'curvature/base/Bindable';
 
 export  class Controller
-extends Injectable.inject({
-	Keyboard
-	, OnScreenJoyPad
-	, triggers: Bindable.makeBindable({})
-	, axis:     Bindable.makeBindable({})
-}){
-	constructor()
+{
+	triggers = Bindable.makeBindable({});
+	axis     = Bindable.makeBindable({});
+	
+	constructor({keyboard, onScreenJoyPad})
 	{
-		super();
-
-		Keyboard.get().keys.bindTo((v,k,t,d)=>{
+		keyboard.keys.bindTo((v,k,t,d)=>{
 			if(v > 0)
 			{
 				this.keyPress(k,v,t[k]);
@@ -30,11 +22,11 @@ extends Injectable.inject({
 
 		});
 
-		this.OnScreenJoyPad.args.bindTo('x', (v) => {
+		onScreenJoyPad.args.bindTo('x', (v) => {
 			this.axis[0] = v / 50;
 		});
 
-		this.OnScreenJoyPad.args.bindTo('y', (v) => {
+		onScreenJoyPad.args.bindTo('y', (v) => {
 			this.axis[1] = v / 50;
 		});
 	}

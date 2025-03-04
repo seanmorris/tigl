@@ -1,5 +1,6 @@
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { Injectable  } from '../inject/Injectable';
+import { Bindable } from 'curvature/base/Bindable';
 
 export  class Map
 extends Injectable.inject({SpriteSheet})
@@ -7,6 +8,8 @@ extends Injectable.inject({SpriteSheet})
 	constructor()
 	{
 		super();
+
+		this[Bindable.Prevent] = true;
 
 		this.tiles = {};
 	}
@@ -28,8 +31,17 @@ extends Injectable.inject({SpriteSheet})
 			second = 'cheese.png'
 		}
 
+		if(x === -1 && y === -1)
+		{
+			return [
+				// this.SpriteSheet.getFrame('floorTile.png')
+				this.SpriteSheet.getFrame('box_face.png')
+			];
+		}
+
 		return [
 			this.SpriteSheet.getFrame('floorTile.png')
+			// this.SpriteSheet.getFrame('box_face.png')
 		];
 
 		return [

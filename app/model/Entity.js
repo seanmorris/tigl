@@ -1,15 +1,14 @@
-import { Injectable } from '../inject/Injectable';
-import { Sprite     } from '../sprite/Sprite';
-import { Controller } from './Controller';
-import { Camera     } from '../sprite/Camera';
+import { Camera } from '../sprite/Camera';
 
-export class Entity extends Injectable.inject({sprite: Sprite, Controller, Camera})
+export class Entity
 {
-	constructor()
+	constructor({sprite, controller})
 	{
-		super();
 		this.direction = 'south';
 		this.state     = 'standing';
+
+		this.sprite = sprite;
+		this.controller = controller;
 	}
 
 	create()
@@ -20,12 +19,12 @@ export class Entity extends Injectable.inject({sprite: Sprite, Controller, Camer
 	{
 		let speed = 4;
 
-		let xAxis = this.Controller.axis[0] || 0;
-		let yAxis = this.Controller.axis[1] || 0;
+		let xAxis = this.controller.axis[0] || 0;
+		let yAxis = this.controller.axis[1] || 0;
 
-		for(let t in this.Controller.triggers)
+		for(let t in this.controller.triggers)
 		{
-			if(!this.Controller.triggers[t])
+			if(!this.controller.triggers[t])
 			{
 				continue;
 			}
@@ -44,8 +43,8 @@ export class Entity extends Injectable.inject({sprite: Sprite, Controller, Camer
 			? Math.ceil(speed * yAxis)
 			: Math.floor(speed * yAxis);
 
-		this.Camera.x = this.sprite.x;
-		this.Camera.y = this.sprite.y;
+		Camera.x = (16 + this.sprite.x) * this.sprite.spriteBoard.gl2d.zoomLevel || 0;
+		Camera.y = (16 + this.sprite.y) * this.sprite.spriteBoard.gl2d.zoomLevel || 0;
 
 		let horizontal = false;
 

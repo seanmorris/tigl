@@ -1,11 +1,7 @@
 export class Camera
 {
-	constructor()
-	{
-		this.x = 0;
-		this.y = 0;
-
-		this.width  = 0;
-		this.height = 0;
-	}
+	static x = 0;
+	static y = 0;
+	static width  = 0;
+	static height = 0;
 }

@@ -12,18 +12,23 @@ import { SpriteBoard } from '../sprite/SpriteBoard';
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
 import { MapEditor   } from '../ui/MapEditor';
 
-import { Entity }     from '../model/Entity';
-import { Injectable } from '../inject/Injectable';
+import { Entity } from '../model/Entity';
+import { Camera } from '../sprite/Camera';
+
+import { Controller } from '../model/Controller';
+import { Sprite } from '../sprite/Sprite';
 
 const Application = {};
 
 Application.onScreenJoyPad = new OnScreenJoyPad;
 Application.keyboard = Keyboard.get();
 
+
 export class View extends BaseView
 {
 	constructor(args)
 	{
+		window.smProfiling = true;
 		super(args);
 		this.template  = require('./view.tmp');
 		this.routes    = [];
@@ -113,12 +118,25 @@ export class View extends BaseView
 
 	onRendered()
 	{
-		this.spriteBoard = new SpriteBoard(
+		const spriteBoard = new SpriteBoard(
 			this.tags.canvas.element
 			, this.map
 		);
 
-		const entity = new Entity;
+		this.spriteBoard = spriteBoard;
+
+		const entity = new Entity({
+			sprite: new Sprite({
+				src: undefined,
+				spriteBoard: spriteBoard,
+				spriteSheet: this.spriteSheet,
+			}),
+			controller: new Controller({
+				keyboard: this.keyboard,
+				onScreenJoyPad: this.args.controller,
+			}),
+			camera: Camera,
+		});
 		this.entities.add(entity);
 		this.spriteBoard.sprites.add(entity.sprite);
 
@@ -199,62 +217,9 @@ export class View extends BaseView
 
 		this.args.showEditor = true;
 
-		// this.args.controller.args.bindTo((v,k,t,d,p)=>{
-		// 	if(v === 0)
-		// 	{
-		// 		// sprite.moving = false;
-		// 		// sprite.speed  = 0;
-		// 		return;
-		// 	}
-
-		// 	if(k !== 'x' && k !== 'y')
-		// 	{
-		// 		return;
-		// 	}
-
-		// 	let horizontal = false;
-		// 	let magnitude  = t['y'];
-
-		// 	if(Math.abs(t['x']) > Math.abs(t['y']))
-		// 	{
-		// 		horizontal = true;
-		// 		magnitude  = t['x'];
-		// 	}
-
-		// 	if(horizontal && magnitude > 0)
-		// 	{
-		// 		// sprite.setFrames(sprite.walking.east);
-		// 		// sprite.direction = sprite.RIGHT;
-		// 	}
-		// 	else if(horizontal && magnitude < 0)
-		// 	{
-		// 		// sprite.setFrames(sprite.walking.west);
-		// 		// sprite.direction = sprite.LEFT;
-		// 	}
-		// 	else if(magnitude > 0){
-		// 		// sprite.setFrames(sprite.walking.south);
-		// 		// sprite.direction = sprite.DOWN;
-		// 	}
-		// 	else if(magnitude < 0){
-		// 		// sprite.setFrames(sprite.walking.north);
-		// 		// sprite.direction = sprite.UP;
-		// 	}
-
-		// 	magnitude = Math.round(magnitude / 6.125);
-
-		// 	// sprite.speed = magnitude < 8 ? magnitude : 8;
-
-		// 	if(magnitude < -8)
-		// 	{
-		// 		sprite.speed = -8;
-		// 	}
-
-		// 	// sprite.moving = !!magnitude;
-		// });
-
 		window.addEventListener('resize', () => {
 			this.resize();
-			update();
+			// update();
 		});
 
 		let fThen = 0;
@@ -342,10 +307,11 @@ export class View extends BaseView
 
 			this.args._fps = (1 / delta);
 
-			this.args.camX = this.spriteBoard.Camera.x;
-			this.args.camY = this.spriteBoard.Camera.y;
+			this.args.camX = Number(Camera.x).toFixed(2);
+			this.args.camY = Number(Camera.y).toFixed(2);
 		};
 
+		this.spriteBoard.gl2d.zoomLevel = document.body.clientWidth / 1024;
 		this.resize();
 
 		setInterval(()=>{
@@ -374,13 +340,18 @@ export class View extends BaseView
 		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;
 		this.args.height = this.tags.canvas.element.height  = y || document.body.clientHeight;
 
-		this.args.rwidth  = Math.floor(
-			(x || document.body.clientWidth)  / this.spriteBoard.zoomLevel
+		this.args.rwidth  = Math.trunc(
+			(x || document.body.clientWidth)  / this.spriteBoard.gl2d.zoomLevel
 		);
 
-		this.args.rheight = Math.floor(
-			(y || document.body.clientHeight) / this.spriteBoard.zoomLevel
+		this.args.rheight = Math.trunc(
+			(y || document.body.clientHeight) / this.spriteBoard.gl2d.zoomLevel
 		);
+
+		const oldScale = this.spriteBoard.gl2d.screenScale;
+		this.spriteBoard.gl2d.screenScale = document.body.clientWidth / 1024;
+
+		this.spriteBoard.gl2d.zoomLevel *= this.spriteBoard.gl2d.screenScale / oldScale;
 
 		this.spriteBoard.resize();
 	}
@@ -396,17 +367,25 @@ export class View extends BaseView
 
 	zoom(delta)
 	{
-		let min   = 0.35;
-		let step  = 0.05;		
+		const max   = this.spriteBoard.gl2d.screenScale * 32;
+		const min   = this.spriteBoard.gl2d.screenScale * 0.6667;
+		
+		const step  = 0.05 * this.spriteBoard.gl2d.zoomLevel;
 
-		if(delta > 0 || delta < 0 && this.spriteBoard.zoomLevel > min)
+		let zoomLevel = this.spriteBoard.gl2d.zoomLevel + (delta * step);
+
+		if(zoomLevel < min)
 		{
-			this.spriteBoard.zoomLevel += (delta * step);
-			this.resize();
+			zoomLevel = min;
 		}
-		else
+		else if(zoomLevel > max)
 		{
-			this.spriteBoard.zoomLevel = min;
+			zoomLevel = max;
+		}
+
+		if(this.spriteBoard.gl2d.zoomLevel !== zoomLevel)
+		{
+			this.spriteBoard.gl2d.zoomLevel = zoomLevel;
 			this.resize();
 		}
 	}

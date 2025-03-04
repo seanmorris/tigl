@@ -1,15 +1,12 @@
-import { SpriteSheet } from './SpriteSheet';
+import { Bindable } from "curvature/base/Bindable";
+import { Camera } from "./Camera";
 
-import { Gl2d        } from '../gl2d/Gl2d';
-import { Injectable  } from '../inject/Injectable';
-import { Camera      } from './Camera';
-
-export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
+export class Sprite
 {
-	constructor(imageSrc)
+	constructor({src, spriteBoard, spriteSheet})
 	{
-		super();
-
+		this[Bindable.Prevent] = true;
+		
 		this.z      = 0;
 		this.x      = 0;
 		this.y      = 0;
@@ -94,16 +91,9 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 			]
 		};
 
-		const gl = this.Gl2d.context;
+		this.spriteBoard = spriteBoard;
 
-		gl.vertexAttribPointer(
-			this.Gl2d.positionLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
+		const gl = this.spriteBoard.gl2d.context;
 
 		this.texture = gl.createTexture();
 
@@ -123,12 +113,14 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 			, new Uint8Array([r(), r(), 0, 255])
 		);
 
-		this.SpriteSheet.ready.then((sheet)=>{
-			const frame = this.SpriteSheet.getFrame(imageSrc);
+		this.spriteSheet = spriteSheet;
+
+		this.spriteSheet.ready.then((sheet)=>{
+			const frame = this.spriteSheet.getFrame(src);
 
 			if(frame)
 			{
-				Sprite.loadTexture(this.Gl2d, this.SpriteSheet, frame).then((args)=>{
+				Sprite.loadTexture(this.spriteBoard.gl2d, this.spriteSheet, frame).then((args)=>{
 					this.texture = args.texture;
 					this.width   = args.image.width * this.scale;
 					this.height  = args.image.height * this.scale;
@@ -165,65 +157,22 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 		if(frame)
 		{
 			this.texture = frame.texture;
-
 			this.width  = frame.width * this.scale;
 			this.height = frame.height * this.scale;
 		}
 
-		const gl = this.Gl2d.context;
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-		gl.useProgram(this.Gl2d.program);
-
-		gl.enableVertexAttribArray(this.Gl2d.positionLocation);
+		const gl = this.spriteBoard.gl2d.context;
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		gl.enableVertexAttribArray(this.Gl2d.texCoordLocation);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.texCoordBuffer);
-
-		gl.vertexAttribPointer(
-			this.Gl2d.texCoordLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.texCoordBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0,  0.0,
-			1.0,  0.0,
-			0.0,  1.0,
-			0.0,  1.0,
-			1.0,  0.0,
-			1.0,  1.0,
-		]), gl.STREAM_DRAW);
 
 		this.setRectangle(
-			this.x   - (
-				this.Camera.x
-				- this.Camera.width / 2
-			) - (16 * this.scale)
-			, this.y - (
-				this.Camera.y
-				- this.Camera.height /2
-			) - (this.height /2) - (16 * this.scale)
-
-			, this.width
-			, this.height
+			this.x * this.spriteBoard.gl2d.zoomLevel + -Camera.x + (Camera.width * this.spriteBoard.gl2d.zoomLevel / 2)
+			, this.y * this.spriteBoard.gl2d.zoomLevel + -Camera.y + (Camera.height * this.spriteBoard.gl2d.zoomLevel / 2) + -this.height * 0.5 * this.spriteBoard.gl2d.zoomLevel
+			, this.width * this.spriteBoard.gl2d.zoomLevel
+			, this.height * this.spriteBoard.gl2d.zoomLevel
 		);
 
-		gl.uniform4f(
-			this.Gl2d.colorLocation
-			, 1
-			, 0
-			, 0
-			, 1
-		);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
 	setFrames(frameSelector)
@@ -237,11 +186,11 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 		this.currentFrames = framesId;
 
-		this.SpriteSheet.ready.then((sheet)=>{
+		this.spriteSheet.ready.then((sheet)=>{
 
 			const frames = sheet.getFrames(frameSelector).map((frame)=>{
 
-				return Sprite.loadTexture(this.Gl2d, this.SpriteSheet, frame).then((args)=>{
+				return Sprite.loadTexture(this.spriteBoard.gl2d, this.spriteSheet, frame).then((args)=>{
 					return {
 						texture:  args.texture
 						, width:  args.image.width
@@ -312,22 +261,22 @@ export class Sprite extends Injectable.inject({Gl2d, Camera, SpriteSheet})
 
 	setRectangle(x, y, width, height)
 	{
-		const gl = this.Gl2d.context;
+		const gl = this.spriteBoard.gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.Gl2d.positionBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.positionBuffer);
 
-		var x1 = x;
-		var x2 = x + width;
-		var y1 = y;
-		var y2 = y + height;
+		const x1 = x;
+		const x2 = x + width;
+		const y1 = y;
+		const y2 = y + height;
 		
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1, y1,
-			x2, y1,
-			x1, y2,
-			x1, y2,
-			x2, y1,
-			x2, y2,
+			x1, y1, this.z,
+			x2, y1, this.z,
+			x1, y2, this.z,
+			x1, y2, this.z,
+			x2, y1, this.z,
+			x2, y2, this.z,
 		]), gl.STREAM_DRAW);
 	}
 }
