@@ -44,6 +44,8 @@ export class SpriteBoard
 			, this.gl2d.createShader('overlay/overlay.frag')
 		);
 
+		gl.useProgram(this.program);
+
 		this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
 		this.texCoordLocation = gl.getAttribLocation(this.program, 'a_texCoord');
 
@@ -143,7 +145,6 @@ export class SpriteBoard
 		}
 			
 		const gl = this.gl2d.context;
-		gl.useProgram(this.program);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);

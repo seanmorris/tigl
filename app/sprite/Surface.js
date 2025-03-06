@@ -10,77 +10,33 @@ export class Surface
 		this.spriteBoard = spriteBoard;
 		this.spriteSheet = spriteSheet;
 
-		this.x       = xOffset;
-		this.y       = yOffset;
-		this.z       = z;
+		this.x = xOffset;
+		this.y = yOffset;
+		this.z = z;
 
-		this.layer   = layer;
-		this.xSize   = xSize;
-		this.ySize   = ySize;
+		this.layer = layer;
+		this.xSize = xSize;
+		this.ySize = ySize;
 
 		this.tileWidth  = 32;
 		this.tileHeight = 32;
 
-		this.width   = this.xSize * this.tileWidth;
-		this.height  = this.ySize * this.tileHeight;
+		this.width  = this.xSize * this.tileWidth;
+		this.height = this.ySize * this.tileHeight;
 
 		this.map = map;
 
 		this.texVertices = [];
 
-		const gl  = this.spriteBoard.gl2d.context;
-
+		
 		this.subTextures = {};
-
-		this.spriteSheet.ready.then(sheet => {
-			let texturePromises = [];
-
-			const size = this.xSize * this.ySize;
-
-			for(let i = 0; i < size; i++)
-			{
-				let localX  = i % this.xSize;
-				let offsetX = Math.floor(this.x / this.tileWidth);
-				let globalX = localX + offsetX;
-
-				let localY  = Math.floor(i / this.xSize);
-				let offsetY = Math.floor(this.y / this.tileHeight);
-				let globalY = localY + offsetY;
-
-				let frames = this.map.getTile(globalX, globalY, this.layer);
-
-				if(Array.isArray(frames))
-				{
-					let j = 0;
-					this.subTextures[i] = [];
-
-					texturePromises.push( Promise.all(frames.map((frame)=>
-						this.spriteSheet.constructor.loadTexture(this.spriteBoard.gl2d, frame).then(
-							args => {
-								this.subTextures[i][j] = args.texture;
-								j++;
-							}
-						)
-					)));
-				}
-				else
-				{
-					texturePromises.push(
-						this.spriteSheet.constructor.loadTexture(gl2d, frames).then(
-							args => this.subTextures[i] = args.texture
-						)
-					);
-				}
-			}
-
-			Promise.all(texturePromises).then(() => this.assemble());
-
-		});
-
+		
+		this.spriteSheet.ready.then(sheet => this.buildTiles());
+		
+		const gl = this.spriteBoard.gl2d.context;
 		this.pane = gl.createTexture();
-
+		
 		gl.bindTexture(gl.TEXTURE_2D, this.pane);
-
 		gl.texImage2D(
 			gl.TEXTURE_2D
 			, 0
@@ -135,9 +91,56 @@ export class Surface
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
+	buildTiles()
+	{
+		let texturePromises = [];
+		const size = this.xSize * this.ySize;
+
+		for(let i = 0; i < size; i++)
+		{
+			let localX  = i % this.xSize;
+			let offsetX = Math.floor(this.x / this.tileWidth);
+			let globalX = localX + offsetX;
+
+			let localY  = Math.floor(i / this.xSize);
+			let offsetY = Math.floor(this.y / this.tileHeight);
+			let globalY = localY + offsetY;
+
+			let frames = this.map.getTile(globalX, globalY, this.layer);
+
+			const loadTexture = frame => this.spriteSheet.constructor.loadTexture(this.spriteBoard.gl2d, frame);
+
+			if(Array.isArray(frames))
+			{
+				let j = 0;
+				this.subTextures[i] = [];
+				texturePromises.push(
+					Promise.all(frames.map((frame)=>
+						loadTexture(frame).then(
+							args => {
+								this.subTextures[i][j] = args.texture;
+								j++;
+							}
+						)
+					)
+				));
+			}
+			else
+			{
+				texturePromises.push(
+					loadTexture(frames).then(args => this.subTextures[i] = args.texture)
+				);
+			}
+		}
+
+		Promise.all(texturePromises).then(() => this.assemble());
+	}
+
 	assemble()
 	{
 		const gl = this.spriteBoard.gl2d.context;
+		
+		gl.bindTexture(gl.TEXTURE_2D, this.subTextures[0][0]);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.viewport(0, 0, this.width, this.height);
 		// gl.clearColor(0, 0, 0, 1);
@@ -150,6 +153,13 @@ export class Surface
 			, 0
 			, 0
 			, 1
+		);
+
+		gl.uniform3f(
+			this.spriteBoard.tilePosLocation
+			, 0
+			, 0
+			, 0
 		);
 
 		gl.uniform2f(
@@ -181,25 +191,30 @@ export class Surface
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 
-		let x = 0;
-		let y = 0;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		return;
 
 		for(let i in this.subTextures)
 		{
+			i = Number(i);
+			const x = (i * this.tileWidth) % this.width;
+			const y = Math.trunc(i * this.tileWidth / this.width) * this.tileWidth;
+
 			if(!Array.isArray(this.subTextures[i]))
 			{
 				this.subTextures[i] = [this.subTextures[i]];
 			}
-
+			
 			for(let j in this.subTextures[i])
 			{
 				gl.uniform3f(
 					this.spriteBoard.tilePosLocation
 					, Number(i)
 					, Object.keys(this.subTextures).length
-					, 0
-				);
-
+					, 1
+				);				
+				
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 					0.0, 0.0,
@@ -209,23 +224,15 @@ export class Surface
 					1.0, 0.0,
 					1.0, 1.0,
 				]), gl.STATIC_DRAW);
-
+				
 				this.setRectangle(
 					x
 					, y + this.tileHeight
 					, this.tileWidth
 					, -this.tileHeight
 				);
-
-				gl.drawArrays(gl.TRIANGLES, 0, 6);
-			}
-
-			x += this.tileWidth;
-
-			if(x >= this.width)
-			{
-				x = 0;
-				y += this.tileHeight;
+				
+				gl.drawArrays(gl.TRIANGLES, 0, 6);				
 			}
 		}
 
@@ -235,6 +242,8 @@ export class Surface
 			, 0
 			, 0
 		);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 
 	setRectangle(x, y, width, height)

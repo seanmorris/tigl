@@ -165,6 +165,16 @@ export class Sprite
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			0.0, 1.0,
+			1.0, 0.0,
+			1.0, 1.0,
+		]), gl.STATIC_DRAW);
+
 		this.setRectangle(
 			this.x * this.spriteBoard.gl2d.zoomLevel + -Camera.x + (Camera.width * this.spriteBoard.gl2d.zoomLevel / 2)
 			, this.y * this.spriteBoard.gl2d.zoomLevel + -Camera.y + (Camera.height * this.spriteBoard.gl2d.zoomLevel / 2) + -this.height * 0.5 * this.spriteBoard.gl2d.zoomLevel
