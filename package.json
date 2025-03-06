@@ -25,7 +25,6 @@
     "clean-css-brunch": "^3",
     "raw-brunch": "^1.0.2",
     "rawquire": "^0.0.1",
-    "terser-brunch": "^4",
     "uglify-es-brunch": "^1"
   }
 }

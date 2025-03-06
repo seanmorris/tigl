@@ -44,13 +44,14 @@ export class SpriteBoard
 			, this.gl2d.createShader('overlay/overlay.frag')
 		);
 
-		this.positionLocation   = gl.getAttribLocation(this.program, 'a_position');
-		this.texCoordLocation   = gl.getAttribLocation(this.program, 'a_texCoord');
+		this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
+		this.texCoordLocation = gl.getAttribLocation(this.program, 'a_texCoord');
 
 		this.positionBuffer = gl.createBuffer();
 		this.texCoordBuffer = gl.createBuffer();
 
 		this.resolutionLocation = gl.getUniformLocation(this.program, 'u_resolution');
+		this.tilePosLocation    = gl.getUniformLocation(this.program, 'u_tileNo');
 		this.colorLocation      = gl.getUniformLocation(this.program, 'u_color');
 
 		this.overlayLocation   = gl.getAttribLocation(this.overlayProgram, 'a_position');
@@ -112,7 +113,10 @@ export class SpriteBoard
 			barrel.y = Math.trunc((i * 32) / w) * 32;
 			this.sprites.add(barrel);
 		}
+
 		this.sprites.add(this.background);
+
+		this.following = null;
 	}
 
 	unselect()
@@ -132,6 +136,12 @@ export class SpriteBoard
 
 	draw()
 	{
+		if(this.following)
+		{
+			Camera.x = (16 + this.following.sprite.x) * this.gl2d.zoomLevel || 0;
+			Camera.y = (16 + this.following.sprite.y) * this.gl2d.zoomLevel || 0;
+		}
+
 		const gl = this.gl2d.context;
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -147,12 +157,6 @@ export class SpriteBoard
 		// gl.clear(gl.COLOR_BUFFER_BIT);
 
 		gl.useProgram(this.program);
-
-		gl.uniform2f(
-			this.gl2d.resolutionLocation
-			, Camera.width
-			, Camera.height
-		);
 
 		let sprites = this.sprites.items();
 
@@ -198,6 +202,9 @@ export class SpriteBoard
 	{
 		x = x || this.gl2d.element.width;
 		y = y || this.gl2d.element.height;
+
+		Camera.x *= this.gl2d.zoomLevel;
+		Camera.y *= this.gl2d.zoomLevel;
 
 		Camera.width  = x / this.gl2d.zoomLevel;
 		Camera.height = y / this.gl2d.zoomLevel;

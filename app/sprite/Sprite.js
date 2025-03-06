@@ -120,7 +120,7 @@ export class Sprite
 
 			if(frame)
 			{
-				Sprite.loadTexture(this.spriteBoard.gl2d, this.spriteSheet, frame).then((args)=>{
+				Sprite.loadTexture(this.spriteBoard.gl2d, frame).then((args)=>{
 					this.texture = args.texture;
 					this.width   = args.image.width * this.scale;
 					this.height  = args.image.height * this.scale;
@@ -186,28 +186,23 @@ export class Sprite
 
 		this.currentFrames = framesId;
 
-		this.spriteSheet.ready.then((sheet)=>{
+		const loadTexture = frame => Sprite.loadTexture(this.spriteBoard.gl2d, frame);
 
-			const frames = sheet.getFrames(frameSelector).map((frame)=>{
+		this.spriteSheet.ready.then(sheet => {
+			const frames = sheet.getFrames(frameSelector).map(
+				frame => loadTexture(frame).then(args => ({
+					texture:  args.texture
+					, width:  args.image.width
+					, height: args.image.height
+				}))
+			);
 
-				return Sprite.loadTexture(this.spriteBoard.gl2d, this.spriteSheet, frame).then((args)=>{
-					return {
-						texture:  args.texture
-						, width:  args.image.width
-						, height: args.image.height
-					}
-				});
-
-			});
-
-			Promise.all(frames).then((frames)=>{
-				this.frames = frames;
-			});
+			Promise.all(frames).then(frames => this.frames = frames);
 
 		});
 	}
 
-	static loadTexture(gl2d, spriteSheet, imageSrc)
+	static loadTexture(gl2d, imageSrc)
 	{
 		const gl = gl2d.context;
 
@@ -220,8 +215,6 @@ export class Sprite
 		{
 			return this.promises[imageSrc];
 		}
-
-		// console.log(imageSrc);
 
 		this.promises[imageSrc] = Sprite.loadImage(imageSrc).then((image)=>{
 			const texture = gl.createTexture();
@@ -266,16 +259,19 @@ export class Sprite
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.positionBuffer);
 
 		const x1 = x;
-		const x2 = x + width;
 		const y1 = y;
+		const x2 = x + width;
 		const y2 = y + height;
-		
+
+		// const s = -80 * this.spriteBoard.gl2d.zoomLevel * Math.sin(performance.now() / 1000);
+		const s = 0;
+
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1, y1, this.z,
-			x2, y1, this.z,
-			x1, y2, this.z,
-			x1, y2, this.z,
-			x2, y1, this.z,
+			x1 + s, y1, this.z,
+			x2 + s, y1, this.z,
+			x1,     y2, this.z,
+			x1,     y2, this.z,
+			x2 + s, y1, this.z,
 			x2, y2, this.z,
 		]), gl.STREAM_DRAW);
 	}

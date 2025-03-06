@@ -1,14 +1,35 @@
-// texture.fragZ
+// texture.frag
 
 precision mediump float;
 
-uniform vec4      u_color;
 uniform sampler2D u_image;
-varying vec2      v_texCoord;
+uniform vec4 u_color;
+varying vec2 v_texCoord;
+uniform vec3 u_tileNo;
+
+
+vec2 ripple(vec2 texCoord, float ripple, float disp) {
+  return vec2(v_texCoord.x + sin(v_texCoord.y * ripple) * disp, v_texCoord.y);
+}
 
 void main() {
-  gl_FragColor = texture2D(u_image, v_texCoord);
+  vec2 v_displaced = ripple(v_texCoord, 0.0, 0.0);
+  // vec2 v_displaced = ripple(v_texCoord, 3.1415 * 2.0, 0.025);
+
+  if (v_displaced.x > 1.0) {
+    v_displaced.x = 1.0 - (v_displaced.x - 1.0);
+  }
+
+  if (v_displaced.x < 0.0) {
+    v_displaced.x = abs(v_displaced.x);
+  }
+
   // gl_FragColor.w = gl_FragColor.w * 0.5;
-  // gl_FragColor = vec4(1.0,0.0,1.0,1.0);
+  if (u_tileNo.z > 0.0) {
+    gl_FragColor = vec4(u_tileNo.x / u_tileNo.y, 0, 0, 1.0);
+  } 
+  else {
+    gl_FragColor = texture2D(u_image, v_displaced);
+  }
   // gl_FragColor = gl_PointCoord.yyxx;
 }

@@ -140,6 +140,8 @@ export class View extends BaseView
 		this.entities.add(entity);
 		this.spriteBoard.sprites.add(entity.sprite);
 
+		this.spriteBoard.following = entity;
+
 		this.keyboard.keys.bindTo('=', (v,k,t,d)=>{
 			if(v > 0)
 			{
@@ -217,10 +219,7 @@ export class View extends BaseView
 
 		this.args.showEditor = true;
 
-		window.addEventListener('resize', () => {
-			this.resize();
-			// update();
-		});
+		window.addEventListener('resize', () => this.resize());
 
 		let fThen = 0;
 		let sThen = 0;
@@ -274,30 +273,14 @@ export class View extends BaseView
 		};
 
 		const update = (now) =>{
-			now = now / 1000;
-			
-			const delta = now - fThen;
-
-			if(delta < 1/(this.args.frameLock+(10 * (this.args.frameLock/60))))
-			{
-				window.requestAnimationFrame(update);
-				return;
-			}
-
-			fThen = now;
-
-			if(this.args.frameLock == 0)
-			{
-				window.requestAnimationFrame(update);
-				fSamples = [0];
-				return;
-			}
-
-
+			window.requestAnimationFrame(update);
 			this.spriteBoard.draw();
 
-			window.requestAnimationFrame(update);
+			now = now / 1000;
 
+			fThen = now;
+			const delta = now - fThen;
+			this.args._fps = (1 / delta);
 			fSamples.push(this.args._fps);
 
 			while(fSamples.length > maxSamples)
@@ -305,14 +288,14 @@ export class View extends BaseView
 				fSamples.shift();
 			}
 
-			this.args._fps = (1 / delta);
-
 			this.args.camX = Number(Camera.x).toFixed(2);
 			this.args.camY = Number(Camera.y).toFixed(2);
 		};
 
-		this.spriteBoard.gl2d.zoomLevel = document.body.clientWidth / 1024;
+		this.spriteBoard.gl2d.zoomLevel = document.body.clientWidth / 1024 * 2;
 		this.resize();
+
+		update(performance.now());
 
 		setInterval(()=>{
 			simulate(performance.now());
@@ -331,8 +314,6 @@ export class View extends BaseView
 			const sps = sSamples.reduce((a,b)=>a+b, 0) / sSamples.length;
 			this.args.sps = sps.toFixed(3).padStart(5, ' ');
 		}, 231/2);
-
-		window.requestAnimationFrame(update);
 	}
 
 	resize(x, y)
@@ -369,7 +350,7 @@ export class View extends BaseView
 	{
 		const max   = this.spriteBoard.gl2d.screenScale * 32;
 		const min   = this.spriteBoard.gl2d.screenScale * 0.6667;
-		
+
 		const step  = 0.05 * this.spriteBoard.gl2d.zoomLevel;
 
 		let zoomLevel = this.spriteBoard.gl2d.zoomLevel + (delta * step);

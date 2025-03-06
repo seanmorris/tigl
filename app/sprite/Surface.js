@@ -32,15 +32,13 @@ export class Surface
 
 		this.subTextures = {};
 
-		this.loaded = false;
-
 		this.spriteSheet.ready.then(sheet => {
 			let texturePromises = [];
 
-			for(let i = 0; i < this.xSize * this.ySize; i++)
-			{
-				let vertices;
+			const size = this.xSize * this.ySize;
 
+			for(let i = 0; i < size; i++)
+			{
 				let localX  = i % this.xSize;
 				let offsetX = Math.floor(this.x / this.tileWidth);
 				let globalX = localX + offsetX;
@@ -49,9 +47,7 @@ export class Surface
 				let offsetY = Math.floor(this.y / this.tileHeight);
 				let globalY = localY + offsetY;
 
-				let frames = i > 10
-					? this.map.getTile(globalX, globalY, this.layer)
-					: this.map.getTile(-1, -1, this.layer);
+				let frames = this.map.getTile(globalX, globalY, this.layer);
 
 				if(Array.isArray(frames))
 				{
@@ -77,11 +73,7 @@ export class Surface
 				}
 			}
 
-			Promise.all(texturePromises).then(()=>{
-				this.assemble();
-
-				this.loaded = true;
-			});
+			Promise.all(texturePromises).then(() => this.assemble());
 
 		});
 
@@ -113,14 +105,10 @@ export class Surface
 		//*/
 
 		this.frameBuffer = gl.createFramebuffer();
-
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-
-		const attachmentPoint = gl.COLOR_ATTACHMENT0;
-
 		gl.framebufferTexture2D(
 			gl.FRAMEBUFFER
-			, attachmentPoint
+			, gl.COLOR_ATTACHMENT0
 			, gl.TEXTURE_2D
 			, this.pane
 			, 0
@@ -205,7 +193,13 @@ export class Surface
 
 			for(let j in this.subTextures[i])
 			{
-				gl.bindTexture(gl.TEXTURE_2D, this.subTextures[i][j]);
+				gl.uniform3f(
+					this.spriteBoard.tilePosLocation
+					, Number(i)
+					, Object.keys(this.subTextures).length
+					, 0
+				);
+
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 					0.0, 0.0,
@@ -235,7 +229,12 @@ export class Surface
 			}
 		}
 
-		// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.uniform3f(
+			this.spriteBoard.tilePosLocation
+			, 0
+			, 0
+			, 0
+		);
 	}
 
 	setRectangle(x, y, width, height)

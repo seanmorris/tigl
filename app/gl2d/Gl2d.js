@@ -5,7 +5,7 @@ export class Gl2d
 		this.element   = element || document.createElement('canvas');
 		this.context   = this.element.getContext('webgl');
 		this.screenScale = 1;
-		this.zoomLevel = 1;
+		this.zoomLevel = 2;
 	}
 
 	cleanup()

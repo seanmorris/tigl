@@ -43,9 +43,6 @@ export class Entity
 			? Math.ceil(speed * yAxis)
 			: Math.floor(speed * yAxis);
 
-		Camera.x = (16 + this.sprite.x) * this.sprite.spriteBoard.gl2d.zoomLevel || 0;
-		Camera.y = (16 + this.sprite.y) * this.sprite.spriteBoard.gl2d.zoomLevel || 0;
-
 		let horizontal = false;
 
 		if(Math.abs(xAxis) > Math.abs(yAxis))
