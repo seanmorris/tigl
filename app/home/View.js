@@ -276,20 +276,13 @@ export class View extends BaseView
 			window.requestAnimationFrame(update);
 			this.spriteBoard.draw();
 
-			now = now / 1000;
-
-			fThen = now;
 			const delta = now - fThen;
-			this.args._fps = (1 / delta);
-			fSamples.push(this.args._fps);
+			fThen = now;
+			
+			this.args.fps = (1000 / delta).toFixed(3);
 
-			while(fSamples.length > maxSamples)
-			{
-				fSamples.shift();
-			}
-
-			this.args.camX = Number(Camera.x).toFixed(2);
-			this.args.camY = Number(Camera.y).toFixed(2);
+			this.args.camX = Number(Camera.x).toFixed(3);
+			this.args.camY = Number(Camera.y).toFixed(3);
 		};
 
 		this.spriteBoard.gl2d.zoomLevel = document.body.clientWidth / 1024 * 2;
@@ -300,11 +293,6 @@ export class View extends BaseView
 		setInterval(()=>{
 			simulate(performance.now());
 		}, 0);
-
-		setInterval(()=>{
-			const fps = fSamples.reduce((a,b)=>a+b, 0) / fSamples.length;
-			this.args.fps = fps.toFixed(3).padStart(5, ' ');
-		}, 227);
 
 		setInterval(()=>{
 			document.title = `${Config.title} ${this.args.fps} FPS`;

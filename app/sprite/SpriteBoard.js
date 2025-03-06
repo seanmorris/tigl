@@ -141,8 +141,9 @@ export class SpriteBoard
 			Camera.x = (16 + this.following.sprite.x) * this.gl2d.zoomLevel || 0;
 			Camera.y = (16 + this.following.sprite.y) * this.gl2d.zoomLevel || 0;
 		}
-
+			
 		const gl = this.gl2d.context;
+		gl.useProgram(this.program);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -155,8 +156,6 @@ export class SpriteBoard
 
 		// gl.clearColor(0, 0, 0, 0);
 		// gl.clear(gl.COLOR_BUFFER_BIT);
-
-		gl.useProgram(this.program);
 
 		let sprites = this.sprites.items();
 
