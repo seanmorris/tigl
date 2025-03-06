@@ -13,7 +13,7 @@ vec2 ripple(vec2 texCoord, float ripple, float disp) {
 }
 
 void main() {
-/*
+//*
   vec2 v_displaced = ripple(v_texCoord, 0.0, 0.0);
 /*/
   vec2 v_displaced = ripple(v_texCoord, 3.1415 * 2.0, 0.025);
