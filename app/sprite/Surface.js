@@ -28,25 +28,29 @@ export class Surface
 
 		this.texVertices = [];
 
-		
+
 		this.subTextures = {};
-		
+
 		this.spriteSheet.ready.then(sheet => this.buildTiles());
-		
+
 		const gl = this.spriteBoard.gl2d.context;
+
 		this.pane = gl.createTexture();
-		
+
 		gl.bindTexture(gl.TEXTURE_2D, this.pane);
+
+		const r = () => parseInt(Math.random()*255);
+		const pixel = new Uint8Array([r(), r(), r(), 255]);
 		gl.texImage2D(
 			gl.TEXTURE_2D
 			, 0
 			, gl.RGBA
-			, this.width
-			, this.height
+			, 1
+			, 1
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
-			, null
+			, pixel
 		);
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -87,7 +91,7 @@ export class Surface
 			, this.height * this.spriteBoard.gl2d.zoomLevel
 		);
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 	}
 
@@ -139,7 +143,21 @@ export class Surface
 	assemble()
 	{
 		const gl = this.spriteBoard.gl2d.context;
-		
+
+		gl.bindTexture(gl.TEXTURE_2D, this.pane);
+
+		gl.texImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			this.width,
+			this.height,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			null,
+		);
+
 		gl.bindTexture(gl.TEXTURE_2D, this.subTextures[0][0]);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 		gl.viewport(0, 0, this.width, this.height);
@@ -168,6 +186,19 @@ export class Surface
 			, this.height
 		);
 
+		gl.uniform2f(
+			this.spriteBoard.sizeLocation
+			, this.width
+			, this.height
+		);
+
+		gl.uniform3f(
+			this.spriteBoard.rippleLocation
+			, 0
+			, 0
+			, 0
+		);
+
 		if(this.subTextures[0][0])
 		{
 			gl.bindTexture(gl.TEXTURE_2D, this.subTextures[0][0]);
@@ -191,8 +222,7 @@ export class Surface
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
+		// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		return;
 
 		for(let i in this.subTextures)
@@ -205,7 +235,7 @@ export class Surface
 			{
 				this.subTextures[i] = [this.subTextures[i]];
 			}
-			
+
 			for(let j in this.subTextures[i])
 			{
 				gl.uniform3f(
@@ -213,8 +243,8 @@ export class Surface
 					, Number(i)
 					, Object.keys(this.subTextures).length
 					, 1
-				);				
-				
+				);
+
 				gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 					0.0, 0.0,
@@ -224,15 +254,15 @@ export class Surface
 					1.0, 0.0,
 					1.0, 1.0,
 				]), gl.STATIC_DRAW);
-				
+
 				this.setRectangle(
 					x
 					, y + this.tileHeight
 					, this.tileWidth
 					, -this.tileHeight
 				);
-				
-				gl.drawArrays(gl.TRIANGLES, 0, 6);				
+
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
 			}
 		}
 
@@ -258,12 +288,12 @@ export class Surface
 		const y2 = (y + height);
 
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1, y2, this.z,
-			x2, y2, this.z,
-			x1, y1, this.z,
-			x1, y1, this.z,
-			x2, y2, this.z,
-			x2, y1, this.z,
+			x1, y2,
+			x2, y2,
+			x1, y1,
+			x1, y1,
+			x2, y2,
+			x2, y1,
 		]), gl.STATIC_DRAW);
 	}
 }

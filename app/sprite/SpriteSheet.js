@@ -161,9 +161,9 @@ export class SpriteSheet
 			return this.texturePromises[imageSrc];
 		}
 
-		return this.texturePromises[imageSrc] = this.loadImage(imageSrc).then((image)=>{
-			const texture = gl.createTexture();
+		const texture = gl.createTexture();
 
+		return this.texturePromises[imageSrc] = this.loadImage(imageSrc).then(image => {
 			gl.bindTexture(gl.TEXTURE_2D, texture);
 
 			gl.texImage2D(
@@ -184,7 +184,7 @@ export class SpriteSheet
 			//*/
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);			
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
 			return {image, texture}
 		});

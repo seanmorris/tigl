@@ -1,11 +1,12 @@
-import { Camera } from '../sprite/Camera';
+const fireRegion = [1, 0, 0];
+const waterRegion = [0, 1, 1];
 
 export class Entity
 {
 	constructor({sprite, controller})
 	{
 		this.direction = 'south';
-		this.state     = 'standing';
+		this.state = 'standing';
 
 		this.sprite = sprite;
 		this.controller = controller;
@@ -17,6 +18,21 @@ export class Entity
 
 	simulate()
 	{
+		if(Math.trunc(performance.now() / 1000) % 15 === 0)
+		{
+			this.sprite.region = fireRegion;
+		}
+
+		if(Math.trunc(performance.now() / 1000) % 15 === 5)
+		{
+			this.sprite.region = waterRegion;
+		}
+
+		if(Math.trunc(performance.now() / 1000) % 15 === 10)
+		{
+			this.sprite.region = null;
+		}
+
 		let speed = 4;
 
 		let xAxis = this.controller.axis[0] || 0;
@@ -60,7 +76,7 @@ export class Entity
 			}
 
 			this.state = 'walking';
-			
+
 		}
 		else if(yAxis)
 		{

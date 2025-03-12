@@ -3,22 +3,22 @@ import { Camera } from "./Camera";
 
 export class Sprite
 {
-	constructor({src, spriteBoard, spriteSheet})
+	constructor({src, spriteBoard, spriteSheet, width, height})
 	{
 		this[Bindable.Prevent] = true;
-		
-		this.z      = 0;
-		this.x      = 0;
-		this.y      = 0;
 
-		this.width  = 0;
-		this.height = 0;
+		this.z = 0;
+		this.x = 0;
+		this.y = 0;
+
+		this.width  = 32 || width;
+		this.height = 32 || height;
 		this.scale  = 1;
 
-		this.frames        = [];
-		this.frameDelay    = 4;
-		this.currentDelay  = this.frameDelay;
-		this.currentFrame  = 0;
+		this.frames = [];
+		this.frameDelay = 4;
+		this.currentDelay = this.frameDelay;
+		this.currentFrame = 0;
 		this.currentFrames = '';
 
 		this.speed    = 0;
@@ -35,6 +35,8 @@ export class Sprite
 		this.SOUTH	= this.DOWN;
 		this.WEST	= this.LEFT;
 		this.NORTH	= this.UP;
+
+		this.region = [0, 0, 0, 1];
 
 		this.standing = {
 			'north': [
@@ -99,7 +101,8 @@ export class Sprite
 
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-		const r = ()=>parseInt(Math.random()*255);
+		const r = () => parseInt(Math.random() * 255);
+		const pixel = new Uint8Array([r(), r(), r(), 255]);
 
 		gl.texImage2D(
 			gl.TEXTURE_2D
@@ -110,7 +113,7 @@ export class Sprite
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
-			, new Uint8Array([r(), r(), 0, 255])
+			, pixel
 		);
 
 		this.spriteSheet = spriteSheet;
@@ -120,10 +123,10 @@ export class Sprite
 
 			if(frame)
 			{
-				Sprite.loadTexture(this.spriteBoard.gl2d, frame).then((args)=>{
+				Sprite.loadTexture(this.spriteBoard.gl2d, frame).then(args => {
 					this.texture = args.texture;
-					this.width   = args.image.width * this.scale;
-					this.height  = args.image.height * this.scale;
+					this.width = args.image.width * this.scale;
+					this.height = args.image.height * this.scale;
 				});
 			}
 		});
@@ -161,10 +164,9 @@ export class Sprite
 			this.height = frame.height * this.scale;
 		}
 
+
 		const gl = this.spriteBoard.gl2d.context;
-
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			0.0, 0.0,
@@ -175,6 +177,20 @@ export class Sprite
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
+		gl.uniform4f(
+			this.spriteBoard.regionLocation
+			, 0
+			, 0
+			, 0
+			, 0
+		);
+
+		gl.uniform2f(
+			this.sizeLocation
+			, 1.0
+			, 1.0
+		);
+
 		this.setRectangle(
 			this.x * this.spriteBoard.gl2d.zoomLevel + -Camera.x + (Camera.width * this.spriteBoard.gl2d.zoomLevel / 2)
 			, this.y * this.spriteBoard.gl2d.zoomLevel + -Camera.y + (Camera.height * this.spriteBoard.gl2d.zoomLevel / 2) + -this.height * 0.5 * this.spriteBoard.gl2d.zoomLevel
@@ -182,7 +198,21 @@ export class Sprite
 			, this.height * this.spriteBoard.gl2d.zoomLevel
 		);
 
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+		gl.uniform4f(this.spriteBoard.regionLocation, ...Object.assign(this.region || [0, 0, 0], {3: 1}));
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+		gl.uniform4f(
+			this.spriteBoard.regionLocation
+			, 0
+			, 0
+			, 0
+			, 0
+		);
 	}
 
 	setFrames(frameSelector)
@@ -262,7 +292,7 @@ export class Sprite
 		});
 	}
 
-	setRectangle(x, y, width, height)
+	setRectangle(x, y, width, height, transform = [])
 	{
 		const gl = this.spriteBoard.gl2d.context;
 
@@ -273,16 +303,86 @@ export class Sprite
 		const x2 = x + width;
 		const y2 = y + height;
 
-		// const s = -80 * this.spriteBoard.gl2d.zoomLevel * Math.sin(performance.now() / 1000);
+		// const s = -80 * this.spriteBoard.gl2d.zoomLevel * Math.sin(performance.now() / 500);
 		const s = 0;
 
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1 + s, y1, this.z,
-			x2 + s, y1, this.z,
-			x1,     y2, this.z,
-			x1,     y2, this.z,
-			x2 + s, y1, this.z,
-			x2, y2, this.z,
-		]), gl.STREAM_DRAW);
+		const points = new Float32Array([
+			x1 + s, y1,
+			x2 + s, y1,
+			x1,     y2,
+			x1,     y2,
+			x2 + s, y1,
+			x2,     y2,
+		]);
+
+		// const o = this.translate(points, -x + -width / 2, -y + -height/ 2);
+		// const r = this.rotate(o, performance.now() / 1000 % (2 * Math.PI));
+		// const t = this.translate(r, x + width / 2, y + height/ 2);
+
+		gl.bufferData(gl.ARRAY_BUFFER, points, gl.STREAM_DRAW);
 	}
+
+	translate(points, dx, dy)
+	{
+		const matrix = [
+			[1, 0, dx],
+			[0, 1, dy],
+			[0, 0,  1],
+		];
+
+		const output = [];
+
+		for(let i = 0; i < points.length; i += 2)
+		{
+			const point = [points[i], points[i + 1], 1];
+
+			for(const row of matrix)
+			{
+				output.push(
+					point[0] * row[0]
+					+ point[1] * row[1]
+					+ point[2] * row[2]
+				)
+			}
+		}
+
+		return new Float32Array(output.filter((_, k) => (1 + k) % 3));
+	}
+
+	rotate(points, theta)
+	{
+		const s = Math.sin(theta);
+		const c = Math.cos(theta);
+
+		const matrix = [
+			[c, -s, 0],
+			[s,  c, 0],
+			[0,  0, 1],
+		];
+
+		const output = [];
+
+		for(let i = 0; i < points.length; i += 2)
+		{
+			const point = [points[i], points[i + 1], 1];
+
+			for(const row of matrix)
+			{
+				output.push(
+					point[0] * row[0]
+					+ point[1] * row[1]
+					+ point[2] * row[2]
+				)
+			}
+		}
+
+		return new Float32Array(output.filter((_, k) => (1 + k) % 3));
+	}
+
+	sheer()
+	{
+
+	}
+
+
 }

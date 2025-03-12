@@ -130,6 +130,8 @@ export class View extends BaseView
 				src: undefined,
 				spriteBoard: spriteBoard,
 				spriteSheet: this.spriteSheet,
+				width: 32,
+				height: 48,
 			}),
 			controller: new Controller({
 				keyboard: this.keyboard,
@@ -137,6 +139,7 @@ export class View extends BaseView
 			}),
 			camera: Camera,
 		});
+
 		this.entities.add(entity);
 		this.spriteBoard.sprites.add(entity.sprite);
 
@@ -278,14 +281,14 @@ export class View extends BaseView
 
 			const delta = now - fThen;
 			fThen = now;
-			
+
 			this.args.fps = (1000 / delta).toFixed(3);
 
 			this.args.camX = Number(Camera.x).toFixed(3);
 			this.args.camY = Number(Camera.y).toFixed(3);
 		};
 
-		this.spriteBoard.gl2d.zoomLevel = document.body.clientWidth / 1024 * 2;
+		this.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1024 * 4;
 		this.resize();
 
 		update(performance.now());
@@ -318,7 +321,7 @@ export class View extends BaseView
 		);
 
 		const oldScale = this.spriteBoard.gl2d.screenScale;
-		this.spriteBoard.gl2d.screenScale = document.body.clientWidth / 1024;
+		this.spriteBoard.gl2d.screenScale = document.body.clientHeight / 1024;
 
 		this.spriteBoard.gl2d.zoomLevel *= this.spriteBoard.gl2d.screenScale / oldScale;
 
@@ -336,10 +339,9 @@ export class View extends BaseView
 
 	zoom(delta)
 	{
-		const max   = this.spriteBoard.gl2d.screenScale * 32;
-		const min   = this.spriteBoard.gl2d.screenScale * 0.6667;
-
-		const step  = 0.05 * this.spriteBoard.gl2d.zoomLevel;
+		const max = this.spriteBoard.gl2d.screenScale * 32;
+		const min = this.spriteBoard.gl2d.screenScale * 0.6667;
+		const step = 0.05 * this.spriteBoard.gl2d.zoomLevel;
 
 		let zoomLevel = this.spriteBoard.gl2d.zoomLevel + (delta * step);
 
