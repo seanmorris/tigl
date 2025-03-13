@@ -64,6 +64,25 @@ export class SpriteBoard
 		this.regionLocation     = gl.getUniformLocation(this.program, 'u_region');
 		this.rectLocation       = gl.getUniformLocation(this.program, 'u_rect');
 
+		const attributes = [
+			'a_position'
+			, 'a_texCoord'
+			, 'a_effCoord'
+		];
+
+		const uniforms = [
+			'u_image'
+			, 'u_effect'
+			, 'u_resolution'
+			, 'u_color'
+			, 'u_tileNo'
+			, 'u_ripple'
+			, 'u_size'
+			, 'u_scale'
+			, 'u_region'
+			, 'u_rect'
+		];
+
 		// this.overlayLocation   = gl.getAttribLocation(this.overlayProgram, 'a_position');
 		// this.overlayResolution = gl.getUniformLocation(this.overlayProgram, 'u_resolution');
 		// this.overlayColor      = gl.getUniformLocation(this.overlayProgram, 'u_color');
