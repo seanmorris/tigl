@@ -9,9 +9,7 @@ export class SpriteSheet
 		this.width    = 0;
 		this.height   = 0;
 
-		let request   = new Request(this.boxesUrl);
-
-		let sheetLoader = fetch(request)
+		let sheetLoader = fetch(this.boxesUrl)
 		.then((response)=>response.json())
 		.then((boxes) => this.boxes = boxes);
 

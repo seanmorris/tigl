@@ -165,6 +165,8 @@ export class Surface
 		gl.clearColor(Math.random(), Math.random(), Math.random(), 1);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+		this.spriteBoard.drawProgram.uniformI('u_background', 1);
+
 		gl.uniform4f(
 			this.spriteBoard.colorLocation
 			, 1
@@ -181,19 +183,26 @@ export class Surface
 		);
 
 		gl.uniform2f(
-			this.spriteBoard.resolutionLocation
+			this.spriteBoard.drawProgram.uniforms.u_resolution
 			, this.width
 			, this.height
 		);
 
 		gl.uniform2f(
-			this.spriteBoard.sizeLocation
+			this.spriteBoard.drawProgram.uniforms.u_size
 			, this.width
 			, this.height
 		);
 
+
+		gl.uniform2f(
+			this.spriteBoard.drawProgram.uniforms.u_tileSize
+			, 32
+			, 32
+		);
+
 		gl.uniform3f(
-			this.spriteBoard.rippleLocation
+			this.spriteBoard.drawProgram.uniforms.u_ripple
 			, 0
 			, 0
 			, 0
@@ -202,7 +211,7 @@ export class Surface
 		if(this.subTextures[0][0])
 		{
 			gl.bindTexture(gl.TEXTURE_2D, this.subTextures[0][0]);
-			gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 				0.0,              0.0,
 				this.width / 32,  0.0,
@@ -222,7 +231,8 @@ export class Surface
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 
-		// gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		this.spriteBoard.drawProgram.uniformI('u_background', 0);
+
 		return;
 
 		for(let i in this.subTextures)
@@ -245,7 +255,7 @@ export class Surface
 					, 1
 				);
 
-				gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 					0.0, 0.0,
 					1.0, 0.0,
@@ -280,7 +290,7 @@ export class Surface
 	{
 		const gl = this.spriteBoard.gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.positionBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 
 		const x1 = x;
 		const x2 = (x + width);

@@ -164,10 +164,10 @@ export class Sprite
 			this.height = frame.height * this.scale;
 		}
 
-
 		const gl = this.spriteBoard.gl2d.context;
+
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.texCoordBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			0.0, 0.0,
 			1.0, 0.0,
@@ -177,25 +177,15 @@ export class Sprite
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
-		gl.uniform4f(
-			this.spriteBoard.regionLocation
-			, 0
-			, 0
-			, 0
-			, 0
-		);
+		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
 
-		gl.uniform2f(
-			this.sizeLocation
-			, 1.0
-			, 1.0
-		);
+		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
 		this.setRectangle(
-			this.x * this.spriteBoard.gl2d.zoomLevel + -Camera.x + (Camera.width * this.spriteBoard.gl2d.zoomLevel / 2)
-			, this.y * this.spriteBoard.gl2d.zoomLevel + -Camera.y + (Camera.height * this.spriteBoard.gl2d.zoomLevel / 2) + -this.height * 0.5 * this.spriteBoard.gl2d.zoomLevel
-			, this.width * this.spriteBoard.gl2d.zoomLevel
-			, this.height * this.spriteBoard.gl2d.zoomLevel
+			this.x * zoom + -Camera.x + (Camera.width * zoom / 2)
+			, this.y * zoom + -Camera.y + (Camera.height * zoom / 2) + -this.height * zoom
+			, this.width * zoom
+			, this.height * zoom
 		);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
@@ -296,7 +286,7 @@ export class Sprite
 	{
 		const gl = this.spriteBoard.gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.positionBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 
 		const x1 = x;
 		const y1 = y;

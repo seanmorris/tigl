@@ -1,17 +1,23 @@
-import { SpriteSheet } from '../sprite/SpriteSheet';
-import { Injectable  } from '../inject/Injectable';
 import { Bindable } from 'curvature/base/Bindable';
+import { Tileset } from '../sprite/Tileset';
 
 export  class Map
-extends Injectable.inject({SpriteSheet})
 {
-	constructor()
+	constructor({src, spriteSheet})
 	{
-		super();
-
+		this.spriteSheet = spriteSheet;
 		this[Bindable.Prevent] = true;
-
 		this.tiles = {};
+
+		const loader = fetch(src)
+		.then(response => response.json())
+		.then(mapData => {
+			console.log(mapData);
+			const tilesets = mapData.tilesets && mapData.tilesets.map(t => new Tileset(t));
+			console.log(tilesets);
+		})
+
+		this.ready = loader;
 	}
 
 	getTile(x, y, layer = 0)
@@ -19,7 +25,7 @@ extends Injectable.inject({SpriteSheet})
 		if(this.tiles[`${x},${y}--${layer}`])
 		{
 			return [
-				this.SpriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
+				this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
 			];
 		}
 
@@ -34,19 +40,19 @@ extends Injectable.inject({SpriteSheet})
 		if(x === -1 && y === -1)
 		{
 			return [
-				// this.SpriteSheet.getFrame('floorTile.png')
-				this.SpriteSheet.getFrame('box_face.png')
+				// this.spriteSheet.getFrame('floorTile.png')
+				this.spriteSheet.getFrame('box_face.png')
 			];
 		}
 
 		return [
-			this.SpriteSheet.getFrame('floorTile.png')
-			// this.SpriteSheet.getFrame('box_face.png')
+			this.spriteSheet.getFrame('floorTile.png')
+			// this.spriteSheet.getFrame('box_face.png')
 		];
 
 		return [
-			this.SpriteSheet.getFrame('floorTile.png')
-			, this.SpriteSheet.getFrame(second)
+			this.spriteSheet.getFrame('floorTile.png')
+			, this.spriteSheet.getFrame(second)
 		];
 	}
 

@@ -106,13 +106,16 @@ export class View extends BaseView
 		});
 
 		this.spriteSheet = new SpriteSheet;
-		this.map         = new WorldMap;
+		this.map = new WorldMap({
+			spriteSheet: this.spriteSheet
+			, src: './map.json'
+		});
 
 		this.map.import();
 
 		this.args.mapEditor  = new MapEditor({
 			spriteSheet: this.spriteSheet
-			, map:       this.map
+			, map: this.map
 		});
 	}
 

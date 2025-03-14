@@ -28,146 +28,39 @@ export class SpriteBoard
 
 		this.gl2d = new Gl2d(element);
 
-		const gl = this.gl2d.context;
+		this.gl2d.enableBlending();
 
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-		gl.enable(gl.BLEND);
-
-		this.program = this.gl2d.createProgram(
-			this.gl2d.createShader('sprite/texture.vert')
-			, this.gl2d.createShader('sprite/texture.frag')
-		);
-
-		// this.overlayProgram = this.gl2d.createProgram(
-		// 	this.gl2d.createShader('overlay/overlay.vert')
-		// 	, this.gl2d.createShader('overlay/overlay.frag')
-		// );
-
-		gl.useProgram(this.program);
-
-		this.positionBuffer = gl.createBuffer();
-		this.texCoordBuffer = gl.createBuffer();
-		this.effCoordBuffer = gl.createBuffer();
-
-		this.positionLocation = gl.getAttribLocation(this.program, 'a_position');
-		this.texCoordLocation = gl.getAttribLocation(this.program, 'a_texCoord');
-		this.effCoordLocation = gl.getAttribLocation(this.program, 'a_effCoord');
-
-		this.imageLocation      = gl.getUniformLocation(this.program, 'u_image');
-		this.effectLocation     = gl.getUniformLocation(this.program, 'u_effect');
-		this.resolutionLocation = gl.getUniformLocation(this.program, 'u_resolution');
-		this.colorLocation      = gl.getUniformLocation(this.program, 'u_color');
-		this.tilePosLocation    = gl.getUniformLocation(this.program, 'u_tileNo');
-		this.rippleLocation     = gl.getUniformLocation(this.program, 'u_ripple');
-		this.sizeLocation       = gl.getUniformLocation(this.program, 'u_size');
-		this.scaleLocation      = gl.getUniformLocation(this.program, 'u_scale');
-		this.regionLocation     = gl.getUniformLocation(this.program, 'u_region');
-		this.rectLocation       = gl.getUniformLocation(this.program, 'u_rect');
-
-		const attributes = [
-			'a_position'
-			, 'a_texCoord'
-			, 'a_effCoord'
-		];
-
+		const attributes = ['a_position', 'a_texCoord'];
 		const uniforms = [
 			'u_image'
 			, 'u_effect'
+			, 'u_tiles'
 			, 'u_resolution'
-			, 'u_color'
-			, 'u_tileNo'
 			, 'u_ripple'
 			, 'u_size'
-			, 'u_scale'
+			, 'u_tileSize'
 			, 'u_region'
-			, 'u_rect'
+			, 'u_background'
 		];
 
-		// this.overlayLocation   = gl.getAttribLocation(this.overlayProgram, 'a_position');
-		// this.overlayResolution = gl.getUniformLocation(this.overlayProgram, 'u_resolution');
-		// this.overlayColor      = gl.getUniformLocation(this.overlayProgram, 'u_color');
+		this.drawProgram = this.gl2d.createProgram({
+			vertexShader: this.gl2d.createShader('sprite/texture.vert')
+			, fragmentShader: this.gl2d.createShader('sprite/texture.frag')
+			, attributes
+			, uniforms
+		});
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-		gl.enableVertexAttribArray(this.positionLocation);
-		gl.vertexAttribPointer(
-			this.positionLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
+		this.drawProgram.use();
 
-		gl.enableVertexAttribArray(this.texCoordLocation);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-		gl.vertexAttribPointer(
-			this.texCoordLocation
-			, 2
-			, gl.FLOAT
-			, false
-			, 0
-			, 0
-		);
+		this.colorLocation   = this.drawProgram.uniforms.u_color;
+		this.tilePosLocation = this.drawProgram.uniforms.u_tileNo;
+		this.regionLocation  = this.drawProgram.uniforms.u_region;
 
-		this.drawLayer = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
-		gl.texImage2D(
-			gl.TEXTURE_2D
-			, 0
-			, gl.RGBA
-			, 1000
-			, 1000
-			, 0
-			, gl.RGBA
-			, gl.UNSIGNED_BYTE
-			, null
-		);
+		this.drawLayer = this.gl2d.createTexture(1000, 1000);
+		this.effectLayer = this.gl2d.createTexture(1000, 1000);
 
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-		this.effectLayer = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.effectLayer);
-		gl.texImage2D(
-			gl.TEXTURE_2D
-			, 0
-			, gl.RGBA
-			, 1000
-			, 1000
-			, 0
-			, gl.RGBA
-			, gl.UNSIGNED_BYTE
-			, null
-		);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-		this.drawBuffer = gl.createFramebuffer();
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
-		gl.framebufferTexture2D(
-			gl.FRAMEBUFFER
-			, gl.COLOR_ATTACHMENT0
-			, gl.TEXTURE_2D
-			, this.drawLayer
-			, 0
-		);
-
-		this.effectBuffer = gl.createFramebuffer();
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
-		gl.framebufferTexture2D(
-			gl.FRAMEBUFFER
-			, gl.COLOR_ATTACHMENT0
-			, gl.TEXTURE_2D
-			, this.effectLayer
-			, 0
-		);
+		this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
+		this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
 
 		document.addEventListener(
 			'mousemove', (event)=>{
@@ -188,10 +81,10 @@ export class SpriteBoard
 		this.selected = Bindable.makeBindable(this.selected);
 
 		this.background  = new Background(this, map);
-		const w = 128;
+		const w = 1280;
 		const spriteSheet = new SpriteSheet;
 
-		for(const i in Array(16).fill())
+		for(const i in Array(100).fill())
 		{
 			const barrel = new Sprite({
 				src: 'barrel.png',
@@ -233,50 +126,27 @@ export class SpriteBoard
 
 		const gl = this.gl2d.context;
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
-
-		gl.clearColor(0, 0, 0, 0);
-		gl.clear(gl.COLOR_BUFFER_BIT);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
-
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-		gl.uniform2f(
-			this.resolutionLocation
-			, gl.canvas.width
-			, gl.canvas.height
-		);
-
-		gl.uniform3f(
-			this.rippleLocation
-			, 0
-			, 0
-			, 0
-		);
-
-		gl.uniform2f(
-			this.sizeLocation
-			, Camera.width
-			, Camera.height
-		);
-
-		gl.uniform2f(
-			this.scaleLocation
-			, this.gl2d.zoomLevel
-			, this.gl2d.zoomLevel
-		);
-
-		gl.uniform4f(
-			this.regionLocation
-			, 0
-			, 0
-			, 0
-			, 0
-		);
-
 		gl.clearColor(0, 0, 0, 0);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+
+		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
+		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
+		this.drawProgram.uniformF('u_scale', this.gl2d.zoomLevel, this.gl2d.zoomLevel);
+		this.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+		this.drawProgram.uniformF(
+			'u_ripple'
+			, Math.PI / 8
+			, performance.now() / 200 // + -Camera.y
+			, 1
+		);
 
 		let sprites = this.sprites.items();
 
@@ -316,23 +186,7 @@ export class SpriteBoard
 
 		sprites.forEach(s => s.draw());
 
-		gl.uniform3f(
-			this.rippleLocation
-			, Math.PI / 8
-			, performance.now() / 200 // + -Camera.y
-			, 1
-		);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
-		gl.uniform1i(this.imageLocation, 0);
-
-		gl.activeTexture(gl.TEXTURE1);
-		gl.bindTexture(gl.TEXTURE_2D, this.effectLayer);
-		gl.uniform1i(this.effectLocation, 1);
-
+		// Set the rectangle for both layers
 		this.setRectangle(
 			0
 			, this.gl2d.element.height
@@ -340,25 +194,26 @@ export class SpriteBoard
 			, -this.gl2d.element.height
 		);
 
+		// Switch to the main framebuffer
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		// Put the drawLayer in tex0
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
+		this.drawProgram.uniformI('u_image', 0);
+
+		// Put the effectLayer in tex1
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, this.effectLayer);
+		this.drawProgram.uniformI('u_effect', 1);
+
+		// Draw
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-		gl.uniform3f(
-			this.rippleLocation
-			, 0
-			, 0
-			, 0
-		);
-
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, null);
-		gl.uniform1i(this.imageLocation, 0);
-
+		// Cleanup...
 		gl.activeTexture(gl.TEXTURE1);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		gl.uniform1i(this.effectLocation, 1);
-
 		gl.activeTexture(gl.TEXTURE0);
-
 	}
 
 	resize(width, height)
@@ -407,7 +262,7 @@ export class SpriteBoard
 	{
 		const gl = this.gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_position);
 
 		const x1 = x;
 		const x2 = x + width;

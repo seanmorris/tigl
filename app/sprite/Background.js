@@ -1,118 +1,135 @@
-import { Surface } from './Surface';
 import { Camera } from './Camera';
 import { SpriteSheet } from './SpriteSheet';
 
 export  class Background
 {
-	constructor(spriteBoard, map, layer = 0)
+	constructor(spriteBoard, map)
 	{
 		this.spriteBoard = spriteBoard;
 		this.spriteSheet = new SpriteSheet;
-
-		this.panes       = [];
-		this.panesXY     = {};
-		this.maxPanes    = 9;
-
 		this.map         = map;
-		this.layer       = layer;
 
-		this.tileWidth   = 32;
-		this.tileHeight  = 32;
+		this.width  = 32;
+		this.height = 32;
 
-		this.surfaceWidth = 5;
-		this.surfaceHeight = 5;
+		const gl = this.spriteBoard.gl2d.context;
+
+		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
+		this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
 	}
 
-	renderPane(x, y, forceUpdate)
+	negSafeMod(a,b)
 	{
-		let pane;
-		let paneX = x * this.tileWidth * this.surfaceWidth * this.spriteBoard.gl2d.zoomLevel;
-		let paneY = y * this.tileHeight * this.surfaceHeight * this.spriteBoard.gl2d.zoomLevel;
-
-		if(this.panesXY[paneX] && this.panesXY[paneX][paneY])
-		{
-			pane = this.panesXY[paneX][paneY];
-		}
-		else
-		{
-			pane = new Surface(
-				this.spriteBoard
-				, this.spriteSheet
-				, this.map
-				, this.surfaceWidth
-				, this.surfaceHeight
-				, paneX
-				, paneY
-				, this.layer
-			);
-
-			if(!this.panesXY[paneX])
-			{
-				this.panesXY[paneX] = {};
-			}
-
-			if(!this.panesXY[paneX][paneY])
-			{
-				this.panesXY[paneX][paneY] = pane;
-			}
-		}
-
-		this.panes.push(pane);
-
-		if(this.panes.length > this.maxPanes)
-		{
-			this.panes.shift();
-		}
+		if(a >= 0) return a % b;
+		return (b + a % b) % b;
 	}
 
 	draw()
 	{
-		this.panes.length = 0;
+		const gl = this.spriteBoard.gl2d.context;
 
-		const centerX = Math.floor(
-			(Camera.x / (this.surfaceWidth * this.tileWidth * this.spriteBoard.gl2d.zoomLevel)) + 0
-		);
+		this.spriteBoard.drawProgram.uniformI('u_background', 1);
+		this.spriteBoard.drawProgram.uniformF('u_size', this.width + 64, this.height + 64);
+		this.spriteBoard.drawProgram.uniformF('u_tileSize', 32, 32);
 
-		const centerY = Math.floor(
-			Camera.y / (this.surfaceHeight * this.tileHeight * this.spriteBoard.gl2d.zoomLevel) + 0
-		);
+		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
-		let range = [-1, 0, 1];
+		const tilesWide = Math.floor(this.width / 32) + 1;
+		const tilesHigh = Math.floor(this.height / 32) + 1;
+		const tileCount = tilesWide * tilesHigh;
 
-		for(let x in range)
-		{
-			for(let y in range)
+		const tilesOnScreen = new Uint8Array(4 * tileCount).fill(0).map((_,k) => {
+			if(k % 4 === 0) // red channel
 			{
-				this.renderPane(centerX + range[x], centerY + range[y]);
+				return Math.floor(k / 4) % 256;
 			}
-		}
 
-		this.panes.forEach(p => p.draw());
+			if(k % 4 === 1) // green channel
+			{
+				return Math.floor(Math.floor(k / 4) / 256);
+			}
+
+			return 0;
+		});
+
+		gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
+		gl.texImage2D(
+			gl.TEXTURE_2D
+			, 0
+			, gl.RGBA
+			, tileCount
+			, 1
+			, 0
+			, gl.RGBA
+			, gl.UNSIGNED_BYTE
+			, tilesOnScreen
+		);
+
+		const xOffset = Math.floor(Math.floor((0.5 * this.width)  / 32) + 1) * 32;
+		const yOffset = Math.floor(Math.floor((0.5 * this.height) / 32) - 1) * 32;
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			0.0, 1.0,
+			1.0, 0.0,
+			1.0, 1.0,
+		]), gl.STATIC_DRAW);
+
+		//*/
+		this.setRectangle(
+			( (this.width / 2) * zoom )
+				+ -this.negSafeMod( Camera.x, 32 * zoom )
+				+ -xOffset * zoom
+			, -(( (this.height / 2) * zoom )
+				+ -this.negSafeMod( -Camera.y, 32 * zoom )
+				+ -yOffset * zoom)
+			, (this.width  + 64) * zoom
+			, (this.height + 64) * zoom
+		);
+		/*/
+		this.setRectangle(
+			-Camera.x
+			, -Camera.y
+			, this.width * zoom
+			, this.height * zoom
+		);
+		//*/
+
+		gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+		this.spriteBoard.drawProgram.uniformI('u_background', 0);
 	}
 
 	resize(x, y)
 	{
-		for(let i in this.panesXY)
-		{
-			for(let j in this.panesXY[i])
-			{
-				delete this.panesXY[i][j];
-			}
-		}
-
-		while(this.panes.length)
-		{
-			this.panes.pop();
-		}
-
-		this.surfaceWidth = Math.ceil((x / this.tileWidth));
-		this.surfaceHeight = Math.ceil((y / this.tileHeight));
-
-		this.draw();
+		this.width = x;
+		this.height = y;
 	}
 
 	simulate()
+	{}
+
+	setRectangle(x, y, width, height)
 	{
-		
+		const gl = this.spriteBoard.gl2d.context;
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+
+		const x1 = x;
+		const x2 = (x + width);
+		const y1 = y;
+		const y2 = (y + height);
+
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			x1, y2,
+			x2, y2,
+			x1, y1,
+			x1, y1,
+			x2, y2,
+			x2, y1,
+		]), gl.STATIC_DRAW);
 	}
 }

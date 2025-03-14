@@ -3,19 +3,20 @@
 #define M_TAU M_PI / 2.0
 precision mediump float;
 
+uniform vec3 u_ripple;
+uniform vec2 u_size;
+uniform vec2 u_tileSize;
+uniform vec4 u_region;
+uniform int u_background;
+
 uniform sampler2D u_image;
 uniform sampler2D u_effect;
+uniform sampler2D u_tiles;
 
 varying vec2 v_texCoord;
 varying vec2 v_position;
 
-uniform vec4 u_color;
-uniform vec3 u_tileNo;
-uniform vec3 u_ripple;
-uniform vec2 u_size;
-uniform vec2 u_rect;
-uniform vec2 u_scale;
-uniform vec4 u_region;
+
 
 float masked = 0.0;
 float sorted = 1.0;
@@ -100,10 +101,50 @@ vec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {
 }
 
 void main() {
-  vec4 originalColor = texture2D(u_image, v_texCoord);
-  vec4 effectColor = texture2D(u_effect, v_texCoord);
-  gl_FragColor = originalColor;
+  if (u_background == 1) {
+    float xTiles = floor(u_size.x / u_tileSize.x);
+    float yTiles = floor(u_size.y / u_tileSize.y);
 
+    float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;
+    float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;
+
+    float xTile = floor(xT) / xTiles;
+    float yTile = floor(yT) / yTiles;
+
+    float xOff = (xT / xTiles - xTile) * xTiles;
+    float yOff = (yT / yTiles - yTile) * yTiles;
+
+    vec4 tile = texture2D(u_tiles, vec2(-xTile / yTiles + yTile, 0.0));
+
+    int lo = int(tile.r * 256.0);
+    int hi = int(tile.g * 256.0);
+
+    int tileNumber = lo + (hi * 256);
+
+    //*/
+    gl_FragColor = vec4(
+      xTile
+      , yTile
+      , (1.0-xOff) / 3.0 + (1.0-yOff) / 3.0 + tile.r / 3.0
+      , 1.0
+    );
+    /*/
+    gl_FragColor = vec4(
+      mod(float(tileNumber), 256.0) / 256.0
+      , mod(float(tileNumber), 256.0) / 256.0
+      , mod(float(tileNumber), 256.0) / 256.0
+      , 1.0
+    );
+    //*/
+
+    return;
+  }
+
+  vec4 originalColor = texture2D(u_image,  v_texCoord);
+  vec4 effectColor   = texture2D(u_effect, v_texCoord);
+
+  // This if/else block only applies
+  // when we're drawing the effectBuffer
   if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) {
     if (masked < 1.0 || originalColor.a > 0.0) {
       gl_FragColor = u_region;
@@ -118,8 +159,10 @@ void main() {
       gl_FragColor = vec4(0, 0, 0, 0.0);
     }
     return;
-  }
+  };
 
+  // This if/else block only applies
+  // when we're drawing the drawBuffer
   if (effectColor == vec4(0, 1, 1, 1)) { // Water region
     vec2 texCoord = v_texCoord;
     vec4 v_blurredColor = originalColor;

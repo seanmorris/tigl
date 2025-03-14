@@ -20,7 +20,7 @@ export class Entity
 	{
 		if(Math.trunc(performance.now() / 1000) % 15 === 0)
 		{
-			this.sprite.region = fireRegion;
+			this.sprite.region = null;
 		}
 
 		if(Math.trunc(performance.now() / 1000) % 15 === 5)
@@ -30,7 +30,7 @@ export class Entity
 
 		if(Math.trunc(performance.now() / 1000) % 15 === 10)
 		{
-			this.sprite.region = null;
+			this.sprite.region = fireRegion;
 		}
 
 		let speed = 4;
