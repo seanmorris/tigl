@@ -357,6 +357,8 @@ export class View extends BaseView
 			zoomLevel = max;
 		}
 
+		// zoomLevel = Number(zoomLevel.toFixed(2));
+
 		if(this.spriteBoard.gl2d.zoomLevel !== zoomLevel)
 		{
 			this.spriteBoard.gl2d.zoomLevel = zoomLevel;

@@ -6,17 +6,18 @@ precision mediump float;
 uniform vec3 u_ripple;
 uniform vec2 u_size;
 uniform vec2 u_tileSize;
+uniform float u_tileCount;
 uniform vec4 u_region;
 uniform int u_background;
+uniform vec2 u_mapTextureSize;
 
 uniform sampler2D u_image;
 uniform sampler2D u_effect;
 uniform sampler2D u_tiles;
+uniform sampler2D u_tileMapping;
 
 varying vec2 v_texCoord;
 varying vec2 v_position;
-
-
 
 float masked = 0.0;
 float sorted = 1.0;
@@ -105,37 +106,63 @@ void main() {
     float xTiles = floor(u_size.x / u_tileSize.x);
     float yTiles = floor(u_size.y / u_tileSize.y);
 
+    float inv_xTiles = 1.0 / xTiles; // Precompute reciprocal for precision
+    float inv_yTiles = 1.0 / yTiles;
+
+    float xTiless = (u_size.x / u_tileSize.x);
+    float yTiless = (u_size.y / u_tileSize.y);
+
+    float inv_xTiless = 1.0 / xTiless;
+    float inv_yTiless = 1.0 / yTiless;
+
     float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;
     float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;
 
-    float xTile = floor(xT) / xTiles;
-    float yTile = floor(yT) / yTiles;
+    float xTile = floor(xT) * inv_xTiles;
+    float yTile = floor(yT) * inv_yTiles;
 
-    float xOff = (xT / xTiles - xTile) * xTiles;
-    float yOff = (yT / yTiles - yTile) * yTiles;
+    float xOff = (xT * inv_xTiles - xTile) * xTiles;
+    float yOff = (yT * inv_yTiles - yTile) * yTiles;
 
-    vec4 tile = texture2D(u_tiles, vec2(-xTile / yTiles + yTile, 0.0));
+    vec4 tile = texture2D(u_tileMapping, vec2((xTile * inv_yTiless + yTile), 0.0));
 
-    int lo = int(tile.r * 256.0);
-    int hi = int(tile.g * 256.0);
+    float lo = tile.r * 256.0;
+    float hi = tile.g * 256.0 * 256.0;
 
-    int tileNumber = lo + (hi * 256);
+    float tileNumber = lo + hi;
+
+    gl_FragColor = tile;
+    gl_FragColor.a = 1.0;
 
     //*/
     gl_FragColor = vec4(
       xTile
       , yTile
-      , (1.0-xOff) / 3.0 + (1.0-yOff) / 3.0 + tile.r / 3.0
+      , 0 //, xOff / 3.0 + yOff / 3.0 + tile.r / 3.0
       , 1.0
     );
     /*/
     gl_FragColor = vec4(
-      mod(float(tileNumber), 256.0) / 256.0
-      , mod(float(tileNumber), 256.0) / 256.0
-      , mod(float(tileNumber), 256.0) / 256.0
+      -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
+      , -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
+      , -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
       , 1.0
     );
     //*/
+
+    // return;
+
+    float xWrap = (u_mapTextureSize.x / u_tileSize.x);
+    float yWrap = (u_mapTextureSize.y / u_tileSize.y);
+
+    float tileX = floor(mod(tileNumber, xWrap));
+    float tileY = floor(tileNumber / xWrap);
+
+
+    gl_FragColor = texture2D(u_tiles, vec2(
+      xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)
+      , yOff / yWrap + tileY * (u_tileSize.y / u_mapTextureSize.y)
+    ));
 
     return;
   }

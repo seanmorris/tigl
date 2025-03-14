@@ -285,13 +285,14 @@ export class Sprite
 	setRectangle(x, y, width, height, transform = [])
 	{
 		const gl = this.spriteBoard.gl2d.context;
+		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 
 		const x1 = x;
-		const y1 = y;
+		const y1 = y + 32 * zoom;
 		const x2 = x + width;
-		const y2 = y + height;
+		const y2 = y + height + 32 * zoom;
 
 		const points = new Float32Array([
 			x1, y1,

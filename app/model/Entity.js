@@ -20,7 +20,7 @@ export class Entity
 	{
 		if(Math.trunc(performance.now() / 1000) % 15 === 0)
 		{
-			this.sprite.region = null;
+			// this.sprite.region = null;
 		}
 
 		if(Math.trunc(performance.now() / 1000) % 15 === 5)

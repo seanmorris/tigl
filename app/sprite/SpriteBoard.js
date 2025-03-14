@@ -35,12 +35,15 @@ export class SpriteBoard
 			'u_image'
 			, 'u_effect'
 			, 'u_tiles'
+			, 'u_tileMapping'
 			, 'u_resolution'
 			, 'u_ripple'
 			, 'u_size'
 			, 'u_tileSize'
+			, 'u_tileCount'
 			, 'u_region'
 			, 'u_background'
+			, 'u_mapTextureSize'
 		];
 
 		this.drawProgram = this.gl2d.createProgram({
@@ -84,14 +87,14 @@ export class SpriteBoard
 		const w = 1280;
 		const spriteSheet = new SpriteSheet;
 
-		for(const i in Array(100).fill())
+		for(const i in Array(98).fill())
 		{
 			const barrel = new Sprite({
 				src: 'barrel.png',
 				spriteBoard: this,
 				spriteSheet
 			});
-			barrel.x = 32 + (i * 32) % w;
+			barrel.x = 32 + (i * 64) % w;
 			barrel.y = Math.trunc((i * 32) / w) * 32;
 			this.sprites.add(barrel);
 		}

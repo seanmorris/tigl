@@ -9,7 +9,7 @@ export class Tileset
 		this.image.src = image;
 
 		this.columns = columns;
-		this.firstgid = firstgid;
+		this.firstGid = firstgid;
 		this.imageWidth = imagewidth;
 		this.imageHeight = imageheight;
 		this.margin = margin;
