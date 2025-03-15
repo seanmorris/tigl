@@ -130,8 +130,8 @@ export class View extends BaseView
 
 		const entity = new Entity({
 			sprite: new Sprite({
-				x: 816,
-				y: -72,
+				// x: 816,
+				// y: -72,
 				src: undefined,
 				spriteBoard: spriteBoard,
 				spriteSheet: this.spriteSheet,
@@ -352,7 +352,7 @@ export class View extends BaseView
 	zoom(delta)
 	{
 		const max = this.spriteBoard.gl2d.screenScale * 32;
-		const min = this.spriteBoard.gl2d.screenScale * 0.6667;
+		const min = this.spriteBoard.gl2d.screenScale * 0.2;
 		const step = 0.05 * this.spriteBoard.gl2d.zoomLevel;
 
 		let zoomLevel = this.spriteBoard.gl2d.zoomLevel + (delta * step);

@@ -1,10 +1,11 @@
-import { Camera } from './Camera';
+import { Bindable } from 'curvature/base/Bindable';
 import { SpriteSheet } from './SpriteSheet';
 
 export  class Background
 {
 	constructor(spriteBoard, map)
 	{
+		this[Bindable.Prevent] = true;
 		this.spriteBoard = spriteBoard;
 		this.spriteSheet = new SpriteSheet;
 		this.map = map;
@@ -56,31 +57,50 @@ export  class Background
 		this.spriteBoard.drawProgram.uniformF('u_tileSize', 32, 32);
 		this.spriteBoard.drawProgram.uniformF('u_mapTextureSize', this.map.tileSetWidth, this.map.tileSetHeight);
 
+		const xOffset = Math.floor(Math.floor((0.5 * this.width)  / 64) + 0) * 64;
+		const yOffset = Math.floor(Math.floor((0.5 * this.height) / 64) + 0) * 64;
+
 		const zoom = this.spriteBoard.gl2d.zoomLevel;
+
+		const x = this.spriteBoard.following.sprite.x;
+		const y = this.spriteBoard.following.sprite.y;
+
+		const xPos = ( this.width * zoom * 0.5 )
+			+ -this.negSafeMod( x + 16, 64 ) * zoom
+			+ -xOffset * zoom
+			+ this.xOffset * zoom * 0.5;
+
+		const yPos = ( this.height * zoom * 0.5 )
+			+ -this.negSafeMod( y + 16, 64 ) * zoom
+			+ -yOffset * zoom
+			+ this.yOffset * zoom * 0.5;
 
 		const tilesWide = Math.floor(this.width / 32);
 		const tilesHigh = Math.floor(this.height / 32);
 		const tileCount = tilesWide * tilesHigh;
 
-		// const x = Math.ceil(-Camera.x / this.spriteBoard.gl2d.zoomLevel * 1);
-		const x = (this.spriteBoard.following.sprite.x + 16);
+		const tileValues = new Uint32Array(tileCount);
+		const tilePixels = new Uint8Array(tileValues.buffer);
 
-		const tilesOnScreen = new Uint8Array(4 * tileCount).fill(0).map((_,k) => {
-			if(k % 4 === 0) // red channel
+		for(const k in tileValues)
+		{
+			const kX = (k % tilesWide) * 32
+				+ -this.negSafeMod( x + 16, 64 ) + x + -16 + -this.width / 2;
+
+			const kY = (-1 + tilesHigh - Math.floor(k / tilesWide)) * 32
+				+ -this.negSafeMod( y + 16, 64 ) + y + -16 + -this.height / 2;
+
+
+			if(kX < 0 || kY < 0)
 			{
-				// if(this.spriteBoard.following && (this.negSafeMod(x, 64) < 32))
-				// {
-				// 	return Math.floor(k/4) % 2 ? 1 : 128;
-				// }
-
-				return Math.floor(k/4) % 2 ? 128 : 1;
+				tileValues[k] = 2;
+				// tileValues[k] = (Math.floor(k/4) % 2 && Math.random() > 0.5 ) ? 2 : 1;
 			}
-
-			if(k % 4 === 1) // green channel
-			{}
-
-			return 0;
-		});
+			else
+			{
+				tileValues[k] = 1;
+			}
+		}
 
 		this.spriteBoard.drawProgram.uniformF('u_tileCount', tileCount);
 
@@ -105,11 +125,8 @@ export  class Background
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
-			, tilesOnScreen
+			, tilePixels
 		);
-
-		const xOffset = Math.floor(Math.floor((0.5 * this.width)  / 64) + 0) * 64;
-		const yOffset = Math.floor(Math.floor((0.5 * this.height) / 64) + 1) * 64;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -121,48 +138,12 @@ export  class Background
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
-		//*/
 		this.setRectangle(
-
-			( (this.width / 1) * zoom )
-				+ -this.negSafeMod( Camera.x, 64 * zoom )
-				+ -xOffset * zoom
-				+ this.xOffset * zoom
-
-			, (( ((this.height + 0) / 1) * zoom )
-				+ this.negSafeMod( -Camera.y, 64 * zoom )
-				+ -yOffset * zoom
-				+ this.yOffset * zoom
-			)
-
+			xPos
+			, yPos
 			, this.width * zoom
-
 			, this.height * zoom
-
 		);
-		/*/
-		this.setRectangle(
-			( (this.width / 1) * zoom )
-				+ -this.negSafeMod( Camera.x, 32 * zoom )
-				+ -xOffset * zoom
-				+ this.xOffset * zoom
-				+ 128 * zoom
-			, (( ((this.height + 32) / 1) * zoom )
-				+ this.negSafeMod( -Camera.y, 32 * zoom )
-				+ -yOffset * zoom
-				+ this.yOffset * zoom
-				+ -32 * zoom
-			)
-			, this.width * zoom * 0.5
-			, this.height * zoom * 0.5
-		);
-		// this.setRectangle(
-		// 	-Camera.x
-		// 	, -Camera.y
-		// 	, this.width * zoom
-		// 	, this.height * zoom
-		// );
-		//*/
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -175,11 +156,11 @@ export  class Background
 		this.width =  x + 0;
 		this.height = y + 0;
 
-		this.width =  Math.ceil(x / 64) * 64 + 128;
-		this.height = Math.ceil(y / 64) * 64 + 128;
+		this.width =  Math.ceil(x / 128) * 128 + 128;
+		this.height = Math.ceil(y / 128) * 128 + 128;
 
-		this.xOffset = x * 0.5 - this.width;
-		this.yOffset = y * 0.5 - this.height;
+		this.xOffset = x - this.width;
+		this.yOffset = y - this.height;
 	}
 
 	simulate()
