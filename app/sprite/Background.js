@@ -12,6 +12,9 @@ export  class Background
 		this.width  = 32;
 		this.height = 32;
 
+		this.xOffset = 0;
+		this.yOffset = 0;
+
 		const gl = this.spriteBoard.gl2d.context;
 
 		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
@@ -59,10 +62,18 @@ export  class Background
 		const tilesHigh = Math.floor(this.height / 32);
 		const tileCount = tilesWide * tilesHigh;
 
+		// const x = Math.ceil(-Camera.x / this.spriteBoard.gl2d.zoomLevel * 1);
+		const x = (this.spriteBoard.following.sprite.x + 16);
+
 		const tilesOnScreen = new Uint8Array(4 * tileCount).fill(0).map((_,k) => {
 			if(k % 4 === 0) // red channel
 			{
-				return Math.floor(k/4) % 2 ? 128 : 0;
+				// if(this.spriteBoard.following && (this.negSafeMod(x, 64) < 32))
+				// {
+				// 	return Math.floor(k/4) % 2 ? 1 : 128;
+				// }
+
+				return Math.floor(k/4) % 2 ? 128 : 1;
 			}
 
 			if(k % 4 === 1) // green channel
@@ -89,16 +100,16 @@ export  class Background
 			gl.TEXTURE_2D
 			, 0
 			, gl.RGBA
-			, tileCount
-			, 1
+			, tilesWide
+			, tilesHigh
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
 			, tilesOnScreen
 		);
 
-		const xOffset = Math.floor(Math.floor((0.5 * this.width)  / 32) + 1) * 32;
-		const yOffset = Math.floor(Math.floor((0.5 * this.height) / 32) - 0) * 32;
+		const xOffset = Math.floor(Math.floor((0.5 * this.width)  / 64) + 0) * 64;
+		const yOffset = Math.floor(Math.floor((0.5 * this.height) / 64) + 1) * 64;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -112,25 +123,45 @@ export  class Background
 
 		//*/
 		this.setRectangle(
-			( (this.width / 2) * zoom )
-				+ -this.negSafeMod( Camera.x, 32 * zoom )
+
+			( (this.width / 1) * zoom )
+				+ -this.negSafeMod( Camera.x, 64 * zoom )
 				+ -xOffset * zoom
-				+ -32 * zoom
-			, -(( ((this.height + 32) / 2) * zoom )
-				+ -this.negSafeMod( -Camera.y, 32 * zoom )
+				+ this.xOffset * zoom
+
+			, (( ((this.height + 0) / 1) * zoom )
+				+ this.negSafeMod( -Camera.y, 64 * zoom )
 				+ -yOffset * zoom
-				+ 16 * zoom
+				+ this.yOffset * zoom
 			)
+
 			, this.width * zoom
+
 			, this.height * zoom
+
 		);
 		/*/
 		this.setRectangle(
-			-Camera.x
-			, -Camera.y
-			, this.width * zoom
-			, this.height * zoom
+			( (this.width / 1) * zoom )
+				+ -this.negSafeMod( Camera.x, 32 * zoom )
+				+ -xOffset * zoom
+				+ this.xOffset * zoom
+				+ 128 * zoom
+			, (( ((this.height + 32) / 1) * zoom )
+				+ this.negSafeMod( -Camera.y, 32 * zoom )
+				+ -yOffset * zoom
+				+ this.yOffset * zoom
+				+ -32 * zoom
+			)
+			, this.width * zoom * 0.5
+			, this.height * zoom * 0.5
 		);
+		// this.setRectangle(
+		// 	-Camera.x
+		// 	, -Camera.y
+		// 	, this.width * zoom
+		// 	, this.height * zoom
+		// );
 		//*/
 
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -141,10 +172,14 @@ export  class Background
 
 	resize(x, y)
 	{
-		this.width =  x + 128;
-		this.height = y + 128;
-		// this.width =  Math.ceil(x / 32) * 32;
-		// this.height = Math.ceil(y / 32) * 32;
+		this.width =  x + 0;
+		this.height = y + 0;
+
+		this.width =  Math.ceil(x / 64) * 64 + 128;
+		this.height = Math.ceil(y / 64) * 64 + 128;
+
+		this.xOffset = x * 0.5 - this.width;
+		this.yOffset = y * 0.5 - this.height;
 	}
 
 	simulate()

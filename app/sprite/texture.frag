@@ -6,7 +6,6 @@ precision mediump float;
 uniform vec3 u_ripple;
 uniform vec2 u_size;
 uniform vec2 u_tileSize;
-uniform float u_tileCount;
 uniform vec4 u_region;
 uniform int u_background;
 uniform vec2 u_mapTextureSize;
@@ -108,7 +107,7 @@ void main() {
     float xTiles = floor(u_size.x / u_tileSize.x);
     float yTiles = floor(u_size.y / u_tileSize.y);
 
-    float inv_xTiles = 1.0 / xTiles; // Precompute reciprocal for precision
+    float inv_xTiles = 1.0 / xTiles;
     float inv_yTiles = 1.0 / yTiles;
 
     float xTiless = (u_size.x / u_tileSize.x);
@@ -146,12 +145,22 @@ void main() {
       return;
     }
 
-    vec4 tile = texture2D(u_tileMapping, vec2(xTile * inv_yTiless + yTile, 0.0));
+    // vec4 tile = texture2D(u_tileMapping, vec2(xTile * inv_yTiless + yTile, 0.0));
+    // vec4 tile = texture2D(u_tileMapping, vec2(xTile, yTile));
+    vec4 tile = texture2D(u_tileMapping, v_texCoord);
+
+    if (u_renderMode == 3) {
+      gl_FragColor = tile;
+      gl_FragColor.b = 0.5;
+      gl_FragColor.a = 1.0;
+      return;
+    }
+
     float lo = tile.r * 256.0;
     float hi = tile.g * (256.0 * 256.0);
     float tileNumber = lo + hi;
 
-    if (u_renderMode == 3) {
+    if (u_renderMode == 4) {
       gl_FragColor = vec4(
         xTile * inv_yTiless + yTile
         , xTile * inv_yTiless + yTile
@@ -161,7 +170,7 @@ void main() {
       return;
     }
 
-    if (u_renderMode == 4) {
+    if (u_renderMode == 5) {
       gl_FragColor = vec4(
         mod(tileNumber, 256.0) / 256.0
         , mod(tileNumber, 256.0) / 256.0
@@ -176,6 +185,12 @@ void main() {
 
     float tileX = floor(mod(tileNumber, xWrap));
     float tileY = floor(tileNumber / xWrap);
+
+    gl_FragColor = texture2D(u_tiles, vec2(
+      xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)
+      , yOff / yWrap + tileY * (u_tileSize.y / u_mapTextureSize.y)
+    ));
+
 
     gl_FragColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)

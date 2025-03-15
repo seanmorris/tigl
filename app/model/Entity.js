@@ -3,13 +3,16 @@ const waterRegion = [0, 1, 1];
 
 export class Entity
 {
-	constructor({sprite, controller})
+	constructor({sprite, controller, x, y})
 	{
 		this.direction = 'south';
 		this.state = 'standing';
 
 		this.sprite = sprite;
 		this.controller = controller;
+
+		this.x = x;
+		this.y = y;
 	}
 
 	create()
@@ -20,7 +23,7 @@ export class Entity
 	{
 		if(Math.trunc(performance.now() / 1000) % 15 === 0)
 		{
-			// this.sprite.region = null;
+			this.sprite.region = null;
 		}
 
 		if(Math.trunc(performance.now() / 1000) % 15 === 5)

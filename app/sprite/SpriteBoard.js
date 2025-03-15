@@ -90,7 +90,7 @@ export class SpriteBoard
 		const w = 1280;
 		const spriteSheet = new SpriteSheet;
 
-		for(const i in Array(98).fill())
+		for(const i in Array(16).fill())
 		{
 			const barrel = new Sprite({
 				src: 'barrel.png',

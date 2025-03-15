@@ -20,7 +20,7 @@ export  class Map
 			return Promise.all(tilesets.map(t => t.ready)).then(() => tilesets);
 		}).then(tilesets => {
 			this.assemble(tilesets);
-		})
+		});
 
 		this.ready = loader;
 	}
@@ -85,9 +85,7 @@ export  class Map
 
 		destination.toBlob(blob => {
 			const url = URL.createObjectURL(blob);
-			this.image.onload = () => {
-				URL.revokeObjectURL(url);
-			};
+			this.image.onload = () => URL.revokeObjectURL(url);
 			this.image.src = url;
 		});
 

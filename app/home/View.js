@@ -130,6 +130,8 @@ export class View extends BaseView
 
 		const entity = new Entity({
 			sprite: new Sprite({
+				x: 816,
+				y: -72,
 				src: undefined,
 				spriteBoard: spriteBoard,
 				spriteSheet: this.spriteSheet,
@@ -289,6 +291,13 @@ export class View extends BaseView
 
 			this.args.camX = Number(Camera.x).toFixed(3);
 			this.args.camY = Number(Camera.y).toFixed(3);
+
+			if(this.spriteBoard.following)
+			{
+				this.args.posX = Number(this.spriteBoard.following.sprite.x).toFixed(3);
+				this.args.posY = Number(this.spriteBoard.following.sprite.y).toFixed(3);
+			}
+
 		};
 
 		this.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1024 * 4;

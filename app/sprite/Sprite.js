@@ -3,13 +3,13 @@ import { Camera } from "./Camera";
 
 export class Sprite
 {
-	constructor({src, spriteBoard, spriteSheet, width, height})
+	constructor({src, spriteBoard, spriteSheet, width, height, x, y, z})
 	{
 		this[Bindable.Prevent] = true;
 
-		this.z = 0;
-		this.x = 0;
-		this.y = 0;
+		this.x = x || 0;
+		this.y = y || 0;
+		this.z = z || 0;
 
 		this.width  = 32 || width;
 		this.height = 32 || height;
