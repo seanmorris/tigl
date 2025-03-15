@@ -44,7 +44,10 @@ export class SpriteBoard
 			, 'u_region'
 			, 'u_background'
 			, 'u_mapTextureSize'
+			, 'u_renderMode'
 		];
+
+		this.renderMode = 0;
 
 		this.drawProgram = this.gl2d.createProgram({
 			vertexShader: this.gl2d.createShader('sprite/texture.vert')
@@ -140,6 +143,7 @@ export class SpriteBoard
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
+		this.drawProgram.uniformI('u_renderMode', this.renderMode);
 		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 		this.drawProgram.uniformF('u_scale', this.gl2d.zoomLevel, this.gl2d.zoomLevel);

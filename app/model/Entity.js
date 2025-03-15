@@ -45,6 +45,8 @@ export class Entity
 				continue;
 			}
 
+			this.sprite.spriteBoard.renderMode = t;
+
 			console.log(t);
 		}
 

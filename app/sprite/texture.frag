@@ -24,6 +24,8 @@ float sorted = 1.0;
 float displace = 1.0;
 float blur = 1.0;
 
+uniform int u_renderMode;
+
 vec2 rippleX(vec2 texCoord, float a, float b, float c) {
   vec2 rippled = vec2(
     v_texCoord.x + sin(v_texCoord.y * (a * u_size.y) + b) * c / u_size.x,
@@ -124,40 +126,56 @@ void main() {
     float xOff = (xT * inv_xTiles - xTile) * xTiles;
     float yOff = (yT * inv_yTiles - yTile) * yTiles;
 
-    vec4 tile = texture2D(u_tileMapping, vec2((xTile * inv_yTiless + yTile), 0.0));
+    if (u_renderMode == 1) {
+      gl_FragColor = vec4(
+        xTile
+        , yTile
+        , 0
+        , 1.0
+      );
+      return;
+    }
 
+    if (u_renderMode == 2) {
+      gl_FragColor = vec4(
+        xTile
+        , yTile
+        , xOff / 2.0 + yOff / 2.0
+        , 1.0
+      );
+      return;
+    }
+
+    vec4 tile = texture2D(u_tileMapping, vec2(xTile * inv_yTiless + yTile, 0.0));
     float lo = tile.r * 256.0;
-    float hi = tile.g * 256.0 * 256.0;
-
+    float hi = tile.g * (256.0 * 256.0);
     float tileNumber = lo + hi;
 
-    gl_FragColor = tile;
-    gl_FragColor.a = 1.0;
+    if (u_renderMode == 3) {
+      gl_FragColor = vec4(
+        xTile * inv_yTiless + yTile
+        , xTile * inv_yTiless + yTile
+        , xTile * inv_yTiless + yTile
+        , 1.0
+      );
+      return;
+    }
 
-    //*/
-    gl_FragColor = vec4(
-      xTile
-      , yTile
-      , 0 //, xOff / 3.0 + yOff / 3.0 + tile.r / 3.0
-      , 1.0
-    );
-    /*/
-    gl_FragColor = vec4(
-      -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
-      , -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
-      , -xTile / yTiles + yTile //mod(float(tileNumber), 256.0) / 256.0
-      , 1.0
-    );
-    //*/
-
-    // return;
+    if (u_renderMode == 4) {
+      gl_FragColor = vec4(
+        mod(tileNumber, 256.0) / 256.0
+        , mod(tileNumber, 256.0) / 256.0
+        , mod(tileNumber, 256.0) / 256.0
+        , 1.0
+      );
+      return;
+    }
 
     float xWrap = (u_mapTextureSize.x / u_tileSize.x);
     float yWrap = (u_mapTextureSize.y / u_tileSize.y);
 
     float tileX = floor(mod(tileNumber, xWrap));
     float tileY = floor(tileNumber / xWrap);
-
 
     gl_FragColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)

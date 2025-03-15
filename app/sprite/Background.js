@@ -62,7 +62,7 @@ export  class Background
 		const tilesOnScreen = new Uint8Array(4 * tileCount).fill(0).map((_,k) => {
 			if(k % 4 === 0) // red channel
 			{
-				return Math.floor(k/4) % 2 ? 1 : 0;
+				return Math.floor(k/4) % 2 ? 128 : 0;
 			}
 
 			if(k % 4 === 1) // green channel
