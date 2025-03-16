@@ -7,22 +7,37 @@ export  class Map
 	{
 		this[Bindable.Prevent] = true;
 		this.spriteSheet = spriteSheet;
-		this.image = document.createElement("img");
+		this.image = document.createElement('img');
+		this.canvas = document.createElement('canvas');
+		this.context = this.canvas.getContext('2d', {willReadFrequently: true});
 		this.pixels = [];
 		this.tileCount = 0;
-		this.tileSetWidth = 1;
-		this.tileSetHeight = 1;
+		this.tileWidth = 0;
+		this.tileHeight = 0;
+		this.tileSetWidth = 0;
+		this.tileSetHeight = 0;
 
-		const loader = fetch(src)
-		.then(response => response.json())
-		.then(mapData => {
-			const tilesets = mapData.tilesets && mapData.tilesets.map(t => new Tileset(t));
-			return Promise.all(tilesets.map(t => t.ready)).then(() => tilesets);
-		}).then(tilesets => {
-			this.assemble(tilesets);
-		});
+		this.layers = [];
+		this.width  = 0;
+		this.height = 0;
 
-		this.ready = loader;
+		this.ready = this.getReady(src);
+	}
+
+	async getReady(src)
+	{
+		const mapData = await (await fetch(src)).json();
+
+		this.layers     = mapData.layers;
+		this.width      = mapData.width;
+		this.height     = mapData.height;
+		this.tileWidth  = mapData.tilewidth;
+		this.tileHeight = mapData.tileheight;
+		const tilesets  = mapData.tilesets.map(t => new Tileset(t));
+
+		await Promise.all(tilesets.map(t => t.ready));
+
+		this.assemble(tilesets);
 	}
 
 	assemble(tilesets)
@@ -33,11 +48,11 @@ export  class Map
 
 		const size = Math.ceil(Math.sqrt(tileTotal));
 
-		console.log(tileTotal, size, tilesets);
+		console.log(this);
 
 		const destination = document.createElement('canvas');
-		this.tileSetWidth  = destination.width  = size * 32;
-		this.tileSetHeight = destination.height = Math.ceil(tileTotal / size) * 32;
+		this.tileSetWidth  = destination.width  = size * this.tileWidth;
+		this.tileSetHeight = destination.height = Math.ceil(tileTotal / size) * this.tileHeight;
 
 		const ctxDestination = destination.getContext('2d');
 
@@ -60,23 +75,23 @@ export  class Map
 
 			for(let i = 0; i < tileset.tileCount; i++)
 			{
-				const tile = ctxSource.getImageData(xSource, ySource, 32, 32);
+				const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
 
 				ctxDestination.putImageData(tile, xDestination, yDestination);
 
-				xSource += 32;
-				xDestination += 32;
+				xSource += this.tileWidth;
+				xDestination += this.tileWidth;
 
 				if(xSource >= tileset.imageWidth)
 				{
 					xSource = 0;
-					ySource += 32;
+					ySource += this.tileHeight;
 				}
 
 				if(xDestination >= destination.width)
 				{
 					xDestination = 0;
-					yDestination += 32;
+					yDestination += this.tileHeight;
 				}
 			}
 		}
@@ -89,64 +104,26 @@ export  class Map
 			this.image.src = url;
 		});
 
-		console.log(destination.toDataURL());
-	}
+		// console.log(destination.toDataURL());
 
-	getTile(x, y, layer = 0)
-	{
-		if(this.tiles[`${x},${y}--${layer}`])
+		for(const layer of this.layers)
 		{
-			return [
-				this.spriteSheet.getFrame(this.tiles[`${x},${y}--${layer}`])
-			];
+			const tileValues = new Uint32Array(layer.data.map(t => -1 + t));
+			const tilePixels = new Uint8ClampedArray(tileValues.buffer);
+
+			for(let i = 3; i < tilePixels.length; i +=4)
+			{
+				tilePixels[i] = 0xFF;
+			}
+
+			this.canvas.width = this.width;
+			this.canvas.height = this.height;
+			this.context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
 		}
-
-		let split = 4;
-		let second = 'rock_4.png';
-
-		if((x % split === 0) && (y % split === 0))
-		{
-			second = 'cheese.png'
-		}
-
-		if(x === -1 && y === -1)
-		{
-			return [
-				// this.spriteSheet.getFrame('floorTile.png')
-				this.spriteSheet.getFrame('box_face.png')
-			];
-		}
-
-		return [
-			this.spriteSheet.getFrame('floorTile.png')
-			// this.spriteSheet.getFrame('box_face.png')
-		];
-
-		return [
-			this.spriteSheet.getFrame('floorTile.png')
-			, this.spriteSheet.getFrame(second)
-		];
 	}
 
-	setTile(x, y, image, layer = 0)
+	getSlice(x, y, width, height)
 	{
-		this.tiles[`${x},${y}--${layer}`] = image;
-	}
-
-	export()
-	{
-		console.log(JSON.stringify(this.tiles));
-	}
-
-	import(input)
-	{
-		input = `{"-2,11":"lava_center_middle.png","-1,11":"lava_center_middle.png","0,11":"lava_center_middle.png"}`;
-
-		this.tiles = JSON.parse(input);
-
-		// console.log(JSON.parse(input));
+		return this.context.getImageData(x, y, width, height).data;
 	}
 }
-
-
-// {"-2,11":"lava_center_middle.png","-1,11":"lava_center_middle.png","0,11":"lava_center_middle.png"}

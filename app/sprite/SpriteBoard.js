@@ -97,8 +97,8 @@ export class SpriteBoard
 				spriteBoard: this,
 				spriteSheet
 			});
-			barrel.x = 32 + (i * 64) % w;
-			barrel.y = Math.trunc((i * 32) / w) * 32;
+			barrel.x = 32 + (i * 64) % w - 16;
+			barrel.y = Math.trunc((i * 32) / w) * 32 + 32;
 			this.sprites.add(barrel);
 		}
 

@@ -145,9 +145,7 @@ void main() {
       return;
     }
 
-    // vec4 tile = texture2D(u_tileMapping, vec2(xTile * inv_yTiless + yTile, 0.0));
-    // vec4 tile = texture2D(u_tileMapping, vec2(xTile, yTile));
-    vec4 tile = texture2D(u_tileMapping, v_texCoord);
+    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
 
     if (u_renderMode == 3) {
       gl_FragColor = tile;
@@ -185,12 +183,6 @@ void main() {
 
     float tileX = floor(mod(tileNumber, xWrap));
     float tileY = floor(tileNumber / xWrap);
-
-    gl_FragColor = texture2D(u_tiles, vec2(
-      xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)
-      , yOff / yWrap + tileY * (u_tileSize.y / u_mapTextureSize.y)
-    ));
-
 
     gl_FragColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)

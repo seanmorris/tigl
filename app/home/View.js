@@ -46,19 +46,12 @@ export class View extends BaseView
 		this.args.camX = 0;
 		this.args.camY = 0;
 
-		this.args.frameLock      = 60;
+		this.args.frameLock = 60;
 		this.args.simulationLock = 60;
 
 		this.args.showEditor = false;
 
 		this.keyboard.listening = true;
-
-		this.keyboard.keys.bindTo('e', (v,k,t,d)=>{
-			if(v > 0)
-			{
-				this.map.export();
-			}
-		});
 
 		this.keyboard.keys.bindTo('Escape', (v,k,t,d)=>{
 			if(v === -1)
@@ -111,8 +104,6 @@ export class View extends BaseView
 			, src: './map.json'
 		});
 
-		this.map.import();
-
 		this.args.mapEditor  = new MapEditor({
 			spriteSheet: this.spriteSheet
 			, map: this.map
@@ -130,8 +121,8 @@ export class View extends BaseView
 
 		const entity = new Entity({
 			sprite: new Sprite({
-				// x: 816,
-				// y: -72,
+				x: 48,
+				y: 64,
 				src: undefined,
 				spriteBoard: spriteBoard,
 				spriteSheet: this.spriteSheet,
