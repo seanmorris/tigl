@@ -166,24 +166,16 @@ export class Sprite
 
 		const gl = this.spriteBoard.gl2d.context;
 
+		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0, 0.0,
-			1.0, 0.0,
-			0.0, 1.0,
-			0.0, 1.0,
-			1.0, 0.0,
-			1.0, 1.0,
-		]), gl.STATIC_DRAW);
 
 		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
 
 		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
 		this.setRectangle(
-			this.x * zoom + -Camera.x + (Camera.width * zoom / 2)
-			, this.y * zoom + -Camera.y + (Camera.height * zoom / 2) + -this.height * zoom
+			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
+			, this.y * zoom + -Camera.y + (this.spriteBoard.height / 2) + -this.height * zoom
 			, this.width * zoom
 			, this.height * zoom
 		);
@@ -191,18 +183,16 @@ export class Sprite
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-		gl.uniform4f(this.spriteBoard.regionLocation, ...Object.assign(this.region || [0, 0, 0], {3: 1}));
+		this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {3: 1}));
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-		gl.uniform4f(
-			this.spriteBoard.regionLocation
-			, 0
-			, 0
-			, 0
-			, 0
-		);
+		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+		// Cleanup...
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	setFrames(frameSelector)
@@ -287,6 +277,16 @@ export class Sprite
 		const gl = this.spriteBoard.gl2d.context;
 		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			0.0, 1.0,
+			1.0, 0.0,
+			1.0, 1.0,
+		]), gl.STATIC_DRAW);
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 
 		const x1 = x;
@@ -303,9 +303,8 @@ export class Sprite
 			x2, y2,
 		]);
 
-		const xOff = x + width / 2;
-		const yOff = y + height / 2;
-		const theta = performance.now() / 1000 % (2 * Math.PI);
+		const xOff = x + width  * 0.5;
+		const yOff = y + height * 0.5;
 
 		const t = this.matrixTransform(points, this.matrixComposite(
 			this.matrixTranslate(xOff, yOff)

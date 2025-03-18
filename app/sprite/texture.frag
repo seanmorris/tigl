@@ -3,27 +3,31 @@
 #define M_TAU M_PI / 2.0
 precision mediump float;
 
-uniform vec3 u_ripple;
-uniform vec2 u_size;
-uniform vec2 u_tileSize;
-uniform vec4 u_region;
-uniform int u_background;
-uniform vec2 u_mapTextureSize;
+varying vec2 v_texCoord;
+varying vec2 v_position;
 
 uniform sampler2D u_image;
 uniform sampler2D u_effect;
 uniform sampler2D u_tiles;
 uniform sampler2D u_tileMapping;
 
-varying vec2 v_texCoord;
-varying vec2 v_position;
+uniform vec2 u_size;
+uniform vec2 u_tileSize;
+uniform vec2 u_mapTextureSize;
+
+uniform vec4 u_color;
+uniform vec4 u_region;
+uniform vec2 u_parallax;
+uniform float u_time;
+
+uniform int u_renderMap;
+uniform int u_renderParallax;
+uniform int u_renderMode;
 
 float masked = 0.0;
 float sorted = 1.0;
 float displace = 1.0;
 float blur = 1.0;
-
-uniform int u_renderMode;
 
 vec2 rippleX(vec2 texCoord, float a, float b, float c) {
   vec2 rippled = vec2(
@@ -103,49 +107,49 @@ vec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {
 }
 
 void main() {
-  if (u_background == 1) {
+  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);
+
+  if (u_renderParallax == 1) {
+    gl_FragColor = texture2D(u_image,  v_texCoord * vec2(1.0, -1.0) + vec2(u_time * u_parallax.x / 5000.0, 1.0));
+    return;
+  }
+  if (u_renderMap == 1) {
     float xTiles = floor(u_size.x / u_tileSize.x);
     float yTiles = floor(u_size.y / u_tileSize.y);
 
-    float inv_xTiles = 1.0 / xTiles;
-    float inv_yTiles = 1.0 / yTiles;
-
-    float xTiless = (u_size.x / u_tileSize.x);
-    float yTiless = (u_size.y / u_tileSize.y);
-
-    float inv_xTiless = 1.0 / xTiless;
-    float inv_yTiless = 1.0 / yTiless;
-
     float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;
     float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;
+
+    float inv_xTiles = 1.0 / xTiles;
+    float inv_yTiles = 1.0 / yTiles;
 
     float xTile = floor(xT) * inv_xTiles;
     float yTile = floor(yT) * inv_yTiles;
 
     float xOff = (xT * inv_xTiles - xTile) * xTiles;
-    float yOff = (yT * inv_yTiles - yTile) * yTiles;
+    float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;
 
     if (u_renderMode == 1) {
-      gl_FragColor = vec4(
-        xTile
-        , yTile
-        , 0
-        , 1.0
-      );
+      gl_FragColor = vec4(xTile, yTile, 0, 1.0);
       return;
     }
 
     if (u_renderMode == 2) {
-      gl_FragColor = vec4(
-        xTile
-        , yTile
-        , xOff / 2.0 + yOff / 2.0
-        , 1.0
-      );
+      gl_FragColor = vec4(xTile, yTile, xOff + yOff * 0.5, 1.0);
       return;
     }
 
     vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
+
+    float lo = tile.r * 256.0;
+    float hi = tile.g * 256.0 * 256.0;
+
+    float tileNumber = lo + hi;
+
+    if (tileNumber == 0.0) {
+      gl_FragColor.a = 0.0;
+      return;
+    }
 
     if (u_renderMode == 3) {
       gl_FragColor = tile;
@@ -154,21 +158,7 @@ void main() {
       return;
     }
 
-    float lo = tile.r * 256.0;
-    float hi = tile.g * (256.0 * 256.0);
-    float tileNumber = lo + hi;
-
     if (u_renderMode == 4) {
-      gl_FragColor = vec4(
-        xTile * inv_yTiless + yTile
-        , xTile * inv_yTiless + yTile
-        , xTile * inv_yTiless + yTile
-        , 1.0
-      );
-      return;
-    }
-
-    if (u_renderMode == 5) {
       gl_FragColor = vec4(
         mod(tileNumber, 256.0) / 256.0
         , mod(tileNumber, 256.0) / 256.0
@@ -178,15 +168,15 @@ void main() {
       return;
     }
 
-    float xWrap = (u_mapTextureSize.x / u_tileSize.x);
-    float yWrap = (u_mapTextureSize.y / u_tileSize.y);
+    float xWrap = u_mapTextureSize.x / u_tileSize.x;
+    float yWrap = u_mapTextureSize.y / u_tileSize.y;
 
-    float tileX = floor(mod(tileNumber, xWrap));
-    float tileY = floor(tileNumber / xWrap);
+    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));
+    float tileSetY = floor((-1.0 + tileNumber) / xWrap);
 
     gl_FragColor = texture2D(u_tiles, vec2(
-      xOff / xWrap + tileX * (u_tileSize.y / u_mapTextureSize.y)
-      , yOff / yWrap + tileY * (u_tileSize.y / u_mapTextureSize.y)
+      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)
+      , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)
     ));
 
     return;
@@ -213,13 +203,18 @@ void main() {
     return;
   };
 
+  if (u_renderMode == 5) {
+    gl_FragColor = effectColor;
+    return;
+  }
+
   // This if/else block only applies
   // when we're drawing the drawBuffer
   if (effectColor == vec4(0, 1, 1, 1)) { // Water region
     vec2 texCoord = v_texCoord;
     vec4 v_blurredColor = originalColor;
     if (displace > 0.0) {
-      texCoord = rippleX(v_texCoord, u_ripple.x, u_ripple.y, u_ripple.z);
+      texCoord = rippleX(v_texCoord, ripple.x, ripple.y, ripple.z);
       v_blurredColor = texture2D(u_image, texCoord);
     }
     if (blur > 0.0) {
@@ -228,7 +223,7 @@ void main() {
     gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;
   }
   else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region
-    vec2 v_displacement = rippleY(v_texCoord, u_ripple.x * 2.0, u_ripple.y * 1.5, u_ripple.z * 0.1);
+    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 2.0, ripple.y * 1.5, ripple.z * 0.25);
     vec4 v_blurredColor = originalColor;
     if (displace > 0.0) {
       v_blurredColor = texture2D(u_image, v_displacement);

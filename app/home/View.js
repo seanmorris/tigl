@@ -4,7 +4,7 @@ import { Bag } from 'curvature/base/Bag';
 
 import { Config } from 'Config';
 
-import { Map as WorldMap } from '../world/Map';
+import { Map as TileMap } from '../world/Map';
 
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
@@ -17,6 +17,7 @@ import { Camera } from '../sprite/Camera';
 
 import { Controller } from '../model/Controller';
 import { Sprite } from '../sprite/Sprite';
+import { World } from '../world/World';
 
 const Application = {};
 
@@ -99,23 +100,28 @@ export class View extends BaseView
 		});
 
 		this.spriteSheet = new SpriteSheet;
-		this.map = new WorldMap({
+
+		this.world = new World({src: './world.json'});
+
+		this.map = new TileMap({
 			spriteSheet: this.spriteSheet
 			, src: './map.json'
 		});
 
 		this.args.mapEditor  = new MapEditor({
 			spriteSheet: this.spriteSheet
+			, world: this.world
 			, map: this.map
 		});
 	}
 
 	onRendered()
 	{
-		const spriteBoard = new SpriteBoard(
-			this.tags.canvas.element
-			, this.map
-		);
+		const spriteBoard = new SpriteBoard({
+			element: this.tags.canvas.element
+			, world: this.world
+			, map: this.map
+		});
 
 		this.spriteBoard = spriteBoard;
 
@@ -202,21 +208,7 @@ export class View extends BaseView
 			this.spriteBoard.unselect();
 		});
 
-		this.spriteBoard.selected.bindTo((v,k,t,d,p)=>{
-			if(this.spriteBoard.selected.localX == null)
-			{
-				this.args.showEditor = false;
-				return
-			}
-
-			this.args.mapEditor.select(this.spriteBoard.selected);
-
-			this.args.showEditor = true;
-
-			this.spriteBoard.resize();
-		},{wait:0});
-
-		this.args.showEditor = true;
+		this.args.showEditor = false;
 
 		window.addEventListener('resize', () => this.resize());
 
@@ -315,7 +307,7 @@ export class View extends BaseView
 		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;
 		this.args.height = this.tags.canvas.element.height  = y || document.body.clientHeight;
 
-		this.args.rwidth  = Math.trunc(
+		this.args.rwidth = Math.trunc(
 			(x || document.body.clientWidth)  / this.spriteBoard.gl2d.zoomLevel
 		);
 
@@ -356,8 +348,6 @@ export class View extends BaseView
 		{
 			zoomLevel = max;
 		}
-
-		// zoomLevel = Number(zoomLevel.toFixed(2));
 
 		if(this.spriteBoard.gl2d.zoomLevel !== zoomLevel)
 		{

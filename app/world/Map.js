@@ -1,25 +1,37 @@
 import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
 
-export  class Map
+export class Map
 {
-	constructor({src, spriteSheet})
+	constructor({src})
 	{
 		this[Bindable.Prevent] = true;
-		this.spriteSheet = spriteSheet;
 		this.image = document.createElement('img');
-		this.canvas = document.createElement('canvas');
-		this.context = this.canvas.getContext('2d', {willReadFrequently: true});
 		this.pixels = [];
 		this.tileCount = 0;
-		this.tileWidth = 0;
-		this.tileHeight = 0;
-		this.tileSetWidth = 0;
-		this.tileSetHeight = 0;
 
-		this.layers = [];
+		this.backgroundColor = null;
+
+		this.properties = {};
+
+		this.canvases = new window.Map;
+		this.contexts = new window.Map;
+
+		this.tileLayers   = [];
+		this.imageLayers  = [];
+		this.objectLayers = [];
+
+		this.xWorld = 0;
+		this.yWorld = 0;
+
 		this.width  = 0;
 		this.height = 0;
+
+		this.tileWidth  = 0;
+		this.tileHeight = 0;
+
+		this.tileSetWidth  = 0;
+		this.tileSetHeight = 0;
 
 		this.ready = this.getReady(src);
 	}
@@ -28,16 +40,36 @@ export  class Map
 	{
 		const mapData = await (await fetch(src)).json();
 
-		this.layers     = mapData.layers;
-		this.width      = mapData.width;
-		this.height     = mapData.height;
+		this.tileLayers   = mapData.layers.filter(layer => layer.type === 'tilelayer');
+		this.imageLayers  = mapData.layers.filter(layer => layer.type === 'imagelayer');
+		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectlayer');
+
+		this.backgroundColor = mapData.backgroundcolor;
+
+		if(mapData.properties)
+		for(const property of mapData.properties)
+		{
+			this.properties[ property.name ] = property.value;
+		}
+
+		if(this.properties.backgroundColor)
+		{
+			this.backgroundColor = this.properties.backgroundColor;
+		}
+
+		const tilesets = mapData.tilesets.map(t => new Tileset(t));
+
+		this.width  = mapData.width;
+		this.height = mapData.height;
+
 		this.tileWidth  = mapData.tilewidth;
 		this.tileHeight = mapData.tileheight;
-		const tilesets  = mapData.tilesets.map(t => new Tileset(t));
 
 		await Promise.all(tilesets.map(t => t.ready));
 
 		this.assemble(tilesets);
+
+		return this;
 	}
 
 	assemble(tilesets)
@@ -47,8 +79,6 @@ export  class Map
 		const tileTotal = this.tileCount = tilesets.reduce((a, b) => a.tileCount + b.tileCount, {tileCount: 0});
 
 		const size = Math.ceil(Math.sqrt(tileTotal));
-
-		console.log(this);
 
 		const destination = document.createElement('canvas');
 		this.tileSetWidth  = destination.width  = size * this.tileWidth;
@@ -104,11 +134,15 @@ export  class Map
 			this.image.src = url;
 		});
 
-		// console.log(destination.toDataURL());
-
-		for(const layer of this.layers)
+		for(const layer of this.tileLayers)
 		{
-			const tileValues = new Uint32Array(layer.data.map(t => -1 + t));
+			const canvas = document.createElement('canvas');
+			const context = canvas.getContext('2d', {willReadFrequently: true});
+
+			this.canvases.set(layer, canvas);
+			this.contexts.set(layer, context);
+
+			const tileValues = new Uint32Array(layer.data.map(t => 0 + t));
 			const tilePixels = new Uint8ClampedArray(tileValues.buffer);
 
 			for(let i = 3; i < tilePixels.length; i +=4)
@@ -116,14 +150,14 @@ export  class Map
 				tilePixels[i] = 0xFF;
 			}
 
-			this.canvas.width = this.width;
-			this.canvas.height = this.height;
-			this.context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
+			canvas.width = this.width;
+			canvas.height = this.height;
+			context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
 		}
 	}
 
 	getSlice(x, y, width, height)
 	{
-		return this.context.getImageData(x, y, width, height).data;
+		return this.contexts.values().map(context => context.getImageData(x, y, width, height).data);
 	}
 }

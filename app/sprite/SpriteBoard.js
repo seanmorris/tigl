@@ -1,19 +1,23 @@
 import { Bag } from 'curvature/base/Bag';
-import { Background  } from './Background';
+import { Bindable } from 'curvature/base/Bindable';
 
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
 import { Sprite } from './Sprite';
-import { Bindable } from 'curvature/base/Bindable';
 import { SpriteSheet } from './SpriteSheet';
+import { MapRenderer } from './MapRenderer';
+import { Parallax } from './Parallax';
 
 export class SpriteBoard
 {
-	constructor(element, map)
+	constructor({element, world, map})
 	{
 		this[Bindable.Prevent] = true;
 
 		this.map = map;
+		this.maps = [];
+		this.mapRenderers = [];
+		this.world = world;
 		this.sprites = new Bag;
 
 		this.mouse = {
@@ -22,6 +26,9 @@ export class SpriteBoard
 			, clickX: null
 			, clickY: null
 		};
+
+		this.width = element.width;
+		this.height = element.height;
 
 		Camera.width  = element.width;
 		Camera.height = element.height;
@@ -36,14 +43,19 @@ export class SpriteBoard
 			, 'u_effect'
 			, 'u_tiles'
 			, 'u_tileMapping'
-			, 'u_resolution'
-			, 'u_ripple'
+
 			, 'u_size'
 			, 'u_tileSize'
-			, 'u_tileCount'
-			, 'u_region'
-			, 'u_background'
+			, 'u_resolution'
 			, 'u_mapTextureSize'
+
+			, 'u_color'
+			, 'u_region'
+			, 'u_parallax'
+			, 'u_time'
+
+			, 'u_renderMap'
+			, 'u_renderParallax'
 			, 'u_renderMode'
 		];
 
@@ -75,18 +87,16 @@ export class SpriteBoard
 			}
 		);
 
-		this.selected = {
-			localX:    null
-			, localY:  null
-			, globalX: null
-			, globalY: null
-			, startGlobalX: null
-			, startGlobalY: null
-		};
+		world.ready.then(maps => {
+			this.mapRenderers = maps.map(m => {
+				const mr = new MapRenderer({spriteBoard: this, map: m});
+				mr.resize(Camera.width, Camera.height);
+				return mr;
+			})
+		});
 
-		this.selected = Bindable.makeBindable(this.selected);
+		this.parallax = new Parallax({spriteBoard: this, map});
 
-		this.background  = new Background(this, map);
 		const w = 1280;
 		const spriteSheet = new SpriteSheet;
 
@@ -102,24 +112,7 @@ export class SpriteBoard
 			this.sprites.add(barrel);
 		}
 
-		this.sprites.add(this.background);
-
 		this.following = null;
-	}
-
-	unselect()
-	{
-		if(this.selected.localX === null)
-		{
-			return false;
-		}
-
-		this.selected.localX  = null;
-		this.selected.localY  = null;
-		this.selected.globalX = null;
-		this.selected.globalY = null;
-
-		return true;
 	}
 
 	draw()
@@ -132,46 +125,54 @@ export class SpriteBoard
 
 		const gl = this.gl2d.context;
 
-		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+		this.drawProgram.uniformI('u_renderMode', this.renderMode);
+		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
 
+		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
+
+		this.drawProgram.uniformF('u_time', performance.now());
+		this.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clearColor(0, 0, 0, 0);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
+
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+		if(this.map.backgroundColor)
+		{
+			const color = this.map.backgroundColor.substr(1);
+
+			const r = parseInt(color.substr(-6, 2), 16) / 255;
+			const b = parseInt(color.substr(-4, 2), 16) / 255;
+			const g = parseInt(color.substr(-2, 2), 16) / 255;
+			const a = color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+
+			// console.log({r,g,b,a});
+
+			gl.clearColor(r, g, b, a);
+		}
+
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		this.drawProgram.uniformI('u_renderMode', this.renderMode);
-		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
-		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
-		this.drawProgram.uniformF('u_scale', this.gl2d.zoomLevel, this.gl2d.zoomLevel);
-		this.drawProgram.uniformF('u_region', 0, 0, 0, 0);
-		this.drawProgram.uniformF(
-			'u_ripple'
-			, Math.PI / 8
-			, performance.now() / 200 // + -Camera.y
-			, 1
-		);
+		window.smProfiling && console.time('draw-parallax');
+		this.parallax && this.parallax.draw();
+		window.smProfiling && console.timeEnd('draw-parallax');
+
+		window.smProfiling && console.time('draw-tiles');
+		this.mapRenderers.forEach(mr => mr.draw());
+		window.smProfiling && console.timeEnd('draw-tiles');
+
+		window.smProfiling && console.time('draw-sprites');
 
 		let sprites = this.sprites.items();
-
-		sprites.forEach(s => s.z = s instanceof Background ? -1 : s.y);
-
-		window.smProfiling && console.time('sort');
-
+		sprites.forEach(s => s.z = s.y);
 		sprites.sort((a,b) => {
-			if((a instanceof Background) && !(b instanceof Background))
-			{
-				return -1;
-			}
-
-			if((b instanceof Background) && !(a instanceof Background))
-			{
-				return 1;
-			}
-
 			if(a.z === undefined)
 			{
 				return -1;
@@ -185,13 +186,13 @@ export class SpriteBoard
 			return a.z - b.z;
 		});
 
+		sprites.forEach(s => s.draw());
+		window.smProfiling && console.timeEnd('draw-sprites');
+
 		if(window.smProfiling)
 		{
-			console.timeEnd('sort');
 			window.smProfiling = false;
 		}
-
-		sprites.forEach(s => s.draw());
 
 		// Set the rectangle for both layers
 		this.setRectangle(
@@ -221,6 +222,7 @@ export class SpriteBoard
 		gl.activeTexture(gl.TEXTURE1);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	resize(width, height)
@@ -230,21 +232,24 @@ export class SpriteBoard
 		width  = width  || this.gl2d.element.width;
 		height = height || this.gl2d.element.height;
 
+		this.width = width;
+		this.height = height;
+
 		Camera.x *= this.gl2d.zoomLevel;
 		Camera.y *= this.gl2d.zoomLevel;
 
 		Camera.width  = width  / this.gl2d.zoomLevel;
 		Camera.height = height / this.gl2d.zoomLevel;
 
-		this.background.resize(Camera.width, Camera.height);
+		this.mapRenderers.forEach(mr => mr.resize(Camera.width, Camera.height))
 
 		gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
 		gl.texImage2D(
 			gl.TEXTURE_2D
 			, 0
 			, gl.RGBA
-			, Camera.width * this.gl2d.zoomLevel
-			, Camera.height * this.gl2d.zoomLevel
+			, this.width
+			, this.height
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
@@ -256,13 +261,15 @@ export class SpriteBoard
 			gl.TEXTURE_2D
 			, 0
 			, gl.RGBA
-			, Camera.width * this.gl2d.zoomLevel
-			, Camera.height * this.gl2d.zoomLevel
+			, this.width
+			, this.height
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
 			, null
 		);
+
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	setRectangle(x, y, width, height)
@@ -285,4 +292,19 @@ export class SpriteBoard
 			x2, y2,
 		]), gl.STREAM_DRAW);
 	}
+
+	// unselect()
+	// {
+	// 	if(this.selected.localX === null)
+	// 	{
+	// 		return false;
+	// 	}
+
+	// 	this.selected.localX  = null;
+	// 	this.selected.localY  = null;
+	// 	this.selected.globalX = null;
+	// 	this.selected.globalY = null;
+
+	// 	return true;
+	// }
 }

@@ -92,8 +92,8 @@ export class Gl2d
 {
 	constructor(element)
 	{
-		this.element   = element || document.createElement('canvas');
-		this.context   = this.element.getContext('webgl');
+		this.element = element || document.createElement('canvas');
+		this.context = this.element.getContext('webgl');
 		this.screenScale = 1;
 		this.zoomLevel = 2;
 	}
@@ -179,6 +179,7 @@ export class Gl2d
 		const framebuffer = gl.createFramebuffer();
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+
 		gl.framebufferTexture2D(
 			gl.FRAMEBUFFER
 			, gl.COLOR_ATTACHMENT0
