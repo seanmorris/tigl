@@ -7,12 +7,15 @@ import { Sprite } from './Sprite';
 import { SpriteSheet } from './SpriteSheet';
 import { MapRenderer } from './MapRenderer';
 import { Parallax } from './Parallax';
+import { Split } from '../math/Split';
 
 export class SpriteBoard
 {
 	constructor({element, world, map})
 	{
 		this[Bindable.Prevent] = true;
+
+		console.log(Split.intToBytes(0xFF_00));
 
 		this.map = map;
 		this.maps = [];
@@ -45,16 +48,18 @@ export class SpriteBoard
 			, 'u_tileMapping'
 
 			, 'u_size'
+			, 'u_scale'
+			, 'u_scroll'
+			, 'u_stretch'
 			, 'u_tileSize'
 			, 'u_resolution'
 			, 'u_mapTextureSize'
 
-			, 'u_color'
 			, 'u_region'
 			, 'u_parallax'
 			, 'u_time'
 
-			, 'u_renderMap'
+			, 'u_renderTiles'
 			, 'u_renderParallax'
 			, 'u_renderMode'
 		];
@@ -100,7 +105,7 @@ export class SpriteBoard
 		const w = 1280;
 		const spriteSheet = new SpriteSheet;
 
-		for(const i in Array(16).fill())
+		for(const i in Array(2).fill())
 		{
 			const barrel = new Sprite({
 				src: 'barrel.png',
@@ -125,21 +130,21 @@ export class SpriteBoard
 
 		const gl = this.gl2d.context;
 
-		this.drawProgram.uniformI('u_renderMode', this.renderMode);
-		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
-
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
+		this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
+		this.drawProgram.uniformI('u_renderMode', this.renderMode);
 
 		this.drawProgram.uniformF('u_time', performance.now());
 		this.drawProgram.uniformF('u_region', 0, 0, 0, 0);
 
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.clearColor(0, 0, 0, 0);
+		gl.clearColor(0, 0, 0, 1);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
+		gl.clearColor(0, 0, 0, 0);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -153,9 +158,11 @@ export class SpriteBoard
 			const g = parseInt(color.substr(-2, 2), 16) / 255;
 			const a = color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
 
-			// console.log({r,g,b,a});
-
 			gl.clearColor(r, g, b, a);
+		}
+		else
+		{
+			gl.clearColor(0, 0, 0, 1);
 		}
 
 		gl.clear(gl.COLOR_BUFFER_BIT);
@@ -164,28 +171,29 @@ export class SpriteBoard
 		this.parallax && this.parallax.draw();
 		window.smProfiling && console.timeEnd('draw-parallax');
 
+		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
+
+
 		window.smProfiling && console.time('draw-tiles');
 		this.mapRenderers.forEach(mr => mr.draw());
 		window.smProfiling && console.timeEnd('draw-tiles');
 
 		window.smProfiling && console.time('draw-sprites');
-
 		let sprites = this.sprites.items();
-		sprites.forEach(s => s.z = s.y);
+		// sprites.forEach(s => s.z = s.y);
 		sprites.sort((a,b) => {
-			if(a.z === undefined)
+			if(a.y === undefined)
 			{
 				return -1;
 			}
 
-			if(b.z === undefined)
+			if(b.y === undefined)
 			{
 				return 1;
 			}
 
-			return a.z - b.z;
+			return a.y - b.y;
 		});
-
 		sprites.forEach(s => s.draw());
 		window.smProfiling && console.timeEnd('draw-sprites');
 
@@ -219,9 +227,11 @@ export class SpriteBoard
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
 		// Cleanup...
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.activeTexture(gl.TEXTURE1);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		gl.activeTexture(gl.TEXTURE0);
+		gl.activeTexture(gl.TEXTURE4);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 

@@ -1,12 +1,13 @@
 import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
 
-export class Map
+export class TileMap
 {
 	constructor({src})
 	{
 		this[Bindable.Prevent] = true;
 		this.image = document.createElement('img');
+		this.src = src;
 		this.pixels = [];
 		this.tileCount = 0;
 
@@ -14,8 +15,8 @@ export class Map
 
 		this.properties = {};
 
-		this.canvases = new window.Map;
-		this.contexts = new window.Map;
+		this.canvases = new Map;
+		this.contexts = new Map;
 
 		this.tileLayers   = [];
 		this.imageLayers  = [];
@@ -34,6 +35,8 @@ export class Map
 		this.tileSetHeight = 0;
 
 		this.ready = this.getReady(src);
+
+		this.animations = new Map;
 	}
 
 	async getReady(src)
@@ -134,6 +137,17 @@ export class Map
 			this.image.src = url;
 		});
 
+		for(const tileset of tilesets)
+		{
+			for(const tileData of tileset.tiles)
+			{
+				if(tileData.animation)
+				{
+					this.animations.set(tileData.id, tileData.animation);
+				}
+			}
+		}
+
 		for(const layer of this.tileLayers)
 		{
 			const canvas = document.createElement('canvas');
@@ -144,6 +158,16 @@ export class Map
 
 			const tileValues = new Uint32Array(layer.data.map(t => 0 + t));
 			const tilePixels = new Uint8ClampedArray(tileValues.buffer);
+
+			for(const i in tileValues)
+			{
+				const tile = tileValues[i];
+
+				if(this.animations.has(tile))
+				{
+					console.log({i, tile}, this.animations.get(tile));
+				}
+			}
 
 			for(let i = 3; i < tilePixels.length; i +=4)
 			{
@@ -156,8 +180,8 @@ export class Map
 		}
 	}
 
-	getSlice(x, y, width, height)
+	getSlice(x, y, w, h, t = 0)
 	{
-		return this.contexts.values().map(context => context.getImageData(x, y, width, height).data);
+		return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
 	}
 }

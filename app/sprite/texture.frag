@@ -13,14 +13,19 @@ uniform sampler2D u_tileMapping;
 
 uniform vec2 u_size;
 uniform vec2 u_tileSize;
+uniform vec2 u_resolution;
 uniform vec2 u_mapTextureSize;
 
 uniform vec4 u_color;
 uniform vec4 u_region;
 uniform vec2 u_parallax;
-uniform float u_time;
+uniform vec2 u_scroll;
+uniform vec2 u_stretch;
 
-uniform int u_renderMap;
+uniform float u_time;
+uniform float u_scale;
+
+uniform int u_renderTiles;
 uniform int u_renderParallax;
 uniform int u_renderMode;
 
@@ -107,13 +112,27 @@ vec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {
 }
 
 void main() {
-  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);
+  vec4 originalColor = texture2D(u_image, v_texCoord);
+  vec4 effectColor = texture2D(u_effect,  v_texCoord);
 
+  // This only applies when drawing the parallax background
   if (u_renderParallax == 1) {
-    gl_FragColor = texture2D(u_image,  v_texCoord * vec2(1.0, -1.0) + vec2(u_time * u_parallax.x / 5000.0, 1.0));
+
+    float texelSize = 1.0 / u_size.x;
+
+    vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)
+      + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);
+      // + vec2(u_time / 10000.0, 0.0);
+      // + vec2(, 0.0);
+      ;
+
+    gl_FragColor = texture2D(u_image,  parallaxCoord);
+
     return;
   }
-  if (u_renderMap == 1) {
+
+  // This only applies when drawing tiles.
+  if (u_renderTiles == 1) {
     float xTiles = floor(u_size.x / u_tileSize.x);
     float yTiles = floor(u_size.y / u_tileSize.y);
 
@@ -129,13 +148,19 @@ void main() {
     float xOff = (xT * inv_xTiles - xTile) * xTiles;
     float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;
 
+    float xWrap = u_mapTextureSize.x / u_tileSize.x;
+    float yWrap = u_mapTextureSize.y / u_tileSize.y;
+
+    // Mode 1 draws tiles' x/y values as red & green
     if (u_renderMode == 1) {
       gl_FragColor = vec4(xTile, yTile, 0, 1.0);
       return;
     }
 
+    // Mode 2 is the same as mode 1 but adds combines
+    // internal tile x/y to the blue channel
     if (u_renderMode == 2) {
-      gl_FragColor = vec4(xTile, yTile, xOff + yOff * 0.5, 1.0);
+      gl_FragColor = vec4(xTile, yTile, (xOff + yOff) * 0.5, 1.0);
       return;
     }
 
@@ -151,6 +176,7 @@ void main() {
       return;
     }
 
+    // Mode 3 uses the tile number for the red/green channels
     if (u_renderMode == 3) {
       gl_FragColor = tile;
       gl_FragColor.b = 0.5;
@@ -158,6 +184,7 @@ void main() {
       return;
     }
 
+    // Mode 4 normalizes the tile number to all channels
     if (u_renderMode == 4) {
       gl_FragColor = vec4(
         mod(tileNumber, 256.0) / 256.0
@@ -168,22 +195,18 @@ void main() {
       return;
     }
 
-    float xWrap = u_mapTextureSize.x / u_tileSize.x;
-    float yWrap = u_mapTextureSize.y / u_tileSize.y;
-
     float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));
     float tileSetY = floor((-1.0 + tileNumber) / xWrap);
 
-    gl_FragColor = texture2D(u_tiles, vec2(
+    vec4 tileColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)
       , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)
     ));
 
+    gl_FragColor = tileColor;
+
     return;
   }
-
-  vec4 originalColor = texture2D(u_image,  v_texCoord);
-  vec4 effectColor   = texture2D(u_effect, v_texCoord);
 
   // This if/else block only applies
   // when we're drawing the effectBuffer
@@ -203,10 +226,13 @@ void main() {
     return;
   };
 
+  // Mode 5 draws the effect buffer to the screen
   if (u_renderMode == 5) {
     gl_FragColor = effectColor;
     return;
   }
+
+  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);
 
   // This if/else block only applies
   // when we're drawing the drawBuffer
@@ -223,7 +249,7 @@ void main() {
     gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;
   }
   else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region
-    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 2.0, ripple.y * 1.5, ripple.z * 0.25);
+    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);
     vec4 v_blurredColor = originalColor;
     if (displace > 0.0) {
       v_blurredColor = texture2D(u_image, v_displacement);

@@ -13,6 +13,8 @@ export class Entity
 
 		this.x = x;
 		this.y = y;
+
+		this.sprite.spriteBoard.renderMode = 0;
 	}
 
 	create()
@@ -50,7 +52,14 @@ export class Entity
 
 			this.sprite.spriteBoard.renderMode = t;
 
-			console.log(t);
+			if(t === '9')
+			{
+				const maps = this.sprite.spriteBoard.world.getMapsForPoint(
+					this.sprite.x, this.sprite.y,
+				);
+
+				console.log(maps);
+			}
 		}
 
 		xAxis = Math.min(1, Math.max(xAxis, -1));

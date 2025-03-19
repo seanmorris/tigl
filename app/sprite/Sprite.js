@@ -1,5 +1,6 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Camera } from "./Camera";
+import { Split } from "../math/Split";
 
 export class Sprite
 {
@@ -135,6 +136,7 @@ export class Sprite
 	draw()
 	{
 		this.frameDelay = this.maxSpeed - Math.abs(this.speed);
+
 		if(this.frameDelay > this.maxSpeed)
 		{
 			this.frameDelay = this.maxSpeed;
@@ -193,6 +195,7 @@ export class Sprite
 		// Cleanup...
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
+		return;
 	}
 
 	setFrames(frameSelector)
@@ -255,6 +258,8 @@ export class Sprite
 				, image
 			);
 
+			gl.bindTexture(gl.TEXTURE_2D, null);
+
 			return {image, texture}
 		});
 
@@ -287,7 +292,6 @@ export class Sprite
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 
 		const x1 = x;
 		const y1 = y + 32 * zoom;
@@ -311,9 +315,10 @@ export class Sprite
 			// , this.matrixScale(Math.sin(theta), Math.cos(theta))
 			// , this.matrixRotate(theta)
 			, this.matrixTranslate(-xOff, -yOff)
-		))
+		));
 
-		gl.bufferData(gl.ARRAY_BUFFER, t, gl.STREAM_DRAW);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+		gl.bufferData(gl.ARRAY_BUFFER, t, gl.STATIC_DRAW);
 	}
 
 	matrixIdentity()

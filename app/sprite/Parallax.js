@@ -1,4 +1,5 @@
 import { Bindable } from 'curvature/base/Bindable';
+import { Camera } from './Camera';
 
 class ParallaxLayer
 {
@@ -39,6 +40,9 @@ export class Parallax
 		});
 
 		this.loaded = false;
+
+		this.x = 0;
+		this.y = 0;
 	}
 
 	assemble()
@@ -93,17 +97,21 @@ export class Parallax
 		}
 
 		const gl = this.spriteBoard.gl2d.context;
+		const zoom = this.spriteBoard.gl2d.zoomLevel;
+
+		this.x = this.spriteBoard.following.sprite.x + -this.spriteBoard.width / zoom * 0.5;
+		this.y = this.spriteBoard.following.sprite.y;
+
 		this.spriteBoard.drawProgram.uniformI('u_renderParallax', 1);
+		this.spriteBoard.drawProgram.uniformF('u_scroll', this.x, this.y);
 
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
-
-		const zoom = this.spriteBoard.gl2d.zoomLevel;
 
 		for(const layer of this.parallaxLayers)
 		{
 			gl.bindTexture(gl.TEXTURE_2D, layer.texture);
 
+			this.spriteBoard.drawProgram.uniformF('u_size', layer.width, layer.width);
 			this.spriteBoard.drawProgram.uniformF('u_parallax', layer.parallax, 0);
 
 			this.setRectangle(
@@ -111,9 +119,10 @@ export class Parallax
 				, this.spriteBoard.height + (-this.height + layer.offset) * zoom
 				, layer.width * zoom
 				, layer.height * zoom
-				, this.spriteBoard.width * zoom
+				, layer.width
 			);
 
+			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 
@@ -147,27 +156,28 @@ export class Parallax
 		return this.imagePromises[src];
 	}
 
-	setRectangle(x, y, width, height, wrap = 1)
+	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
+
+		const ratio = this.spriteBoard.width / width;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			0.0, 0.0,
-			wrap, 0.0,
+			ratio, 0.0,
 			0.0, 1.0,
 			0.0, 1.0,
-			wrap, 0.0,
-			wrap, 1.0,
+			ratio, 0.0,
+			ratio, 1.0,
 		]), gl.STATIC_DRAW);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
-
-		const x1 = x;
-		const x2 = x + width * wrap;
+		const x1 = x - 0;
+		const x2 = x + this.spriteBoard.width;
 		const y1 = y;
 		const y2 = y + height;
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			x1, y2,
 			x2, y2,

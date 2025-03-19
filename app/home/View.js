@@ -4,7 +4,7 @@ import { Bag } from 'curvature/base/Bag';
 
 import { Config } from 'Config';
 
-import { Map as TileMap } from '../world/Map';
+import { TileMap } from '../world/TileMap';
 
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
@@ -18,12 +18,73 @@ import { Camera } from '../sprite/Camera';
 import { Controller } from '../model/Controller';
 import { Sprite } from '../sprite/Sprite';
 import { World } from '../world/World';
+import { Quadtree } from '../math/Quadtree';
+import { Rectangle } from '../math/Rectangle';
+import { MTree } from '../math/MTree';
 
 const Application = {};
 
 Application.onScreenJoyPad = new OnScreenJoyPad;
 Application.keyboard = Keyboard.get();
 
+
+const quad = new Quadtree(0, 0, 100, 100, 0.25);
+quad.insert({x: 10, y: 10});
+quad.insert({x: 20, y: 20});
+quad.insert({x: 20, y: 25});
+quad.insert({x: 25, y: 25});
+
+// console.log(quad);
+// console.log(quad.findLeaf(75, 75));
+// console.log(quad.select(0 , 0, 20, 20));
+
+const mapTree = new MTree;
+
+// const rect1 = new Rectangle( 0, 0, 50,  20);
+// const rect2 = new Rectangle(25, 0, 75,  10);
+// const rect3 = new Rectangle(50, 0, 75,  10);
+// const rect4 = new Rectangle(50, 0, 100, 100);
+// const rect5 = new Rectangle(140, 0, 160, 0);
+// console.log({rect1, rect2, rect3, rect4});
+// mapTree.add(rect1);
+// mapTree.add(rect2);
+// mapTree.add(rect3);
+// mapTree.add(rect4);
+// mapTree.add(rect5);
+
+// const xSize = 50;
+// const ySize = 50;
+// const xSpace = 25;
+// const ySpace = 25;
+
+// const rects = [];
+
+// for(let i = 0; i < 10; i++)
+// {
+// 	for(let j = 0; j < 10; j++)
+// 	{
+// 		const rect = new Rectangle(
+// 			i * xSpace, j * ySpace
+// 			, i * xSpace + xSize, j * ySpace + ySize
+// 		);
+
+// 		mapTree.add(rect);
+
+// 		rects.push(rect);
+// 	}
+// }
+
+// // console.log(mapTree);
+// console.log(mapTree.segments);
+// console.log(mapTree.query(0, 0, 100, 100));
+
+// for(const rect of rects)
+// {
+// 	mapTree.delete(rect);
+// }
+
+// console.log(mapTree.segments);
+// console.log(mapTree.query(0, 0, 100, 100));
 
 export class View extends BaseView
 {
@@ -245,7 +306,6 @@ export class View extends BaseView
 			});
 
 			// this.spriteBoard.simulate();
-
 			// this.args.localX  = this.spriteBoard.selected.localX;
 			// this.args.localY  = this.spriteBoard.selected.localY;
 			// this.args.globalX = this.spriteBoard.selected.globalX;
@@ -263,7 +323,15 @@ export class View extends BaseView
 			// this.spriteBoard.moveCamera(sprite.x, sprite.y);
 		};
 
-		const update = (now) =>{
+		const update = now => {
+
+			if(document.hidden)
+			{
+				window.requestAnimationFrame(update);
+				return;
+			}
+
+			simulate(performance.now());
 			window.requestAnimationFrame(update);
 			this.spriteBoard.draw();
 
@@ -288,9 +356,8 @@ export class View extends BaseView
 
 		update(performance.now());
 
-		setInterval(()=>{
-			simulate(performance.now());
-		}, 0);
+		// setInterval(()=>{
+		// }, 0);
 
 		setInterval(()=>{
 			document.title = `${Config.title} ${this.args.fps} FPS`;
@@ -338,7 +405,7 @@ export class View extends BaseView
 		const min = this.spriteBoard.gl2d.screenScale * 0.2;
 		const step = 0.05 * this.spriteBoard.gl2d.zoomLevel;
 
-		let zoomLevel = this.spriteBoard.gl2d.zoomLevel + (delta * step);
+		let zoomLevel = (delta * step + this.spriteBoard.gl2d.zoomLevel).toFixed(2);
 
 		if(zoomLevel < min)
 		{
@@ -347,6 +414,11 @@ export class View extends BaseView
 		else if(zoomLevel > max)
 		{
 			zoomLevel = max;
+		}
+
+		if(Math.abs(zoomLevel - 1) < 0.05)
+		{
+			zoomLevel = 1;
 		}
 
 		if(this.spriteBoard.gl2d.zoomLevel !== zoomLevel)

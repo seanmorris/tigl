@@ -1,15 +1,37 @@
 export class Tileset
 {
 	constructor({
-		columns, firstgid, image, imageheight, imagewidth
-		, margin, name, spacing, tilecount, tileheight, tilewidth,
+		source, firstgid, columns, image, imageheight, imagewidth, margin
+		, name, spacing, tilecount, tileheight, tilewidth, tiles
 	}){
+		this.firstGid = firstgid;
+
+		this.ready = this.getReady({
+			source, columns, image, imageheight, imagewidth, margin
+			, name, spacing, tilecount, tileheight, tilewidth, tiles
+		});
+	}
+
+	async getReady({
+		source, columns, image, imageheight, imagewidth, margin, name
+		, spacing, tilecount, tileheight, tilewidth, tiles
+	}){
+		if(source)
+		{
+			({columns, image, imageheight, imagewidth, margin, name,
+				spacing, tilecount, tileheight, tilewidth, tiles
+			} = await (await fetch(source)).json());
+
+			for(const tile of tiles)
+			{
+				tile.id += this.firstGid;
+			}
+		}
+
 		this.image = new Image;
-		this.ready = new Promise(accept => this.image.onload = () => accept());
 		this.image.src = image;
 
 		this.columns = columns;
-		this.firstGid = firstgid;
 		this.imageWidth = imagewidth;
 		this.imageHeight = imageheight;
 		this.margin = margin;
@@ -18,5 +40,10 @@ export class Tileset
 		this.tileCount = tilecount;
 		this.tileHeight = tileheight;
 		this.tileWidth = tilewidth;
+		this.tiles = tiles ?? [];
+
+		console.log(this);
+
+		return new Promise(accept => this.image.onload = () => accept());
 	}
 }

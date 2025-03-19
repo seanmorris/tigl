@@ -1,5 +1,6 @@
 import { Bindable } from 'curvature/base/Bindable';
 import { SpriteSheet } from './SpriteSheet';
+import { Split } from '../math/Split';
 
 export class MapRenderer
 {
@@ -45,6 +46,8 @@ export class MapRenderer
 				, gl.UNSIGNED_BYTE
 				, map.pixels
 			);
+			gl.bindTexture(gl.TEXTURE_2D, null);
+
 		});
 	}
 
@@ -104,14 +107,10 @@ export class MapRenderer
 			+ -yOffset
 		);
 
-		const tilePixelLayers = this.map.getSlice(xTile, yTile, tilesWide, tilesHigh);
-
-		this.spriteBoard.drawProgram.uniformI('u_renderMap', 1);
 		this.spriteBoard.drawProgram.uniformF('u_size', this.width, this.height);
 		this.spriteBoard.drawProgram.uniformF('u_tileSize', this.tileWidth, this.tileHeight);
 		this.spriteBoard.drawProgram.uniformF('u_mapTextureSize', this.map.tileSetWidth, this.map.tileSetHeight);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+		this.spriteBoard.drawProgram.uniformI('u_renderTiles', 1);
 
 		gl.activeTexture(gl.TEXTURE2);
 		gl.bindTexture(gl.TEXTURE_2D, this.tileTexture);
@@ -121,8 +120,7 @@ export class MapRenderer
 		gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
 		this.spriteBoard.drawProgram.uniformI('u_tileMapping', 3);
 
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
+		const tilePixelLayers = this.map.getSlice(xTile, yTile, tilesWide, tilesHigh, performance.now()/1000);
 
 		for(const tilePixels of tilePixelLayers)
 		{
@@ -145,11 +143,14 @@ export class MapRenderer
 				, this.height * zoom
 			);
 
+			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
 
 		// Cleanup...
-		this.spriteBoard.drawProgram.uniformI('u_renderMap', 0);
+		this.spriteBoard.drawProgram.uniformI('u_renderTiles', 0);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 		gl.activeTexture(gl.TEXTURE2);
 		gl.bindTexture(gl.TEXTURE_2D, null);
@@ -157,7 +158,9 @@ export class MapRenderer
 		gl.activeTexture(gl.TEXTURE3);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 
+
 		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	resize(x, y)
@@ -189,13 +192,12 @@ export class MapRenderer
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
-
 		const x1 = x;
 		const x2 = x + width;
 		const y1 = y;
 		const y2 = y + height;
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			x1, y2,
 			x2, y2,
