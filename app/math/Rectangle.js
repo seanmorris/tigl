@@ -10,12 +10,12 @@ export class Rectangle
 
 	contains(x, y)
 	{
-		if(x < this.x1 || x > this.x2)
+		if(x <= this.x1 || x >= this.x2)
 		{
 			return false;
 		}
 
-		if(y < this.y1 || y > this.y2)
+		if(y <= this.y1 || y >= this.y2)
 		{
 			return false;
 		}
@@ -23,16 +23,49 @@ export class Rectangle
 		return true;
 	}
 
-	intersection(other)
+	isOverlapping(other)
 	{
-		if(this.x1 > other.x2 || this.x2 < other.x1)
+		if(this.x1 >= other.x2 || this.x2 <= other.x1)
 		{
-			return;
+			return false;
 		}
 
-		if(this.y1 > other.y2 || this.y2 < other.y1)
+		if(this.y1 >= other.y2 || this.y2 <= other.y1)
 		{
-			return
+			return false;
+		}
+
+		return true;
+	}
+
+	isFlushWith(other)
+	{
+		if(this.x1 > other.x2 || other.x1 > this.x2)
+		{
+			return false;
+		}
+
+		if(this.y1 > other.y2 || other.y1 > this.y2)
+		{
+			return false;
+		}
+
+		if(this.x1 === other.x2 || other.x1 === this.x2)
+		{
+			return true;
+		}
+
+		if(this.y1 === other.y2 || other.y1 === this.y2)
+		{
+			return true;
+		}
+	}
+
+	intersection(other)
+	{
+		if(!this.isOverlapping(other))
+		{
+			return;
 		}
 
 		return new (this.constructor)(
@@ -43,10 +76,10 @@ export class Rectangle
 
 	isInside(other)
 	{
-		return this.x1 <= other.x1
+		return this.x1 >= other.x1
 			&& this.y1 >= other.y1
-			&& this.x2 >= other.x2
-			&& this.y2 >= other.y2;
+			&& this.x2 <= other.x2
+			&& this.y2 <= other.y2;
 	}
 
 	isOutside(other)

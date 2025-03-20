@@ -1,5 +1,3 @@
-import { Rectangle } from "./Rectangle";
-
 class Segment
 {
 	constructor(start, end, prev, depth = 0)
@@ -11,7 +9,7 @@ class Segment
 
 		this.rectangles = new Set;
 		this.subTree = depth < 1
-			? new MTree(1 + depth)
+			? new SMTree(1 + depth)
 			: null;
 
 		this.prev  = prev;
@@ -63,6 +61,8 @@ class Segment
 
 	add(rectangle)
 	{
+		Object.freeze(rectangle);
+
 		if(this.subTree)
 		{
 			this.subTree.add(rectangle);
@@ -88,7 +88,14 @@ class Segment
 	}
 }
 
-export class MTree
+const isRectangle = (object) => {
+	return 'x1' in object
+		&& 'y1' in object
+		&& 'x2' in object
+		&& 'y2' in object;
+};
+
+export class SMTree
 {
 	constructor(depth = 0)
 	{
@@ -98,6 +105,11 @@ export class MTree
 
 	add(rectangle)
 	{
+		if(!isRectangle(rectangle))
+		{
+			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y1.');
+		}
+
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
 		const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
 
@@ -121,6 +133,11 @@ export class MTree
 
 	delete(rectangle)
 	{
+		if(!isRectangle(rectangle))
+		{
+			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y1.');
+		}
+
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
 		const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
 
@@ -160,9 +177,7 @@ export class MTree
 
 	query(x1, y1, x2, y2)
 	{
-		console.time('query time');
-
-		const rectangles = new Set;
+		const results = new Set;
 
 		const xStartIndex = this.findSegment(x1);
 		const xEndIndex = this.findSegment(x2);
@@ -181,15 +196,14 @@ export class MTree
 
 			for(let j = yStartIndex; j <= yEndIndex; j++)
 			{
-				for(const rectangle of segment.subTree.segments[j].rectangles)
+				for(const result of segment.subTree.segments[j].rectangles)
 				{
-					rectangles.add(rectangle)
+					results.add(result)
 				}
 			}
 		}
 
-		console.timeEnd('query time');
-		return rectangles;
+		return results;
 	}
 
 	splitSegment(index, at)
@@ -214,7 +228,7 @@ export class MTree
 			const current = Math.floor((lo + hi) * 0.5);
 			const segment = this.segments[current];
 
-			if(segment.start <= at && segment.end >= at)
+			if(segment.start < at && segment.end >= at)
 			{
 				return current;
 			}

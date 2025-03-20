@@ -2,7 +2,7 @@ import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
 import { TileMap } from './TileMap';
 import { Rectangle } from '../math/Rectangle';
-import { MTree } from '../math/MTree';
+import { SMTree } from '../math/SMTree';
 
 export class World
 {
@@ -11,7 +11,7 @@ export class World
 		this[Bindable.Prevent] = true;
 		this.ready = this.getReady(src);
 		this.maps = [];
-		this.mTree = new MTree;
+		this.mTree = new SMTree;
 		this.rectMap = new Map;
 	}
 

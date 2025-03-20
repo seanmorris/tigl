@@ -58,7 +58,7 @@ export class Entity
 					this.sprite.x, this.sprite.y,
 				);
 
-				console.log(maps);
+				maps.forEach(m => console.log(m.src));
 			}
 		}
 

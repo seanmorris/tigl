@@ -20,7 +20,7 @@ import { Sprite } from '../sprite/Sprite';
 import { World } from '../world/World';
 import { Quadtree } from '../math/Quadtree';
 import { Rectangle } from '../math/Rectangle';
-import { MTree } from '../math/MTree';
+import { SMTree } from '../math/SMTree';
 
 const Application = {};
 
@@ -38,7 +38,7 @@ quad.insert({x: 25, y: 25});
 // console.log(quad.findLeaf(75, 75));
 // console.log(quad.select(0 , 0, 20, 20));
 
-const mapTree = new MTree;
+const mapTree = new SMTree;
 
 // const rect1 = new Rectangle( 0, 0, 50,  20);
 // const rect2 = new Rectangle(25, 0, 75,  10);
@@ -52,36 +52,6 @@ const mapTree = new MTree;
 // mapTree.add(rect4);
 // mapTree.add(rect5);
 
-// const xSize = 50;
-// const ySize = 50;
-// const xSpace = 25;
-// const ySpace = 25;
-
-// const rects = [];
-
-// for(let i = 0; i < 10; i++)
-// {
-// 	for(let j = 0; j < 10; j++)
-// 	{
-// 		const rect = new Rectangle(
-// 			i * xSpace, j * ySpace
-// 			, i * xSpace + xSize, j * ySpace + ySize
-// 		);
-
-// 		mapTree.add(rect);
-
-// 		rects.push(rect);
-// 	}
-// }
-
-// // console.log(mapTree);
-// console.log(mapTree.segments);
-// console.log(mapTree.query(0, 0, 100, 100));
-
-// for(const rect of rects)
-// {
-// 	mapTree.delete(rect);
-// }
 
 // console.log(mapTree.segments);
 // console.log(mapTree.query(0, 0, 100, 100));
