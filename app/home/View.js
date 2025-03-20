@@ -12,48 +12,14 @@ import { Controller as OnScreenJoyPad } from '../ui/Controller';
 
 import { Camera } from '../sprite/Camera';
 
-import { Controller } from '../model/Controller';
-import { Sprite } from '../sprite/Sprite';
 import { World } from '../world/World';
-import { Quadtree } from '../math/Quadtree';
-import { Rectangle } from '../math/Rectangle';
-import { SMTree } from '../math/SMTree';
-import { Player } from '../model/Player';
-import { SpriteSheet } from '../sprite/SpriteSheet';
+
+import { Session } from '../session/Session';
 
 const Application = {};
 
 Application.onScreenJoyPad = new OnScreenJoyPad;
 Application.keyboard = Keyboard.get();
-
-
-const quad = new Quadtree(0, 0, 100, 100, 0.25);
-quad.insert({x: 10, y: 10});
-quad.insert({x: 20, y: 20});
-quad.insert({x: 20, y: 25});
-quad.insert({x: 25, y: 25});
-
-// console.log(quad);
-// console.log(quad.findLeaf(75, 75));
-// console.log(quad.select(0 , 0, 20, 20));
-
-const mapTree = new SMTree;
-
-// const rect1 = new Rectangle( 0, 0, 50,  20);
-// const rect2 = new Rectangle(25, 0, 75,  10);
-// const rect3 = new Rectangle(50, 0, 75,  10);
-// const rect4 = new Rectangle(50, 0, 100, 100);
-// const rect5 = new Rectangle(140, 0, 160, 0);
-// console.log({rect1, rect2, rect3, rect4});
-// mapTree.add(rect1);
-// mapTree.add(rect2);
-// mapTree.add(rect3);
-// mapTree.add(rect4);
-// mapTree.add(rect5);
-
-
-// console.log(mapTree.segments);
-// console.log(mapTree.query(0, 0, 100, 100));
 
 export class View extends BaseView
 {
@@ -64,7 +30,6 @@ export class View extends BaseView
 		this.template  = require('./view.tmp');
 		this.routes    = [];
 
-		this.entities  = new Bag;
 		this.keyboard  = Application.keyboard;
 		this.speed     = 24;
 		this.maxSpeed  = this.speed;
@@ -77,92 +42,63 @@ export class View extends BaseView
 		this.args.camX = 0;
 		this.args.camY = 0;
 
-		this.args.frameLock = 60;
-		this.args.simulationLock = 60;
-
 		this.args.showEditor = false;
 
 		this.keyboard.listening = true;
 
-		this.keyboard.keys.bindTo('Escape', (v,k,t,d)=>{
-			if(v === -1)
-			{
-				this.spriteBoard.unselect();
-			}
-		});
-
 		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
-			if(v > 0)
+			if(!this.session || v < 0) return;
+
+			if(v % 5 === 0)
 			{
-				this.args.frameLock++;
+				this.session.frameLock++;
+
+				this.args.frameLock = this.session.frameLock;
 			}
 		});
 
 		this.keyboard.keys.bindTo('End', (v,k,t,d)=>{
-			if(v > 0)
-			{
-				this.args.frameLock--;
+			if(!this.session || v < 0) return;
 
-				if(this.args.frameLock < 0)
+			if(v % 5 === 0)
+			{
+				this.session.frameLock--;
+
+				if(this.session.frameLock < 0)
 				{
-					this.args.frameLock = 0;
+					this.session.frameLock = 0;
 				}
+
+				this.args.frameLock = this.session.frameLock;
 			}
 		});
 
 		this.keyboard.keys.bindTo('PageUp', (v,k,t,d)=>{
-			if(v > 0)
+			if(!this.session || v < 0) return;
+
+			if(v % 5 === 0)
 			{
-				this.args.simulationLock++;
+				this.session.simulationLock++;
 			}
+
+			this.args.simulationLock = this.session.simulationLock;
 		});
 
 		this.keyboard.keys.bindTo('PageDown', (v,k,t,d)=>{
-			if(v > 0)
-			{
-				this.args.simulationLock--;
+			if(!this.session || v < 0) return;
 
-				if(this.args.simulationLock < 0)
+			if(v % 5 === 0)
+			{
+				this.session.simulationLock--;
+
+				if(this.session.simulationLock < 0)
 				{
-					this.args.simulationLock = 0;
+					this.session.simulationLock = 0;
 				}
 			}
+
+			this.args.simulationLock = this.session.simulationLock;
 		});
-
-		this.world = new World({src: './world.json'});
-		this.map = new TileMap({src: './map.json'});
-	}
-
-	onRendered()
-	{
-		const spriteBoard = new SpriteBoard({
-			element: this.tags.canvas.element
-			, world: this.world
-			, map: this.map
-		});
-
-		this.spriteBoard = spriteBoard;
-
-		const player = new Player({
-			sprite: new Sprite({
-				x: 0,//48,
-				y: 0,//64,
-				// src: undefined,
-				spriteSet: new SpriteSheet({source: './player.tsj'}),
-				spriteBoard: spriteBoard,
-				width: 32,
-				height: 48,
-			}),
-			controller: new Controller({
-				keyboard: this.keyboard,
-				onScreenJoyPad: this.args.controller,
-			}),
-			camera: Camera,
-		});
-
-		this.entities.add(player);
-		this.spriteBoard.sprites.add(player.sprite);
-		this.spriteBoard.following = player;
 
 		this.keyboard.keys.bindTo('=', (v,k,t,d)=>{
 			if(v > 0)
@@ -185,102 +121,79 @@ export class View extends BaseView
 			}
 		});
 
+	}
+
+	onRendered()
+	{
+		const spriteBoard = new SpriteBoard({
+			element: this.tags.canvas.element
+			, world: new World({src: './world.json'})
+			, map:   new TileMap({src: './map.json'})
+		});
+
+		this.spriteBoard = spriteBoard;
+
+		this.session = new Session({
+			spriteBoard
+			, keyboard: this.keyboard
+			, onScreenJoyPad: this.args.controller
+		});
+
+		this.args.frameLock = this.session.frameLock;
+		this.args.simulationLock = this.session.simulationLock;
+
 		window.addEventListener('resize', () => this.resize());
 
 		let fThen = 0;
 		let sThen = 0;
 
-		let fSamples = [];
-		let sSamples = [];
-
-		let maxSamples = 5;
-
-		const simulate = (now) => {
-			now = now / 1000;
-
-			const delta = now - sThen;
-
-			if(this.args.simulationLock == 0)
-			{
-				sSamples = [0];
-				return;
-			}
-
-			if(delta < 1/(this.args.simulationLock+(10 * (this.args.simulationLock/60))))
+		const simulate = now => {
+			if(document.hidden)
 			{
 				return;
 			}
 
+			if(!this.session.simulate(now))
+			{
+				return;
+			}
+
+			this.args.sps = (1000 / (now - sThen)).toFixed(3);
 			sThen = now;
-
-			this.keyboard.update();
-
-			Object.values(this.entities.items()).map((e)=>{
-				e.simulate();
-			});
-
-			// this.spriteBoard.simulate();
-			// this.args.localX  = this.spriteBoard.selected.localX;
-			// this.args.localY  = this.spriteBoard.selected.localY;
-			// this.args.globalX = this.spriteBoard.selected.globalX;
-			// this.args.globalY = this.spriteBoard.selected.globalY;
-
-			this.args._sps = (1 / delta);
-
-			sSamples.push(this.args._sps);
-
-			while(sSamples.length > maxSamples)
-			{
-				sSamples.shift();
-			}
-
-			// this.spriteBoard.moveCamera(sprite.x, sprite.y);
 		};
 
 		const draw = now => {
-
 			if(document.hidden)
 			{
 				window.requestAnimationFrame(draw);
 				return;
 			}
 
-			const delta = now - fThen;
-			fThen = now;
-
-			simulate(performance.now());
 			window.requestAnimationFrame(draw);
-			this.spriteBoard.draw(delta);
 
-			this.args.fps = (1000 / delta).toFixed(3);
+			if(!this.session.draw(now))
+			{
+				return;
+			}
 
+			this.args.fps = (1000 / (now - fThen)).toFixed(3);
 			this.args.camX = Number(Camera.x).toFixed(3);
 			this.args.camY = Number(Camera.y).toFixed(3);
+
+			fThen = now;
 
 			if(this.spriteBoard.following)
 			{
 				this.args.posX = Number(this.spriteBoard.following.sprite.x).toFixed(3);
 				this.args.posY = Number(this.spriteBoard.following.sprite.y).toFixed(3);
 			}
-
 		};
 
 		this.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1024 * 4;
 		this.resize();
 
+		setInterval(() => simulate(performance.now()), 0);
 		draw(performance.now());
-
-		// setInterval(()=>{
-		// }, 0);
-
-		setInterval(()=>{
-			document.title = `${Config.title} ${this.args.fps} FPS`;
-		}, 227/3);
-
-		setInterval(()=>{
-			const sps = sSamples.reduce((a,b)=>a+b, 0) / sSamples.length;
-			this.args.sps = sps.toFixed(3).padStart(5, ' ');
-		}, 231/2);
 	}
 
 	resize(x, y)
@@ -315,6 +228,11 @@ export class View extends BaseView
 
 	zoom(delta)
 	{
+		if(!this.session)
+		{
+			return;
+		}
+
 		const max = this.spriteBoard.gl2d.screenScale * 32;
 		const min = this.spriteBoard.gl2d.screenScale * 0.2;
 		const step = 0.05 * this.spriteBoard.gl2d.zoomLevel;

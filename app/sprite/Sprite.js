@@ -19,6 +19,7 @@ export class Sprite
 		this.width  = 32 || width;
 		this.height = 32 || height;
 		this.scale  = 1;
+		this.visible = false;
 
 		this.textures = [];
 

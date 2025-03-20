@@ -2,27 +2,20 @@
 	cv-ref = "canvas:curvature/base/Tag"
 	cv-on  = "wheel:scroll(event);"
 ></canvas>
-<div class = "hud fps">
- [[sps]] simulations/s / [[simulationLock]]
- [[fps]] frames/s      / [[frameLock]]
 
- Res [[rwidth]] x [[rheight]]
-     [[width]] x [[height]]
+<div class = "hud fps">[[sps]] simulations/s / [[simulationLock]]
+[[fps]] frames/s      / [[frameLock]]
 
- Cam [[camX]] x [[camY]]
- Pos [[posX]] x [[posY]]
+Res [[rwidth]] x [[rheight]]
+    [[width]] x [[height]]
 
- δ Sim:   Pg Up / Dn
- δ Frame: Home / End
- δ Scale: + / -
+Cam [[camX]] x [[camY]]
+Pos [[posX]] x [[posY]]
 
+𝚫 Sim:   Pg Up / Dn
+𝚫 Frame: Home / End
+𝚫 Scale: + / -
 </div>
 <div class = "reticle"></div>
 
 [[controller]]
-
-<div cv-if = "showEditor">
-	[[mapEditor]]
-	--
-	[[mmm]]
-</span>

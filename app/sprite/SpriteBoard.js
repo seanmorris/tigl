@@ -3,10 +3,8 @@ import { Bindable } from 'curvature/base/Bindable';
 
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
-import { Sprite } from './Sprite';
 import { MapRenderer } from './MapRenderer';
 import { Parallax } from './Parallax';
-import { Split } from '../math/Split';
 
 export class SpriteBoard
 {
@@ -14,12 +12,12 @@ export class SpriteBoard
 	{
 		this[Bindable.Prevent] = true;
 
-		console.log(Split.intToBytes(0xFF_00));
-
 		this.map = map;
 		this.maps = [];
+
 		this.world = world;
 		this.sprites = new Bag;
+
 
 		this.mouse = {
 			x: null
@@ -93,19 +91,6 @@ export class SpriteBoard
 		this.mapRenderers = new Map;
 
 		this.parallax = new Parallax({spriteBoard: this, map});
-
-		const w = 1280;
-
-		for(const i in Array(2).fill())
-		{
-			const barrel = new Sprite({
-				src: './barrel.png',
-				spriteBoard: this,
-			});
-			barrel.x = 32 + (i * 64) % w - 16;
-			barrel.y = Math.trunc((i * 32) / w) * 32 + 32;
-			this.sprites.add(barrel);
-		}
 
 		this.following = null;
 	}
@@ -209,7 +194,7 @@ export class SpriteBoard
 
 			return a.y - b.y;
 		});
-		sprites.forEach(s => s.draw(delta));
+		sprites.forEach(s => s.visible && s.draw(delta));
 		window.smProfiling && console.timeEnd('draw-sprites');
 
 		if(window.smProfiling)
@@ -317,19 +302,4 @@ export class SpriteBoard
 			x2, y2,
 		]), gl.STREAM_DRAW);
 	}
-
-	// unselect()
-	// {
-	// 	if(this.selected.localX === null)
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	this.selected.localX  = null;
-	// 	this.selected.localY  = null;
-	// 	this.selected.globalX = null;
-	// 	this.selected.globalY = null;
-
-	// 	return true;
-	// }
 }

@@ -1,72 +1,42 @@
+import { Bindable } from "curvature/base/Bindable";
+import { Rectangle } from "../math/Rectangle";
+
 export class Entity
 {
-	constructor({sprite, controller, x, y})
+	constructor({controller, sprite, x = 0, y = 0, width = 32, height = 32})
 	{
-		this.direction = 'south';
-		this.state = 'standing';
+		this[Bindable.Prevent] = true;
 
-		this.sprite = sprite;
 		this.controller = controller;
+		this.sprite = sprite;
 
 		this.x = x;
 		this.y = y;
 
-		this.sprite.spriteBoard.renderMode = 0;
+		this.width  = width;
+		this.height = height;
+
+		this.rect = new Rectangle(
+			x - width * 0.5, y - height,
+			x + width * 0.5, y
+		);
 	}
 
 	create()
-	{
-	}
+	{}
 
 	simulate()
 	{
-		let speed = 4;
+		this.rect.x1 = this.x - this.width * 0.5;
+		this.rect.x2 = this.x + this.width * 0.5;
 
-		const xAxis = Math.min(1, Math.max(this.controller.axis[0] || 0, -1)) || 0;
-		const yAxis = Math.min(1, Math.max(this.controller.axis[1] || 0, -1)) || 0;
+		this.rect.y1 = this.y - this.height;
+		this.rect.y2 = this.y;
 
-		this.sprite.x += Math.abs(xAxis) * Math.sign(xAxis) * speed;
-		this.sprite.y += Math.abs(yAxis) * Math.sign(yAxis) * speed;
-
-		let horizontal = false;
-
-		if(Math.abs(xAxis) > Math.abs(yAxis))
-		{
-			horizontal = true;
-		}
-
-		if(horizontal)
-		{
-			this.direction = 'west';
-
-			if(xAxis > 0)
-			{
-				this.direction = 'east';
-			}
-
-			this.state = 'walking';
-
-		}
-		else if(yAxis)
-		{
-			this.direction = 'north';
-
-			if(yAxis > 0)
-			{
-				this.direction = 'south';
-			}
-
-			this.state = 'walking';
-		}
-		else
-		{
-			this.state = 'standing';
-		}
-
-		this.sprite.changeAnimation(`${this.state}-${this.direction}`);
+		this.sprite.x = this.x;
+		this.sprite.y = this.y;
 	}
 
 	destroy()
-	{
-	}
+	{}
 }
