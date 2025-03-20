@@ -13,6 +13,13 @@
             "width": 1024,
             "x": 0,
             "y": 0
+        },
+        {
+            "fileName": "map-3.json",
+            "height": 4096,
+            "width": 20480,
+            "x": 1920,
+            "y": 128
         }
     ],
     "onlyShowAdjacentMaps": false,

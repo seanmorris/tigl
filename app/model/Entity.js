@@ -1,6 +1,3 @@
-const fireRegion = [1, 0, 0];
-const waterRegion = [0, 1, 1];
-
 export class Entity
 {
 	constructor({sprite, controller, x, y})
@@ -23,55 +20,13 @@ export class Entity
 
 	simulate()
 	{
-		if(Math.trunc(performance.now() / 1000) % 15 === 0)
-		{
-			this.sprite.region = null;
-		}
-
-		if(Math.trunc(performance.now() / 1000) % 15 === 5)
-		{
-			this.sprite.region = waterRegion;
-		}
-
-		if(Math.trunc(performance.now() / 1000) % 15 === 10)
-		{
-			this.sprite.region = fireRegion;
-		}
-
 		let speed = 4;
 
-		let xAxis = this.controller.axis[0] || 0;
-		let yAxis = this.controller.axis[1] || 0;
+		const xAxis = Math.min(1, Math.max(this.controller.axis[0] || 0, -1)) || 0;
+		const yAxis = Math.min(1, Math.max(this.controller.axis[1] || 0, -1)) || 0;
 
-		for(let t in this.controller.triggers)
-		{
-			if(!this.controller.triggers[t])
-			{
-				continue;
-			}
-
-			this.sprite.spriteBoard.renderMode = t;
-
-			if(t === '9')
-			{
-				const maps = this.sprite.spriteBoard.world.getMapsForPoint(
-					this.sprite.x, this.sprite.y,
-				);
-
-				maps.forEach(m => console.log(m.src));
-			}
-		}
-
-		xAxis = Math.min(1, Math.max(xAxis, -1));
-		yAxis = Math.min(1, Math.max(yAxis, -1));
-
-		this.sprite.x += xAxis > 0
-			? Math.ceil(speed * xAxis)
-			: Math.floor(speed * xAxis);
-
-		this.sprite.y += yAxis > 0
-			? Math.ceil(speed * yAxis)
-			: Math.floor(speed * yAxis);
+		this.sprite.x += Math.abs(xAxis) * Math.sign(xAxis) * speed;
+		this.sprite.y += Math.abs(yAxis) * Math.sign(yAxis) * speed;
 
 		let horizontal = false;
 
@@ -108,17 +63,7 @@ export class Entity
 			this.state = 'standing';
 		}
 
-		// if(!xAxis && !yAxis)
-		// {
-		// 	this.direction = 'south';
-		// }
-
-		let frames;
-
-		if(frames = this.sprite[this.state][this.direction])
-		{
-			this.sprite.setFrames(frames);
-		}
+		this.sprite.changeAnimation(`${this.state}-${this.direction}`);
 	}
 
 	destroy()

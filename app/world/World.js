@@ -48,4 +48,22 @@ export class World
 
 		return maps;
 	}
+
+	getMapsForRect(x, y, w, h)
+	{
+		const rects = this.mTree.query(x + -w*0.5, y + -h*0.5, x + w*0.5, y + h*0.5);
+		const maps = new Set;
+
+		window.smProfiling && console.time('query mapTree');
+
+		for(const rect of rects)
+		{
+			const map = this.rectMap.get(rect);
+			maps.add(map);
+		}
+
+		window.smProfiling && console.timeEnd('query mapTree');
+
+		return maps;
+	}
 }

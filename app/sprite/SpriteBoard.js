@@ -4,7 +4,6 @@ import { Bindable } from 'curvature/base/Bindable';
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
 import { Sprite } from './Sprite';
-import { SpriteSheet } from './SpriteSheet';
 import { MapRenderer } from './MapRenderer';
 import { Parallax } from './Parallax';
 import { Split } from '../math/Split';
@@ -19,7 +18,6 @@ export class SpriteBoard
 
 		this.map = map;
 		this.maps = [];
-		this.mapRenderers = [];
 		this.world = world;
 		this.sprites = new Bag;
 
@@ -92,25 +90,17 @@ export class SpriteBoard
 			}
 		);
 
-		world.ready.then(maps => {
-			this.mapRenderers = maps.map(m => {
-				const mr = new MapRenderer({spriteBoard: this, map: m});
-				mr.resize(Camera.width, Camera.height);
-				return mr;
-			})
-		});
+		this.mapRenderers = new Map;
 
 		this.parallax = new Parallax({spriteBoard: this, map});
 
 		const w = 1280;
-		const spriteSheet = new SpriteSheet;
 
 		for(const i in Array(2).fill())
 		{
 			const barrel = new Sprite({
-				src: 'barrel.png',
+				src: './barrel.png',
 				spriteBoard: this,
-				spriteSheet
 			});
 			barrel.x = 32 + (i * 64) % w - 16;
 			barrel.y = Math.trunc((i * 32) / w) * 32 + 32;
@@ -120,13 +110,38 @@ export class SpriteBoard
 		this.following = null;
 	}
 
-	draw()
+	draw(delta)
 	{
 		if(this.following)
 		{
 			Camera.x = (16 + this.following.sprite.x) * this.gl2d.zoomLevel || 0;
 			Camera.y = (16 + this.following.sprite.y) * this.gl2d.zoomLevel || 0;
 		}
+
+		const visibleMaps = this.world.getMapsForRect(
+			this.following.sprite.x
+			, this.following.sprite.y
+			, 64//Camera.width * 0.125
+			, 64//Camera.height * 0.125
+		);
+
+		const mapRenderers = new Set;
+
+		visibleMaps.forEach(map => {
+			if(this.mapRenderers.has(map))
+			{
+				mapRenderers.add(this.mapRenderers.get(map));
+				return;
+			}
+			const renderer = new MapRenderer({spriteBoard: this, map});
+			mapRenderers.add(renderer);
+			renderer.resize(Camera.width, Camera.height);
+			this.mapRenderers.set(map, renderer);
+		});
+
+		new Set(this.mapRenderers.keys())
+			.difference(visibleMaps)
+			.forEach(m => this.mapRenderers.delete(m));
 
 		const gl = this.gl2d.context;
 
@@ -175,7 +190,7 @@ export class SpriteBoard
 
 
 		window.smProfiling && console.time('draw-tiles');
-		this.mapRenderers.forEach(mr => mr.draw());
+		this.mapRenderers.values().forEach(mr => mr.draw());
 		window.smProfiling && console.timeEnd('draw-tiles');
 
 		window.smProfiling && console.time('draw-sprites');
@@ -194,7 +209,7 @@ export class SpriteBoard
 
 			return a.y - b.y;
 		});
-		sprites.forEach(s => s.draw());
+		sprites.forEach(s => s.draw(delta));
 		window.smProfiling && console.timeEnd('draw-sprites');
 
 		if(window.smProfiling)
@@ -251,7 +266,7 @@ export class SpriteBoard
 		Camera.width  = width  / this.gl2d.zoomLevel;
 		Camera.height = height / this.gl2d.zoomLevel;
 
-		this.mapRenderers.forEach(mr => mr.resize(Camera.width, Camera.height))
+		this.mapRenderers.values().forEach(mr => mr.resize(Camera.width, Camera.height))
 
 		gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
 		gl.texImage2D(

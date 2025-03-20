@@ -65,6 +65,7 @@ test('Can find non-overlapping rects in a field', () => {
 		}
 	}
 
+
 	const fastStart = performance.now();
 
 	const fastResult1   = tree.query(0,  0,  10,   10);
@@ -74,10 +75,12 @@ test('Can find non-overlapping rects in a field', () => {
 
 	const fastTime = performance.now() - fastStart;
 
+
 	assert(fastResult1.size === 1, 'fastResult1 should contain a single result.');
 	assert(fastResult10.size === 10, 'fastResult10 should hold 10 results.');
-	assert(fastResult25.size === 25, 'fastResult10 should hold 25 results.');
+	assert(fastResult25.size === 25, 'fastResult25 should hold 25 results.');
 	assert(fastResult100.size === 100, 'fastResult100 should hold 100 results.');
+
 
 	const slowStart = performance.now();
 
@@ -87,6 +90,7 @@ test('Can find non-overlapping rects in a field', () => {
 	const slowResult100 = fullScan(rects, 0,  0,  1000, 1000);
 
 	const slowTime = performance.now() - slowStart;
+
 
 	assert(slowResult1.size === 1, 'slowResult1 should contain a single result.');
 	assert(slowResult10.size === 10, 'slowResult10 should hold 10 results.');
@@ -127,11 +131,13 @@ test('Can find overlapping rects in a field', () => {
 	const fastResult25  = tree.query(0, 0, 500,  500);
 	const fastResult100 = tree.query(0, 0, 1000, 1000);
 
+	// fastResult10.forEach(r => console.log(r));
+
 	const fastTime = performance.now() - fastStart;
 
 	assert(fastResult1.size === 1, 'fastResult1 should contain a single result.');
 	assert(fastResult10.size === 10, 'fastResult10 should hold 10 results.');
-	assert(fastResult25.size === 25, 'fastResult10 should hold 25 results.');
+	assert(fastResult25.size === 25, 'fastResult25 should hold 25 results.');
 	assert(fastResult100.size === 100, 'fastResult100 should hold 100 results.');
 
 	const slowStart = performance.now();

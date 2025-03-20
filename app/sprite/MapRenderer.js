@@ -1,6 +1,4 @@
 import { Bindable } from 'curvature/base/Bindable';
-import { SpriteSheet } from './SpriteSheet';
-import { Split } from '../math/Split';
 
 export class MapRenderer
 {
@@ -8,7 +6,6 @@ export class MapRenderer
 	{
 		this[Bindable.Prevent] = true;
 		this.spriteBoard = spriteBoard;
-		this.spriteSheet = new SpriteSheet;
 
 		this.loaded = false;
 

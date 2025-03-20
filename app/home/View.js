@@ -6,13 +6,10 @@ import { Config } from 'Config';
 
 import { TileMap } from '../world/TileMap';
 
-import { SpriteSheet } from '../sprite/SpriteSheet';
 import { SpriteBoard } from '../sprite/SpriteBoard';
 
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
-import { MapEditor   } from '../ui/MapEditor';
 
-import { Entity } from '../model/Entity';
 import { Camera } from '../sprite/Camera';
 
 import { Controller } from '../model/Controller';
@@ -21,6 +18,8 @@ import { World } from '../world/World';
 import { Quadtree } from '../math/Quadtree';
 import { Rectangle } from '../math/Rectangle';
 import { SMTree } from '../math/SMTree';
+import { Player } from '../model/Player';
+import { SpriteSheet } from '../sprite/SpriteSheet';
 
 const Application = {};
 
@@ -130,20 +129,8 @@ export class View extends BaseView
 			}
 		});
 
-		this.spriteSheet = new SpriteSheet;
-
 		this.world = new World({src: './world.json'});
-
-		this.map = new TileMap({
-			spriteSheet: this.spriteSheet
-			, src: './map.json'
-		});
-
-		this.args.mapEditor  = new MapEditor({
-			spriteSheet: this.spriteSheet
-			, world: this.world
-			, map: this.map
-		});
+		this.map = new TileMap({src: './map.json'});
 	}
 
 	onRendered()
@@ -156,13 +143,13 @@ export class View extends BaseView
 
 		this.spriteBoard = spriteBoard;
 
-		const entity = new Entity({
+		const player = new Player({
 			sprite: new Sprite({
-				x: 48,
-				y: 64,
-				src: undefined,
+				x: 0,//48,
+				y: 0,//64,
+				// src: undefined,
+				spriteSet: new SpriteSheet({source: './player.tsj'}),
 				spriteBoard: spriteBoard,
-				spriteSheet: this.spriteSheet,
 				width: 32,
 				height: 48,
 			}),
@@ -173,10 +160,9 @@ export class View extends BaseView
 			camera: Camera,
 		});
 
-		this.entities.add(entity);
-		this.spriteBoard.sprites.add(entity.sprite);
-
-		this.spriteBoard.following = entity;
+		this.entities.add(player);
+		this.spriteBoard.sprites.add(player.sprite);
+		this.spriteBoard.following = player;
 
 		this.keyboard.keys.bindTo('=', (v,k,t,d)=>{
 			if(v > 0)
@@ -198,48 +184,6 @@ export class View extends BaseView
 				this.zoom(-1);
 			}
 		});
-
-		this.args.mapEditor.args.bindTo('selectedGraphic', (v)=>{
-			if(!v || this.spriteBoard.selected.globalX == null)
-			{
-				return;
-			}
-
-			this.args.showEditor = false;
-
-			let i  = this.spriteBoard.selected.startGlobalX;
-			let ii = this.spriteBoard.selected.globalX;
-
-			if(ii < i)
-			{
-				[ii, i] = [i, ii];
-			}
-
-			for(; i<= ii; i++)
-			{
-				let j  = this.spriteBoard.selected.startGlobalY;
-				let jj = this.spriteBoard.selected.globalY;
-				if(jj < j)
-				{
-					[jj, j] = [j, jj];
-				}
-				for(; j <= jj; j++)
-				{
-					this.map.setTile(i, j, v);
-				}
-			}
-
-			this.map.setTile(
-				this.spriteBoard.selected.globalX
-				, this.spriteBoard.selected.globalY
-				, v
-			);
-
-			this.spriteBoard.resize();
-			this.spriteBoard.unselect();
-		});
-
-		this.args.showEditor = false;
 
 		window.addEventListener('resize', () => this.resize());
 
@@ -293,20 +237,20 @@ export class View extends BaseView
 			// this.spriteBoard.moveCamera(sprite.x, sprite.y);
 		};
 
-		const update = now => {
+		const draw = now => {
 
 			if(document.hidden)
 			{
-				window.requestAnimationFrame(update);
+				window.requestAnimationFrame(draw);
 				return;
 			}
 
-			simulate(performance.now());
-			window.requestAnimationFrame(update);
-			this.spriteBoard.draw();
-
 			const delta = now - fThen;
 			fThen = now;
+
+			simulate(performance.now());
+			window.requestAnimationFrame(draw);
+			this.spriteBoard.draw(delta);
 
 			this.args.fps = (1000 / delta).toFixed(3);
 
@@ -324,7 +268,7 @@ export class View extends BaseView
 		this.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1024 * 4;
 		this.resize();
 
-		update(performance.now());
+		draw(performance.now());
 
 		// setInterval(()=>{
 		// }, 0);

@@ -4,7 +4,10 @@ export class Tileset
 		source, firstgid, columns, image, imageheight, imagewidth, margin
 		, name, spacing, tilecount, tileheight, tilewidth, tiles
 	}){
-		this.firstGid = firstgid;
+		this.firstGid = firstgid ?? 0;
+		this.tileCount  = tilecount ?? 0;
+		this.tileHeight = tileheight ?? 0;
+		this.tileWidth  = tilewidth ?? 0;
 
 		this.ready = this.getReady({
 			source, columns, image, imageheight, imagewidth, margin
@@ -28,22 +31,25 @@ export class Tileset
 			}
 		}
 
+		this.columns = columns ?? 1;
+		this.margin  = margin ?? 0;
+		this.name    = name ?? image;
+		this.spacing = spacing ?? 0;
+		this.tiles   = tiles ?? [];
+
+		this.tileCount  = tilecount ?? 1;
+
 		this.image = new Image;
 		this.image.src = image;
 
-		this.columns = columns;
-		this.imageWidth = imagewidth;
-		this.imageHeight = imageheight;
-		this.margin = margin;
-		this.name = name;
-		this.spacing = spacing;
-		this.tileCount = tilecount;
-		this.tileHeight = tileheight;
-		this.tileWidth = tilewidth;
-		this.tiles = tiles ?? [];
+		await new Promise(accept => this.image.onload = () => accept());
 
-		console.log(this);
+		this.imageWidth  = imagewidth ?? this.image.width;
+		this.imageHeight = imageheight ?? this.image.height;
 
-		return new Promise(accept => this.image.onload = () => accept());
+		this.tileWidth  = tilewidth ?? this.imageWidth;
+		this.tileHeight = tileheight ?? this.imageHeight;
+
+		this.rows = Math.ceil(imageheight / tileheight) || 1;
 	}
 }
