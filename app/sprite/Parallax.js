@@ -97,7 +97,7 @@ export class Parallax
 		}
 
 		const gl = this.spriteBoard.gl2d.context;
-		const zoom = this.spriteBoard.gl2d.zoomLevel;
+		const zoom = this.spriteBoard.zoomLevel;
 
 		this.x = this.spriteBoard.following.sprite.x + -this.spriteBoard.width / zoom * 0.5;
 		this.y = this.spriteBoard.following.sprite.y;

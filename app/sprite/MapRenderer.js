@@ -66,7 +66,7 @@ export class MapRenderer
 		const x = this.spriteBoard.following.sprite.x;
 		const y = this.spriteBoard.following.sprite.y;
 
-		const zoom = this.spriteBoard.gl2d.zoomLevel;
+		const zoom = this.spriteBoard.zoomLevel;
 
 		const halfTileWidth  = this.tileWidth  * 0.5;
 		const halfTileHeight = this.tileHeight * 0.5;

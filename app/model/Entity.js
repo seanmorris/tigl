@@ -3,11 +3,11 @@ import { Rectangle } from "../math/Rectangle";
 
 export class Entity
 {
-	constructor({session, controller, sprite, x = 0, y = 0, width = 32, height = 32})
+	constructor({session, inputManager, sprite, x = 0, y = 0, width = 32, height = 32})
 	{
 		this[Bindable.Prevent] = true;
 
-		this.controller = controller;
+		this.inputManager = inputManager;
 		this.sprite = sprite;
 		this.session = session;
 

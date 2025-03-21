@@ -1,4 +1,5 @@
 import { Ray } from "../math/Ray";
+import { Sprite } from "../sprite/Sprite";
 import { Entity } from "./Entity";
 
 export class Pushable extends Entity
@@ -12,6 +13,11 @@ export class Pushable extends Entity
 
 		this.height = 48;
 		this.width = 32;
+
+		this.sprite = new Sprite({
+			session: entityData.session
+			, src: './barrel.png'
+		});
 
 		this.grounded = true;
 

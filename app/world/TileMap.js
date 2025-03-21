@@ -2,31 +2,11 @@ import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
 import { QuickTree } from '../math/QuickTree';
 
-import { Player } from '../model/Player';
 import { Pushable } from '../model/Pushable';
 import { Spawner } from '../model/Spawner';
-import { Sprite } from '../sprite/Sprite';
 
 const objectPallet = {
-	'@barrel': session => new Pushable({
-		sprite: new Sprite({src: './barrel.png', session})
-		, session
-	}),
-
-	// '@player-start': () => new Player({
-	// 	x: 48,
-	// 	y: 64,
-	// 	world: spriteBoard.world,
-	// 	sprite: new Sprite({
-	// 		// src: undefined,
-	// 		spriteSheet: new SpriteSheet({source: './player.tsj'}),
-	// 		spriteBoard: spriteBoard,
-	// 		width: 32,
-	// 		height: 48,
-	// 	}),
-	// 	controller: new Controller({keyboard, onScreenJoyPad}),
-	// 	camera: Camera,
-	// }),
+	'@barrel': Pushable,
 };
 
 export class TileMap
@@ -43,6 +23,7 @@ export class TileMap
 		this.session = session;
 
 		this.properties = {};
+		this.entityDefs = {};
 
 		this.emptyTiles = new Set;
 		this.tilesIndexes = new Map;
@@ -106,7 +87,7 @@ export class TileMap
 		await Promise.all(tilesets.map(t => t.ready));
 
 		this.assemble(tilesets);
-		this.spawn();
+		await this.spawn();
 
 		return this;
 	}
@@ -213,18 +194,41 @@ export class TileMap
 		}
 	}
 
-	spawn()
+	async spawn()
 	{
 		for(const layer of this.objectLayers)
 		{
-			const templates = layer.objects;
-			for(const template of templates)
+			const entityDefs = layer.objects;
+
+			for(const entityDef of entityDefs)
 			{
-				if(objectPallet[ template.type ])
+				this.entityDefs[ entityDef.id ] = entityDef;
+
+				if(entityDef.type[0] === '@')
+				{
+					if(objectPallet[ entityDef.type ])
+					{
+						const spawner = new Spawner({
+							spawnType: entityDef.type
+							, spawnClass: objectPallet[ entityDef.type ]
+							, ...entityDef
+							, spriteBoard: this.session.spriteBoard
+							, session: this.session
+							, world: this.session.world
+						});
+
+						spawner.x += this.xWorld;
+						spawner.y += this.yWorld;
+
+						this.session.addEntity(spawner);
+					}
+				}
+				else if(entityDef.type.substr(0, 7) === 'http://' || entityDef.type.substr(0, 8) === 'https://')
 				{
 					const spawner = new Spawner({
-						spawnFunction: objectPallet[ template.type ]
-						, ...template
+						spawnType: entityDef.type
+						, spawnClass: await import(entityDef.type)
+						, ...entityDef
 						, spriteBoard: this.session.spriteBoard
 						, session: this.session
 						, world: this.session.world

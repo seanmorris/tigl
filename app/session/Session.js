@@ -1,8 +1,6 @@
-import { Bag } from "curvature/base/Bag";
-
 import { Camera } from '../sprite/Camera';
 
-import { Controller } from '../model/Controller';
+import { InputManager } from '../model/InputManager';
 import { SpriteSheet } from '../sprite/SpriteSheet';
 import { Sprite } from '../sprite/Sprite';
 
@@ -32,22 +30,34 @@ export class Session
 
 		this.world.ready.then(() => {
 			this.loaded = true;
-			const player = this.player = new Player({
-				x: 128,
-				y: 64,
-				session: this,
-				sprite: new Sprite({
-					session: this,
-					spriteSheet: new SpriteSheet({source: './player.tsj'}),
-					width: 32,
-					height: 48,
-				}),
-				controller: new Controller({keyboard, onScreenJoyPad}),
-				camera: Camera,
-			});
 
-			this.spriteBoard.following = player;
-			this.addEntity(player);
+			for(const map of this.world.maps)
+			{
+				if(!map.properties['player-start'])
+				{
+					continue;
+				}
+
+				const startId = map.properties['player-start'];
+				const startDef = map.entityDefs[startId];
+
+				const player = this.player = new Player({
+					session: this,
+					x: startDef.x,
+					y: startDef.y,
+					inputManager: new InputManager({keyboard, onScreenJoyPad}),
+					sprite: new Sprite({
+						session: this,
+						spriteSheet: new SpriteSheet({source: './player.tsj'}),
+						width: 32,
+						height: 48,
+					}),
+					camera: Camera,
+				});
+
+				this.spriteBoard.following = player;
+				this.addEntity(player);
+			}
 		});
 	}
 
@@ -93,7 +103,12 @@ export class Session
 		this.entities.forEach(entity => entity.sprite.visible = false);
 
 		const player = this.player;
-		const nearBy = this.world.getEntitiesForRect(player.x, player.y, 100, 100);
+		const nearBy = this.world.getEntitiesForRect(
+			player.x
+			, player.y
+			, (Camera.width * 0.5)
+			, (Camera.height * 0.5)
+		);
 
 		nearBy.add(player);
 

@@ -1,11 +1,11 @@
 import { View } from 'curvature/base/View';
 
-export class Controller extends View
+export class OnScreenJoyPad extends View
 {
 	constructor(args)
 	{
 		super(args);
-		this.template  = require('./controller.tmp');
+		this.template  = require('./onScreenJoyPad.tmp');
 		this.dragStart = false;
 
 		this.args.dragging  = false;

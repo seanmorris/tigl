@@ -36,8 +36,8 @@ export class Player extends Entity
 
 		const speed = 4;
 
-		const xAxis = Math.min(1, Math.max(this.controller.axis[0] || 0, -1)) || 0;
-		const yAxis = Math.min(1, Math.max(this.controller.axis[1] || 0, -1)) || 0;
+		const xAxis = Math.min(1, Math.max(this.inputManager.axis[0] || 0, -1)) || 0;
+		const yAxis = Math.min(1, Math.max(this.inputManager.axis[1] || 0, -1)) || 0;
 
 		const world = this.session.world;
 
@@ -78,7 +78,7 @@ export class Player extends Entity
 		}
 		else
 		{
-			this.xSpeed *= 0.999;
+			this.xSpeed *= 0.99;
 		}
 
 		if(world.getSolid(this.x, this.y) && !world.getSolid(this.x, this.y + -this.height))
@@ -197,9 +197,9 @@ export class Player extends Entity
 		// 	this.sprite.region = fireRegion;
 		// }
 
-		for(let t in this.controller.triggers)
+		for(let t in this.inputManager.triggers)
 		{
-			if(!this.controller.triggers[t])
+			if(!this.inputManager.triggers[t])
 			{
 				continue;
 			}
@@ -214,14 +214,18 @@ export class Player extends Entity
 
 			if(t === '8')
 			{
-				console.log(Ray.castEntity(
+				const entities = Ray.castEntity(
 					world
 					, this.x
 					, this.y + -16
 					, this.x + 200 * this.xDirection
 					, this.y + -16
 					, 0x0
-				));
+				);
+
+				entities.delete(this);
+
+				console.log(entities);
 			}
 
 			if(t === '9')

@@ -204,14 +204,14 @@
                 {
                  "height":0,
                  "id":1,
-                 "name":"",
+                 "name":"player-start",
                  "point":true,
                  "rotation":0,
-                 "type":"@player-start",
+                 "type":"",
                  "visible":true,
                  "width":0,
-                 "x":64,
-                 "y":64
+                 "x":160,
+                 "y":192
                 }, 
                 {
                  "height":0,
@@ -219,7 +219,7 @@
                  "name":"",
                  "point":true,
                  "rotation":0,
-                 "type":"@barrel",
+                 "type":"http:\/\/127.0.0.1:8080\/model\/Pushable.mjs",
                  "visible":true,
                  "width":0,
                  "x":272,
@@ -236,18 +236,6 @@
                  "width":0,
                  "x":1024,
                  "y":907.33
-                }, 
-                {
-                 "height":0,
-                 "id":10,
-                 "name":"",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":224,
-                 "y":271
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -263,6 +251,11 @@
          "name":"backgroundColor",
          "type":"color",
          "value":"#ff408080"
+        }, 
+        {
+         "name":"player-start",
+         "type":"object",
+         "value":1
         }],
  "renderorder":"right-down",
  "tiledversion":"1.10.1",

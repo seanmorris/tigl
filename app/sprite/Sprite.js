@@ -129,7 +129,7 @@ export class Sprite
 
 		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
 
-		const zoom = this.spriteBoard.gl2d.zoomLevel;
+		const zoom = this.spriteBoard.zoomLevel;
 
 		this.setRectangle(
 			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
@@ -201,7 +201,7 @@ export class Sprite
 	setRectangle(x, y, width, height, transform = [])
 	{
 		const gl = this.spriteBoard.gl2d.context;
-		const zoom = this.spriteBoard.gl2d.zoomLevel;
+		const zoom = this.spriteBoard.zoomLevel;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([

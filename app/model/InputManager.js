@@ -1,6 +1,6 @@
 import { Bindable } from 'curvature/base/Bindable';
 
-export  class Controller
+export class InputManager
 {
 	triggers = Bindable.makeBindable({});
 	axis     = Bindable.makeBindable({});

@@ -14,15 +14,18 @@ export class Spawner extends Entity
 
 		super(entityData);
 
-		this.spawnFunction = entityData.spawnFunction;
+		this.spawnType = entityData.spawnType;
+		this.spawnClass = entityData.spawnClass;
 		this.session = entityData.session;
 	}
 
 	simulate()
 	{
-		const entity = this.spawnFunction(this.session);
-		entity.x = this.x;
-		entity.y = this.y;
+		const entity = new this.spawnClass({
+			session: this.session,
+			x: this.x,
+			y: this.y,
+		});
 		this.session.addEntity(entity);
 		this.session.removeEntity(this);
 		super.simulate();

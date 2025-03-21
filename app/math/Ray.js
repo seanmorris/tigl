@@ -2,12 +2,12 @@ import { Geometry } from "./Geometry";
 
 export class Ray
 {
-	static T_LAST_EMPTY = 0b0000_0000_0000_0001;
-	static T_ALL_POINTS = 0b0000_0000_0000_0010;
+	static T_LAST_EMPTY = 0b0000_0000_0000_0000_0000_0000_0000_0001;
+	static T_ALL_POINTS = 0b0000_0000_0000_0000_0000_0000_0000_0010;
 
-	static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
+	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
 
-	static DEFAULT_FLAGS = 0x0;
+	static DEFAULT_FLAGS = 0b0000_0000_0000_0000_0000_0000_0000_0000;
 
 	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
 	{
@@ -15,7 +15,7 @@ export class Ray
 		const endY = startY + Math.sin(angle) * maxDistance;
 
 		const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
-		const entities = null; //this.castEntity(world, startX, startY, endX, endY, rayFlags);
+		const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags);
 
 		return {terrain, entities};
 	}
