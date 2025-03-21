@@ -1,8 +1,72 @@
+import { Geometry } from "./Geometry";
+
 export class Ray
 {
-	static LAST_EMPTY = 0b0000_0000_0000_0001;
+	static T_LAST_EMPTY = 0b0000_0000_0000_0001;
+	static T_ALL_POINTS = 0b0000_0000_0000_0010;
 
-	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = 0x0)
+	static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
+
+	static DEFAULT_FLAGS = 0x0;
+
+	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
+	{
+		const endX = startX + Math.cos(angle) * maxDistance;
+		const endY = startY + Math.sin(angle) * maxDistance;
+
+		const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
+		const entities = null; //this.castEntity(world, startX, startY, endX, endY, rayFlags);
+
+		return {terrain, entities};
+	}
+
+	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS)
+	{
+		const centerX = (startX + endX) * 0.5;
+		const centerY = (startY + endY) * 0.5;
+
+		const sizeX = Math.max(320, Math.abs(startX - endX));
+		const sizeY = Math.max(320, Math.abs(startY - endY));
+
+		const candidates = world.getEntitiesForRect(centerX, centerY, sizeX, sizeY);
+		const collisions = new Map;
+
+		for(const candidate of candidates)
+		{
+			const points = candidate.rect.toLines();
+
+			for(let i = 0; i < points.length; i += 4)
+			{
+				const x1 = points[i + 0];
+				const y1 = points[i + 1];
+				const x2 = points[i + 2];
+				const y2 = points[i + 3];
+
+				const intersection = Geometry.lineIntersectsLine(x1, y1, x2, y2, startX, startY, endX, endY);
+
+				if(intersection)
+				{
+					if(collisions.has(candidate))
+					{
+						const existing = collisions.get(candidate);
+
+						if(Math.hypot(startX - intersection[0], startY - intersection[1]) < Math.hypot(startX - existing[0], startY - existing[1]))
+						{
+							collisions.set(candidate, intersection);
+						}
+					}
+					else
+					{
+						collisions.set(candidate, intersection);
+					}
+				}
+			}
+		}
+
+		return collisions;
+	}
+
+	static castTerrain(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
 	{
 		maxDistance = Math.ceil(maxDistance);
 
@@ -25,10 +89,10 @@ export class Ray
 
 		let currentDistance = 0;
 
-		// if(world.getSolid(startX, startY, layerId))
-		// {
-		// 	return [startX, startY];
-		// }
+		if(world.getSolid(startX, startY, layerId))
+		{
+			return [startX, startY];
+		}
 
 		const startTile = world.getCollisionTile(startX, startY, layerId);
 
@@ -51,12 +115,6 @@ export class Ray
 		let rayX = checkX * sx * ox;
 		let rayY = checkY * sy * oy;
 
-		const magX = Math.abs(rayX);
-		const magY = Math.abs(rayY);
-
-		const pa = new Set;
-		const pb = new Set;
-
 		const solidsX = new Set;
 		const solidsY = new Set;
 
@@ -69,8 +127,8 @@ export class Ray
 			{
 				const mag = Math.abs(rayX);
 
-				let px = (startX + mag * Math.cos(angle));
-				let py = (startY + mag * Math.sin(angle));
+				let px = (startX + mag * cos);
+				let py = (startY + mag * sin);
 
 				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
 				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
@@ -102,8 +160,8 @@ export class Ray
 			{
 				const mag = Math.abs(rayY);
 
-				let px = (startX + mag * Math.cos(angle));
-				let py = (startY + mag * Math.sin(angle));
+				let px = (startX + mag * cos);
+				let py = (startY + mag * sin);
 
 				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
 				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
@@ -137,6 +195,12 @@ export class Ray
 		}
 
 		const points = [...solidsX, ...solidsY];
+
+		if(rayFlags & this.ALL_POINTS)
+		{
+			return new solidsX.union(solidsY);
+		}
+
 		const distSquares = points.map(s => (s[0] - startX) ** 2 + (s[1] - startY) ** 2);
 		const minDistSq   = Math.min(...distSquares);
 		const nearest     = points[ distSquares.indexOf(minDistSq) ];
@@ -154,11 +218,11 @@ export class Ray
 			return;
 		}
 
-		if(rayFlags & this.LAST_EMPTY)
+		if(rayFlags & this.T_LAST_EMPTY)
 		{
 			return [
-				nearest[0] + -Math.cos(angle) * Math.sign(rayX)
-				, nearest[1] + -Math.sin(angle) * Math.sign(rayY)
+				nearest[0] + -cos * Math.sign(rayX)
+				, nearest[1] + -sin * Math.sign(rayY)
 			]
 		}
 

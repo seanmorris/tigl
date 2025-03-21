@@ -10,6 +10,9 @@ export class Pushable extends Entity
 		this.xSpeed = 0;
 		this.ySpeed = 0;
 
+		this.height = 48;
+		this.width = 32;
+
 		this.grounded = true;
 
 		this.ySpriteOffset = 6;
@@ -37,45 +40,57 @@ export class Pushable extends Entity
 			this.ySpeed = 0;
 			this.y--;
 		}
-		else if(world.getSolid(this.x, this.y) && !world.getSolid(this.x, this.y + 1))
+
+		while(world.getSolid(this.x, this.y + -this.height) && !world.getSolid(this.x, this.y))
 		{
 			this.ySpeed = 0;
 			this.y++;
 		}
 
-		let xMove = this.xSpeed;// Math.abs(xAxis) * Math.sign(xAxis) * speed;
-		let yMove = this.ySpeed;// Math.abs(yAxis) * Math.sign(yAxis) * speed;
-
-		const direction = Math.atan2(yMove, xMove);
-		const distance = Math.hypot(yMove, xMove);
-
-		if(distance)
+		while(world.getSolid(this.x + -this.width * 0.5, this.y + -8) && !world.getSolid(this.x + this.width * 0.5, this.y + -8))
 		{
-			const solid = Ray.cast(
+			this.xSpeed = 0;
+			this.x++;
+		}
+
+		while(world.getSolid(this.x + this.width * 0.5, this.y + -8) && !world.getSolid(this.x - this.width * 0.5, this.y + -8))
+		{
+			this.xSpeed = 0;
+			this.x--;
+		}
+
+		if(this.xSpeed || this.ySpeed)
+		{
+			const direction = Math.atan2(this.ySpeed, this.xSpeed);
+			const distance = Math.hypot(this.ySpeed, this.xSpeed);
+			const hit = Ray.cast(
 				world
 				, this.x
 				, this.y
 				, 0
 				, direction
 				, distance
-				, Ray.LAST_EMPTY
+				, Ray.T_LAST_EMPTY
 			);
 
-			if(solid)
+			let xMove = this.xSpeed;
+			let yMove = this.ySpeed;
+
+			if(hit.terrain)
 			{
 				const actualDistance = Math.hypot(
-					this.x - solid[0]
-					, this.y - solid[1]
+					this.x - hit.terrain[0]
+					, this.y - hit.terrain[1]
 				);
 
 				xMove = Math.cos(direction) * actualDistance;
 				yMove = Math.sin(direction) * actualDistance;
-
-				// actualDistance && console.log(direction, actualDistance);
 			}
-		}
 
-		this.x += xMove;
-		this.y += yMove;
+			this.x += xMove;
+			this.y += yMove;
+
+			this.fixFPE();
+		}
 	}
 }

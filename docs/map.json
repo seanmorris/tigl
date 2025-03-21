@@ -222,8 +222,8 @@
                  "type":"@barrel",
                  "visible":true,
                  "width":0,
-                 "x":202.666666666667,
-                 "y":154.666666666667
+                 "x":272,
+                 "y":288
                 }, 
                 {
                  "height":0,
@@ -236,6 +236,18 @@
                  "width":0,
                  "x":1024,
                  "y":907.33
+                }, 
+                {
+                 "height":0,
+                 "id":10,
+                 "name":"",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":224,
+                 "y":271
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -244,7 +256,7 @@
          "y":0
         }],
  "nextlayerid":10,
- "nextobjectid":10,
+ "nextobjectid":12,
  "orientation":"orthogonal",
  "properties":[
         {

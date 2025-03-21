@@ -10,12 +10,12 @@ export class Rectangle
 
 	contains(x, y)
 	{
-		if(x < this.x1 || x >= this.x2)
+		if(x < this.x1 || x > this.x2)
 		{
 			return false;
 		}
 
-		if(y < this.y1 || y >= this.y2)
+		if(y < this.y1 || y > this.y2)
 		{
 			return false;
 		}
@@ -85,6 +85,16 @@ export class Rectangle
 	isOutside(other)
 	{
 		return other.isInside(this);
+	}
+
+	toLines()
+	{
+		return [
+			this.x1, this.y1, this.x2, this.y1, // Top
+			this.x2, this.y1, this.x2, this.y2, // Right
+			this.x1, this.y2, this.x2, this.y2, // Bottom
+			this.x1, this.y1, this.x1, this.y2, // Left
+		];
 	}
 
 	toTriangles(dim = 2)

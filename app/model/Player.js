@@ -17,10 +17,23 @@ export class Player extends Entity
 		this.ySpeed = 0;
 
 		this.grounded = true;
+
+		this.xDirection = 0;
 	}
 
 	simulate()
 	{
+		super.simulate();
+
+		if(this.state === 'jumping')
+		{
+			this.height = 24;
+		}
+		else
+		{
+			this.height = 48;
+		}
+
 		const speed = 4;
 
 		const xAxis = Math.min(1, Math.max(this.controller.axis[0] || 0, -1)) || 0;
@@ -39,58 +52,64 @@ export class Player extends Entity
 			this.grounded = true;
 		}
 
-		if(world.getSolid(this.x, this.y) && !world.getSolid(this.x, this.y - 1))
-		{
-			this.ySpeed = 0;
-			this.y--;
-		}
-		else if(world.getSolid(this.x, this.y) && !world.getSolid(this.x, this.y + 2))
-		{
-			this.ySpeed = 0;
-			this.y++;
-		}
-
 		if(xAxis)
 		{
+			this.xDirection = Math.sign(xAxis);
+
 			if(!world.getSolid(this.x + Math.sign(xAxis) * this.width * 0.5 + Math.sign(xAxis), this.y))
 			{
-				this.xSpeed += xAxis;
+				this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.4);
 			}
 
 			if(Math.abs(this.xSpeed) > 8)
 			{
 				this.xSpeed = 8 * Math.sign(this.xSpeed);
 			}
+
+			if(this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(this.xSpeed))
+			{
+				this.xSpeed *= 0.75;
+			}
 		}
 		else if(this.grounded)
 		{
-			this.xSpeed *= 0.75;
+
+			this.xSpeed *= 0.9;
 		}
 		else
 		{
 			this.xSpeed *= 0.999;
 		}
 
-		while(world.getSolid(this.x + -this.width * 0.5, this.y) && !world.getSolid(this.x + this.width * 0.5, this.y))
+		if(world.getSolid(this.x, this.y) && !world.getSolid(this.x, this.y + -this.height))
+		{
+			this.ySpeed = 0;
+			this.y--;
+		}
+
+		while(world.getSolid(this.x, this.y + -this.height) && !world.getSolid(this.x, this.y))
+		{
+			this.ySpeed = 0;
+			this.y++;
+		}
+
+		while(world.getSolid(this.x + -this.width * 0.5, this.y + -8) && !world.getSolid(this.x + this.width * 0.5, this.y + -8))
 		{
 			this.xSpeed = 0;
 			this.x++;
 		}
 
-		while(world.getSolid(this.x + this.width * 0.5, this.y) && !world.getSolid(this.x - this.width * 0.5, this.y))
+		while(world.getSolid(this.x + this.width * 0.5, this.y + -8) && !world.getSolid(this.x - this.width * 0.5, this.y + -8))
 		{
 			this.xSpeed = 0;
 			this.x--;
 		}
 
-		let xMove = this.xSpeed;// Math.abs(xAxis) * Math.sign(xAxis) * speed;
-		let yMove = this.ySpeed;// Math.abs(yAxis) * Math.sign(yAxis) * speed;
-
-		const direction = Math.atan2(yMove, xMove);
-		const distance = Math.hypot(yMove, xMove);
-
-		if(distance)
+		if(this.xSpeed || this.ySpeed)
 		{
+			const direction = Math.atan2(this.ySpeed, this.xSpeed);
+			const distance = Math.hypot(this.ySpeed, this.xSpeed);
+
 			const hit = Ray.cast(
 				world
 				, this.x
@@ -98,24 +117,28 @@ export class Player extends Entity
 				, 0
 				, direction
 				, distance
-				, Ray.LAST_EMPTY
+				, Ray.T_LAST_EMPTY
 			);
 
-			if(hit)
+			let xMove = this.xSpeed;
+			let yMove = this.ySpeed;
+
+			if(hit.terrain)
 			{
-				const actualDistance = Math.hypot(this.x - hit[0], this.y - hit[1]);
+				const actualDistance = Math.hypot(
+					this.x - hit.terrain[0]
+					, this.y - hit.terrain[1]
+				);
+
 				xMove = Math.cos(direction) * actualDistance;
 				yMove = Math.sin(direction) * actualDistance;
 			}
+
+			this.x += xMove;
+			this.y += yMove;
+
+			this.fixFPE();
 		}
-
-		this.x += xMove;
-		this.y += yMove;
-
-		if(this.x % 1 > 0.99999) this.x = Math.round(this.x);
-		if(this.y % 1 > 0.99999) this.y = Math.round(this.y);
-		if(this.x % 1 < 0.00001) this.x = Math.round(this.x);
-		if(this.y % 1 < 0.00001) this.y = Math.round(this.y);
 
 		let horizontal = false;
 
@@ -189,6 +212,18 @@ export class Player extends Entity
 				this.ySpeed = -10;
 			}
 
+			if(t === '8')
+			{
+				console.log(Ray.castEntity(
+					world
+					, this.x
+					, this.y + -16
+					, this.x + 200 * this.xDirection
+					, this.y + -16
+					, 0x0
+				));
+			}
+
 			if(t === '9')
 			{
 				const maps = this.sprite.spriteBoard.world.getMapsForPoint(
@@ -203,7 +238,5 @@ export class Player extends Entity
 				this.direction = 'east';
 			}
 		}
-
-		super.simulate();
 	}
 }

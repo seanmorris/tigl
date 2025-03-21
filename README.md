@@ -1,5 +1,3 @@
-# CV-GL
+# tigl
 
-Curvature WebGl
-
-Demo @ http://cnb2.seanmorr.is
+I like *really* fast code.

@@ -25,7 +25,7 @@ export class Quadtree extends Rectangle
 	{
 		if(!this.contains(entity.x, entity.y))
 		{
-			return;
+			return false;
 		}
 
 		const xSize = this.x2 - this.x1;
@@ -33,13 +33,15 @@ export class Quadtree extends Rectangle
 
 		if(this.split)
 		{
-			this.ulCell.add(entity);
-			this.urCell.add(entity);
-			this.blCell.add(entity);
-			this.brCell.add(entity);
+			return this.ulCell.add(entity)
+				|| this.urCell.add(entity)
+				|| this.blCell.add(entity)
+				|| this.brCell.add(entity);
 		}
 		else if(this.items.size && xSize > this.minSize && ySize > this.minSize)
 		{
+			this.split  = true;
+
 			const xSizeHalf = 0.5 * xSize;
 			const ySizeHalf = 0.5 * ySize;
 
@@ -83,23 +85,23 @@ export class Quadtree extends Rectangle
 			{
 				this.items.delete(item);
 
-				this.ulCell.add(item);
-				this.urCell.add(item);
-				this.blCell.add(item);
-				this.brCell.add(item);
+				this.ulCell.add(item)
+					|| this.urCell.add(item)
+					|| this.blCell.add(item)
+					|| this.brCell.add(item);
 			}
 
-			this.ulCell.add(entity);
-			this.urCell.add(entity);
-			this.blCell.add(entity);
-			this.brCell.add(entity);
+			return this.ulCell.add(entity)
+				|| this.urCell.add(entity)
+				|| this.blCell.add(entity)
+				|| this.brCell.add(entity);
 
-			this.split  = true;
 		}
 		else
 		{
 			this.backMap.set(entity, this);
 			this.items.add(entity);
+			return true;
 		}
 	}
 
@@ -113,8 +115,8 @@ export class Quadtree extends Rectangle
 		}
 
 		const startCell = this.backMap.get(entity);
-		let cell = startCell;
 
+		let cell = startCell;
 		while(cell && !cell.contains(entity.x, entity.y))
 		{
 			cell = cell.parent;
@@ -139,11 +141,10 @@ export class Quadtree extends Rectangle
 		if(!this.backMap.has(entity))
 		{
 			console.warn('Entity not in Quadtree.');
-			return;
+			return false;
 		}
 
 		const cell = this.backMap.get(entity);
-		this.backMap.delete(entity);
 
 		cell.items.delete(entity);
 
@@ -151,14 +152,25 @@ export class Quadtree extends Rectangle
 		{
 			cell.parent.prune();
 		}
+
+		this.backMap.delete(entity);
+
+		return true;
 	}
 
 	isPrunable()
 	{
-		return !this.ulCell.split && this.ulCell.items.size === 0
-			&& !this.urCell.split && this.urCell.items.size === 0
-			&& !this.blCell.split && this.blCell.items.size === 0
-			&& !this.brCell.split && this.brCell.items.size === 0;
+		if(this.split)
+		{
+			return this.ulCell.isPrunable()
+				&& this.urCell.isPrunable()
+				&& this.blCell.isPrunable()
+				&& this.brCell.isPrunable();
+		}
+		else
+		{
+			return this.items.size === 0;
+		}
 	}
 
 	prune()

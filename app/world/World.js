@@ -50,20 +50,19 @@ export class World
 
 	getMapsForRect(x, y, w, h)
 	{
+		const result = new Set;
 		const rects = this.mTree.query(x + -w*0.5, y + -h*0.5, x + w*0.5, y + h*0.5);
-		const maps = new Set;
 
 		window.smProfiling && console.time('query mapTree');
 
 		for(const rect of rects)
 		{
-			const map = this.rectMap.get(rect);
-			maps.add(map);
+			result.add( this.rectMap.get(rect) );
 		}
 
 		window.smProfiling && console.timeEnd('query mapTree');
 
-		return maps;
+		return result;
 	}
 
 	getSolid(x, y, z)
@@ -98,5 +97,22 @@ export class World
 		}
 
 		return null;
+	}
+
+	getEntitiesForRect(x, y, w, h)
+	{
+		const tilemaps = this.getMapsForRect(x, y, w, h);
+
+		let result = new Set;
+		window.smProfiling && console.time('query quadTree');
+		for(const tilemap of tilemaps)
+		{
+			result = result.union(
+				tilemap.quadTree.select(x + -w*0.5, y + -h*0.5, w, h)
+			);
+		}
+		window.smProfiling && console.timeEnd('query quadTree');
+
+		return result;
 	}
 }

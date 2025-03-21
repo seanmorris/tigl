@@ -1,6 +1,6 @@
 export class Geometry
 {
-	lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b)
+	static lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b)
 	{
 		const ax = x2a - x1a;
 		const ay = y2a - y1a;

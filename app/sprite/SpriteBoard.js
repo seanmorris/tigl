@@ -15,7 +15,7 @@ export class SpriteBoard
 		this.maps = [];
 
 		this.world = world;
-		this.sprites = new Bag;
+		this.sprites = new Set;
 		this.currentMap = null;
 
 		this.mouse = {
@@ -193,7 +193,7 @@ export class SpriteBoard
 		window.smProfiling && console.timeEnd('draw-tiles');
 
 		window.smProfiling && console.time('draw-sprites');
-		let sprites = this.sprites.items();
+		let sprites = [...this.sprites];
 		// sprites.forEach(s => s.z = s.y);
 		sprites.sort((a,b) => {
 			if(a.y === undefined)

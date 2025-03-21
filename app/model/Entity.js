@@ -43,4 +43,12 @@ export class Entity
 
 	destroy()
 	{}
+
+	fixFPE()
+	{
+		if(this.x % 1 > 0.99999) this.x = Math.round(this.x);
+		if(this.y % 1 > 0.99999) this.y = Math.round(this.y);
+		if(this.x % 1 < 0.00001) this.x = Math.round(this.x);
+		if(this.y % 1 < 0.00001) this.y = Math.round(this.y);
+	}
 }

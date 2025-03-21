@@ -1,6 +1,6 @@
 import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
-import { Quadtree } from '../math/Quadtree';
+import { QuickTree } from '../math/QuickTree';
 
 import { Player } from '../model/Player';
 import { Pushable } from '../model/Pushable';
@@ -70,7 +70,7 @@ export class TileMap
 
 		this.animations = new Map;
 
-		this.quadTree = new Quadtree(x, x, x + this.width, y + this.height);
+		this.quadTree = new QuickTree(x, x, x + this.width, y + this.height);
 	}
 
 	async getReady(src)
@@ -233,9 +233,7 @@ export class TileMap
 					spawner.x += this.xWorld;
 					spawner.y += this.yWorld;
 
-					this.quadTree.add(spawner);
-					this.session.entities.add(spawner);
-					this.session.spriteBoard.sprites.add(spawner.sprite);
+					this.session.addEntity(spawner);
 				}
 			}
 		}

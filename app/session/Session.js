@@ -3,16 +3,13 @@ import { Bag } from "curvature/base/Bag";
 import { Camera } from '../sprite/Camera';
 
 import { Controller } from '../model/Controller';
+import { SpriteSheet } from '../sprite/SpriteSheet';
 import { Sprite } from '../sprite/Sprite';
 
-import { Quadtree } from '../math/Quadtree';
-import { SpriteSheet } from '../sprite/SpriteSheet';
-
-import { Player } from '../model/Player';
-import { Pushable } from '../model/Pushable';
-import { Spawner } from "../model/Spawner";
 import { SpriteBoard } from "../sprite/SpriteBoard";
+import { Player } from '../model/Player';
 import { World } from "../world/World";
+import { QuickTree } from "../math/QuickTree";
 
 export class Session
 {
@@ -27,27 +24,31 @@ export class Session
 		this.frameLock = 60;
 		this.simulationLock = 60;
 
-		this.entities  = new Bag;
-		// this.quadTree = new Quadtree(0, 0, 10000, 10000);
+		this.entities  = new Set;
+		this.removed = new WeakSet;
 
 		this.keyboard = keyboard;
+		this.loaded = false;
 
-		const player = this.player = new Player({
-			x: 128,
-			y: 64,
-			session: this,
-			sprite: new Sprite({
+		this.world.ready.then(() => {
+			this.loaded = true;
+			const player = this.player = new Player({
+				x: 128,
+				y: 64,
 				session: this,
-				spriteSheet: new SpriteSheet({source: './player.tsj'}),
-				width: 32,
-				height: 48,
-			}),
-			controller: new Controller({keyboard, onScreenJoyPad}),
-			camera: Camera,
-		});
+				sprite: new Sprite({
+					session: this,
+					spriteSheet: new SpriteSheet({source: './player.tsj'}),
+					width: 32,
+					height: 48,
+				}),
+				controller: new Controller({keyboard, onScreenJoyPad}),
+				camera: Camera,
+			});
 
-		this.spriteBoard.following = player;
-		this.addEntity(player);
+			this.spriteBoard.following = player;
+			this.addEntity(player);
+		});
 	}
 
 	addEntity(entity)
@@ -58,25 +59,24 @@ export class Session
 		maps.forEach(map => map.quadTree.add(entity));
 	}
 
-
 	removeEntity(entity)
 	{
 		this.entities.delete(entity);
 		this.spriteBoard.sprites.delete(entity.sprite);
-		const maps = this.world.getMapsForPoint(entity.x, entity.y);
-		maps.forEach(map => map.quadTree.delete(entity));
+		QuickTree.deleteFromAllTrees(entity)
+		this.removed.add(entity);
 	}
 
 	simulate(now)
 	{
-		const delta = now - this.sThen;
-
-		if(this.simulationLock == 0)
+		if(!this.loaded)
 		{
 			return false;
 		}
 
-		if(0.2 + delta < (1000 / this.simulationLock))
+		const delta = now - this.sThen;
+
+		if(this.simulationLock == 0 || 0.2 + delta < (1000 / this.simulationLock))
 		{
 			return false;
 		}
@@ -85,36 +85,38 @@ export class Session
 
 		this.keyboard.update();
 
-		const player = this.player;
-
-		Object.values(this.entities.items()).forEach(entity => {
-			entity.simulate(delta);
-			const maps = this.world.getMapsForPoint(entity.x, entity.y);
-			maps.forEach(map => map.quadTree.move(entity));
-			entity.sprite.visible = false;
-		});
-
-		const maps = this.world.getMapsForPoint(player.x, player.y);
-
-		for(const map of maps)
+		if(!this.player)
 		{
-			const nearBy = map.quadTree.select(player.x - 50, player.y - 50, player.x + 50, player.y + 50);
-			nearBy.forEach(e => e.sprite.visible = true);
+			return false;
 		}
+
+		this.entities.forEach(entity => entity.sprite.visible = false);
+
+		const player = this.player;
+		const nearBy = this.world.getEntitiesForRect(player.x, player.y, 100, 100);
+
+		nearBy.add(player);
+
+		nearBy.forEach(entity => {
+			entity.simulate(delta);
+			const maps = this.world.getMapsForRect(entity.x, entity.y, 100, 100);
+			maps.forEach(map => this.removed.has(entity) || map.quadTree.move(entity));
+			entity.sprite.visible = true;
+		});
 
 		return true;
 	}
 
 	draw(now)
 	{
-		const delta = now - this.fThen;
-
-		if(this.frameLock == 0)
+		if(!this.loaded)
 		{
-			return false;
+			return;
 		}
 
-		if(0.2 + delta < (1000 / this.frameLock))
+		const delta = now - this.fThen;
+
+		if(this.frameLock == 0 || 0.2 + delta < (1000 / this.frameLock))
 		{
 			return false;
 		}
