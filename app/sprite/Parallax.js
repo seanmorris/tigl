@@ -35,7 +35,7 @@ export class Parallax
 		this.parallaxLayers = [];
 		this.textures = [];
 
-		map.ready.then(() => this.assemble(map)).then(() => {
+		this.ready = map.ready.then(() => this.assemble(map)).then(() => {
 			this.loaded = true;
 		});
 

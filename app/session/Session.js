@@ -10,11 +10,17 @@ import { SpriteSheet } from '../sprite/SpriteSheet';
 
 import { Player } from '../model/Player';
 import { Pushable } from '../model/Pushable';
+import { Spawner } from "../model/Spawner";
+import { SpriteBoard } from "../sprite/SpriteBoard";
+import { World } from "../world/World";
 
 export class Session
 {
-	constructor({spriteBoard, keyboard, onScreenJoyPad})
+	constructor({element, world, keyboard, onScreenJoyPad})
 	{
+		this.world = new World({src: world, session: this});
+		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
+
 		this.fThen = 0;
 		this.sThen = 0;
 
@@ -22,17 +28,17 @@ export class Session
 		this.simulationLock = 60;
 
 		this.entities  = new Bag;
-		this.quadTree = new Quadtree(0, 0, 10000, 10000);
+		// this.quadTree = new Quadtree(0, 0, 10000, 10000);
 
 		this.keyboard = keyboard;
 
 		const player = this.player = new Player({
-			x: 48,
+			x: 128,
 			y: 64,
+			session: this,
 			sprite: new Sprite({
-				// src: undefined,
-				spriteSet: new SpriteSheet({source: './player.tsj'}),
-				spriteBoard: spriteBoard,
+				session: this,
+				spriteSheet: new SpriteSheet({source: './player.tsj'}),
 				width: 32,
 				height: 48,
 			}),
@@ -40,31 +46,25 @@ export class Session
 			camera: Camera,
 		});
 
-		this.spriteBoard = spriteBoard;
-
 		this.spriteBoard.following = player;
+		this.addEntity(player);
+	}
 
-		this.entities.add(player);
-		this.quadTree.add(player);
-		this.spriteBoard.sprites.add(player.sprite);
+	addEntity(entity)
+	{
+		this.entities.add(entity);
+		this.spriteBoard.sprites.add(entity.sprite);
+		const maps = this.world.getMapsForPoint(entity.x, entity.y);
+		maps.forEach(map => map.quadTree.add(entity));
+	}
 
-		const w = 1280;
-		for(const i in Array(2).fill())
-		{
-			const barrel = new Pushable({
-				sprite: new Sprite({
-					spriteBoard: this.spriteBoard,
-					src: './barrel.png',
-				})
-			})
 
-			barrel.x = 32 + (i * 64) % w - 16;
-			barrel.y = Math.trunc((i * 32) / w) * 32 + 32;
-
-			this.entities.add(barrel);
-			this.quadTree.add(barrel);
-			this.spriteBoard.sprites.add(barrel.sprite);
-		}
+	removeEntity(entity)
+	{
+		this.entities.delete(entity);
+		this.spriteBoard.sprites.delete(entity.sprite);
+		const maps = this.world.getMapsForPoint(entity.x, entity.y);
+		maps.forEach(map => map.quadTree.delete(entity));
 	}
 
 	simulate(now)
@@ -76,7 +76,7 @@ export class Session
 			return false;
 		}
 
-		if(delta < (1000 / this.simulationLock))
+		if(0.2 + delta < (1000 / this.simulationLock))
 		{
 			return false;
 		}
@@ -89,13 +89,18 @@ export class Session
 
 		Object.values(this.entities.items()).forEach(entity => {
 			entity.simulate(delta);
-			this.quadTree.move(entity);
+			const maps = this.world.getMapsForPoint(entity.x, entity.y);
+			maps.forEach(map => map.quadTree.move(entity));
 			entity.sprite.visible = false;
 		});
 
-		const nearBy = this.quadTree.select(player.x - 50, player.y - 50, player.x + 50, player.y + 50);
+		const maps = this.world.getMapsForPoint(player.x, player.y);
 
-		nearBy.forEach(e => e.sprite.visible = true);
+		for(const map of maps)
+		{
+			const nearBy = map.quadTree.select(player.x - 50, player.y - 50, player.x + 50, player.y + 50);
+			nearBy.forEach(e => e.sprite.visible = true);
+		}
 
 		return true;
 	}

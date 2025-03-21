@@ -11,7 +11,7 @@ export class Quadtree extends Rectangle
 
 		this.items = new Set;
 		this.split = false;
-		this.minSize = minSize;
+		this.minSize = minSize || 10;
 		this.backMap = parent ? parent.backMap : new Map
 		this.parent = parent;
 
@@ -31,43 +31,70 @@ export class Quadtree extends Rectangle
 		const xSize = this.x2 - this.x1;
 		const ySize = this.y2 - this.y1;
 
-		if(this.split || this.items.size && xSize > this.minSize && ySize > this.minSize)
+		if(this.split)
 		{
-			if(!this.split)
+			this.ulCell.add(entity);
+			this.urCell.add(entity);
+			this.blCell.add(entity);
+			this.brCell.add(entity);
+		}
+		else if(this.items.size && xSize > this.minSize && ySize > this.minSize)
+		{
+			const xSizeHalf = 0.5 * xSize;
+			const ySizeHalf = 0.5 * ySize;
+
+			this.ulCell = new Quadtree(
+				this.x1
+				, this.y1
+				, this.x1 + xSizeHalf
+				, this.y1 + ySizeHalf
+				, this.minSize
+				, this
+			);
+
+			this.blCell = new Quadtree(
+				this.x1
+				, this.y1 + ySizeHalf
+				, this.x1 + xSizeHalf
+				, this.y2
+				, this.minSize
+				, this
+			);
+
+			this.urCell = new Quadtree(
+				this.x1 + xSizeHalf
+				, this.y1
+				, this.x2
+				, this.y1 + ySizeHalf
+				, this.minSize
+				, this
+			);
+
+			this.brCell = new Quadtree(
+				this.x1 + xSizeHalf
+				, this.y1 + ySizeHalf
+				, this.x2
+				, this.y2
+				, this.minSize
+				, this
+			);
+
+			for(const item of this.items)
 			{
-				const xSizeHalf = 0.5 * xSize;
-				const ySizeHalf = 0.5 * ySize;
+				this.items.delete(item);
 
-				this.ulCell = new Quadtree(this.x1, this.y1,             this.x1 + xSizeHalf, this.y1 + ySizeHalf, this.minSize, this);
-				this.blCell = new Quadtree(this.x1, this.y1 + ySizeHalf, this.x1 + xSizeHalf, this.y2,             this.minSize, this);
-
-				this.urCell = new Quadtree(this.x1 + xSizeHalf, this.y1,             this.x2, this.y1 + ySizeHalf, this.minSize, this);
-				this.brCell = new Quadtree(this.x1 + xSizeHalf, this.y1 + ySizeHalf, this.x2, this.y2,             this.minSize, this);
-
-				for(const item of this.items)
-				{
-					this.items.delete(item);
-
-					this.ulCell.add(item);
-					this.urCell.add(item);
-					this.blCell.add(item);
-					this.brCell.add(item);
-				}
-
-				this.split  = true;
+				this.ulCell.add(item);
+				this.urCell.add(item);
+				this.blCell.add(item);
+				this.brCell.add(item);
 			}
 
 			this.ulCell.add(entity);
 			this.urCell.add(entity);
 			this.blCell.add(entity);
 			this.brCell.add(entity);
-		}
-		else if(this.split)
-		{
-			this.ulCell.add(entity);
-			this.urCell.add(entity);
-			this.blCell.add(entity);
-			this.brCell.add(entity);
+
+			this.split  = true;
 		}
 		else
 		{

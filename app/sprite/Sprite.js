@@ -1,12 +1,11 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Camera } from "./Camera";
-import { Split } from "../math/Split";
 import { Matrix } from "../math/Matrix";
 import { SpriteSheet } from "./SpriteSheet";
 
 export class Sprite
 {
-	constructor({src, spriteBoard, spriteSet, width, height, x, y, z})
+	constructor({src, session, spriteSheet, width, height, x, y, z})
 	{
 		this[Bindable.Prevent] = true;
 
@@ -19,10 +18,11 @@ export class Sprite
 		this.width  = 32 || width;
 		this.height = 32 || height;
 		this.scale  = 1;
+
 		this.visible = false;
+		this.moving = false;
 
 		this.textures = [];
-
 		this.frames = [];
 		this.currentDelay = 0;
 		this.currentFrame = 0;
@@ -31,7 +31,6 @@ export class Sprite
 		this.speed    = 0;
 		this.maxSpeed = 4;
 
-		this.moving = false;
 
 		this.RIGHT	= 0;
 		this.DOWN	= 1;
@@ -45,7 +44,7 @@ export class Sprite
 
 		this.region = [0, 0, 0, 1];
 
-		this.spriteBoard = spriteBoard;
+		this.spriteBoard = session.spriteBoard;
 
 		const gl = this.spriteBoard.gl2d.context;
 
@@ -67,26 +66,23 @@ export class Sprite
 			, pixel
 		);
 
-		if(src && !spriteSet)
+		if(src && !spriteSheet)
 		{
-			spriteSet = new SpriteSheet({image: src});
-
-			console.log(spriteSet);
+			spriteSheet = new SpriteSheet({image: src});
 		}
 
-		this.spriteSet = spriteSet;
+		this.spriteSheet = spriteSheet;
 
-		if(spriteSet)
+		if(spriteSheet)
 		{
-			spriteSet.ready.then(() => {
-				console.log(spriteSet);
-				this.width = spriteSet.tileWidth;
-				this.height = spriteSet.tileHeight;
-				this.texture = this.createTexture( spriteSet.getFrame(0) );
+			spriteSheet.ready.then(() => {
+				this.width = spriteSheet.tileWidth;
+				this.height = spriteSheet.tileHeight;
+				this.texture = this.createTexture( spriteSheet.getFrame(0) );
 
-				for(let i = 0; i < spriteSet.tileCount; i++)
+				for(let i = 0; i < spriteSheet.tileCount; i++)
 				{
-					this.textures[i] = this.createTexture( spriteSet.getFrame(i) );
+					this.textures[i] = this.createTexture( spriteSheet.getFrame(i) );
 				}
 
 				this.changeAnimation('default');
@@ -104,9 +100,9 @@ export class Sprite
 		{
 			this.currentFrame++;
 
-			if(this.spriteSet && this.spriteSet.animations[this.currentAnimation])
+			if(this.spriteSheet && this.spriteSheet.animations[this.currentAnimation])
 			{
-				const animation = this.spriteSet.animations[this.currentAnimation];
+				const animation = this.spriteSheet.animations[this.currentAnimation];
 
 				if(this.currentFrame >= animation.length)
 				{
@@ -160,7 +156,7 @@ export class Sprite
 
 	changeAnimation(name)
 	{
-		if(!this.spriteSet ||!this.spriteSet.animations[name])
+		if(!this.spriteSheet ||!this.spriteSheet.animations[name])
 		{
 			console.warn(`Animation ${name} not found.`);
 			return;

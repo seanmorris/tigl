@@ -1,18 +1,9 @@
 import { View as BaseView } from 'curvature/base/View';
 import { Keyboard } from 'curvature/input/Keyboard'
-import { Bag } from 'curvature/base/Bag';
-
 import { Config } from 'Config';
 
-import { TileMap } from '../world/TileMap';
-
-import { SpriteBoard } from '../sprite/SpriteBoard';
-
 import { Controller as OnScreenJoyPad } from '../ui/Controller';
-
 import { Camera } from '../sprite/Camera';
-
-import { World } from '../world/World';
 
 import { Session } from '../session/Session';
 
@@ -125,18 +116,11 @@ export class View extends BaseView
 
 	onRendered()
 	{
-		const spriteBoard = new SpriteBoard({
-			element: this.tags.canvas.element
-			, world: new World({src: './world.json'})
-			, map:   new TileMap({src: './map.json'})
-		});
-
-		this.spriteBoard = spriteBoard;
-
 		this.session = new Session({
-			spriteBoard
+			onScreenJoyPad: this.args.controller
 			, keyboard: this.keyboard
-			, onScreenJoyPad: this.args.controller
+			, element: this.tags.canvas.element
+			, world: 'world.json'
 		});
 
 		this.args.frameLock = this.session.frameLock;
@@ -182,14 +166,14 @@ export class View extends BaseView
 
 			fThen = now;
 
-			if(this.spriteBoard.following)
+			if(this.session.spriteBoard.following)
 			{
-				this.args.posX = Number(this.spriteBoard.following.sprite.x).toFixed(3);
-				this.args.posY = Number(this.spriteBoard.following.sprite.y).toFixed(3);
+				this.args.posX = Number(this.session.spriteBoard.following.sprite.x).toFixed(3);
+				this.args.posY = Number(this.session.spriteBoard.following.sprite.y).toFixed(3);
 			}
 		};
 
-		this.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1024 * 4;
+		this.session.spriteBoard.gl2d.zoomLevel = document.body.clientHeight / 1280 * 4;
 		this.resize();
 
 		setInterval(() => simulate(performance.now()), 0);
@@ -202,19 +186,19 @@ export class View extends BaseView
 		this.args.height = this.tags.canvas.element.height  = y || document.body.clientHeight;
 
 		this.args.rwidth = Math.trunc(
-			(x || document.body.clientWidth)  / this.spriteBoard.gl2d.zoomLevel
+			(x || document.body.clientWidth)  / this.session.spriteBoard.gl2d.zoomLevel
 		);
 
 		this.args.rheight = Math.trunc(
-			(y || document.body.clientHeight) / this.spriteBoard.gl2d.zoomLevel
+			(y || document.body.clientHeight) / this.session.spriteBoard.gl2d.zoomLevel
 		);
 
-		const oldScale = this.spriteBoard.gl2d.screenScale;
-		this.spriteBoard.gl2d.screenScale = document.body.clientHeight / 1024;
+		const oldScale = this.session.spriteBoard.gl2d.screenScale;
+		this.session.spriteBoard.gl2d.screenScale = document.body.clientHeight / 1280;
 
-		this.spriteBoard.gl2d.zoomLevel *= this.spriteBoard.gl2d.screenScale / oldScale;
+		this.session.spriteBoard.gl2d.zoomLevel *= this.session.spriteBoard.gl2d.screenScale / oldScale;
 
-		this.spriteBoard.resize();
+		this.session.spriteBoard.resize();
 	}
 
 	scroll(event)
@@ -233,11 +217,11 @@ export class View extends BaseView
 			return;
 		}
 
-		const max = this.spriteBoard.gl2d.screenScale * 32;
-		const min = this.spriteBoard.gl2d.screenScale * 0.2;
-		const step = 0.05 * this.spriteBoard.gl2d.zoomLevel;
+		const max = this.session.spriteBoard.gl2d.screenScale * 32;
+		const min = this.session.spriteBoard.gl2d.screenScale * 0.2;
+		const step = 0.05 * this.session.spriteBoard.gl2d.zoomLevel;
 
-		let zoomLevel = (delta * step + this.spriteBoard.gl2d.zoomLevel).toFixed(2);
+		let zoomLevel = (delta * step + this.session.spriteBoard.gl2d.zoomLevel).toFixed(2);
 
 		if(zoomLevel < min)
 		{
@@ -253,9 +237,9 @@ export class View extends BaseView
 			zoomLevel = 1;
 		}
 
-		if(this.spriteBoard.gl2d.zoomLevel !== zoomLevel)
+		if(this.session.spriteBoard.gl2d.zoomLevel !== zoomLevel)
 		{
-			this.spriteBoard.gl2d.zoomLevel = zoomLevel;
+			this.session.spriteBoard.gl2d.zoomLevel = zoomLevel;
 			this.resize();
 		}
 	}

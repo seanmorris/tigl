@@ -10,4 +10,24 @@ export class Split
 
 		return [...this.bytes];
 	}
+
+	static bytesToInt(bytes)
+	{
+		this.bytes[0] = bytes[0];
+		this.bytes[1] = bytes[1];
+		this.bytes[2] = bytes[2];
+		this.bytes[3] = bytes[3];
+
+		return this.value[0];
+	}
+
+	static bytesToInt3(bytes)
+	{
+		this.bytes[0] = bytes[0];
+		this.bytes[1] = bytes[1];
+		this.bytes[2] = bytes[2];
+		this.bytes[3] = 0;
+
+		return this.value[0];
+	}
 }

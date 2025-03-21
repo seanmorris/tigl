@@ -1,32 +1,64 @@
 import { Bindable } from 'curvature/base/Bindable';
 import { Tileset } from '../sprite/Tileset';
+import { Quadtree } from '../math/Quadtree';
+
+import { Player } from '../model/Player';
+import { Pushable } from '../model/Pushable';
+import { Spawner } from '../model/Spawner';
+import { Sprite } from '../sprite/Sprite';
+
+const objectPallet = {
+	'@barrel': session => new Pushable({
+		sprite: new Sprite({src: './barrel.png', session})
+		, session
+	}),
+
+	// '@player-start': () => new Player({
+	// 	x: 48,
+	// 	y: 64,
+	// 	world: spriteBoard.world,
+	// 	sprite: new Sprite({
+	// 		// src: undefined,
+	// 		spriteSheet: new SpriteSheet({source: './player.tsj'}),
+	// 		spriteBoard: spriteBoard,
+	// 		width: 32,
+	// 		height: 48,
+	// 	}),
+	// 	controller: new Controller({keyboard, onScreenJoyPad}),
+	// 	camera: Camera,
+	// }),
+};
 
 export class TileMap
 {
-	constructor({src})
+	constructor({fileName, session, x, y, width, height})
 	{
 		this[Bindable.Prevent] = true;
 		this.image = document.createElement('img');
-		this.src = src;
+		this.src = fileName;
 		this.pixels = [];
 		this.tileCount = 0;
 
 		this.backgroundColor = null;
+		this.session = session;
 
 		this.properties = {};
 
+		this.emptyTiles = new Set;
+		this.tilesIndexes = new Map;
 		this.canvases = new Map;
 		this.contexts = new Map;
+		this.tiles = null;
 
 		this.tileLayers   = [];
 		this.imageLayers  = [];
 		this.objectLayers = [];
 
-		this.xWorld = 0;
-		this.yWorld = 0;
+		this.xWorld = x;
+		this.yWorld = y;
 
-		this.width  = 0;
-		this.height = 0;
+		this.width  = width;
+		this.height = height;
 
 		this.tileWidth  = 0;
 		this.tileHeight = 0;
@@ -34,18 +66,21 @@ export class TileMap
 		this.tileSetWidth  = 0;
 		this.tileSetHeight = 0;
 
-		this.ready = this.getReady(src);
+		this.ready = this.getReady(fileName);
 
 		this.animations = new Map;
+
+		this.quadTree = new Quadtree(x, x, x + this.width, y + this.height);
 	}
 
 	async getReady(src)
 	{
 		const mapData = await (await fetch(src)).json();
 
-		this.tileLayers   = mapData.layers.filter(layer => layer.type === 'tilelayer');
+		this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
+		this.tileLayers   = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class !== 'collision');
 		this.imageLayers  = mapData.layers.filter(layer => layer.type === 'imagelayer');
-		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectlayer');
+		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
 
 		this.backgroundColor = mapData.backgroundcolor;
 
@@ -71,6 +106,7 @@ export class TileMap
 		await Promise.all(tilesets.map(t => t.ready));
 
 		this.assemble(tilesets);
+		this.spawn();
 
 		return this;
 	}
@@ -87,15 +123,10 @@ export class TileMap
 		this.tileSetWidth  = destination.width  = size * this.tileWidth;
 		this.tileSetHeight = destination.height = Math.ceil(tileTotal / size) * this.tileHeight;
 
-		const ctxDestination = destination.getContext('2d');
-
-		let xDestination = 0;
-		let yDestination = 0;
+		const ctxDestination = destination.getContext('2d', {willReadFrequently: true});
 
 		for(const tileset of tilesets)
 		{
-			let xSource = 0;
-			let ySource = 0;
 			const image = tileset.image;
 			const source = document.createElement('canvas');
 
@@ -108,37 +139,33 @@ export class TileMap
 
 			for(let i = 0; i < tileset.tileCount; i++)
 			{
+				const xSource = (i * this.tileWidth) % tileset.imageWidth;
+				const ySource = Math.floor((i * this.tileWidth) / tileset.imageWidth) * this.tileHeight;
+
+				const xDestination = (i * this.tileWidth) % destination.width;
+				const yDestination = Math.floor((i * this.tileWidth) / destination.width) * this.tileHeight;
 				const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
 
 				ctxDestination.putImageData(tile, xDestination, yDestination);
 
-				xSource += this.tileWidth;
-				xDestination += this.tileWidth;
+				const pixels = new Uint32Array(tile.data.buffer);
 
-				if(xSource >= tileset.imageWidth)
+				let empty = true;
+
+				for(const pixel of pixels)
 				{
-					xSource = 0;
-					ySource += this.tileHeight;
+					if(pixel > 0)
+					{
+						empty = false;
+					}
 				}
 
-				if(xDestination >= destination.width)
+				if(empty)
 				{
-					xDestination = 0;
-					yDestination += this.tileHeight;
+					this.emptyTiles.add(i);
 				}
 			}
-		}
 
-		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
-
-		destination.toBlob(blob => {
-			const url = URL.createObjectURL(blob);
-			this.image.onload = () => URL.revokeObjectURL(url);
-			this.image.src = url;
-		});
-
-		for(const tileset of tilesets)
-		{
 			for(const tileData of tileset.tiles)
 			{
 				if(tileData.animation)
@@ -148,7 +175,11 @@ export class TileMap
 			}
 		}
 
-		for(const layer of this.tileLayers)
+		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
+
+		this.tiles = ctxDestination;
+
+		for(const layer of [...this.tileLayers, ...this.collisionLayers])
 		{
 			const canvas = document.createElement('canvas');
 			const context = canvas.getContext('2d', {willReadFrequently: true});
@@ -174,14 +205,115 @@ export class TileMap
 				tilePixels[i] = 0xFF;
 			}
 
+			this.tilesIndexes.set(layer, tileValues);
+
 			canvas.width = this.width;
 			canvas.height = this.height;
 			context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
 		}
 	}
 
+	spawn()
+	{
+		for(const layer of this.objectLayers)
+		{
+			const templates = layer.objects;
+			for(const template of templates)
+			{
+				if(objectPallet[ template.type ])
+				{
+					const spawner = new Spawner({
+						spawnFunction: objectPallet[ template.type ]
+						, ...template
+						, spriteBoard: this.session.spriteBoard
+						, session: this.session
+						, world: this.session.world
+					});
+
+					spawner.x += this.xWorld;
+					spawner.y += this.yWorld;
+
+					this.quadTree.add(spawner);
+					this.session.entities.add(spawner);
+					this.session.spriteBoard.sprites.add(spawner.sprite);
+				}
+			}
+		}
+	}
+
+	getCollisionTile(x, y, z)
+	{
+		if(!this.collisionLayers || !this.collisionLayers[z])
+		{
+			return false;
+		}
+
+		return this.getTileFromLayer(this.collisionLayers[z], x, y);
+	}
+
+	getColor(x, y, z = 0)
+	{
+		return this.getPixel(this.tileLayers[z], x, y, z);
+	}
+
+	getSolid(x, y, z = 0)
+	{
+		if(!this.collisionLayers || !this.collisionLayers[z])
+		{
+			return false;
+		}
+
+		const pixel = this.getPixel(this.collisionLayers[z], x, y, z);
+
+		if(pixel === 0)
+		{
+			return true;
+		}
+
+		return pixel;
+	}
+
+	getPixel(layer, x, y)
+	{
+		const tileNumber = this.getTileFromLayer(layer, x, y);
+
+		if(tileNumber === false || tileNumber === -1)
+		{
+			return false;
+		}
+
+		const offsetX = Math.trunc(x % this.tileWidth);
+		const offsetY = Math.trunc(y % this.tileHeight);
+
+		const tileSetX = (tileNumber * this.tileWidth) % this.tileSetWidth;
+		const tileSetY = Math.floor((tileNumber * this.tileWidth) / this.tileSetWidth);
+
+		return this.pixels[tileSetX + offsetX + (tileSetY + offsetY) * (this.tileSetWidth)];
+	}
+
+	getTileFromLayer(layer, x, y)
+	{
+		const localX = -this.xWorld + x;
+		const localY = -this.yWorld + y;
+
+		if(localX < 0 || localX >= this.width * this.tileWidth
+			|| localY < 0 || localY >= this.height * this.tileWidth
+		){
+			return false;
+		}
+
+		const tileX = Math.floor(localX / this.tileWidth);
+		const tileY = Math.floor(localY / this.tileHeight);
+
+		return -1 + layer.data[tileX + tileY * this.width];
+	}
+
 	getSlice(x, y, w, h, t = 0)
 	{
+		return (this.tileLayers
+			.map(layer => this.contexts.get(layer))
+			.map(context => context.getImageData(x, y, w, h).data));
+
 		return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
 	}
 }

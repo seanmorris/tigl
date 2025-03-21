@@ -10,12 +10,12 @@ export class Rectangle
 
 	contains(x, y)
 	{
-		if(x <= this.x1 || x >= this.x2)
+		if(x < this.x1 || x >= this.x2)
 		{
 			return false;
 		}
 
-		if(y <= this.y1 || y >= this.y2)
+		if(y < this.y1 || y >= this.y2)
 		{
 			return false;
 		}

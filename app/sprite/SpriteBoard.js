@@ -8,16 +8,15 @@ import { Parallax } from './Parallax';
 
 export class SpriteBoard
 {
-	constructor({element, world, map})
+	constructor({element, world})
 	{
 		this[Bindable.Prevent] = true;
 
-		this.map = map;
 		this.maps = [];
 
 		this.world = world;
 		this.sprites = new Bag;
-
+		this.currentMap = null;
 
 		this.mouse = {
 			x: null
@@ -25,6 +24,8 @@ export class SpriteBoard
 			, clickX: null
 			, clickY: null
 		};
+
+		this.parallax = null;
 
 		this.width = element.width;
 		this.height = element.height;
@@ -89,9 +90,6 @@ export class SpriteBoard
 		);
 
 		this.mapRenderers = new Map;
-
-		this.parallax = new Parallax({spriteBoard: this, map});
-
 		this.following = null;
 	}
 
@@ -101,6 +99,22 @@ export class SpriteBoard
 		{
 			Camera.x = (16 + this.following.sprite.x) * this.gl2d.zoomLevel || 0;
 			Camera.y = (16 + this.following.sprite.y) * this.gl2d.zoomLevel || 0;
+
+			const maps = [...this.world.getMapsForPoint(this.following.x, this.following.y)];
+
+			if(maps[0] && this.currentMap !== maps[0])
+			{
+				const parallax = this.nextParallax = new Parallax({spriteBoard: this, map: maps[0]});
+
+				this.nextParallax.ready.then(() => {
+					if(this.nextParallax === parallax)
+					{
+						this.parallax = parallax;
+					}
+				});
+
+				this.currentMap = maps[0];
+			}
 		}
 
 		const visibleMaps = this.world.getMapsForRect(
@@ -149,9 +163,9 @@ export class SpriteBoard
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		if(this.map.backgroundColor)
+		if(this.currentMap && this.currentMap.backgroundColor)
 		{
-			const color = this.map.backgroundColor.substr(1);
+			const color = this.currentMap.backgroundColor.substr(1);
 
 			const r = parseInt(color.substr(-6, 2), 16) / 255;
 			const b = parseInt(color.substr(-4, 2), 16) / 255;

@@ -1,15 +1,18 @@
+const depthSymbol = Symbol('depth');
+
 class Segment
 {
-	constructor(start, end, prev, depth = 0)
+	constructor(start, end, prev, dimension = 2, depth = 0)
 	{
 		this.start = start;
 		this.end   = end;
 		this.depth = depth;
+		this.dimension = dimension;
 		this.size  = 0;
 
 		this.rectangles = new Set;
 		this.subTree = depth < 1
-			? new SMTree(1 + depth)
+			? new SMTree({dimension, [depthSymbol]: 1 + depth})
 			: null;
 
 		this.prev  = prev;
@@ -32,8 +35,8 @@ class Segment
 			return [this];
 		}
 
-		const a = new Segment(this.start, at, this.prev, this.depth);
-		const b = new Segment(at, this.end, a, this.depth);
+		const a = new Segment(this.start, at, this.prev, this.dimension, this.depth);
+		const b = new Segment(at, this.end, a, this.dimension, this.depth);
 
 		for(const rectangle of this.rectangles)
 		{
@@ -92,22 +95,26 @@ const isRectangle = (object) => {
 	return 'x1' in object
 		&& 'y1' in object
 		&& 'x2' in object
-		&& 'y2' in object;
+		&& 'y2' in object
+		&& object.x1 < object.x2
+		&& object.y1 < object.y2;
 };
 
 export class SMTree
 {
-	constructor(depth = 0)
+	constructor(args = {dimension: 2, [depthSymbol]: 0})
 	{
-		this.depth = depth;
-		this.segments = [new Segment(-Infinity, Infinity, null, this.depth)];
+		this.depth = args[depthSymbol];
+		this.dimension = args.dimension;
+
+		this.segments = [new Segment(-Infinity, Infinity, null, this.dimension, this.depth)];
 	}
 
 	add(rectangle)
 	{
 		if(!isRectangle(rectangle))
 		{
-			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y1.');
+			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
 		}
 
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
@@ -135,7 +142,7 @@ export class SMTree
 	{
 		if(!isRectangle(rectangle))
 		{
-			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y1.');
+			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
 		}
 
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
@@ -148,7 +155,7 @@ export class SMTree
 
 		for(let i = startIndex; i <= endIndex; i++)
 		{
-			if(this.segments[i].delete(rectangle))
+			if(i > 0 && this.segments[i].delete(rectangle))
 			{
 				empty.push(i);
 			}

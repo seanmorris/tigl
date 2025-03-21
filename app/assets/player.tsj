@@ -1,13 +1,13 @@
 { "class":"spritesheet",
  "columns":5,
  "image":"player.png",
- "imageheight":144,
+ "imageheight":192,
  "imagewidth":160,
  "margin":0,
  "name":"player",
  "spacing":0,
- "tilecount":15,
- "tiledversion":"1.11.2",
+ "tilecount":20,
+ "tiledversion":"1.10.1",
  "tileheight":48,
  "tiles":[
         {
@@ -109,6 +109,48 @@
                 }],
          "id":10,
          "type":"walking-west"
+        }, 
+        {
+         "animation":[
+                {
+                 "duration":30,
+                 "tileid":12
+                }, 
+                {
+                 "duration":30,
+                 "tileid":13
+                }, 
+                {
+                 "duration":30,
+                 "tileid":14
+                }, 
+                {
+                 "duration":30,
+                 "tileid":15
+                }],
+         "id":12,
+         "type":"jumping-east"
+        }, 
+        {
+         "animation":[
+                {
+                 "duration":30,
+                 "tileid":15
+                }, 
+                {
+                 "duration":30,
+                 "tileid":14
+                }, 
+                {
+                 "duration":30,
+                 "tileid":13
+                }, 
+                {
+                 "duration":30,
+                 "tileid":12
+                }],
+         "id":15,
+         "type":"jumping-west"
         }],
  "tilewidth":32,
  "type":"tileset",
