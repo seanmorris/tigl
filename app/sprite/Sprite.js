@@ -1,7 +1,7 @@
 import { Bindable } from "curvature/base/Bindable";
-import { Camera } from "./Camera";
-import { Matrix } from "../math/Matrix";
 import { SpriteSheet } from "./SpriteSheet";
+import { Matrix } from "../math/Matrix";
+import { Camera } from "./Camera";
 
 export class Sprite
 {
@@ -123,13 +123,11 @@ export class Sprite
 
 
 		const gl = this.spriteBoard.gl2d.context;
+		const zoom = this.spriteBoard.zoomLevel;
+		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-
-		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
-
-		const zoom = this.spriteBoard.zoomLevel;
 
 		this.setRectangle(
 			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
@@ -213,7 +211,6 @@ export class Sprite
 			1.0, 1.0,
 		]), gl.STATIC_DRAW);
 
-
 		const x1 = x;
 		const y1 = y + 32 * zoom;
 		const x2 = x + width;
@@ -230,7 +227,6 @@ export class Sprite
 
 		const xOff = x + width  * 0.5;
 		const yOff = y + height * 0.5;
-
 
 		const t = Matrix.transform(points, Matrix.composite(
 			Matrix.translate(xOff, yOff)

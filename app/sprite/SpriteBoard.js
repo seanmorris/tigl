@@ -1,10 +1,10 @@
-import { Bag } from 'curvature/base/Bag';
 import { Bindable } from 'curvature/base/Bindable';
+
+import { MapRenderer } from './MapRenderer';
+import { Parallax } from './Parallax';
 
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
-import { MapRenderer } from './MapRenderer';
-import { Parallax } from './Parallax';
 
 export class SpriteBoard
 {
@@ -17,6 +17,8 @@ export class SpriteBoard
 		this.world = world;
 		this.sprites = new Set;
 		this.currentMap = null;
+
+		this.screenScale = 1;
 		this.zoomLevel = 2;
 
 		this.mouse = {
@@ -83,12 +85,10 @@ export class SpriteBoard
 		this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
 		this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
 
-		document.addEventListener(
-			'mousemove', (event)=>{
-				this.mouse.x = event.clientX;
-				this.mouse.y = event.clientY;
-			}
-		);
+		document.addEventListener('mousemove', event => {
+			this.mouse.x = event.clientX;
+			this.mouse.y = event.clientY;
+		});
 
 		this.mapRenderers = new Map;
 		this.following = null;
@@ -120,13 +120,14 @@ export class SpriteBoard
 			const visibleMaps = this.world.getMapsForRect(
 				this.following.sprite.x
 				, this.following.sprite.y
-				, 64//Camera.width * 0.125
-				, 64//Camera.height * 0.125
+				, Camera.width
+				, Camera.height
 			);
 
 			const mapRenderers = new Set;
 
 			visibleMaps.forEach(map => {
+				map.visible = true;
 				if(this.mapRenderers.has(map))
 				{
 					mapRenderers.add(this.mapRenderers.get(map));
@@ -140,7 +141,10 @@ export class SpriteBoard
 
 			new Set(this.mapRenderers.keys())
 				.difference(visibleMaps)
-				.forEach(m => this.mapRenderers.delete(m));
+				.forEach(map => {
+					this.mapRenderers.delete(map);
+					map.visible = false;
+				});
 		}
 
 		const gl = this.gl2d.context;
@@ -158,12 +162,6 @@ export class SpriteBoard
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
-		gl.clearColor(0, 0, 0, 0);
-		gl.clear(gl.COLOR_BUFFER_BIT);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
 		if(this.currentMap && this.currentMap.backgroundColor)
 		{
 			const color = this.currentMap.backgroundColor.substr(1);
@@ -180,14 +178,18 @@ export class SpriteBoard
 			gl.clearColor(0, 0, 0, 1);
 		}
 
+		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
+
+		gl.clearColor(0, 0, 0, 0);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+
+		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 
 		window.smProfiling && console.time('draw-parallax');
 		this.parallax && this.parallax.draw();
 		window.smProfiling && console.timeEnd('draw-parallax');
-
-		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
-
 
 		window.smProfiling && console.time('draw-tiles');
 		this.mapRenderers.forEach(mr => mr.draw());
@@ -297,17 +299,55 @@ export class SpriteBoard
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	zoom(delta)
+	{
+		const max = this.screenScale * 32;
+		const min = this.screenScale * 0.2;
+		const step = 0.05 * this.zoomLevel;
+
+		let zoomLevel = delta * step + this.zoomLevel;
+
+		if(zoomLevel < min)
+		{
+			zoomLevel = min;
+		}
+		else if(zoomLevel > max)
+		{
+			zoomLevel = max;
+		}
+
+		if(Math.abs(zoomLevel - 1) < 0.05)
+		{
+			zoomLevel = 1;
+		}
+
+		if(this.zoomLevel !== zoomLevel)
+		{
+			this.zoomLevel = zoomLevel;
+			this.resize();
+		}
+	}
+
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.gl2d.context;
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_position);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_texCoord);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+			0.0, 0.0,
+			1.0, 0.0,
+			0.0, 1.0,
+			0.0, 1.0,
+			1.0, 0.0,
+			1.0, 1.0,
+		]), gl.STATIC_DRAW);
 
 		const x1 = x;
 		const x2 = x + width;
 		const y1 = y;
 		const y2 = y + height;
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			x1, y1,
 			x2, y1,

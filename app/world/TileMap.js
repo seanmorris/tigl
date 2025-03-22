@@ -1,25 +1,32 @@
 import { Bindable } from 'curvature/base/Bindable';
+import { EntityPallet } from './EntityPallet';
 import { Tileset } from '../sprite/Tileset';
 import { QuickTree } from '../math/QuickTree';
-
-import { Pushable } from '../model/Pushable';
 import { Spawner } from '../model/Spawner';
-
-const objectPallet = {
-	'@barrel': Pushable,
-};
 
 export class TileMap
 {
 	constructor({fileName, session, x, y, width, height})
 	{
 		this[Bindable.Prevent] = true;
-		this.image = document.createElement('img');
 		this.src = fileName;
-		this.pixels = [];
+		this.backgroundColor = null;
 		this.tileCount = 0;
 
-		this.backgroundColor = null;
+		this.xWorld = x;
+		this.yWorld = y;
+
+		this.width  = width;
+		this.height = height;
+
+		this.tileWidth  = 0;
+		this.tileHeight = 0;
+
+		this.tileSetWidth  = 0;
+		this.tileSetHeight = 0;
+
+		this.pixels = [];
+		this.image = document.createElement('img');
 		this.session = session;
 
 		this.properties = {};
@@ -35,21 +42,10 @@ export class TileMap
 		this.imageLayers  = [];
 		this.objectLayers = [];
 
-		this.xWorld = x;
-		this.yWorld = y;
-
-		this.width  = width;
-		this.height = height;
-
-		this.tileWidth  = 0;
-		this.tileHeight = 0;
-
-		this.tileSetWidth  = 0;
-		this.tileSetHeight = 0;
-
 		this.ready = this.getReady(fileName);
 
 		this.animations = new Map;
+		this.visible = false;
 
 		this.quadTree = new QuickTree(x, x, x + this.width, y + this.height);
 	}
@@ -76,7 +72,17 @@ export class TileMap
 			this.backgroundColor = this.properties.backgroundColor;
 		}
 
-		const tilesets = mapData.tilesets.map(t => new Tileset(t));
+		const tilesets = mapData.tilesets.map(tilesetData => {
+			if(tilesetData.source)
+			{
+				tilesetData.source = new URL(tilesetData.source, src).href;
+			}
+			else
+			{
+				tilesetData.map = this;
+			}
+			return new Tileset(tilesetData);
+		});
 
 		this.width  = mapData.width;
 		this.height = mapData.height;
@@ -204,41 +210,27 @@ export class TileMap
 			{
 				this.entityDefs[ entityDef.id ] = entityDef;
 
-				if(entityDef.type[0] === '@')
+				if(entityDef.name === 'player-start' || !entityDef.type)
 				{
-					if(objectPallet[ entityDef.type ])
-					{
-						const spawner = new Spawner({
-							spawnType: entityDef.type
-							, spawnClass: objectPallet[ entityDef.type ]
-							, ...entityDef
-							, spriteBoard: this.session.spriteBoard
-							, session: this.session
-							, world: this.session.world
-						});
-
-						spawner.x += this.xWorld;
-						spawner.y += this.yWorld;
-
-						this.session.addEntity(spawner);
-					}
+					continue;
 				}
-				else if(entityDef.type.substr(0, 7) === 'http://' || entityDef.type.substr(0, 8) === 'https://')
-				{
-					const spawner = new Spawner({
-						spawnType: entityDef.type
-						, spawnClass: await import(entityDef.type)
-						, ...entityDef
-						, spriteBoard: this.session.spriteBoard
-						, session: this.session
-						, world: this.session.world
-					});
 
-					spawner.x += this.xWorld;
-					spawner.y += this.yWorld;
+				const spawnClass = await EntityPallet.resolve(entityDef.type);
 
-					this.session.addEntity(spawner);
-				}
+				const spawner = new Spawner({
+					spawnType: entityDef.type
+					, spawnClass
+					, ...entityDef
+					, spriteBoard: this.session.spriteBoard
+					, session: this.session
+					, world: this.session.world
+				});
+
+				spawner.x += this.xWorld;
+				spawner.y += this.yWorld;
+
+				this.session.addEntity(spawner);
+				this.quadTree.add(spawner)
 			}
 		}
 	}

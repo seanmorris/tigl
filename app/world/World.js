@@ -2,23 +2,28 @@ import { Bindable } from 'curvature/base/Bindable';
 import { Rectangle } from '../math/Rectangle';
 import { TileMap } from './TileMap';
 import { SMTree } from '../math/SMTree';
+import { Ray } from "../math/Ray";
 
 export class World
 {
-	constructor({src, session})
+	constructor({source, session})
 	{
 		this[Bindable.Prevent] = true;
-		this.ready = this.getReady(src);
+		this.ready = this.getReady(source);
 		this.maps = [];
 		this.mTree = new SMTree;
 		this.rectMap = new Map;
 		this.session = session;
+		this.source = source;
 	}
 
 	async getReady(src)
 	{
 		const worldData = await (await fetch(src)).json();
 		return await Promise.all(worldData.maps.map((m, i) => {
+
+			m.fileName = new URL(m.fileName, src).href;
+
 			const map = new TileMap({...m, session: this.session});
 
 			map.xWorld = m.x;
@@ -29,6 +34,8 @@ export class World
 
 			this.rectMap.set(rect, map);
 			this.mTree.add(rect);
+
+			console.log(this);
 
 			return map.ready;
 		}));
@@ -107,6 +114,11 @@ export class World
 		window.smProfiling && console.time('query quadTree');
 		for(const tilemap of tilemaps)
 		{
+			if(!tilemap.visible)
+			{
+				continue;
+			}
+
 			result = result.union(
 				tilemap.quadTree.select(x + -w*0.5, y + -h*0.5, w, h)
 			);
@@ -114,5 +126,43 @@ export class World
 		window.smProfiling && console.timeEnd('query quadTree');
 
 		return result;
+	}
+
+	castRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
+	{
+		return Ray.cast(
+			this
+			, startX
+			, startY
+			, layerId
+			, angle
+			, maxDistance
+			, rayFlags
+		);
+	}
+
+	castTerrainRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
+	{
+		return Ray.castTerrain(
+			this
+			, startX
+			, startY
+			, layerId
+			, angle
+			, maxDistance
+			, rayFlags
+		);
+	}
+
+	castEntityRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS)
+	{
+		return Ray.castEntity(
+			this
+			, startX
+			, startY
+			, endX
+			, endY
+			, rayFlags
+		);
 	}
 }

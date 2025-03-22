@@ -94,7 +94,6 @@ export class Gl2d
 	{
 		this.element = element || document.createElement('canvas');
 		this.context = this.element.getContext('webgl');
-		this.screenScale = 1;
 	}
 
 	createShader(location)
@@ -119,8 +118,7 @@ export class Gl2d
 		this.context.compileShader(shader);
 
 		const success = this.context.getShaderParameter(
-			shader
-			, this.context.COMPILE_STATUS
+			shader, this.context.COMPILE_STATUS
 		);
 
 		if(success)
@@ -136,7 +134,6 @@ export class Gl2d
 	createProgram({vertexShader, fragmentShader, uniforms, attributes})
 	{
 		const gl = this.context;
-
 		return new Program({gl, vertexShader, fragmentShader, uniforms, attributes});
 	}
 
@@ -161,12 +158,8 @@ export class Gl2d
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
 
 		return texture;
 	}

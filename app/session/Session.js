@@ -1,20 +1,27 @@
-import { Camera } from '../sprite/Camera';
-
-import { InputManager } from '../model/InputManager';
-import { SpriteSheet } from '../sprite/SpriteSheet';
-import { Sprite } from '../sprite/Sprite';
+import { QuickTree } from "../math/QuickTree";
 
 import { SpriteBoard } from "../sprite/SpriteBoard";
-import { Player } from '../model/Player';
+import { SpriteSheet } from '../sprite/SpriteSheet';
+import { Sprite } from '../sprite/Sprite';
+import { Entity } from '../model/Entity';
+import { Camera } from '../sprite/Camera';
 import { World } from "../world/World";
-import { QuickTree } from "../math/QuickTree";
+
+import { Controller } from '../input/Controller';
+import { EntityPallet } from "../world/EntityPallet";
+
+import { PlayerController } from '../model/PlayerController';
+import { BallController } from "../model/BalllController";
+import { BarrelController } from "../model/BarrelController";
+
+EntityPallet.register('@basic-platformer', PlayerController);
+EntityPallet.register('@barrel', BarrelController);
+EntityPallet.register('@ball', BallController);
 
 export class Session
 {
 	constructor({element, world, keyboard, onScreenJoyPad})
 	{
-		this.world = new World({src: world, session: this});
-		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
 
 		this.fThen = 0;
 		this.sThen = 0;
@@ -25,44 +32,79 @@ export class Session
 		this.entities  = new Set;
 		this.removed = new WeakSet;
 
-		this.keyboard = keyboard;
+		this.paused = false;
+
 		this.loaded = false;
 
-		this.world.ready.then(() => {
-			this.loaded = true;
+		this.world = new World({source: new URL(world, location).href, session: this});
+		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
 
-			for(const map of this.world.maps)
-			{
-				if(!map.properties['player-start'])
-				{
-					continue;
-				}
+		this.keyboard = keyboard;
 
-				const startId = map.properties['player-start'];
-				const startDef = map.entityDefs[startId];
+		this.world.ready.then(() => this.initialize({keyboard, onScreenJoyPad}));
 
-				const player = this.player = new Player({
-					session: this,
-					x: startDef.x,
-					y: startDef.y,
-					inputManager: new InputManager({keyboard, onScreenJoyPad}),
-					sprite: new Sprite({
-						session: this,
-						spriteSheet: new SpriteSheet({source: './player.tsj'}),
-						width: 32,
-						height: 48,
-					}),
-					camera: Camera,
-				});
+		this.controller = new Controller({deadZone: 0.2});
+		this.controller.zero();
 
-				this.spriteBoard.following = player;
-				this.addEntity(player);
-			}
+		this.gamepad = null;
+		window.addEventListener('gamepadconnected', event => {
+			console.log(event);
+			this.gamepad = event.gamepad;
+
 		});
+
+		window.addEventListener('gamepaddisconnected', event => {
+			if(!this.gamepad)
+			{
+				return;
+			}
+
+			this.gamepad = null;
+		});
+	}
+
+	async initialize()
+	{
+		this.loaded = true;
+
+		for(const map of this.world.maps)
+		{
+			if(!map.properties['player-start'])
+			{
+				continue;
+			}
+
+			const startId = map.properties['player-start'];
+			const startDef = map.entityDefs[startId];
+			const playerClass = await EntityPallet.resolve(startDef.type);
+
+			const player = this.player = new Entity({
+				controller: new playerClass,
+				session: this,
+				x: startDef.x,
+				y: startDef.y,
+				inputManager: this.controller,
+				sprite: new Sprite({
+					session: this,
+					spriteSheet: new SpriteSheet({source: '/player.tsj'}),
+					width: 32,
+					height: 48,
+				}),
+				camera: Camera,
+			});
+
+			this.spriteBoard.following = player;
+			this.addEntity(player);
+		}
 	}
 
 	addEntity(entity)
 	{
+		if(this.entities.has(entity))
+		{
+			return;
+		}
+
 		this.entities.add(entity);
 		this.spriteBoard.sprites.add(entity.sprite);
 		const maps = this.world.getMapsForPoint(entity.x, entity.y);
@@ -94,8 +136,15 @@ export class Session
 		this.sThen = now;
 
 		this.keyboard.update();
+		this.controller.update({gamepad: this.gamepad});
+		this.controller.readInput({gamepads: navigator.getGamepads(), keyboard: this.keyboard});
 
-		if(!this.player)
+		if(this.controller.buttons[1020] && this.controller.buttons[1020].time === 1)
+		{
+			this.paused = !this.paused;
+		}
+
+		if(this.paused || !this.player)
 		{
 			return false;
 		}
@@ -106,10 +155,11 @@ export class Session
 		const nearBy = this.world.getEntitiesForRect(
 			player.x
 			, player.y
-			, (Camera.width * 0.5)
-			, (Camera.height * 0.5)
+			, (Camera.width * 1.0) + 64
+			, (Camera.height * 1.0) + 64
 		);
 
+		nearBy.delete(player);
 		nearBy.add(player);
 
 		nearBy.forEach(entity => {

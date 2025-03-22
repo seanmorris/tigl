@@ -1,11 +1,11 @@
 import { View as BaseView } from 'curvature/base/View';
-import { Keyboard } from 'curvature/input/Keyboard'
-import { Config } from 'Config';
-
-import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
 import { Camera } from '../sprite/Camera';
 
+import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
+import { Keyboard } from 'curvature/input/Keyboard'
+
 import { Session } from '../session/Session';
+import { Config } from 'Config';
 
 const Application = {};
 
@@ -120,7 +120,7 @@ export class View extends BaseView
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
 			, element: this.tags.canvas.element
-			, world: 'world.json'
+			, world: '/world.json'
 		});
 
 		this.args.frameLock = this.session.frameLock;
@@ -182,6 +182,11 @@ export class View extends BaseView
 
 	resize(x, y)
 	{
+		const oldScale = this.session.spriteBoard.screenScale;
+
+		this.session.spriteBoard.screenScale = document.body.clientHeight / 1280;
+		this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.screenScale / oldScale;
+
 		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;
 		this.args.height = this.tags.canvas.element.height  = y || document.body.clientHeight;
 
@@ -192,11 +197,6 @@ export class View extends BaseView
 		this.args.rheight = Math.trunc(
 			(y || document.body.clientHeight) / this.session.spriteBoard.zoomLevel
 		);
-
-		const oldScale = this.session.spriteBoard.gl2d.screenScale;
-		this.session.spriteBoard.gl2d.screenScale = document.body.clientHeight / 1280;
-
-		this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.gl2d.screenScale / oldScale;
 
 		this.session.spriteBoard.resize();
 	}
@@ -217,30 +217,7 @@ export class View extends BaseView
 			return;
 		}
 
-		const max = this.session.spriteBoard.gl2d.screenScale * 32;
-		const min = this.session.spriteBoard.gl2d.screenScale * 0.2;
-		const step = 0.05 * this.session.spriteBoard.zoomLevel;
-
-		let zoomLevel = (delta * step + this.session.spriteBoard.zoomLevel).toFixed(2);
-
-		if(zoomLevel < min)
-		{
-			zoomLevel = min;
-		}
-		else if(zoomLevel > max)
-		{
-			zoomLevel = max;
-		}
-
-		if(Math.abs(zoomLevel - 1) < 0.05)
-		{
-			zoomLevel = 1;
-		}
-
-		if(this.session.spriteBoard.zoomLevel !== zoomLevel)
-		{
-			this.session.spriteBoard.zoomLevel = zoomLevel;
-			this.resize();
-		}
+		this.session.spriteBoard.zoom(delta);
+		// this.resize();
 	}
 }

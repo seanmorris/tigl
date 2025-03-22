@@ -6,9 +6,7 @@ export class Quadtree extends Rectangle
 	constructor(x1, y1, x2, y2, minSize = 0, parent = null)
 	{
 		super(x1, y1, x2, y2);
-
 		this[Bindable.Prevent] = true;
-
 		this.items = new Set;
 		this.split = false;
 		this.minSize = minSize || 10;
@@ -110,8 +108,7 @@ export class Quadtree extends Rectangle
 		if(!this.backMap.has(entity))
 		{
 			// console.warn('Entity not in Quadtree.');
-			this.add(entity);
-			return;
+			return this.add(entity);
 		}
 
 		const startCell = this.backMap.get(entity);
@@ -126,7 +123,7 @@ export class Quadtree extends Rectangle
 		{
 			// console.warn('No QuadTree cell found!');
 			startCell.delete(entity);
-			return;
+			return false;
 		}
 
 		if(cell !== startCell)
@@ -134,6 +131,8 @@ export class Quadtree extends Rectangle
 			startCell.delete(entity);
 			cell.add(entity);
 		}
+
+		return true;
 	}
 
 	delete(entity)
@@ -177,7 +176,7 @@ export class Quadtree extends Rectangle
 	{
 		if(!this.isPrunable())
 		{
-			return;
+			return false;
 		}
 
 		this.split = false;
@@ -186,6 +185,8 @@ export class Quadtree extends Rectangle
 		this.urCell = null;
 		this.blCell = null;
 		this.brCell = null;
+
+		return true;
 	}
 
 	findLeaf(x, y)

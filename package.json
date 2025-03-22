@@ -1,30 +1,31 @@
 {
-  "name": "brunch-app",
-  "description": "Brunch.io application",
-  "private": true,
-  "author": "Brunch",
-  "version": "0.0.1",
-  "repository": "",
-  "scripts": {
-    "start": "brunch watch --server",
-    "build": "brunch build --production",
-	"test": "node --test test/*"
-  },
-  "dependencies": {
-    "curvature": "^0.0.68-f"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.26.4",
-    "@babel/core": "^7.26.10",
-    "@babel/preset-env": "^7.26.9",
-    "auto-reload-brunch": "^2",
-    "babel-brunch": "^7.0.1",
-    "babel-minify": "^0.5.1",
-    "babel-plugin-macros": "^2.8.0",
-    "brunch": "^4",
-    "clean-css-brunch": "^3",
-    "raw-brunch": "^1.0.2",
-    "rawquire": "^0.0.1",
-    "uglify-es-brunch": "^1"
-  }
+	"name": "brunch-app",
+	"description": "Brunch.io application",
+	"private": true,
+	"author": "Brunch",
+	"version": "0.0.1",
+	"repository": "",
+	"scripts": {
+		"start": "brunch watch --server",
+		"build": "brunch build --production",
+		"test": "node --test test/*"
+	},
+	"dependencies": {
+		"curvature": "^0.0.68-f",
+		"import-mapper": "^0.0.4"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.26.4",
+		"@babel/core": "^7.26.10",
+		"@babel/preset-env": "^7.26.9",
+		"auto-reload-brunch": "^2",
+		"babel-brunch": "^7.0.1",
+		"babel-minify": "^0.5.1",
+		"babel-plugin-macros": "^2.8.0",
+		"brunch": "^4",
+		"clean-css-brunch": "^3",
+		"raw-brunch": "^1.0.2",
+		"rawquire": "^0.0.1",
+		"uglify-es-brunch": "^1"
+	}
 }

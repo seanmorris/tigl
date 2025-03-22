@@ -1,16 +1,11 @@
 module.exports = {
-	sourceMaps: 'inline'
-	, watcher: { awaitWriteFinish: true }
+	watcher: { awaitWriteFinish: true }
 	, paths: { public: './docs' }
-
-	, modules: {
-	}
-
+	, modules: {}
 	, files: {
 		stylesheets: { joinTo: 'app.css' }
 		, javascripts: { joinTo: 'app.js' }
 	}
-
 	, plugins: {
 		preval: { tokens: { BUILD_TIME: () => Date.now() } }
 		, raw: {
@@ -23,11 +18,13 @@ module.exports = {
 			presets: [[
 				'@babel/preset-env', {
 					useBuiltIns: false,
+					// modules: false,
 					exclude: [
 						'@babel/plugin-transform-async-to-generator',
 						'@babel/plugin-transform-template-literals',
 						'@babel/plugin-transform-arrow-functions',
 						'@babel/plugin-transform-dynamic-import',
+						'@babel/plugin-transform-typeof-symbol',
 						'@babel/plugin-transform-block-scoping',
 						'@babel/plugin-transform-regenerator',
 						'@babel/plugin-transform-for-of',

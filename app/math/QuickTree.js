@@ -19,6 +19,11 @@ export class QuickTree extends Quadtree
 	{
 		if(!super.add(entity))
 		{
+			if(!this.parent)
+			{
+				console.warn('Failed to add object to QuickTree.');
+			}
+
 			return;
 		}
 

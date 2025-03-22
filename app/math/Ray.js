@@ -2,12 +2,12 @@ import { Geometry } from "./Geometry";
 
 export class Ray
 {
-	static T_LAST_EMPTY = 0b0000_0000_0000_0000_0000_0000_0000_0001;
-	static T_ALL_POINTS = 0b0000_0000_0000_0000_0000_0000_0000_0010;
+	static T_LAST_EMPTY = 0b0000_0001;
+	static T_ALL_POINTS = 0b0000_0010;
 
 	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
 
-	static DEFAULT_FLAGS = 0b0000_0000_0000_0000_0000_0000_0000_0000;
+	static DEFAULT_FLAGS = 0b0000_0000;
 
 	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
 	{

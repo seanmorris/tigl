@@ -1,14 +1,25 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Rectangle } from "../math/Rectangle";
+import { Sprite } from '../sprite/Sprite';
 
 export class Entity
 {
-	constructor({session, inputManager, sprite, x = 0, y = 0, width = 32, height = 32})
+	constructor(entityData)
 	{
+		const {controller, session, inputManager, sprite, x = 0, y = 0, width = 32, height = 32} = entityData;
+
 		this[Bindable.Prevent] = true;
 
+		this.controller = controller;
+
+		this.sprite = sprite || new Sprite({
+			session
+			, src: '/thing.png'
+			, width: 32
+			, height: 32
+		});
+
 		this.inputManager = inputManager;
-		this.sprite = sprite;
 		this.session = session;
 
 		this.x = x;
@@ -24,13 +35,14 @@ export class Entity
 			x - width * 0.5, y - height,
 			x + width * 0.5, y
 		);
-	}
 
-	create()
-	{}
+		controller && controller.onCreate(this, entityData);
+	}
 
 	simulate()
 	{
+		this.controller && this.controller.simulate(this);
+
 		this.rect.x1 = this.x - this.width * 0.5;
 		this.rect.x2 = this.x + this.width * 0.5;
 
@@ -39,10 +51,14 @@ export class Entity
 
 		this.sprite.x = this.x + this.xSpriteOffset;
 		this.sprite.y = this.y + this.ySpriteOffset;
+
+		this.fixFPE();
 	}
 
 	destroy()
-	{}
+	{
+		this.controller && controller.destroy(this);
+	}
 
 	fixFPE()
 	{

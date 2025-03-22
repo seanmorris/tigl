@@ -1,5 +1,4 @@
 import { Bindable } from 'curvature/base/Bindable';
-import { Camera } from './Camera';
 
 class ParallaxLayer
 {
@@ -159,7 +158,6 @@ export class Parallax
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
-
 		const ratio = this.spriteBoard.width / width;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
