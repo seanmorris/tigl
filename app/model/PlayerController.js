@@ -7,119 +7,130 @@ export class PlayerController
 {
 	static spriteSheet = '/player.tsj';
 
-	onCreate(entity, entityData)
+	create(entity, entityData)
 	{
-		entity.direction = 'south';
-		entity.state = 'standing';
+		this.direction = 'south';
+		this.state = 'standing';
 
-		entity.xSpeed = 0;
-		entity.ySpeed = 0;
+		this.xSpeed = 0;
+		this.ySpeed = 0;
 
-		entity.grounded = true;
-
-		entity.xDirection = 0;
-
-		entity.ySpriteOffset = 1;
+		this.grounded = true;
+		this.grounded = 0;
 	}
 
 	simulate(entity)
 	{
-		if(entity.state === 'jumping')
+		if(this.state === 'jumping')
 		{
 			entity.height = 24;
 		}
 		else
 		{
-			entity.height = 48;
+			entity.height = 34;
 		}
-
-		const speed = 4;
 
 		const xAxis = entity.inputManager ? ( Math.min(1, Math.max(entity.inputManager.axes[0].magnitude || 0, -1)) || 0 ) : 0;
 		const yAxis = entity.inputManager ? ( Math.min(1, Math.max(entity.inputManager.axes[1].magnitude || 0, -1)) || 0 ) : 0;
 
 		const world = entity.session.world;
 
-		if(!world.getSolid(entity.x, entity.y + 1))
+		const solidTerrain = world.getSolid(entity.x, entity.y + 1);
+		const solidEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)].filter(entity => entity.flags & 0x1);
+
+		// console.log(world.getEntitiesForPoint(entity.x, entity.y + 1));
+
+		if(!solidTerrain)
 		{
-			entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
-			entity.grounded = false;
+			this.ySpeed = Math.min(8, this.ySpeed + 0.5);
+			this.grounded = false;
 		}
-		else if(entity.ySpeed >= 0)
+		else if(this.ySpeed >= 0)
 		{
-			entity.ySpeed = Math.min(0, entity.ySpeed);
-			entity.grounded = true;
+			this.ySpeed = Math.min(0, this.ySpeed);
+			this.grounded = true;
+		}
+
+		if(solidEntities.length)
+		{
+			const otherTop = solidEntities[0].y - solidEntities[0].height;
+			if(this.ySpeed >= 0 && entity.y < otherTop + 16)
+			{
+				entity.y = otherTop;
+				this.ySpeed = Math.min(0, this.ySpeed);
+				this.grounded = true;
+			}
 		}
 
 		if(xAxis)
 		{
-			entity.xDirection = Math.sign(xAxis);
+			this.xDirection = Math.sign(xAxis);
 
 			if(!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y))
 			{
-				entity.xSpeed += xAxis * (entity.grounded ? 0.2 : 0.4);
+				this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.4);
 			}
 
-			if(Math.abs(entity.xSpeed) > 8)
+			if(Math.abs(this.xSpeed) > 8)
 			{
-				entity.xSpeed = 8 * Math.sign(entity.xSpeed);
+				this.xSpeed = 8 * Math.sign(this.xSpeed);
 			}
 
-			if(entity.grounded && xAxis && Math.sign(xAxis) !== Math.sign(entity.xSpeed))
+			if(this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(this.xSpeed))
 			{
-				entity.xSpeed *= 0.75;
+				this.xSpeed *= 0.75;
 			}
 		}
-		else if(entity.grounded)
+		else if(this.grounded)
 		{
-			entity.xSpeed *= 0.9;
+			this.xSpeed *= 0.9;
 		}
 		else
 		{
-			entity.xSpeed *= 0.99;
+			this.xSpeed *= 0.99;
 		}
 
 		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
 		{
-			entity.ySpeed = 0;
+			this.ySpeed = 0;
 			entity.y--;
 		}
 
 		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
 		{
-			entity.ySpeed = 0;
+			this.ySpeed = 0;
 			entity.y++;
 		}
 
 		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
 		{
-			entity.xSpeed = 0;
+			this.xSpeed = 0;
 			entity.x++;
 		}
 
 		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
 		{
-			entity.xSpeed = 0;
+			this.xSpeed = 0;
 			entity.x--;
 		}
 
-		if(entity.xSpeed || entity.ySpeed)
+		if(this.xSpeed || this.ySpeed)
 		{
-			const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
-			const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
+			const direction = Math.atan2(this.ySpeed, this.xSpeed);
+			const distance = Math.hypot(this.ySpeed, this.xSpeed);
 
 			const hit = Ray.cast(
 				world
 				, entity.x
-				, entity.y
+				, entity.y + -entity.height * 0.5
 				, 0
 				, direction
 				, distance
 				, Ray.T_LAST_EMPTY
 			);
 
-			let xMove = entity.xSpeed;
-			let yMove = entity.ySpeed;
+			let xMove = this.xSpeed;
+			let yMove = this.ySpeed;
 
 			if(hit.terrain)
 			{
@@ -132,32 +143,58 @@ export class PlayerController
 				yMove = Math.sin(direction) * actualDistance;
 			}
 
+			if(hit.entities.size)
+			{
+				hit.entities.delete(entity);
+				hit.entities.forEach((point, other) => {
+					other.collide(entity, point);
+					entity.collide(other, point);
+				});
+			}
+
 			entity.x += xMove;
 			entity.y += yMove;
 		}
 
-		if(entity.grounded)
+		if(this.grounded)
 		{
-			entity.state = xAxis ? 'walking' : 'standing';
+			this.state = xAxis ? 'walking' : 'standing';
 
 			if(xAxis < 0)
 			{
-				entity.direction = 'west';
+				this.direction = 'west';
 			}
 			else if(xAxis > 0)
 			{
-				entity.direction = 'east';
+				this.direction = 'east';
 			}
 		}
 
-		if(entity.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
+		if(this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
 		{
-			entity.grounded = false;
-			entity.state = 'jumping';
-			entity.ySpeed = -10;
+			this.grounded = false;
+			this.state = 'jumping';
+			this.ySpeed = -10;
 		}
 
-		entity.sprite.changeAnimation(`${entity.state}-${entity.direction}`);
+		if(!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
+		{
+			this.ySpeed = Math.max(-4, this.ySpeed);
+		}
+
+		if(entity.sprite)
+		{
+			if(this.state === 'jumping')
+			{
+				entity.sprite.scaleX = this.xDirection;
+				entity.sprite.changeAnimation(`${this.state}`);
+			}
+			else
+			{
+				entity.sprite.scaleX = 1;
+				entity.sprite.changeAnimation(`${this.state}-${this.direction}`);
+			}
+		}
 
 		// if(Math.trunc(performance.now() / 1000) % 15 === 0)
 		// {
@@ -174,9 +211,27 @@ export class PlayerController
 		// 	entity.sprite.region = fireRegion;
 		// }
 
-		// if(entity.state === 'jumping' && entity.direction === 'south')
+		// if(this.state === 'jumping' && this.direction === 'south')
 		// {
-		// 	entity.direction = 'east';
+		// 	this.direction = 'east';
 		// }
+	}
+
+	collide(entity, other, point)
+	{
+		if(other.flags & 0x1)
+		{
+			const otherTop = other.y - other.height;
+
+			if(this.ySpeed > 0 && entity.y < otherTop + 16)
+			{
+				this.ySpeed = 0;
+				this.grounded = true;
+				this.y = otherTop;
+			}
+
+			// console.log(other);
+		}
+		// console.log(other, point);
 	}
 }

@@ -47,7 +47,7 @@ export class TileMap
 		this.animations = new Map;
 		this.visible = false;
 
-		this.quadTree = new QuickTree(x, x, x + this.width, y + this.height);
+		this.quadTree = new QuickTree(x, y, x + this.width, y + this.height);
 	}
 
 	async getReady(src)
@@ -163,7 +163,6 @@ export class TileMap
 		}
 
 		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
-
 		this.tiles = ctxDestination;
 
 		for(const layer of [...this.tileLayers, ...this.collisionLayers])
@@ -208,26 +207,34 @@ export class TileMap
 
 			for(const entityDef of entityDefs)
 			{
-				this.entityDefs[ entityDef.id ] = entityDef;
+				this.entityDefs[ entityDef.id ] = {...entityDef};
 
-				if(entityDef.name === 'player-start' || !entityDef.type)
+				entityDef.x += this.xWorld;
+				entityDef.y += this.yWorld;
+
+				if(!entityDef.type || entityDef.name === 'player-start')
 				{
 					continue;
 				}
 
 				const spawnClass = await EntityPallet.resolve(entityDef.type);
 
+				if(!spawnClass)
+				{
+					console.warn(`SpawnClass not found: ${entityDef.type}`);
+					continue;
+				}
+
 				const spawner = new Spawner({
 					spawnType: entityDef.type
 					, spawnClass
+					, entityDef
 					, ...entityDef
 					, spriteBoard: this.session.spriteBoard
 					, session: this.session
 					, world: this.session.world
+					, map: this
 				});
-
-				spawner.x += this.xWorld;
-				spawner.y += this.yWorld;
 
 				this.session.addEntity(spawner);
 				this.quadTree.add(spawner)
@@ -269,9 +276,9 @@ export class TileMap
 
 	getPixel(layer, x, y)
 	{
-		const tileNumber = this.getTileFromLayer(layer, x, y);
+		const gid = this.getTileFromLayer(layer, x, y);
 
-		if(tileNumber === false || tileNumber === -1)
+		if(gid === false || gid === -1)
 		{
 			return false;
 		}
@@ -279,8 +286,8 @@ export class TileMap
 		const offsetX = Math.trunc(x % this.tileWidth);
 		const offsetY = Math.trunc(y % this.tileHeight);
 
-		const tileSetX = (tileNumber * this.tileWidth) % this.tileSetWidth;
-		const tileSetY = Math.floor((tileNumber * this.tileWidth) / this.tileSetWidth);
+		const tileSetX = (gid * this.tileWidth) % this.tileSetWidth;
+		const tileSetY = Math.floor((gid * this.tileWidth) / this.tileSetWidth);
 
 		return this.pixels[tileSetX + offsetX + (tileSetY + offsetY) * (this.tileSetWidth)];
 	}
@@ -309,5 +316,24 @@ export class TileMap
 			.map(context => context.getImageData(x, y, w, h).data));
 
 		return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
+	}
+
+	getTileImage(gid)
+	{
+		gid = -1 + gid;
+		const tileSetX = (gid * this.tileWidth) % this.tileSetWidth;
+		const tileSetY = Math.floor((gid * this.tileWidth) / this.tileSetWidth) * this.tileHeight;
+
+		const imageData = this.tiles.getImageData(tileSetX, tileSetY, this.tileWidth, this.tileHeight);
+
+		const c = document.createElement('canvas');
+		const cc = c.getContext('2d');
+
+		c.width = this.tileWidth;
+		c.height = this.tileHeight;
+
+		cc.putImageData(imageData, 0, 0);
+
+		return c.toDataURL();
 	}
 }

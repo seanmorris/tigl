@@ -2,7 +2,7 @@ export class BarrelController
 {
 	static spriteImage = '/barrel.png';
 
-	onCreate(entity, entityData)
+	create(entity, entityData)
 	{
 		entity.xSpeed = 0;
 		entity.ySpeed = 0;
@@ -10,9 +10,10 @@ export class BarrelController
 		entity.height = 48;
 		entity.width = 32;
 
-		entity.grounded = true;
-
 		entity.ySpriteOffset = 6;
+
+		this.grounded = true;
+
 	}
 
 	simulate(entity)
@@ -22,12 +23,12 @@ export class BarrelController
 		if(!world.getSolid(entity.x, entity.y + 1))
 		{
 			entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
-			entity.grounded = false;
+			this.grounded = false;
 		}
 		else
 		{
 			entity.ySpeed = Math.min(0, entity.ySpeed);
-			entity.grounded = true;
+			this.grounded = true;
 		}
 
 		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1))
@@ -83,6 +84,15 @@ export class BarrelController
 
 			entity.x += xMove;
 			entity.y += yMove;
+
+			entity.xSpeed *= 0.95;
+			entity.ySpeed *= 0.95;
 		}
+	}
+
+	collide(entity, other, point)
+	{
+		// entity.x = point[0] + 0.5 * entity.width;
+		// entity.xSpeed = other.xSpeed;
 	}
 }

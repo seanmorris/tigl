@@ -30,12 +30,15 @@ export class World
 			map.yWorld = m.y;
 			this.maps[i] = map;
 
-			const rect = new Rectangle(m.x, m.y, m.x + m.width, m.y + m.height);
+			const rect = new Rectangle(
+				m.x
+				, m.y
+				, m.x + m.width
+				, m.y + m.height
+			);
 
 			this.rectMap.set(rect, map);
 			this.mTree.add(rect);
-
-			console.log(this);
 
 			return map.ready;
 		}));
@@ -58,16 +61,17 @@ export class World
 	getMapsForRect(x, y, w, h)
 	{
 		const result = new Set;
-		const rects = this.mTree.query(x + -w*0.5, y + -h*0.5, x + w*0.5, y + h*0.5);
-
-		window.smProfiling && console.time('query mapTree');
+		const rects = this.mTree.query(
+			  x + -w * 0.5
+			, y + -h * 0.5
+			, x + w * 0.5
+			, y + h * 0.5
+		);
 
 		for(const rect of rects)
 		{
 			result.add( this.rectMap.get(rect) );
 		}
-
-		window.smProfiling && console.timeEnd('query mapTree');
 
 		return result;
 	}
@@ -106,12 +110,45 @@ export class World
 		return null;
 	}
 
+	getEntitiesForPoint(x, y)
+	{
+		const tilemaps = this.getMapsForPoint(x, y);
+
+		let result = new Set;
+		for(const tilemap of tilemaps)
+		{
+			if(!tilemap.visible)
+			{
+				continue;
+			}
+
+			const w = 500;
+			const h = 500;
+
+			const entities = tilemap.quadTree.select(
+				x + -w * 0.5
+				, y + -h * 0.5
+				, x + w * 0.5
+				, y + h * 0.5
+			);
+
+			for(const entity of entities)
+			{
+				if(entity.rect.contains(x, y))
+				{
+					result.add(entity);
+				}
+			}
+		}
+
+		return result;
+	}
+
 	getEntitiesForRect(x, y, w, h)
 	{
 		const tilemaps = this.getMapsForRect(x, y, w, h);
 
 		let result = new Set;
-		window.smProfiling && console.time('query quadTree');
 		for(const tilemap of tilemaps)
 		{
 			if(!tilemap.visible)
@@ -120,10 +157,14 @@ export class World
 			}
 
 			result = result.union(
-				tilemap.quadTree.select(x + -w*0.5, y + -h*0.5, w, h)
+				tilemap.quadTree.select(
+					  x + -w * 0.5
+					, y + -h * 0.5
+					, x + w * 0.5
+					, y + h * 0.5
+				)
 			);
 		}
-		window.smProfiling && console.timeEnd('query quadTree');
 
 		return result;
 	}

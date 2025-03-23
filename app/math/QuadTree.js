@@ -1,7 +1,7 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Rectangle } from "./Rectangle";
 
-export class Quadtree extends Rectangle
+export class QuadTree extends Rectangle
 {
 	constructor(x1, y1, x2, y2, minSize = 0, parent = null)
 	{
@@ -17,12 +17,15 @@ export class Quadtree extends Rectangle
 		this.urCell = null;
 		this.blCell = null;
 		this.brCell = null;
+		this.count = 0;
+
 	}
 
 	add(entity)
 	{
 		if(!this.contains(entity.x, entity.y))
 		{
+			// console.warn('No QuadTree cell found!');
 			return false;
 		}
 
@@ -43,7 +46,7 @@ export class Quadtree extends Rectangle
 			const xSizeHalf = 0.5 * xSize;
 			const ySizeHalf = 0.5 * ySize;
 
-			this.ulCell = new Quadtree(
+			this.ulCell = new QuadTree(
 				this.x1
 				, this.y1
 				, this.x1 + xSizeHalf
@@ -52,7 +55,7 @@ export class Quadtree extends Rectangle
 				, this
 			);
 
-			this.blCell = new Quadtree(
+			this.blCell = new QuadTree(
 				this.x1
 				, this.y1 + ySizeHalf
 				, this.x1 + xSizeHalf
@@ -61,7 +64,7 @@ export class Quadtree extends Rectangle
 				, this
 			);
 
-			this.urCell = new Quadtree(
+			this.urCell = new QuadTree(
 				this.x1 + xSizeHalf
 				, this.y1
 				, this.x2
@@ -70,7 +73,7 @@ export class Quadtree extends Rectangle
 				, this
 			);
 
-			this.brCell = new Quadtree(
+			this.brCell = new QuadTree(
 				this.x1 + xSizeHalf
 				, this.y1 + ySizeHalf
 				, this.x2
@@ -78,15 +81,35 @@ export class Quadtree extends Rectangle
 				, this.minSize
 				, this
 			);
+
+			let parent = this;
+			while(parent)
+			{
+				parent.count -= this.items.size;
+				parent = parent.parent;
+			}
 
 			for(const item of this.items)
 			{
-				this.items.delete(item);
+				let parent = this;
+				let added = false;
 
-				this.ulCell.add(item)
-					|| this.urCell.add(item)
-					|| this.blCell.add(item)
-					|| this.brCell.add(item);
+				while(parent)
+				{
+					added = parent.ulCell.add(item)
+						|| parent.urCell.add(item)
+						|| parent.blCell.add(item)
+						|| parent.brCell.add(item);
+					if(added) break;
+					parent = parent.parent;
+				}
+
+				if(!added)
+				{
+					console.warn('Bad split!');
+				}
+
+				this.items.delete(item);
 			}
 
 			return this.ulCell.add(entity)
@@ -97,6 +120,16 @@ export class Quadtree extends Rectangle
 		}
 		else
 		{
+			if(!this.items.has(entity))
+			{
+				let parent = this;
+				while(parent)
+				{
+					parent.count++;
+					parent = parent.parent;
+				}
+			}
+
 			this.backMap.set(entity, this);
 			this.items.add(entity);
 			return true;
@@ -107,7 +140,7 @@ export class Quadtree extends Rectangle
 	{
 		if(!this.backMap.has(entity))
 		{
-			// console.warn('Entity not in Quadtree.');
+			// console.warn('Entity not in QuadTree.');
 			return this.add(entity);
 		}
 
@@ -121,7 +154,7 @@ export class Quadtree extends Rectangle
 
 		if(!cell)
 		{
-			// console.warn('No QuadTree cell found!');
+			console.warn('No QuadTree cell found!');
 			startCell.delete(entity);
 			return false;
 		}
@@ -139,12 +172,11 @@ export class Quadtree extends Rectangle
 	{
 		if(!this.backMap.has(entity))
 		{
-			console.warn('Entity not in Quadtree.');
+			console.warn('Entity not in QuadTree.');
 			return false;
 		}
 
 		const cell = this.backMap.get(entity);
-
 		cell.items.delete(entity);
 
 		if(cell.parent)
@@ -153,6 +185,13 @@ export class Quadtree extends Rectangle
 		}
 
 		this.backMap.delete(entity);
+
+		let parent = cell;
+		while(parent)
+		{
+			parent.count--;
+			parent = parent.parent;
+		}
 
 		return true;
 	}
@@ -220,17 +259,14 @@ export class Quadtree extends Rectangle
 		return this.items.has(entity);
 	}
 
-	select(x, y, w, h)
+	select(x1, y1, x2, y2)
 	{
-		const xMax = x + w;
-		const yMax = y + h;
-
-		if(xMax < this.x1 || x > this.x2)
+		if(x1 > this.x2 || x2 < this.x1)
 		{
 			return new Set;
 		}
 
-		if(yMax < this.y1 || y > this.y2)
+		if(y1 > this.y2 || y2 < this.y1)
 		{
 			return new Set;
 		}
@@ -238,14 +274,14 @@ export class Quadtree extends Rectangle
 		if(this.split)
 		{
 			return new Set([
-				...this.ulCell.select(x, y, w, h)
-				, ...this.urCell.select(x, y, w, h)
-				, ...this.blCell.select(x, y, w, h)
-				, ...this.brCell.select(x, y, w, h)
+				...this.ulCell.select(x1, y1, x2, y2)
+				, ...this.urCell.select(x1, y1, x2, y2)
+				, ...this.blCell.select(x1, y1, x2, y2)
+				, ...this.brCell.select(x1, y1, x2, y2)
 			]);
 		}
 
-		return this.items;
+		return new Set(this.items);
 	}
 
 	dump()
@@ -260,6 +296,6 @@ export class Quadtree extends Rectangle
 			]);
 		}
 
-		return this.items;
+		return new Set(this.items);
 	}
 }

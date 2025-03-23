@@ -20,11 +20,8 @@ uniform vec4 u_color;
 uniform vec4 u_region;
 uniform vec2 u_parallax;
 uniform vec2 u_scroll;
-uniform vec2 u_stretch;
 
 uniform float u_time;
-uniform float u_scale;
-
 uniform int u_renderTiles;
 uniform int u_renderParallax;
 uniform int u_renderMode;

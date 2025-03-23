@@ -11,12 +11,14 @@ import { Controller } from '../input/Controller';
 import { EntityPallet } from "../world/EntityPallet";
 
 import { PlayerController } from '../model/PlayerController';
-import { BallController } from "../model/BalllController";
+import { BallController } from "../model/BallController";
 import { BarrelController } from "../model/BarrelController";
+import { BoxController } from "../model/BoxController";
 
 EntityPallet.register('@basic-platformer', PlayerController);
 EntityPallet.register('@barrel', BarrelController);
 EntityPallet.register('@ball', BallController);
+EntityPallet.register('@box', BoxController);
 
 export class Session
 {
@@ -48,17 +50,11 @@ export class Session
 
 		this.gamepad = null;
 		window.addEventListener('gamepadconnected', event => {
-			console.log(event);
 			this.gamepad = event.gamepad;
-
 		});
 
 		window.addEventListener('gamepaddisconnected', event => {
-			if(!this.gamepad)
-			{
-				return;
-			}
-
+			if(!this.gamepad) return;
 			this.gamepad = null;
 		});
 	}
@@ -87,8 +83,6 @@ export class Session
 				sprite: new Sprite({
 					session: this,
 					spriteSheet: new SpriteSheet({source: '/player.tsj'}),
-					width: 32,
-					height: 48,
 				}),
 				camera: Camera,
 			});
@@ -106,7 +100,6 @@ export class Session
 		}
 
 		this.entities.add(entity);
-		this.spriteBoard.sprites.add(entity.sprite);
 		const maps = this.world.getMapsForPoint(entity.x, entity.y);
 		maps.forEach(map => map.quadTree.add(entity));
 	}
@@ -137,7 +130,12 @@ export class Session
 
 		this.keyboard.update();
 		this.controller.update({gamepad: this.gamepad});
-		this.controller.readInput({gamepads: navigator.getGamepads(), keyboard: this.keyboard});
+
+		this.controller.readInput({
+			onScreenJoyPad: this.onScreenJoyPad
+			, gamepads: navigator.getGamepads()
+			, keyboard: this.keyboard
+		});
 
 		if(this.controller.buttons[1020] && this.controller.buttons[1020].time === 1)
 		{
@@ -149,7 +147,7 @@ export class Session
 			return false;
 		}
 
-		this.entities.forEach(entity => entity.sprite.visible = false);
+		this.entities.forEach(entity => { if(entity.sprite) entity.sprite.visible = false; });
 
 		const player = this.player;
 		const nearBy = this.world.getEntitiesForRect(
@@ -162,12 +160,19 @@ export class Session
 		nearBy.delete(player);
 		nearBy.add(player);
 
+		this.spriteBoard.sprites.clear();
+
 		nearBy.forEach(entity => {
 			entity.simulate(delta);
-			const maps = this.world.getMapsForRect(entity.x, entity.y, 100, 100);
+			const maps = this.world.getMapsForPoint(entity.x, entity.y);
 			maps.forEach(map => this.removed.has(entity) || map.quadTree.move(entity));
-			entity.sprite.visible = true;
+			if(entity.sprite)
+			{
+				this.spriteBoard.sprites.add(entity.sprite);
+				entity.sprite.visible = true;
+			}
 		});
+
 
 		return true;
 	}

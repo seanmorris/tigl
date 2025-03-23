@@ -1,9 +1,9 @@
-import { Quadtree } from "./Quadtree";
+import { QuadTree } from "./QuadTree";
 import { Rectangle } from "./Rectangle";
 
 const registry = new WeakMap();
 
-export class QuickTree extends Quadtree
+export class QuickTree extends QuadTree
 {
 	static deleteFromAllTrees(entity)
 	{
@@ -48,10 +48,10 @@ export class QuickTree extends Quadtree
 		}
 	}
 
-	select(x, y, w, h)
+	select(x1, y1, x2, y2)
 	{
-		const selectRect = new Rectangle(x, y, x + w, y + h);
-		const result = super.select(x, y, w, h);
+		const selectRect = new Rectangle(x1, y1, x2, y2);
+		const result = super.select(x1, y1, x2, y2);
 
 		for(const entity of result)
 		{

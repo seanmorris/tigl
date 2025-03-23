@@ -6,13 +6,10 @@ export class SpriteSheet extends Tileset
 	{
 		super(tilesetData);
 
-		this.frames = [];
-		this.animations = {
-			default: [{tileid: 0, duration: Infinity}]
-		};
-
-		this.canvas  = document.createElement('canvas');
+		this.animations = { default: [{tileid: 0, duration: Infinity}] };
+		this.canvas = document.createElement('canvas');
 		this.context = this.canvas.getContext("2d", {willReadFrequently: true});
+		this.frames = [];
 
 		this.ready = this.ready.then(() => {
 			this.processImage();

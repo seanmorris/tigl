@@ -48,9 +48,7 @@ export class SpriteBoard
 			, 'u_tileMapping'
 
 			, 'u_size'
-			, 'u_scale'
 			, 'u_scroll'
-			, 'u_stretch'
 			, 'u_tileSize'
 			, 'u_resolution'
 			, 'u_mapTextureSize'
@@ -98,8 +96,8 @@ export class SpriteBoard
 	{
 		if(this.following)
 		{
-			Camera.x = (16 + this.following.sprite.x) * this.zoomLevel || 0;
-			Camera.y = (16 + this.following.sprite.y) * this.zoomLevel || 0;
+			Camera.x = this.following.x * this.zoomLevel || 0;
+			Camera.y = this.following.y * this.zoomLevel || 0;
 
 			const maps = [...this.world.getMapsForPoint(this.following.x, this.following.y)];
 
@@ -118,8 +116,8 @@ export class SpriteBoard
 			}
 
 			const visibleMaps = this.world.getMapsForRect(
-				this.following.sprite.x
-				, this.following.sprite.y
+				this.following.x
+				, this.following.y
 				, Camera.width
 				, Camera.height
 			);
@@ -187,17 +185,11 @@ export class SpriteBoard
 
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 
-		window.smProfiling && console.time('draw-parallax');
 		this.parallax && this.parallax.draw();
-		window.smProfiling && console.timeEnd('draw-parallax');
-
-		window.smProfiling && console.time('draw-tiles');
 		this.mapRenderers.forEach(mr => mr.draw());
-		window.smProfiling && console.timeEnd('draw-tiles');
 
-		window.smProfiling && console.time('draw-sprites');
 		let sprites = [...this.sprites];
-		// sprites.forEach(s => s.z = s.y);
+
 		sprites.sort((a,b) => {
 			if(a.y === undefined)
 			{
@@ -212,12 +204,6 @@ export class SpriteBoard
 			return a.y - b.y;
 		});
 		sprites.forEach(s => s.visible && s.draw(delta));
-		window.smProfiling && console.timeEnd('draw-sprites');
-
-		if(window.smProfiling)
-		{
-			window.smProfiling = false;
-		}
 
 		// Set the rectangle for both layers
 		this.setRectangle(

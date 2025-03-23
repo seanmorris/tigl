@@ -49,7 +49,7 @@ export class Parallax
 		const gl = this.spriteBoard.gl2d.context;
 
 		const loadSlices = this.map.imageLayers.map(
-			(layerData, index) => this.constructor.loadImage(layerData.image).then(image => {
+			(layerData, index) => this.constructor.loadImage(new URL(layerData.image, this.map.src)).then(image => {
 				const texture = this.textures[index] = gl.createTexture();
 				const layer = this.parallaxLayers[index] = new ParallaxLayer;
 
@@ -98,8 +98,8 @@ export class Parallax
 		const gl = this.spriteBoard.gl2d.context;
 		const zoom = this.spriteBoard.zoomLevel;
 
-		this.x = this.spriteBoard.following.sprite.x + -this.spriteBoard.width / zoom * 0.5;
-		this.y = this.spriteBoard.following.sprite.y;
+		this.x = this.spriteBoard.following.x + -this.spriteBoard.width / zoom * 0.5;
+		this.y = this.spriteBoard.following.y;
 
 		this.spriteBoard.drawProgram.uniformI('u_renderParallax', 1);
 		this.spriteBoard.drawProgram.uniformF('u_scroll', this.x, this.y);

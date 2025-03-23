@@ -120,7 +120,7 @@ export class View extends BaseView
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
 			, element: this.tags.canvas.element
-			, world: '/world.json'
+			, world: '/tile-world.world'
 		});
 
 		this.args.frameLock = this.session.frameLock;
@@ -168,12 +168,12 @@ export class View extends BaseView
 
 			if(this.session.spriteBoard.following)
 			{
-				this.args.posX = Number(this.session.spriteBoard.following.sprite.x).toFixed(3);
-				this.args.posY = Number(this.session.spriteBoard.following.sprite.y).toFixed(3);
+				this.args.posX = Number(this.session.spriteBoard.following.x).toFixed(3);
+				this.args.posY = Number(this.session.spriteBoard.following.y).toFixed(3);
 			}
 		};
 
-		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 4;
+		this.session.spriteBoard.zoomLevel = document.body.clientWidth / 1280 * 2;
 		this.resize();
 
 		setInterval(() => simulate(performance.now()), 0);
@@ -184,7 +184,7 @@ export class View extends BaseView
 	{
 		const oldScale = this.session.spriteBoard.screenScale;
 
-		this.session.spriteBoard.screenScale = document.body.clientHeight / 1280;
+		this.session.spriteBoard.screenScale = document.body.clientWidth / 1280;
 		this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.screenScale / oldScale;
 
 		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;

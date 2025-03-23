@@ -5,7 +5,7 @@ import { Camera } from "./Camera";
 
 export class Sprite
 {
-	constructor({src, session, spriteSheet, width, height, x, y, z})
+	constructor({src, color, pixels, session, spriteSheet, x, y, z, width, height, originalWidth, originalHeight, tiled = false})
 	{
 		this[Bindable.Prevent] = true;
 
@@ -17,7 +17,20 @@ export class Sprite
 
 		this.width  = 32 || width;
 		this.height = 32 || height;
-		this.scale  = 1;
+
+		this.originalWidth = originalWidth ?? this.width;
+		this.originalHeight = originalHeight ?? this.height;
+		this.tiled = tiled;
+
+		this.scale   = 1;
+		this.scaleX  = 1;
+		this.scaleY  = 1;
+		this.theta   = 0;
+		this.shearX  = 0;
+		this.shearY  = 0;
+
+		this.xCenter = 0.5;
+		this.yCenter = 1.0;
 
 		this.visible = false;
 		this.moving = false;
@@ -30,7 +43,6 @@ export class Sprite
 
 		this.speed    = 0;
 		this.maxSpeed = 4;
-
 
 		this.RIGHT	= 0;
 		this.DOWN	= 1;
@@ -49,10 +61,17 @@ export class Sprite
 		const gl = this.spriteBoard.gl2d.context;
 
 		this.texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
-		const r = () => parseInt(Math.random() * 255);
-		const pixel = new Uint8Array([r(), r(), r(), 255]);
+		const singlePixel = color
+			? new Uint8Array(color)
+			: new Uint8Array([
+				Math.trunc(Math.random() * 255)
+				, Math.trunc(Math.random() * 255)
+				, Math.trunc(Math.random() * 255)
+				, 255
+			]);
+
+		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 		gl.texImage2D(
 			gl.TEXTURE_2D
@@ -63,7 +82,7 @@ export class Sprite
 			, 0
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
-			, pixel
+			, singlePixel
 		);
 
 		if(src && !spriteSheet)
@@ -78,6 +97,10 @@ export class Sprite
 			spriteSheet.ready.then(() => {
 				this.width = spriteSheet.tileWidth;
 				this.height = spriteSheet.tileHeight;
+
+				this.originalWidth = originalWidth ?? this.width;
+				this.originalHeight = originalHeight ?? this.height;
+
 				this.texture = this.createTexture( spriteSheet.getFrame(0) );
 
 				for(let i = 0; i < spriteSheet.tileCount; i++)
@@ -121,7 +144,6 @@ export class Sprite
 			}
 		}
 
-
 		const gl = this.spriteBoard.gl2d.context;
 		const zoom = this.spriteBoard.zoomLevel;
 		this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
@@ -156,7 +178,7 @@ export class Sprite
 	{
 		if(!this.spriteSheet ||!this.spriteSheet.animations[name])
 		{
-			console.warn(`Animation ${name} not found.`);
+			// console.warn(`Animation ${name} not found.`);
 			return;
 		}
 
@@ -174,10 +196,20 @@ export class Sprite
 
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		if(this.tiled)
+		{
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		}
+		else
+		{
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		}
+
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
 
 		gl.texImage2D(
 			gl.TEXTURE_2D
@@ -201,20 +233,23 @@ export class Sprite
 		const gl = this.spriteBoard.gl2d.context;
 		const zoom = this.spriteBoard.zoomLevel;
 
+		const xra = this.width / this.originalWidth;
+		const yra = this.height / this.originalHeight;
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
 			0.0, 0.0,
-			1.0, 0.0,
-			0.0, 1.0,
-			0.0, 1.0,
-			1.0, 0.0,
-			1.0, 1.0,
+			xra, 0.0,
+			0.0, yra,
+			0.0, yra,
+			xra, 0.0,
+			xra, yra,
 		]), gl.STATIC_DRAW);
 
 		const x1 = x;
-		const y1 = y + 32 * zoom;
+		const y1 = y;
 		const x2 = x + width;
-		const y2 = y + height + 32 * zoom;
+		const y2 = y + height;
 
 		const points = new Float32Array([
 			x1, y1,
@@ -225,13 +260,17 @@ export class Sprite
 			x2, y2,
 		]);
 
-		const xOff = x + width  * 0.5;
-		const yOff = y + height * 0.5;
+		const xOff = x + width  * this.xCenter;
+		const yOff = y + height * this.yCenter;
+
+		// this.theta = performance.now() / 1000;
 
 		const t = Matrix.transform(points, Matrix.composite(
-			Matrix.translate(xOff, yOff)
-			// , Matrix.scale(Math.sin(theta), Math.cos(theta))
-			// , Matrix.rotate(theta)
+			Matrix.translate(xOff + -width * 0.5, yOff + zoom + 16 * zoom)
+			, Matrix.shearX(this.shearX)
+			, Matrix.shearX(this.shearY)
+			, Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
+			, Matrix.rotate(this.theta)
 			, Matrix.translate(-xOff, -yOff)
 		));
 

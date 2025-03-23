@@ -4,13 +4,37 @@ import { Sprite } from '../sprite/Sprite';
 
 export class Entity
 {
+	static E_SOLID = 0b0000_0001
+
 	constructor(entityData)
 	{
-		const {controller, session, inputManager, sprite, x = 0, y = 0, width = 32, height = 32} = entityData;
-
 		this[Bindable.Prevent] = true;
 
+		const {
+			controller
+			, session
+			, inputManager
+			, sprite
+			, x = 0
+			, y = 0
+			, width = 32
+			, height = 32
+		} = entityData;
+
 		this.controller = controller;
+
+		this.xSpriteOffset = 0;
+		this.ySpriteOffset = sprite ? 0 : 15;
+
+		this.flags = 0b0000_0000;
+
+		this.x = x;
+		this.y = y;
+
+		this.width  = width;
+		this.height = height;
+
+		controller && controller.create(this, entityData);
 
 		this.sprite = sprite || new Sprite({
 			session
@@ -22,21 +46,10 @@ export class Entity
 		this.inputManager = inputManager;
 		this.session = session;
 
-		this.x = x;
-		this.y = y;
-
-		this.xSpriteOffset = 0;
-		this.ySpriteOffset = 0;
-
-		this.width  = width;
-		this.height = height;
-
 		this.rect = new Rectangle(
 			x - width * 0.5, y - height,
 			x + width * 0.5, y
 		);
-
-		controller && controller.onCreate(this, entityData);
 	}
 
 	simulate()
@@ -49,10 +62,18 @@ export class Entity
 		this.rect.y1 = this.y - this.height;
 		this.rect.y2 = this.y;
 
-		this.sprite.x = this.x + this.xSpriteOffset;
-		this.sprite.y = this.y + this.ySpriteOffset;
+		if(this.sprite)
+		{
+			this.sprite.x = this.x + this.xSpriteOffset;
+			this.sprite.y = this.y + this.ySpriteOffset;
+		}
 
 		this.fixFPE();
+	}
+
+	collide(other, point)
+	{
+		this.controller && this.controller.collide(this, other, point);
 	}
 
 	destroy()

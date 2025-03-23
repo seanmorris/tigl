@@ -184,11 +184,11 @@ export class SMTree
 
 	query(x1, y1, x2, y2)
 	{
-		const results = new Set;
 
 		const xStartIndex = this.findSegment(x1);
 		const xEndIndex = this.findSegment(x2);
 
+		let results = new Set;
 		for(let i = xStartIndex; i <= xEndIndex; i++)
 		{
 			const segment = this.segments[i];
@@ -203,10 +203,7 @@ export class SMTree
 
 			for(let j = yStartIndex; j <= yEndIndex; j++)
 			{
-				for(const result of segment.subTree.segments[j].rectangles)
-				{
-					results.add(result)
-				}
+				results = results.union(segment.subTree.segments[j].rectangles);
 			}
 		}
 
@@ -227,6 +224,11 @@ export class SMTree
 
 	findSegment(at)
 	{
+		if(isNaN(at))
+		{
+			throw new Error('World.findSegment takes a number param.');
+		}
+
 		let lo = 0;
 		let hi = -1 + this.segments.length;
 

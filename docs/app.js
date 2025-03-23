@@ -1,1 +1,9612 @@
-!function(){"use strict";var e="undefined"==typeof global?self:global;if("function"!=typeof e.require){var t={},i={},r={},n={}.hasOwnProperty,o=/^\.\.?(\/|$)/,s=function(e,t){for(var i,r=[],n=(o.test(t)?e+"/"+t:t).split("/"),s=0,a=n.length;s<a;s++)".."===(i=n[s])?r.pop():"."!==i&&""!==i&&r.push(i);return r.join("/")},a=function(e){return e.split("/").slice(0,-1).join("/")},l=function(t,r){var n,o={id:t,exports:{},hot:d&&d.createHot(t)};return i[t]=o,r(o.exports,(n=t,function(t){var i=s(a(n),t);return e.require(i,n)}),o),o.exports},u=function(e){var t=r[e];return t&&e!==t?u(t):e},c=function(e,r){null==r&&(r="/");var o=u(e);if(n.call(i,o))return i[o].exports;if(n.call(t,o))return l(o,t[o]);throw new Error("Cannot find module '"+e+"' from '"+r+"'")};c.alias=function(e,t){r[t]=e};var h=/\.[^.\/]+$/,f=/\/index(\.[^\/]+)?$/;c.register=c.define=function(e,o){if(e&&"object"==typeof e)for(var s in e)n.call(e,s)&&c.register(s,e[s]);else t[e]=o,delete i[e],function(e){if(h.test(e)){var t=e.replace(h,"");n.call(r,t)&&r[t].replace(h,"")!==t+"/index"||(r[t]=e)}if(f.test(e)){var i=e.replace(f,"");n.call(r,i)||(r[i]=e)}}(e)},c.list=function(){var e=[];for(var i in t)n.call(t,i)&&e.push(i);return e};var d=e._hmr&&new e._hmr(function(e,t){return u(s(a(e),t))},c,t,i);c._cache=i,c.hmr=d&&d.wrap,c.brunch=!0,e.require=c}}(),function(){"undefined"==typeof window||window;var e=function(e,t,i){var r={},n=function(t,i){try{return e(i+"/node_modules/"+t)}catch(e){if(-1===e.toString().indexOf("Cannot find module"))throw e;if(-1!==i.indexOf("node_modules")){var o=i.split("/"),s=o.lastIndexOf("node_modules"),a=o.slice(0,s).join("/");return n(t,a)}}return r};return function(o){if(o in t&&(o=t[o]),o){if("."!==o[0]&&i){var s=n(o,i);if(s!==r)return s}return e(o)}}};require.register("curvature/base/Bag.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Bag=void 0;var e=i("./Bindable"),r=i("./Mixin"),n=i("../mixin/EventTargetMixin"),o=e=>Number(e),s=Symbol("Mapped"),a=Symbol("Has"),l=Symbol("Add"),u=Symbol("Remove"),c=Symbol("Delete");class h extends(r.Mixin.with(n.EventTargetMixin)){constructor(t){super(),this.changeCallback=t,this.content=new Map,this.current=0,this.length=0,this.list=e.Bindable.makeBindable([]),this.meta=Symbol("meta"),this.type=void 0}has(e){return this[s]?this[s].has(e):this[a](e)}[a](e){return this.content.has(e)}add(e){return this[s]?this[s].add(e):this[l](e)}[l](t){if(void 0===t||!(t instanceof Object))throw new Error("Only objects may be added to Bags.");if(this.type&&!(t instanceof this.type))throw console.error(this.type,t),new Error(`Only objects of type ${this.type} may be added to this Bag.`);if(t=e.Bindable.make(t),!this.content.has(t)){var i=new CustomEvent("adding",{detail:{item:t}});if(this.dispatchEvent(i)){var r=o(this.current++);this.content.set(t,r),this.list[r]=t,this.changeCallback&&this.changeCallback(t,this.meta,h.ITEM_ADDED,r);var n=new CustomEvent("added",{detail:{item:t,id:r}});return this.dispatchEvent(n),this.length=this.size,r}}}remove(e){return this[s]?this[s].remove(e):this[u](e)}[u](t){if(void 0===t||!(t instanceof Object))throw new Error("Only objects may be removed from Bags.");if(this.type&&!(t instanceof this.type))throw console.error(this.type,t),new Error(`Only objects of type ${this.type} may be removed from this Bag.`);if(t=e.Bindable.make(t),!this.content.has(t))return this.changeCallback&&this.changeCallback(t,this.meta,0,void 0),!1;var i=new CustomEvent("removing",{detail:{item:t}});if(this.dispatchEvent(i)){var r=this.content.get(t);delete this.list[r],this.content.delete(t),this.changeCallback&&this.changeCallback(t,this.meta,h.ITEM_REMOVED,r);var n=new CustomEvent("removed",{detail:{item:t,id:r}});return this.dispatchEvent(n),this.length=this.size,t}}delete(e){if(this[s])return this[s].delete(e);this[c](e)}[c](e){this.remove(e)}map(e=(e=>e),t=(e=>e)){var i=new WeakMap,r=new h;return r[s]=this,this.addEventListener("added",n=>{var o=n.detail.item;if(t(o)&&!i.has(o)){var s=e(o);i.set(o,s),r[l](s)}}),this.addEventListener("removed",e=>{var t=e.detail.item;if(i.has(t)){var n=i.get(t);i.delete(t),r[u](n)}}),r}get size(){return this.content.size}items(){return Array.from(this.content.entries()).map(e=>e[0])}}t.Bag=h,Object.defineProperty(h,"ITEM_ADDED",{configurable:!1,enumerable:!1,writable:!0,value:1}),Object.defineProperty(h,"ITEM_REMOVED",{configurable:!1,enumerable:!1,writable:!0,value:-1})}()}),require.register("curvature/base/Bindable.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";function e(e,t,i){return(t=function(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}Object.defineProperty(t,"__esModule",{value:!0}),t.Bindable=void 0;var i=Symbol("ref"),r=Symbol("original"),n=Symbol("deck"),o=Symbol("binding"),s=Symbol("subBinding"),a=Symbol("bindingAll"),l=Symbol("isBindable"),u=Symbol("wrapping"),c=Symbol("Names"),h=Symbol("executing"),f=Symbol("stack"),d=(Symbol("object"),Symbol("wrapped")),p=Symbol("unwrapped"),v=Symbol("getProto"),m=Symbol("onGet"),y=Symbol("onAllGet"),b=Symbol("bindChain"),g=Symbol("Descriptors"),w=Symbol("Before"),x=Symbol("After"),T=Symbol("NoGetters"),_=Symbol("Prevent"),P=Object.getPrototypeOf(Int8Array),E=Set.prototype[Symbol.iterator],S=Map.prototype[Symbol.iterator],j="object"==typeof globalThis?globalThis:"object"==typeof window?window:"object"==typeof self?self:void 0,O=e=>"function"==typeof j.Map&&e instanceof j.Map||"function"==typeof j.Set&&e instanceof j.Set||"function"==typeof j.Node&&e instanceof j.Node||"function"==typeof j.WeakMap&&e instanceof j.WeakMap||"function"==typeof j.Location&&e instanceof j.Location||"function"==typeof j.Storage&&e instanceof j.Storage||"function"==typeof j.WeakSet&&e instanceof j.WeakSet||"function"==typeof j.ArrayBuffer&&e instanceof j.ArrayBuffer||"function"==typeof j.Promise&&e instanceof j.Promise||"function"==typeof j.File&&e instanceof j.File||"function"==typeof j.Event&&e instanceof j.Event||"function"==typeof j.CustomEvent&&e instanceof j.CustomEvent||"function"==typeof j.Gamepad&&e instanceof j.Gamepad||"function"==typeof j.ResizeObserver&&e instanceof j.ResizeObserver||"function"==typeof j.MutationObserver&&e instanceof j.MutationObserver||"function"==typeof j.PerformanceObserver&&e instanceof j.PerformanceObserver||"function"==typeof j.IntersectionObserver&&e instanceof j.IntersectionObserver||"function"==typeof j.IDBCursor&&e instanceof j.IDBCursor||"function"==typeof j.IDBCursorWithValue&&e instanceof j.IDBCursorWithValue||"function"==typeof j.IDBDatabase&&e instanceof j.IDBDatabase||"function"==typeof j.IDBFactory&&e instanceof j.IDBFactory||"function"==typeof j.IDBIndex&&e instanceof j.IDBIndex||"function"==typeof j.IDBKeyRange&&e instanceof j.IDBKeyRange||"function"==typeof j.IDBObjectStore&&e instanceof j.IDBObjectStore||"function"==typeof j.IDBOpenDBRequest&&e instanceof j.IDBOpenDBRequest||"function"==typeof j.IDBRequest&&e instanceof j.IDBRequest||"function"==typeof j.IDBTransaction&&e instanceof j.IDBTransaction||"function"==typeof j.IDBVersionChangeEvent&&e instanceof j.IDBVersionChangeEvent||"function"==typeof j.FileSystemFileHandle&&e instanceof j.FileSystemFileHandle||"function"==typeof j.RTCPeerConnection&&e instanceof j.RTCPeerConnection||"function"==typeof j.ServiceWorkerRegistration&&e instanceof j.ServiceWorkerRegistration||"function"==typeof j.WebGLTexture&&e instanceof j.WebGLTexture;class C{static isBindable(e){return!!(e&&e[l]&&e[_])&&e[l]===C}static onDeck(e,t){return e[n].get(t)||!1}static ref(e){return e[i]||e||!1}static makeBindable(e){return this.make(e)}static shuck(e,t){t=t||new Map;var i=Object.create({});if(e instanceof P||e instanceof ArrayBuffer){var n=e.slice(0);return t.set(e,n),n}var o=Object.keys(e);for(var s in o){var a=o[s];if("___"!==a.substring(0,3)){var l=t.get(e[a]);if(l)i[a]=l;else if(e[a]!==e){if(e[a]&&"object"==typeof e[a]){var u=e[a];C.isBindable(e[a])&&(u=e[a][r]),i[a]=this.shuck(u,t)}else i[a]=e[a];t.set(e[a],i[a])}else t.set(e[a],i),i[a]=i}}return C.isBindable(e)&&(delete i.bindTo,delete i.isBound),i}static make(e){if(e[_])return e;if(!e||!["function","object"].includes(typeof e))return e;if(i in e)return e[i];if(e[l])return e;if(Object.isSealed(e)||Object.isFrozen(e)||!Object.isExtensible(e)||O(e))return e;Object.defineProperty(e,l,{configurable:!1,enumerable:!1,writable:!1,value:C}),Object.defineProperty(e,i,{configurable:!0,enumerable:!1,writable:!0,value:!1}),Object.defineProperty(e,r,{configurable:!1,enumerable:!1,writable:!1,value:e}),Object.defineProperty(e,n,{configurable:!1,enumerable:!1,writable:!1,value:new Map}),Object.defineProperty(e,o,{configurable:!1,enumerable:!1,writable:!1,value:Object.create(null)}),Object.defineProperty(e,s,{configurable:!1,enumerable:!1,writable:!1,value:new Map}),Object.defineProperty(e,a,{configurable:!1,enumerable:!1,writable:!1,value:new Set}),Object.defineProperty(e,h,{enumerable:!1,writable:!0}),Object.defineProperty(e,u,{enumerable:!1,writable:!0}),Object.defineProperty(e,f,{configurable:!1,enumerable:!1,writable:!1,value:[]}),Object.defineProperty(e,w,{configurable:!1,enumerable:!1,writable:!1,value:new Set}),Object.defineProperty(e,x,{configurable:!1,enumerable:!1,writable:!1,value:new Set}),Object.defineProperty(e,d,{configurable:!1,enumerable:!1,writable:!1,value:Object.preventExtensions(new Map)}),Object.defineProperty(e,p,{configurable:!1,enumerable:!1,writable:!1,value:Object.preventExtensions(new Map)}),Object.defineProperty(e,g,{configurable:!1,enumerable:!1,writable:!1,value:Object.preventExtensions(new Map)});var t=(i,r=null,n={})=>{var l=!1;if(Array.isArray(i)){var u=i.map(e=>t(e,r,n));return()=>u.forEach(e=>e())}if(i instanceof Function&&(n=r||{},r=i,l=!0),n.delay>=0&&(r=this.wrapDelayCallback(r,n.delay)),n.throttle>=0&&(r=this.wrapThrottleCallback(r,n.throttle)),n.wait>=0&&(r=this.wrapWaitCallback(r,n.wait)),n.frame&&(r=this.wrapFrameCallback(r,n.frame)),n.idle&&(r=this.wrapIdleCallback(r)),l){if(e[a].add(r),!("now"in n)||n.now)for(var c in e)r(e[c],c,e,!1);return()=>{e[a].delete(r)}}if(e[o][i]||(e[o][i]=new Set),n.children){var h=r;r=((...t)=>{var i=t[0],r=e[s].get(h);if(r&&(e[s].delete(h),r()),"object"==typeof i){var o=C.make(i);C.isBindable(o)&&e[s].set(h,o.bindTo((...e)=>h(...t,...e),Object.assign({},n,{children:!1}))),h(...t)}else h(...t)})}e[o][i].add(r),"now"in n&&!n.now||r(e[i],i,e,!1);var f=()=>{var t=e[s].get(r);t&&(e[s].delete(r),t()),e[o][i]&&e[o][i].has(r)&&e[o][i].delete(r)};return n.removeWith&&n.removeWith instanceof View&&n.removeWith.onRemove(()=>f),f};Object.defineProperty(e,"bindTo",{configurable:!1,enumerable:!1,writable:!1,value:t});Object.defineProperty(e,b,{configurable:!1,enumerable:!1,writable:!1,value:(t,i)=>{var r=t.split("."),n=r.shift(),o=r.slice(0),s=[];return s.push(e.bindTo(n,(e,t,r,n)=>{var a=o.join(".");0!==o.length?(void 0===e&&(e=r[t]=this.make({})),s=s.concat(e[b](a,i))):i(e,t,r,n)})),()=>s.forEach(e=>e())}}),Object.defineProperty(e,"___before",{configurable:!1,enumerable:!1,writable:!1,value:t=>(e[w].add(t),()=>e[w].delete(t))}),Object.defineProperty(e,"___after",{configurable:!1,enumerable:!1,writable:!1,value:t=>(e[x].add(t),()=>e[x].delete(t))});for(var R in Object.defineProperty(e,"isBound",{configurable:!1,enumerable:!1,writable:!1,value:()=>{if(e[a].size)return!0;for(var t of Object.values(e[o]))if(t.size)return!0;return!1}}),e)e[R]&&"object"==typeof e[R]&&(e[R][i]||e[R]instanceof Promise||Object.isExtensible(e[R])&&!Object.isSealed(e[R])&&(O(e[R])||(e[R]=C.make(e[R]))));var k=e[g],M=e[d],B=e[f],A=Object.create(null);return A.set=((t,i,r)=>{if(r&&"object"==typeof r&&(r=C.make(r),t[i]===r))return!0;M.has(i)&&M.delete(i);var s=e[n],l=s.has(i),u=l&&s.get(i);if(l&&u===r)return!0;if(i.slice&&"___"===i.slice(-3))return!0;if(t[i]===r||"number"==typeof r&&isNaN(u)&&isNaN(r))return!0;for(var c of(s.set(i,r),e[a]))c(r,i,t,!1);if(i in e[o])for(var h of e[o][i])h(r,i,t,!1,t[i]);if(s.delete(i),j.File&&t instanceof j.File&&"lastModifiedDate"==i||Reflect.set(t,i,r),Array.isArray(t)&&e[o].length)for(var f in e[o].length)(0,e[o].length[f])(t.length,"length",t,!1,t.length);return!0}),A.construct=((t,i)=>{var n="constructor";for(var o of t[w])o(t,n,e[f],void 0,i);var s=C.make(new t[r](...i));for(var a of t[x])a(t,n,e[f],s,i);return s}),A.deleteProperty=((t,i)=>{var r=e[n];if(r.has(i))return!0;if(!(i in t))return!0;if(k.has(i)){var s=k.get(i);if(s&&!s.configurable)return!1;k.delete(i)}for(var l of(r.set(i,null),M.has(i)&&M.delete(i),e[a]))l(void 0,i,t,!0,t[i]);if(i in e[o])for(var u of e[o][i])u(void 0,i,t,!0,t[i]);return Reflect.deleteProperty(t,i),r.delete(i),!0}),e[T]||(A.getPrototypeOf=(t=>v in e?e[v]:Reflect.getPrototypeOf(t)),A.get=((t,n)=>{if(M.has(n))return M.get(n);if(n===i||n===r||"apply"===n||"isBound"===n||"bindTo"===n||"__proto__"===n||"constructor"===n)return e[n];var o;if(k.has(n)?o=k.get(n):(o=Object.getOwnPropertyDescriptor(e,n),k.set(n,o)),o&&!o.configurable&&!o.writable)return e[n];if(y in e)return e[y](n);if(m in e&&!(n in e))return e[m](n);if(o&&!o.configurable&&!o.writable)return M.set(n,e[n]),e[n];if("function"==typeof e[n]){if(c in e[n])return e[n];e[p].set(n,e[n]);var s=Object.getPrototypeOf(e)[n]===e[n],a=O(e)||"function"==typeof e[Symbol.iterator]&&"next"===n||"function"==typeof P&&e instanceof P||"function"==typeof EventTarget&&e instanceof EventTarget||"function"==typeof Date&&e instanceof Date||"function"==typeof S&&e.prototype===S||"function"==typeof E&&e.prototype===E?e:e[i],l=function(...t){for(var i of(e[h]=n,B.unshift(n),e[w]))i(e,n,B,e,t);var r;if(new.target)r=new(e[p].get(n))(...t);else{var o=e[p].get(n);r=s?o.apply(a||e,t):o(...t)}for(var l of e[x])l(e,n,B,e,t);return e[h]=null,B.shift(),r};l[y]=(t=>e[n][t]);var u=C.make(l);return M.set(n,u),u}return e[n]})),Object.defineProperty(e,i,{configurable:!1,enumerable:!1,writable:!1,value:new Proxy(e,A)}),e[i]}static clearBindings(e){var t=(e=>(...t)=>t.map(e))(e=>Object.keys(e).map(t=>delete e[t]));e[a].clear(),t(e[d],e[o],e[x],e[w])}static resolve(e,t,i=!1){for(var r,n=t.split("."),o=n[0];n.length;){if(i&&1===n.length)return[this.make(e),n.shift(),o];(r=n.shift())in e&&e[r]&&"object"==typeof e[r]||(e[r]=Object.create(null)),e=this.make(e[r])}return[this.make(e),r,o]}static wrapDelayCallback(e,t){return(...i)=>setTimeout(()=>e(...i),t)}static wrapThrottleCallback(e,t){return this.throttles.set(e,!1),(...i)=>{this.throttles.get(e,!0)||(e(...i),this.throttles.set(e,!0),setTimeout(()=>{this.throttles.set(e,!1)},t))}}static wrapWaitCallback(e,t){return(...i)=>{var r;(r=this.waiters.get(e))&&(this.waiters.delete(e),clearTimeout(r)),r=setTimeout(()=>e(...i),t),this.waiters.set(e,r)}}static wrapFrameCallback(e,t){return(...t)=>{requestAnimationFrame(()=>e(...t))}}static wrapIdleCallback(e){return(...t)=>{(window.requestIdleCallback||requestAnimationFrame)(()=>e(...t))}}}t.Bindable=C,e(C,"waiters",new WeakMap),e(C,"throttles",new WeakMap),Object.defineProperty(C,"Prevent",{configurable:!1,enumerable:!1,writable:!1,value:_}),Object.defineProperty(C,"OnGet",{configurable:!1,enumerable:!1,writable:!1,value:m}),Object.defineProperty(C,"NoGetters",{configurable:!1,enumerable:!1,writable:!1,value:T}),Object.defineProperty(C,"GetProto",{configurable:!1,enumerable:!1,writable:!1,value:v}),Object.defineProperty(C,"OnAllGet",{configurable:!1,enumerable:!1,writable:!1,value:y})}()}),require.register("curvature/base/Cache.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Cache=void 0;t.Cache=class{static store(e,t,i,r="standard"){var n=0;i&&(n=1e3*i+(new Date).getTime()),this.buckets||(this.buckets=new Map),this.buckets.has(r)||this.buckets.set(r,new Map);var o=new CustomEvent("cvCacheStore",{cancelable:!0,detail:{key:e,value:t,expiry:i,bucket:r}});document.dispatchEvent(o)&&this.buckets.get(r).set(e,{value:t,expiration:n})}static load(e,t=!1,i="standard"){var r=new CustomEvent("cvCacheLoad",{cancelable:!0,detail:{key:e,defaultvalue:t,bucket:i}});if(!document.dispatchEvent(r))return t;if(this.buckets&&this.buckets.has(i)&&this.buckets.get(i).has(e)){var n=this.buckets.get(i).get(e);if(0===n.expiration||n.expiration>(new Date).getTime())return this.buckets.get(i).get(e).value}return t}}}()}),require.register("curvature/base/Config.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Config=void 0;var e={},r=i,n="object"==typeof globalThis?globalThis:"object"==typeof window?window:"object"==typeof self?self:void 0;try{e=r("/Config").Config}catch(t){!0===n.devMode&&console.error(t),e={}}class o{static get(e){return this.configs[e]}static set(e,t){return this.configs[e]=t,this}static dump(){return this.configs}static init(...e){for(var t in e){var i=e[t];for(var r in"string"==typeof i&&(i=JSON.parse(i)),i){var n=i[r];return this.configs[r]=n}}return this}}t.Config=o,Object.defineProperty(o,"configs",{configurable:!1,enumerable:!1,writable:!1,value:e})}()}),require.register("curvature/base/Dom.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Dom=void 0;t.Dom=class{static mapTags(e,t,i,r,n){var o=[],s=!0;r&&(s=!1);var a=!1,{Node:l,Element:u,NodeFilter:c,document:h}=globalThis.window,f=h.createTreeWalker(e,c.SHOW_ELEMENT|c.SHOW_TEXT,{acceptNode:(e,i)=>{if(!s){if(e!==r)return c.FILTER_SKIP;s=!0}return n&&e===n&&(a=!0),a?c.FILTER_SKIP:t?e instanceof u&&e.matches(t)?c.FILTER_ACCEPT:c.FILTER_SKIP:c.FILTER_ACCEPT}},!1);for(0;f.nextNode();)o.push(i(f.currentNode,f));return o}static dispatchEvent(e,t){e.dispatchEvent(t),this.mapTags(e,!1,e=>{e.dispatchEvent(t)})}}}()}),require.register("curvature/base/Mixin.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Mixin=void 0;var e=i("./Bindable"),r=Symbol("constructor");Symbol("mixinList");class n{static from(e,...t){var i=class extends e{constructor(...r){var o=e.constructor?super(...r):null;for(var s of t)switch(s[n.Constructor]&&s[n.Constructor].apply(this),typeof s){case"function":n.mixClass(s,i);break;case"object":n.mixObject(s,this)}return o}};return i}static make(...e){var t=e.pop();return n.to(t,...e)}static to(e,...t){var i={};t.map(t=>{switch(typeof t){case"object":Object.assign(i,Object.getOwnPropertyDescriptors(t));break;case"function":Object.assign(i,Object.getOwnPropertyDescriptors(t.prototype))}delete i.constructor,Object.defineProperties(e.prototype,i)})}static with(...e){return this.from(class{constructor(){}},...e)}static mixObject(e,t){for(var i of Object.getOwnPropertyNames(e))"function"!=typeof e[i]?t[i]=e[i]:t[i]=e[i].bind(t);for(var r of Object.getOwnPropertySymbols(e))"function"!=typeof e[r]?t[r]=e[r]:t[r]=e[r].bind(t)}static mixClass(e,t){for(var i of Object.getOwnPropertyNames(e.prototype))if(!["name","prototype","length"].includes(i)){var r=Object.getOwnPropertyDescriptor(t,i);r&&!r.writable||("function"==typeof e[i]?t.prototype[i]=e.prototype[i].bind(t.prototype):t.prototype[i]=e.prototype[i])}for(var n of Object.getOwnPropertySymbols(e.prototype))"function"==typeof e[n]?t.prototype[n]=e.prototype[n].bind(t.prototype):t.prototype[n]=e.prototype[n];var o=function(){if(["name","prototype","length"].includes(s))return 0;var i=Object.getOwnPropertyDescriptor(t,s);if(i&&!i.writable)return 0;if("function"!=typeof e[s])return t[s]=e[s],0;var r=t[s]||!1,n=e[s].bind(t);t[s]=((...e)=>(r&&r(...e),n(...e)))};for(var s of Object.getOwnPropertyNames(e))o();var a=function(){if("function"!=typeof e[l])return t.prototype[l]=e[l],1;var i=t[l]||!1,r=e[l].bind(t);t[l]=((...e)=>(i&&i(...e),r(...e)))};for(var l of Object.getOwnPropertySymbols(e))a()}static mix(t){for(var i={},r={},n=e.Bindable.makeBindable(t),o=function(e){var t=Object.getOwnPropertyNames(e.prototype),o=Object.getOwnPropertyNames(e),s=/^(before|after)__(.+)/,a=function(t){var r=t.match(s);if(r){switch(r[1]){case"before":n.___before((i,n,o,s,a)=>{if(n===r[2])return e[t].bind(s)(...a)});break;case"after":n.___after((i,n,o,s,a)=>{if(n===r[2])return e[t].bind(s)(...a)})}return 0}return i[t]?0:"function"!=typeof e[t]?0:void(i[t]=e[t])};for(var l of o)a(l);var u=function(t){var i=t.match(s);if(i){switch(i[1]){case"before":n.___before((r,n,o,s,a)=>{if(n===i[2])return e.prototype[t].bind(s)(...a)});break;case"after":n.___after((r,n,o,s,a)=>{if(n===i[2])return e.prototype[t].bind(s)(...a)})}return 0}return r[t]?0:"function"!=typeof e.prototype[t]?0:void(r[t]=e.prototype[t])};for(var c of t)u(c)},s=this;s&&s.prototype;s=Object.getPrototypeOf(s))o(s);for(var a in i)t[a]=i[a].bind(t);var l=function(e){t.prototype[e]=function(...t){return r[e].apply(this,t)}};for(var u in r)l(u);return n}}t.Mixin=n,n.Constructor=r}()}),require.register("curvature/base/Router.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Router=void 0;var e,r=i("./View"),n=(i("./Cache"),i("./Config")),o=i("./Routes"),s=Symbol("NotFound"),a=Symbol("Internal"),l="object"==typeof globalThis?globalThis:"object"==typeof window?window:"object"==typeof self?self:void 0;l.CustomEvent=null!==(e=l.CustomEvent)&&void 0!==e?e:l.Event;class u{static wait(e,t="DOMContentLoaded",i=document){i.addEventListener(t,()=>{this.listen(e)})}static listen(e,t=!1){this.listener=e||this.listener,this.routes=t||e.routes,Object.assign(this.query,this.queryOver({}));var i=t=>{t.preventDefault(),t.state&&"routedId"in t.state?(t.state.routedId<=this.routeCount?(this.history.splice(t.state.routedId),this.routeCount=t.state.routedId):t.state.routedId>this.routeCount&&(this.history.push(t.state.prev),this.routeCount=t.state.routedId),this.state=t.state):null!==this.prevPath&&this.prevPath!==location.pathname&&this.history.push(this.prevPath),this.isOriginLimited(location)?this.match(this.nextPath,e):this.match(location.pathname,e)};window.addEventListener("cvUrlChanged",i),window.addEventListener("popstate",i);var r=!this.isOriginLimited(location)&&location.pathname+location.search;!this.isOriginLimited(location)&&location.hash&&(r+=location.hash);var n={routedId:this.routeCount,url:location.pathname,prev:this.prevPath};this.isOriginLimited(location)||history.replaceState(n,null,location.pathname),this.go(!1!==r?r:"/")}static go(e,t=!1){var i=n.Config.get("title");i&&(document.title=i);var r={routedId:this.routeCount,prev:this.prevPath,url:location.pathname};-1===t?this.match(e,this.listener,!0):this.isOriginLimited(location)?this.nextPath=e:2===t&&location.pathname!==e?history.replaceState(r,null,e):location.pathname!==e&&history.pushState(r,null,e),(!t||t<0)&&(!1===t&&(this.path=null),t||("#"===e.substring(0,1)?window.dispatchEvent(new HashChangeEvent("hashchange")):window.dispatchEvent(new CustomEvent("cvUrlChanged")))),this.prevPath=e}static processRoute(e,t,i){return"function"==typeof e[t]?e[t].prototype instanceof r.View?new e[t](i):e[t](i):e[t]}static handleError(e,t,i,r,n,o,s,u){"undefined"!=typeof document&&document.dispatchEvent(new CustomEvent("cvRouteError",{detail:{error:e,path:o,prev:s,view:n,routes:t,selected:i}}));var c=l.devMode?"Unexpected error: "+String(e):"Unexpected error.";t[a]&&(r[a]=e,c=this.processRoute(t,a,r)),this.update(n,o,c,t,i,r,u)}static match(e,t,i=!1){var r=null,n=!1;if(!0===i&&(n=i),i&&"object"==typeof i&&(n=i.forceRefresh,r=i.event),"undefined"==typeof document||this.path!==e||n){var a="http://example.com";"undefined"!=typeof document&&(a=this.isOriginLimited(location)?a:location.origin,this.queryString=location.search);var l=new URL(e,a);e=this.path=l.pathname,"undefined"==typeof document&&(this.queryString=l.search);var u=this.prevPath,c=t&&t.args?t.args.content:null,h=this.routes||t&&t.routes||o.Routes.dump(),f=new URLSearchParams(this.queryString);for(var d in r&&r.request&&(this.request=r.request),Object.keys(this.query))delete this.query[d];for(var[p,v]of f)this.query[p]=v;var m={},y=!1,b="";for(var g in"/"===e.substring(0,1)&&(e=e.substring(1)),e=e.split("/"),this.query)m[g]=this.query[g];e:for(var w in h){var x=w.split("/");if(!(x.length<e.length&&"*"!==x[x.length-1])){for(var T in x)if("%"==x[T].substr(0,1)){var _=null,P=/^%(\w+)\??/.exec(x[T]);if(P&&P[1]&&(_=P[1]),!_)throw new Error(`${x[T]} is not a valid argument segment in route "${w}"`);if(e[T])m[_]=e[T];else{if("?"!=x[T].substr(x[T].length-1,1))continue e;m[_]=""}}else if("*"!==x[T]&&e[T]!==x[T])continue e;y=w,b=h[w],"*"===x[x.length-1]&&(m.pathparts=e.slice(x.length-1));break}}var E=new CustomEvent("cvRouteStart",{cancelable:!0,detail:{path:e,prev:u,root:t,selected:y,routes:h}});if("undefined"==typeof document||document.dispatchEvent(E)){if(!n&&t&&c&&"object"==typeof b&&c.constructor===b.constructor&&!(b instanceof Promise)&&c.update(m))return t.args.content=c,!0;y in h||(h[y]=h[s]);try{return!1===(b=this.processRoute(h,y,m))&&(b=this.processRoute(h,s,m)),"undefined"==typeof document?b instanceof Promise?b:Promise.resolve(b):b instanceof Promise?b.then(i=>this.update(t,e,i,h,y,m,n)).catch(i=>{this.handleError(i,h,y,m,t,e,u,n)}):this.update(t,e,b,h,y,m,n)}catch(i){this.handleError(i,h,y,m,t,e,u,n)}}}}static update(e,t,i,n,o,s,a){if(e){var l=this.prevPath,u=new CustomEvent("cvRoute",{cancelable:!0,detail:{result:i,path:t,prev:l,view:e,routes:n,selected:o}});!1!==i&&(e.args.content instanceof r.View&&(e.args.content.pause(!0),e.args.content.remove()),document.dispatchEvent(u)&&(e.args.content=i),i instanceof r.View&&(i.pause(!1),i.update(s,a)));var c=new CustomEvent("cvRouteEnd",{cancelable:!0,detail:{result:i,path:t,prev:l,view:e,routes:n,selected:o}});document.dispatchEvent(c)}}static isOriginLimited({origin:e}){return"null"===e||"file://"===e}static queryOver(e={}){var t=new URLSearchParams(location.search),i={},r={};for(var n of t)r[n[0]]=n[1];return delete(i=Object.assign(i,r,e)).api,i}static queryToString(e={},t=!1){var i=[],r=e;for(var n in t||(r=this.queryOver(e)),r)""!==r[n]&&i.push(n+"="+encodeURIComponent(r[n]));return i.join("&")}static setQuery(e,t,i){var r=this.queryOver();r[e]=t,void 0===t&&delete r[e];var n=this.queryToString(r,!0);this.go(location.pathname+(n?"?"+n:"?"),i)}}t.Router=u,Object.defineProperty(u,"query",{configurable:!1,enumerable:!1,writable:!1,value:{}}),Object.defineProperty(u,"history",{configurable:!1,enumerable:!1,writable:!1,value:[]}),Object.defineProperty(u,"routeCount",{configurable:!1,enumerable:!1,writable:!0,value:0}),Object.defineProperty(u,"prevPath",{configurable:!1,enumerable:!1,writable:!0,value:null}),Object.defineProperty(u,"queryString",{configurable:!1,enumerable:!1,writable:!0,value:null}),Object.defineProperty(u,"InternalError",{configurable:!1,enumerable:!1,writable:!1,value:a}),Object.defineProperty(u,"NotFoundError",{configurable:!1,enumerable:!1,writable:!1,value:s})}()}),require.register("curvature/base/Routes.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Routes=void 0;var e={},r=i,n=!1,o=()=>{if(!n){try{Object.assign(e,r("Routes").Routes||{})}catch(e){!0===globalThis.devMode&&console.warn(e)}n=!0}};class s{static get(e){return o(),this.routes[e]}static dump(){return o(),this.routes}}t.Routes=s,Object.defineProperty(s,"routes",{configurable:!1,enumerable:!1,writable:!1,value:e})}()}),require.register("curvature/base/RuleSet.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.RuleSet=void 0;i("./Dom");var e=i("./Tag"),r=i("./View");class n{static add(e,t){return this.globalRules=this.globalRules||{},this.globalRules[e]=this.globalRules[e]||[],this.globalRules[e].push(t),this}static apply(e=document,t=null){for(var i in this.globalRules)for(var r in this.globalRules[i]){var n=this.globalRules[i][r],o=this.wrap(e,n,t),s=e.querySelectorAll(i);for(var a of s)o(a)}}add(e,t){return this.rules=this.rules||{},this.rules[e]=this.rules[e]||[],this.rules[e].push(t),this}apply(e=document,t=null){for(var i in n.apply(e,t),this.rules)for(var r in this.rules[i]){var o=this.rules[i][r],s=n.wrap(e,o,t),a=e.querySelectorAll(i);for(var l of a)s(l)}}purge(){if(this.rules)for(var[e,t]of Object.entries(this.rules))if(this.rules[e])for(var i in this.rules[e])delete this.rules[e][i]}static wait(e="DOMContentLoaded",t=document){var i=((e,t)=>()=>(t.removeEventListener(e,i),this.apply()))(e,t);t.addEventListener(e,i)}static wrap(t,i,n=null){var o=i;return(i instanceof r.View||i&&i.prototype&&i.prototype instanceof r.View)&&(o=(()=>i)),t=>{if(void 0===t.___cvApplied___&&Object.defineProperty(t,"___cvApplied___",{enumerable:!1,writable:!1,value:new WeakSet}),!t.___cvApplied___.has(i)){var s,a;n&&(s=a=n,n.viewList&&(a=n.viewList.parent));var l=new e.Tag(t,a,null,void 0,s),u=l.element.parentNode,c=l.element.nextSibling,h=o(l);if(!1!==h&&t.___cvApplied___.add(i),h instanceof HTMLElement&&(h=new e.Tag(h)),h instanceof e.Tag){if(!h.element.contains(l.element)){for(;l.element.firstChild;)h.element.appendChild(l.element.firstChild);l.remove()}c?u.insertBefore(h.element,c):u.appendChild(h.element)}h&&h.prototype&&h.prototype instanceof r.View&&(h=new h({},n)),h instanceof r.View&&(n&&(n.cleanup.push(()=>h.remove()),n.cleanup.push(n.args.bindTo((e,t,i)=>{i[t]=e,h.args[t]=e})),n.cleanup.push(h.args.bindTo((e,t,i,r)=>{i[t]=e,n.args[t]=e}))),l.clear(),h.render(l.element))}}}}t.RuleSet=n}()}),require.register("curvature/base/SetMap.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";function e(e,t,i){return(t=function(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}Object.defineProperty(t,"__esModule",{value:!0}),t.SetMap=void 0;t.SetMap=class{constructor(){e(this,"_map",new Map)}has(e){return this._map.has(e)}get(e){return this._map.get(e)}getOne(e){var t=this.get(e);for(var i of t)return i}add(e,t){var i=this._map.get(e);return i||this._map.set(e,i=new Set),i.add(t)}remove(e,t){var i=this._map.get(e);if(i){var r=i.delete(t);return i.size||this._map.delete(e),r}}values(){return new Set(...[...this._map.values()].map(e=>[...e.values()]))}}}()}),require.register("curvature/base/Tag.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Tag=void 0;var e=i("./Bindable"),r=Symbol("CurrentStyle"),n=Symbol("CurrentAttrs"),o=function(e){if(this.node)for(var t in e){var i=String(e[t]);this[r].has(t)&&this[r].get(t)===e[t]||Number.isNaN(e[t])||("-"===t[0]?this.node.style.setProperty(t,i):this.node.style[t]=i,void 0!==e[t]?this[r].set(t,e[t]):this[r].delete(t))}},s=function(e){return"function"==typeof this[e]?this[e]:this.node&&"function"==typeof this.node[e]?this[e]=((...t)=>this.node[e](...t)):"style"===e?this.proxy.style:this.node&&e in this.node?this.node[e]:this[e]};t.Tag=class{constructor(t,i,a,l,u){if("string"==typeof t){var c=document.createRange().createContextualFragment(t);t=c.firstChild}this.element=e.Bindable.makeBindable(t),this.node=this.element,this.parent=i,this.direct=u,this.ref=a,this.index=l,this.cleanup=[],this[e.Bindable.OnAllGet]=s.bind(this),this[r]=new Map,this[n]=new Map;var h=e.Bindable.make(o.bind(this));return Object.defineProperty(this,"style",{value:h}),this.proxy=e.Bindable.make(this),this.proxy.style.bindTo((e,t,i,n)=>{this[r].has(t)&&this[r].get(t)===e||(this.node.style[t]=e,n||void 0===e?this[r].delete(t):this[r].set(t,e))}),this.proxy.bindTo((e,i)=>{if("index"!==i)return i in t&&t[i]!==e&&(t[i]=e),!1}),this.proxy}attr(e){for(var t in e)this[n].has(t)&&void 0===e[t]?(this.node.removeAttribute(t),this[n].delete(t)):this[n].has(t)&&this[n].get(t)===e[t]||(null===e[t]?(this.node.setAttribute(t,""),this[n].set(t,"")):(this.node.setAttribute(t,e[t]),this[n].set(t,e[t])));return this}remove(){var t;for(this.node&&this.node.remove(),e.Bindable.clearBindings(this);t=this.cleanup.shift();)t();if(this.clear(),this.node){var i=new Event("cvDomDetached");this.node.dispatchEvent(i),this.node=this.element=this.ref=this.parent=void 0}}clear(){if(this.node)for(var e=new Event("cvDomDetached");this.node.firstChild;)this.node.firstChild.dispatchEvent(e),this.node.removeChild(this.node.firstChild)}pause(e=!0){}listen(e,t,i){var r=this.node;r.addEventListener(e,t,i);var n=()=>{r.removeEventListener(e,t,i)},o=()=>{n(),n=(()=>console.warn("Already removed!"))};return this.parent.onRemove(()=>o()),o}}}()}),require.register("curvature/base/Uuid.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";function e(e,t,i){return(t=function(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}Object.defineProperty(t,"__esModule",{value:!0}),t.Uuid=void 0;var i=("object"==typeof globalThis?globalThis:"object"==typeof window?window:"object"==typeof self?self:void 0).crypto;class r{constructor(t=null,n=4){if(e(this,"uuid",null),e(this,"version",4),t){if("string"!=typeof t&&!(t instanceof r)||!t.match(/[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}/))throw new Error(`Invalid input for Uuid: "${t}"`);this.version=n,this.uuid=t}else if(i&&"function"==typeof i.randomUUID)this.uuid=i.randomUUID();else{var o=i&&"function"==typeof i.randomUUID?()=>i.getRandomValues(new Uint8Array(1))[0]:()=>Math.trunc(256*Math.random());this.uuid=([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,e=>(e^o()&15>>e/4).toString(16))}Object.freeze(this)}[Symbol.toPrimitive](){return this.toString()}toString(){return this.uuid}toJson(){return{version:this.version,uuid:this.uuid}}}t.Uuid=r}()}),require.register("curvature/base/View.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.View=void 0;var e=i("./Bindable"),r=i("./ViewList"),n=i("./Router"),o=i("./Uuid"),s=i("./Dom"),a=i("./Tag"),l=i("./Bag"),u=i("./RuleSet"),c=i("./Mixin"),h=i("../mixin/EventTargetMixin"),f=Symbol("dontParse"),d=Symbol("expandBind"),p=Symbol("uuid");class v extends(c.Mixin.with(h.EventTargetMixin)){get _id(){return this[p]}static from(e,t={},i=null){var r=new this(t,i);return r.template=e,r}constructor(t={},i=null){super(t,i),this[h.EventTargetMixin.Parent]=i,Object.defineProperty(this,"args",{value:e.Bindable.make(t)}),Object.defineProperty(this,p,{value:this.constructor.uuid()}),Object.defineProperty(this,"nodesAttached",{value:new l.Bag((e,t,i)=>{})}),Object.defineProperty(this,"nodesDetached",{value:new l.Bag((e,t,i)=>{})}),Object.defineProperty(this,"_onRemove",{value:new l.Bag((e,t,i)=>{})}),Object.defineProperty(this,"cleanup",{value:[]}),Object.defineProperty(this,"parent",{value:i,writable:!0}),Object.defineProperty(this,"views",{value:new Map}),Object.defineProperty(this,"viewLists",{value:new Map}),Object.defineProperty(this,"withViews",{value:new Map}),Object.defineProperty(this,"tags",{value:e.Bindable.make({})}),Object.defineProperty(this,"nodes",{value:e.Bindable.make([])}),Object.defineProperty(this,"timeouts",{value:new Map}),Object.defineProperty(this,"intervals",{value:new Map}),Object.defineProperty(this,"frames",{value:[]}),Object.defineProperty(this,"ruleSet",{value:new u.RuleSet}),Object.defineProperty(this,"preRuleSet",{value:new u.RuleSet}),Object.defineProperty(this,"subBindings",{value:{}}),Object.defineProperty(this,"templates",{value:{}}),Object.defineProperty(this,"postMapping",{value:new Set}),Object.defineProperty(this,"eventCleanup",{value:[]}),Object.defineProperty(this,"unpauseCallbacks",{value:new Map}),Object.defineProperty(this,"interpolateRegex",{value:/(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g}),Object.defineProperty(this,"rendered",{value:new Promise((e,t)=>Object.defineProperty(this,"renderComplete",{value:e}))}),this.onRemove(()=>{this[h.EventTargetMixin.Parent]&&(this[h.EventTargetMixin.Parent]=null)}),this.controller=this,this.template="",this.firstNode=null,this.lastNode=null,this.viewList=null,this.mainView=null,this.preserve=!1,this.removed=!1,this.loaded=Promise.resolve(this)}static isView(){return v}onFrame(e){var t=!1,i=()=>{t=!0},r=i=>{this.removed||t||(this.paused||e(Date.now()),requestAnimationFrame(r))};return requestAnimationFrame(()=>r(Date.now())),this.frames.push(i),i}onNextFrame(e){return requestAnimationFrame(()=>e(Date.now()))}onIdle(e){return requestIdleCallback(()=>e(Date.now()))}onTimeout(e,t){var i={timeout:null,callback:null,time:e,fired:!1,created:(new Date).getTime(),paused:!1},r=()=>{t(),i.fired=!0,this.timeouts.delete(i.timeout)},n=setTimeout(r,e);return i.callback=r,i.timeout=n,this.timeouts.set(i.timeout,i),n}clearTimeout(e){if(this.timeouts.has(e)){var t=this.timeouts.get(e);clearTimeout(t.timeout),this.timeouts.delete(t.timeout)}}onInterval(e,t){var i=setInterval(t,e);return this.intervals.set(i,{timeout:i,callback:t,time:e,paused:!1}),i}clearInterval(e){if(this.intervals.has(e)){var t=this.intervals.get(e);clearTimeout(t.timeout),this.intervals.delete(t.timeout)}}pause(e){if(void 0===e&&(this.paused=!this.paused),this.paused=e,this.paused){for(var[t,i]of this.timeouts)i.fired?this.timeouts.delete(i.timeout):(clearTimeout(i.timeout),i.paused=!0,i.time=Math.max(0,i.time-(Date.now()-i.created)));for(var[r,n]of this.intervals)clearInterval(n.timeout),n.paused=!0}else{for(var[o,s]of this.timeouts)s.paused&&(s.fired?this.timeouts.delete(s.timeout):(s.timeout=setTimeout(s.callback,s.time),s.paused=!1));for(var[a,l]of this.intervals)l.paused&&(l.timeout=setInterval(l.callback,l.time),l.paused=!1);for(var[,u]of this.unpauseCallbacks)u();this.unpauseCallbacks.clear()}for(var[c,h]of this.viewLists)h.pause(!!e);for(var f in this.tags)if(Array.isArray(this.tags[f]))for(var d in this.tags[f])this.tags[f][d].pause(!!e);else this.tags[f].pause(!!e)}render(e=null,t=null,i=null){var{document:r}=globalThis.window;if(e instanceof v&&(e=e.firstNode.parentNode),t instanceof v&&(t=t.firstNode),this.firstNode)return this.reRender(e,t,i);this.dispatchEvent(new CustomEvent("render"));var n,o="object"==typeof this.template&&"function"==typeof this.template.cloneNode,s=o||v.templates.has(this.template);if(n=s?o?this.template.cloneNode(!0):v.templates.get(this.template).cloneNode(!0):r.createRange().createContextualFragment(this.template),s||o||v.templates.set(this.template,n.cloneNode(!0)),this.mainView||this.preRuleSet.apply(n,this),this.mapTags(n),this.mainView||this.ruleSet.apply(n,this),!0===globalThis.devMode?(this.firstNode=r.createComment(`Template ${this._id} Start`),this.lastNode=r.createComment(`Template ${this._id} End`)):(this.firstNode=r.createTextNode(""),this.lastNode=r.createTextNode("")),this.nodes.push(this.firstNode,...Array.from(n.childNodes),this.lastNode),this.postRender(e),this.dispatchEvent(new CustomEvent("rendered")),this.dispatchAttach()){if(e){t?(e.insertBefore(this.firstNode,t),e.insertBefore(this.lastNode,t)):(e.insertBefore(this.firstNode,null),e.insertBefore(this.lastNode,null)),e.insertBefore(n,this.lastNode);var a=e.getRootNode();if(a.isConnected)this.attached(a,e),this.dispatchAttached(a,e,i);else if(i){var l=t=>{var r=e.getRootNode();this.attached(r,e),this.dispatchAttached(r,e,i),i.removeEventListener("attached",l)};i.addEventListener("attached",l)}}return this.renderComplete(this.nodes),this.nodes}}dispatchAttach(){var{CustomEvent:e}=globalThis.window;return this.dispatchEvent(new e("attach",{cancelable:!0,target:this}))}dispatchAttached(e,t,i){var{CustomEvent:r}=globalThis.window;for(var n of(this.dispatchEvent(new r("attached",{detail:{view:i||this,node:t,root:e,mainView:this}})),this.dispatchDomAttached(i),this.nodesAttached.items()))n(e,t)}dispatchDomAttached(e){var{Node:t,CustomEvent:i}=globalThis.window;this.nodes.filter(e=>e.nodeType!==t.COMMENT_NODE).forEach(t=>{t.matches&&(t.dispatchEvent(new i("cvDomAttached",{target:t,detail:{view:e||this,mainView:this}})),s.Dom.mapTags(t,!1,(t,r)=>{t.matches&&t.dispatchEvent(new i("cvDomAttached",{target:t,detail:{view:e||this,mainView:this}}))}))})}reRender(e,t,i){var{CustomEvent:r}=globalThis.window;if(this.dispatchEvent(new r("reRender"),{cancelable:!0,target:this,view:i})){var n=new DocumentFragment;if(this.firstNode.isConnected){var o=this.nodesDetached.items();for(var s in o)o[s]()}if(n.append(...this.nodes),e){t?(e.insertBefore(this.firstNode,t),e.insertBefore(this.lastNode,t)):(e.insertBefore(this.firstNode,null),e.insertBefore(this.lastNode,null)),e.insertBefore(n,this.lastNode),this.dispatchEvent(new r("reRendered"),{cancelable:!0,target:this,view:i});var a=e.getRootNode();a.isConnected&&(this.attached(a,e),this.dispatchAttached(a,e))}return this.nodes}}mapTags(e){s.Dom.mapTags(e,!1,(e,t)=>{e[f]||(e=e.matches?(e=(e=(e=(e=(e=(e=(e=(e=(e=(e=(e=(e=(e=this.mapInterpolatableTag(e)).matches("[cv-template]")&&this.mapTemplateTag(e)||e).matches("[cv-slot]")&&this.mapSlotTag(e)||e).matches("[cv-prerender]")&&this.mapPrendererTag(e)||e).matches("[cv-link]")&&this.mapLinkTag(e)||e).matches("[cv-attr]")&&this.mapAttrTag(e)||e).matches("[cv-expand]")&&this.mapExpandableTag(e)||e).matches("[cv-ref]")&&this.mapRefTag(e)||e).matches("[cv-on]")&&this.mapOnTag(e)||e).matches("[cv-each]")&&this.mapEachTag(e)||e).matches("[cv-bind]")&&this.mapBindTag(e)||e).matches("[cv-with]")&&this.mapWithTag(e)||e).matches("[cv-if]")&&this.mapIfTag(e)||e).matches("[cv-view]")&&this.mapViewTag(e)||e:this.mapInterpolatableTag(e))!==t.currentNode&&(t.currentNode=e)}),this.postMapping.forEach(e=>e())}mapExpandableTag(t){var i=t[d];i&&(i(),t[d]=!1);var[r,n]=e.Bindable.resolve(this.args,t.getAttribute("cv-expand"),!0);return t.removeAttribute("cv-expand"),r[n]||(r[n]={}),r[n]=e.Bindable.make(r[n]),this.onRemove(t[d]=r[n].bindTo((e,i,r,n,o)=>{n||void 0===e?t.removeAttribute(i,e):null!==e?t.setAttribute(i,e):t.setAttribute(i,"")})),t}mapAttrTag(e){var t=this.compileAttrTag(e)(this);return e.replaceWith(t),t}compileAttrTag(t){var i=t.getAttribute("cv-attr").split(/[,;]/).map(e=>e.split(":"));return t.removeAttribute("cv-attr"),r=>{var n=t.cloneNode(!0),o=function(){var t=i[s][1]||i[s][0],[o,a]=e.Bindable.resolve(r.args,t,!0),l=i[s][0];r.onRemove(o.bindTo(a,(e,t,i,r)=>{r||void 0===e?n.removeAttribute(l,e):null!==e?n.setAttribute(l,e):n.setAttribute(l,"")}))};for(var s in i)o();return n}}mapInterpolatableTag(t){var i=this,r=this.interpolateRegex,{Node:n,document:o}=globalThis.window;if(t.nodeType===n.TEXT_NODE){var s=t.nodeValue;if(!this.interpolatable(s))return t;for(var l,u,c=0,d=function(){var r=l[2],u=!1,d=!1,p=r.split("|"),m=!1;if(p.length>1&&(m=i.stringTransformer(p.slice(1)),r=p[0]),"$$"===r.substr(0,2)&&(u=!0,d=!0,r=r.substr(2)),"$"===r.substr(0,1)&&(u=!0,r=r.substr(1)),"000"===r.substr(0,3))return expand=!0,r=r.substr(3),0;var y=s.substring(c,l.index);c=l.index+l[1].length;var b,g=o.createTextNode(y);g[f]=!0,t.parentNode.insertBefore(g,t),(b=u?o.createElement("div"):o.createTextNode(""))[f]=!0;var w=i.args,x=r;if(r.match(/\./)&&([w,x]=e.Bindable.resolve(i.args,r,!0)),t.parentNode.insertBefore(b,t),"object"!=typeof w)return 1;var T=(w=e.Bindable.make(w)).bindTo(x,(e,r,o)=>{if(o[r]!==e&&(o[r]instanceof v||o[r]instanceof n||o[r]instanceof a.Tag)&&(o[r].preserve||o[r].remove()),d&&!(e instanceof v)){var s=null!==e&&void 0!==e?e:"";(e=new v(i.args,i)).template=s}if(m&&(e=m(e)),e instanceof v){b.nodeValue="",e[h.EventTargetMixin.Parent]=i,e.render(t.parentNode,b,i);var l=()=>{e.preserve||e.remove()};i.onRemove(l),e.onRemove(()=>i._onRemove.remove(l))}else e instanceof n?(b.nodeValue="",t.parentNode.insertBefore(e,b),i.onRemove(()=>e.remove())):e instanceof a.Tag?(b.nodeValue="",e.node?(t.parentNode.insertBefore(e.node,b),i.onRemove(()=>e.remove())):e.remove()):(e instanceof Object&&e.__toString instanceof Function&&(e=e.__toString()),u?b.innerHTML=e:b.nodeValue=e);b[f]=!0});i.onRemove(T)};(l=r.exec(s))&&(0===(u=d())||1!==u););var p=s.substring(c),m=o.createTextNode(p);m[f]=!0,t.parentNode.insertBefore(m,t),t.nodeValue=""}else if(t.nodeType===n.ELEMENT_NODE)for(var y=function(){if(!i.interpolatable(t.attributes[b].value))return 1;for(var n,o=0,s=t.attributes[b].value,a=t.attributes[b],l={},u=[];n=r.exec(s);)u.push(s.substring(o,n.index)),l[n[2]]||(l[n[2]]=[]),l[n[2]].push(u.length),u.push(n[1]),o=n.index+n[1].length;u.push(s.substring(o));var c=function(){var r=i.args,n=h,o=h.split("|"),s=!1,c=h;o.length>1&&(s=i.stringTransformer(o.slice(1)),n=o[0]),n.match(/\./)&&([r,n]=e.Bindable.resolve(i.args,n,!0));l[c];i.onRemove(r.bindTo(n,(e,r,o,h)=>{for(var f in s&&(e=s(e)),l)for(var d in l[c])u[l[c][d]]=o[f],r===n&&(u[l[c][d]]=e);i.paused?i.unpauseCallbacks.set(a,()=>t.setAttribute(a.name,u.join(""))):t.setAttribute(a.name,u.join(""))}))};for(var h in l)c()},b=0;b<t.attributes.length;b++)y();return t}mapRefTag(e){var t=e.getAttribute("cv-ref"),[i,r=null,n=null]=t.split(":"),o=a.Tag;r&&(o=this.stringToClass(r)),e.removeAttribute("cv-ref"),Object.defineProperty(e,"___tag___",{enumerable:!1,writable:!0}),this.onRemove(()=>{e.___tag___=null,e.remove()});var s=this;this.viewList&&(s=this.viewList.parent);var l=new o(e,this,i,void 0,this);for(e.___tag___=l,this.tags[i]=l;s;){var u=this.args[n];if(void 0!==u?(s.tags[i]||(s.tags[i]=[]),s.tags[i][u]=l):s.tags[i]=l,!s.parent)break;s=s.parent}return e}mapBindTag(t){var i=t.getAttribute("cv-bind"),r=this.args,n=i,o=null;i.match(/\./)&&([r,n,o]=e.Bindable.resolve(this.args,i,!0)),r!==this.args&&(this.subBindings[i]=this.subBindings[i]||[],this.onRemove(this.args.bindTo(o,()=>{for(;this.subBindings.length;)this.subBindings.shift()()})));var l=!1;"$"===n.substr(0,1)&&(n=n.substr(1),l=!0);var u=!1,c=r.bindTo(n,(e,i,r,n,o)=>{if((o instanceof v||o instanceof Node||o instanceof a.Tag)&&o!==e&&o.remove(),["INPUT","SELECT","TEXTAREA"].includes(t.tagName)){var c=t.getAttribute("type");if(c&&"checkbox"===c.toLowerCase())t.checked=!!e;else if(c&&"radio"===c.toLowerCase())t.checked=e==t.value;else if("file"!==c)if("SELECT"===t.tagName){var d=()=>{for(var i=0;i<t.options.length;i++){t.options[i].value==e&&(t.selectedIndex=i)}};d(),this.nodesAttached.add(d)}else t.value=null==e?"":e;u&&t.dispatchEvent(new CustomEvent("cvAutoChanged",{bubbles:!0})),u=!0}else if(e instanceof v){for(var p of t.childNodes)p.remove();e[h.EventTargetMixin.Parent]=this,e.render(t,null,this)}else if(e instanceof Node)t.insert(e);else if(e instanceof a.Tag)t.append(e.node);else if(l){if(t.innerHTML!==e){if(e=String(e),t.innerHTML===e.substring(0,t.innerHTML.length))t.innerHTML+=e.substring(t.innerHTML.length);else{for(var m of t.childNodes)m.remove();t.innerHTML=e}s.Dom.mapTags(t,!1,e=>e[f]=!0)}}else if(t.textContent!==e){for(var y of t.childNodes)y.remove();t.textContent=e}});r!==this.args&&this.subBindings[i].push(c),this.onRemove(c);var d=t.getAttribute("type"),p=t.getAttribute("multiple"),m=i=>{if(i.target===t)if(d&&"checkbox"===d.toLowerCase())t.checked?r[n]=i.target.getAttribute("value"):r[n]=!1;else if(i.target.matches("[contenteditable=true]"))r[n]=i.target.innerHTML;else if("file"===d&&p){var o=Array.from(i.target.files),s=r[n]||e.Bindable.onDeck(r,n);if(s&&o.length){var a=function(e){if(o[e]!==s[e])return o[e].toJSON=(()=>({name:file[e].name,size:file[e].size,type:file[e].type,date:file[e].lastModified})),s[e]=o[e],1};for(var l in o)if(a(l))break}else r[n]=o}else if("file"===d&&!p&&i.target.files.length){var u=i.target.files.item(0);u.toJSON=(()=>({name:u.name,size:u.size,type:u.type,date:u.lastModified})),r[n]=u}else r[n]=i.target.value};return"file"===d||"radio"===d?t.addEventListener("change",m):(t.addEventListener("input",m),t.addEventListener("change",m),t.addEventListener("value-changed",m)),this.onRemove(()=>{"file"===d||"radio"===d?t.removeEventListener("change",m):(t.removeEventListener("input",m),t.removeEventListener("change",m),t.removeEventListener("value-changed",m))}),t.removeAttribute("cv-bind"),t}mapOnTag(e){return String(e.getAttribute("cv-on")).split(";").map(e=>e.split(":")).forEach(t=>{var i=(t=t.map(e=>e.trim())).length,r=String(t.shift()).trim(),n=String(t.shift()||r).trim(),o=String(t.shift()||"").trim(),s=[],a=/(\w+)(?:\(([$\w\s-'",]+)\))?/.exec(n);a&&(n=a[1].replace(/(^[\s\n]+|[\s\n]+$)/,""),a[2]&&(s=a[2].split(",").map(e=>e.trim()))),s.length||s.push("$event"),r&&1!==i||(r=n);var l=t=>{for(var i,r=this,o=function(){var e=r.controller;return"function"==typeof e[n]?(i=((...t)=>{e[n](...t)}),0):"function"==typeof r[n]?(i=((...e)=>{r[n](...e)}),0):r.parent?void(r=r.parent):0};r&&0!==o(););var a=s.map(i=>{var n;return Number(i)==i?i:"event"===i||"$event"===i?t:"$view"===i?r:"$controller"===i?controller:"$tag"===i?e:"$parent"===i?this.parent:"$subview"===i?this:i in this.args?this.args[i]:(n=/^['"]([\w-]+?)["']$/.exec(i))?n[1]:void 0});if("function"!=typeof i)throw new Error(`${n} is not defined on View object.`+"\nTag:\n"+`${e.outerHTML}`);i(...a)},u={};switch(o.includes("p")?u.passive=!0:o.includes("P")&&(u.passive=!1),o.includes("c")?u.capture=!0:o.includes("C")&&(u.capture=!1),o.includes("o")?u.once=!0:o.includes("O")&&(u.once=!1),r){case"_init":l();break;case"_attach":this.nodesAttached.add(l);break;case"_detach":this.nodesDetached.add(l);break;default:e.addEventListener(r,l,u),this.onRemove(()=>{e.removeEventListener(r,l,u)})}return[r,n,s]}),e.removeAttribute("cv-on"),e}mapLinkTag(e){var t=e.getAttribute("cv-link");e.setAttribute("href",t);var i=i=>{i.preventDefault(),"http"!==t.substring(0,4)&&"//"!==t.substring(0,2)?n.Router.go(e.getAttribute("href")):globalThis.open(e.getAttribute("href",t))};return e.addEventListener("click",i),this.onRemove(((e,t)=>()=>{e.removeEventListener("click",t),e=void 0,t=void 0})(e,i)),e.removeAttribute("cv-link"),e}mapPrendererTag(e){var t=e.getAttribute("cv-prerender"),i=globalThis.prerenderer||navigator.userAgent.match(/prerender/i);return e.removeAttribute("cv-prerender"),i&&(globalThis.prerenderer=globalThis.prerenderer||!0),("never"===t&&i||"only"===t&&!i)&&this.postMapping.add(()=>e.parentNode.removeChild(e)),e}mapWithTag(t){var i=this,r=t.getAttribute("cv-with"),n=t.getAttribute("cv-carry"),o=t.getAttribute("cv-view");t.removeAttribute("cv-with"),t.removeAttribute("cv-carry"),t.removeAttribute("cv-view");var s=o?this.stringToClass(o):v,a=new DocumentFragment;[...t.childNodes].forEach(e=>a.appendChild(e));var l=[];n&&(l=n.split(",").map(e=>e.trim()));var u=this.args.bindTo(r,(r,n,o,u)=>{for(this.withViews.has(t)&&this.withViews.delete(t);t.firstChild;)t.removeChild(t.firstChild);var c=new s({},this);this.onRemove((e=>()=>{e.remove()})(c)),c.template=a;var h=function(){var e=i.args.bindTo(l[f],(e,t)=>{c.args[t]=e});c.onRemove(e),i.onRemove(()=>{e(),c.remove()})};for(var f in l)h();var d=function(){if("object"!=typeof r)return 1;var t=(r=e.Bindable.make(r)).bindTo(p,(e,t,i,r)=>{r?t in c.args&&delete c.args[t]:c.args[t]=e});c.args.bindTo(p,(e,t,i,n)=>{n?t in r&&delete r[t]:r[t]=e});i.onRemove(()=>{t(),r.isBound()||e.Bindable.clearBindings(r),c.remove()}),c.onRemove(()=>{t(),r.isBound()||e.Bindable.clearBindings(r)})};for(var p in r)d();c.render(t,null,this),this.withViews.set(t,c)});return this.onRemove(()=>{this.withViews.delete(t),u()}),t}mapViewTag(e){var t=e.getAttribute("cv-view");e.removeAttribute("cv-view");var i=new DocumentFragment;[...e.childNodes].forEach(e=>i.appendChild(e));var r=t.split(":"),n=r.shift(),o=new(r.length?this.stringToClass(r[0]):v)(this.args,this);return this.views.set(e,o),this.views.set(n,o),this.onRemove(()=>{o.remove(),this.views.delete(e),this.views.delete(n)}),o.template=i,o.render(e,null,this),e}mapEachTag(t){var i=t.getAttribute("cv-each"),n=t.getAttribute("cv-view");t.removeAttribute("cv-each"),t.removeAttribute("cv-view");var o=n?this.stringToClass(n):v,s=new DocumentFragment;[...t.childNodes].forEach(e=>s.appendChild(e));var[a,u,c]=i.split(":"),h=this.args,f=a;a.match(/\./)&&([h,f]=e.Bindable.resolve(this.args,a,!0));var d=h.bindTo(f,(e,i,n,a,h)=>{e instanceof l.Bag&&(e=e.list),this.viewLists.has(t)&&this.viewLists.get(t).remove();var f=new r.ViewList(s,u,e,this,c,o),d=()=>f.remove();this.onRemove(d),f.onRemove(()=>this._onRemove.remove(d));var p=this.args.bindTo((e,t,i,r)=>{"_id"!==t&&(r?t in f.subArgs&&delete f.subArgs[t]:f.subArgs[t]=e)}),v=f.args.bindTo((e,t,i,r,n)=>{"_id"!==t&&"value"!==t&&"___"!==String(t).substring(0,3)&&(r?delete this.args[t]:t in this.args&&(this.args[t]=e))});for(f.onRemove(p),f.onRemove(v),this.onRemove(p),this.onRemove(v);t.firstChild;)t.removeChild(t.firstChild);this.viewLists.set(t,f),f.render(t,null,this),"SELECT"===t.tagName&&f.reRender()});return this.onRemove(d),t}mapIfTag(t){var i=t,r=i.getAttribute("cv-view"),n=i.getAttribute("cv-if"),o=i.getAttribute("cv-is"),a=!1,u=!1;i.removeAttribute("cv-view"),i.removeAttribute("cv-if"),i.removeAttribute("cv-is");var c=r?this.stringToClass(r):v;"!"===n.substr(0,1)&&(n=n.substr(1),a=!0),"?"===n.substr(0,1)&&(n=n.substr(1),u=!0);var h=new DocumentFragment;[...i.childNodes].forEach(e=>h.appendChild(e));var f=this,d=new DocumentFragment,p=new c(this.args,f);p.tags.bindTo((e,t)=>this.tags[t]=e,{removeWith:this}),p.template=h;var m=f.args,y=n;n.match(/\./)&&([m,y]=e.Bindable.resolve(f.args,n,!0)),p.render(d,null,this);var b=m.bindTo(y,(e,i)=>{var r=e;u&&(e=null!==e&&void 0!==e),e instanceof l.Bag&&(e=e.list),Array.isArray(e)&&(e=!!e.length),null!==o&&(e=r==o),a&&(e=!e),e?(t.appendChild(d),[...d.childNodes].forEach(e=>s.Dom.mapTags(e,!1,(e,t)=>{e.matches&&e.dispatchEvent(new CustomEvent("cvDomAttached",{target:e,detail:{view:p||this,mainView:this}}))}))):(p.nodes.forEach(e=>d.appendChild(e)),s.Dom.mapTags(d,!1,(e,t)=>{e.matches&&new CustomEvent("cvDomDetached",{target:e,detail:{view:p||this,mainView:this}})}))},{children:Array.isArray(m[y])});f.onRemove(b);return f.onRemove(()=>{b(),f._onRemove.remove(b)}),this.onRemove(()=>{p.remove(),f!==this&&f.remove()}),t}mapTemplateTag(e){var t=e.getAttribute("cv-template");e.removeAttribute("cv-template");var i=e.innerHTML;return v.templates.has(i)||v.templates.set(i,document.createRange().createContextualFragment(e.innerHTML)),this.templates[t]=v.templates.get(i),this.postMapping.add(()=>e.remove()),e}mapSlotTag(e){var t=e.getAttribute("cv-slot"),i=this.templates[t];if(!i){for(var r=this;r&&!(i=r.templates[t]);)r=r.parent;if(!i)return void console.error(`Template ${t} not found.`)}for(e.removeAttribute("cv-slot");e.firstChild;)e.firstChild.remove();return"string"==typeof i&&(v.templates.has(i)||v.templates.set(i,document.createRange().createContextualFragment(i)),i=v.templates.get(i)),e.appendChild(i.cloneNode(!0)),e}postRender(e){}attached(e){}interpolatable(e){return!!String(e).match(this.interpolateRegex)}static uuid(){return new o.Uuid}remove(e=!1){if(this.dispatchEvent(new CustomEvent("remove",{detail:{view:this},cancelable:!0}))){var t=()=>{for(var e in this.tags)Array.isArray(this.tags[e])?(this.tags[e]&&this.tags[e].forEach(e=>e.remove()),this.tags[e].splice(0)):(this.tags[e]&&this.tags[e].remove(),this.tags[e]=void 0);for(var t in this.nodes)this.nodes[t]&&this.nodes[t].dispatchEvent(new Event("cvDomDetached")),this.nodes[t]&&this.nodes[t].remove(),this.nodes[t]=void 0;this.nodes.splice(0),this.firstNode=this.lastNode=void 0};e?t():requestAnimationFrame(t);var i=this._onRemove.items();for(var r of i)r(),this._onRemove.remove(r);for(var n of this.cleanup)n&&n();for(var[o,s]of(this.cleanup.length=0,this.viewLists))s.remove();for(var[a,l]of(this.viewLists.clear(),this.timeouts))clearTimeout(l.timeout),this.timeouts.delete(l.timeout);for(var u of this.intervals)clearInterval(u);for(var c of(this.intervals.length=0,this.frames))c();this.frames.length=0,this.preRuleSet.purge(),this.ruleSet.purge(),this.removed=!0,this.dispatchEvent(new CustomEvent("removed",{detail:{view:this},cancelable:!0}))}}findTag(e){for(var t in this.nodes){var i;if(this.nodes[t].querySelector){if(this.nodes[t].matches(e))return new a.Tag(this.nodes[t],this,void 0,void 0,this);if(i=this.nodes[t].querySelector(e))return new a.Tag(i,this,void 0,void 0,this)}}}findTags(e){var t=this.nodes.filter(t=>t.matches&&t.matches(e)),i=this.nodes.filter(e=>e.querySelectorAll).map(t=>[...t.querySelectorAll(e)]).flat().map(e=>new a.Tag(e,this,void 0,void 0,this))||[];return t.concat(i)}onRemove(e){e instanceof Event||this._onRemove.add(e)}update(){}beforeUpdate(e){}afterUpdate(e){}stringTransformer(e){return t=>{for(var i in e){for(var r=this,n=e[i];r&&!r[n];)r=r.parent;if(!r)return;t=r[e[i]](t)}return t}}stringToClass(e){if(v.refClasses.has(e))return v.refClasses.get(e);var t=e.split("/"),r=t[t.length-1],n=i(e);return v.refClasses.set(e,n[r]),n[r]}preventParsing(e){e[f]=!0}toString(){return this.nodes.map(e=>e.outerHTML).join(" ")}listen(e,t,i,r){if("string"==typeof e&&(r=i,i=t,t=e,e=this),e instanceof v)return this.listen(e.nodes,t,i,r);if(Array.isArray(e))return e.map(e=>this.listen(e,t,i,r));if(e instanceof a.Tag)return this.listen(e.element,t,i,r);e.addEventListener(t,i,r);var n=()=>e.removeEventListener(t,i,r),o=()=>{n(),n=(()=>{})};return this.onRemove(()=>o()),o}detach(){for(var e in this.nodes)this.nodes[e].remove();return this.nodes}}t.View=v,Object.defineProperty(v,"templates",{value:new Map}),Object.defineProperty(v,"refClasses",{value:new Map})}()}),require.register("curvature/base/ViewList.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.ViewList=void 0;var e=i("./Bindable"),r=i("./SetMap"),n=i("./Bag");t.ViewList=class{constructor(t,i,r,o,s=null,a=null){this.removed=!1,this.args=e.Bindable.makeBindable(Object.create(null)),this.args.value=e.Bindable.makeBindable(r||Object.create(null)),this.subArgs=e.Bindable.makeBindable(Object.create(null)),this.views=[],this.cleanup=[],this.viewClass=a,this._onRemove=new n.Bag,this.template=t,this.subProperty=i,this.keyProperty=s,this.tag=null,this.downDebind=[],this.upDebind=[],this.paused=!1,this.parent=o,this.viewCount=0,this.rendered=new Promise((e,t)=>{Object.defineProperty(this,"renderComplete",{configurable:!1,writable:!0,value:e})}),this.willReRender=!1,this.args.___before((e,t,i,r,n)=>{"bindTo"!=t&&(this.paused=!0)}),this.args.___after((e,t,i,r,n)=>{"bindTo"!=t&&(this.paused=i.length>1,this.reRender())});var l=this.args.value.bindTo((e,t,i,r)=>{if(!this.paused){var n=t;if("symbol"!=typeof t)if(isNaN(t)&&(n="_"+t),r)for(var o in this.views[n]&&this.views[n].remove(!0),delete this.views[n],this.views)this.views[o]&&(isNaN(o)?this.views[o].args[this.keyProperty]=o.substr(1):this.views[o].args[this.keyProperty]=o);else this.views[n]?this.views[n]&&this.views[n].args&&(this.views[n].args[this.keyProperty]=t,this.views[n].args[this.subProperty]=e):this.viewCount?!1===this.willReRender&&(this.willReRender=requestAnimationFrame(()=>{this.willReRender=!1,this.reRender()})):this.reRender()}},{wait:0});this._onRemove.add(l),Object.preventExtensions(this)}render(e){var t=this,i=[],r=function(r){r.viewList=t,r.render(e,null,t.parent),i.push(r.rendered.then(()=>r))};for(var n of this.views)r(n);this.tag=e,Promise.all(i).then(e=>this.renderComplete(e)),this.parent.dispatchEvent(new CustomEvent("listRendered",{detail:{detail:{key:this.subProperty,value:this.args.value}}}))}reRender(){var e=this;if(!this.paused&&this.tag){var t=[],i=new r.SetMap;for(var n in this.views){var o=this.views[n];if(void 0!==o){var s=o.args[this.subProperty];i.add(s,o),t[n]=o}else t[n]=o}var a=[],l=new Set;this.downDebind.length&&this.downDebind.forEach(e=>e&&e()),this.upDebind.length&&this.upDebind.forEach(e=>e&&e()),this.upDebind.length=0,this.downDebind.length=0;var u=1/0,c=1/0,h=function(){var t=!1,r=f;if(isNaN(r)?r="_"+f:String(r).length&&(r=Number(r)),void 0!==e.args.value[f]&&i.has(e.args.value[f])){var n=i.getOne(e.args.value[f]);n&&(n.args[e.keyProperty]=f,a[r]=n,l.add(n),t=!0,isNaN(r)||(u=Math.min(u,r),r>0&&(c=Math.min(c,r))),i.remove(e.args.value[f],n))}if(!t){var o=Object.create(null),s=a[r]=new e.viewClass(o,e.parent);isNaN(r)||(u=Math.min(u,r),r>0&&(c=Math.min(c,r))),a[r].template=e.template,a[r].viewList=e,a[r].args[e.keyProperty]=f,a[r].args[e.subProperty]=e.args.value[f],e.upDebind[r]=o.bindTo(e.subProperty,(t,i,r,n)=>{var s=o[e.keyProperty];n?delete e.args.value[s]:e.args.value[s]=t}),e.downDebind[r]=e.subArgs.bindTo((e,t,i,r)=>{r?delete o[t]:o[t]=e});var h=()=>{e.upDebind.filter(e=>e).forEach(e=>e()),e.upDebind.length=0},d=()=>{e.downDebind.filter(e=>e).forEach(e=>e()),e.downDebind.length=0};s.onRemove(()=>{e._onRemove.remove(h),e._onRemove.remove(d),e.upDebind[r]&&e.upDebind[r](),e.downDebind[r]&&e.downDebind[r](),delete e.upDebind[r],delete e.downDebind[r]}),e._onRemove.add(h),e._onRemove.add(d),o[e.subProperty]=e.args.value[f]}};for(var f in this.args.value)h();for(var d in t)t[d]&&!l.has(t[d])&&t[d].remove(!0);if(Array.isArray(this.args.value)){var p=0===u&&void 0!==a[1]&&a.length>1||c===1/0?u:c,v=(e=0)=>{for(var t=a.length-e-1;t>p&&void 0===a[t];)t--;return t<p?Promise.resolve():a[t]===this.views[t]?a[t]&&!a[t].firstNode?(a[t].render(this.tag,a[t+1],this.parent),a[t].rendered.then(()=>v(Number(e)+1))):0===e||e%500?v(Number(e)+1):new Promise(t=>requestAnimationFrame(()=>t(v(Number(e)+1)))):(a[t].render(this.tag,a[t+1],this.parent),this.views.splice(t,0,a[t]),a[t].rendered.then(()=>v(e+1)))};this.rendered=v()}else{var m=[],y=Object.assign(Object.create(null),a),b=e=>parseInt(e)===e-0,g=Object.keys(a).sort((e,t)=>b(e)&&b(t)?Math.sign(e-t):b(e)||b(t)?!b(e)&&b(t)?-1:b(e)&&!b(t)?1:void 0:0),w=function(t){if(delete y[t],a[t].firstNode&&a[t]===e.views[t])return 1;a[t].render(e.tag,null,e.parent),m.push(a[t].rendered.then(()=>a[t]))};for(var x of g)w(x);for(var T in y)delete this.args.views[T],y.remove(!0);this.rendered=Promise.all(m)}for(var _ in a)isNaN(_)?a[_].args[this.keyProperty]=_.substr(1):a[_].args[this.keyProperty]=_;return this.views=Array.isArray(this.args.value)?[...a]:a,this.viewCount=a.length,l.clear(),this.willReRender=!1,this.rendered.then(()=>{this.parent.dispatchEvent(new CustomEvent("listRendered",{detail:{detail:{key:this.subProperty,value:this.args.value,tag:this.tag}}})),this.tag.dispatchEvent(new CustomEvent("listRendered",{detail:{detail:{key:this.subProperty,value:this.args.value,tag:this.tag}}}))}),this.rendered}}pause(e=!0){for(var t in this.views)this.views[t].pause(e)}onRemove(e){this._onRemove.add(e)}remove(){for(var t in this.views)this.views[t]&&this.views[t].remove(!0);var i=this._onRemove.items();for(var r in i)this._onRemove.remove(i[r]),i[r]();for(;this.cleanup.length;)this.cleanup.pop()();for(this.views=[];this.tag&&this.tag.firstChild;)this.tag.removeChild(this.tag.firstChild);this.subArgs&&e.Bindable.clearBindings(this.subArgs),e.Bindable.clearBindings(this.args),this.removed=!0}}}()}),require.register("curvature/input/Keyboard.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.Keyboard=void 0;var e=i("../base/Bindable");t.Keyboard=class{static get(){return this.instance=this.instance||e.Bindable.make(new this)}constructor(){this.maxDecay=120,this.comboTime=500,this.listening=!1,this.focusElement=document.body,this[e.Bindable.NoGetters]=!0,Object.defineProperty(this,"combo",{value:e.Bindable.make([])}),Object.defineProperty(this,"whichs",{value:e.Bindable.make({})}),Object.defineProperty(this,"codes",{value:e.Bindable.make({})}),Object.defineProperty(this,"keys",{value:e.Bindable.make({})}),Object.defineProperty(this,"pressedWhich",{value:e.Bindable.make({})}),Object.defineProperty(this,"pressedCode",{value:e.Bindable.make({})}),Object.defineProperty(this,"pressedKey",{value:e.Bindable.make({})}),Object.defineProperty(this,"releasedWhich",{value:e.Bindable.make({})}),Object.defineProperty(this,"releasedCode",{value:e.Bindable.make({})}),Object.defineProperty(this,"releasedKey",{value:e.Bindable.make({})}),Object.defineProperty(this,"keyRefs",{value:e.Bindable.make({})}),document.addEventListener("keyup",e=>{this.listening&&(this.keys[e.key]>0||!this.focusElement||document.activeElement===this.focusElement||this.focusElement.contains(document.activeElement)&&!document.activeElement.matches("input,textarea"))&&(e.preventDefault(),this.releasedWhich[e.which]=Date.now(),this.releasedCode[e.code]=Date.now(),this.releasedKey[e.key]=Date.now(),this.whichs[e.which]=-1,this.codes[e.code]=-1,this.keys[e.key]=-1)}),document.addEventListener("keydown",e=>{this.listening&&(!this.focusElement||document.activeElement===this.focusElement||this.focusElement.contains(document.activeElement)&&!document.activeElement.matches("input,textarea"))&&(e.preventDefault(),e.repeat||(this.combo.push(e.code),clearTimeout(this.comboTimer),this.comboTimer=setTimeout(()=>this.combo.splice(0),this.comboTime),this.pressedWhich[e.which]=Date.now(),this.pressedCode[e.code]=Date.now(),this.pressedKey[e.key]=Date.now(),this.keys[e.key]>0||(this.whichs[e.which]=1,this.codes[e.code]=1,this.keys[e.key]=1)))});var t=e=>{for(var t in this.keys)this.keys[t]<0||(this.releasedKey[t]=Date.now(),this.keys[t]=-1);for(var i in this.codes)this.codes[i]<0||(this.releasedCode[i]=Date.now(),this.codes[i]=-1);for(var r in this.whichs)this.whichs[r]<0||(this.releasedWhich[r]=Date.now(),this.whichs[r]=-1)};window.addEventListener("blur",t),window.addEventListener("visibilitychange",()=>{"visible"!==document.visibilityState&&t()})}getKeyRef(t){return this.keyRefs[t]=this.keyRefs[t]||e.Bindable.make({})}getKeyTime(e){var t=this.releasedKey[e],i=this.pressedKey[e];return i?!t||t<i?Date.now()-i:-1*(Date.now()-t):0}getCodeTime(e){var t=this.releasedCode[e],i=this.pressedCode[e];return i?!t||t<i?Date.now()-i:-1*(Date.now()-t):0}getWhichTime(e){var t=this.releasedWhich[e],i=this.pressedWhich[e];return i?!t||t<i?Date.now()-i:-1*(Date.now()-t):0}getKey(e){return this.keys[e]?this.keys[e]:0}getKeyCode(e){return this.codes[e]?this.codes[e]:0}reset(){for(var e in this.keys)delete this.keys[e];for(var e in this.codes)delete this.codes[e];for(var e in this.whichs)delete this.whichs[e]}update(){for(var e in this.keys)this.keys[e]>0?this.keys[e]++:this.keys[e]>-this.maxDecay?this.keys[e]--:delete this.keys[e];for(var e in this.codes){var t=this.releasedCode[e],i=this.pressedCode[e],r=this.getKeyRef(e);if(this.codes[e]>0){if(r.frames=this.codes[e]++,r.time=i?Date.now()-i:0,r.down=!0,!t||t<i)return;return-1*(Date.now()-t)}this.codes[e]>-this.maxDecay?(r.frames=this.codes[e]--,r.time=t-Date.now(),r.down=!1):(r.frames=0,r.time=0,r.down=!1,delete this.codes[e])}for(var e in this.whichs)this.whichs[e]>0?this.whichs[e]++:this.whichs[e]>-this.maxDecay?this.whichs[e]--:delete this.whichs[e]}}}()}),require.register("curvature/mixin/EventTargetMixin.js",function(t,i,r){i=e(i,{},"curvature"),function(){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.EventTargetMixin=void 0;var e=i("../base/Mixin"),r=Symbol("EventTargetParent"),n=Symbol("CallHandler"),o=Symbol("Capture"),s=Symbol("Bubble"),a=(Symbol("Target"),Symbol("HandlersBubble")),l=Symbol("HandlersCapture"),u=t.EventTargetMixin={[e.Mixin.Constructor](){this[l]=new Map,this[a]=new Map},dispatchEvent(...e){var t=e[0];"string"==typeof t&&(t=new CustomEvent(t),e[0]=t),t.cvPath=t.cvPath||[],t.cvTarget=t.cvCurrentTarget=this;var i=this[o](...e);if(t.cancelable&&(!1===i||t.cancelBubble))return i;var u=[];if(this[l].has(t.type)){var c=this[l].get(t.type),h=[...c];h.forEach(e=>e.push(c)),u.push(...h)}if(this[a].has(t.type)){var f=this[a].get(t.type),d=[...f];d.forEach(e=>e.push(f)),u.push(...d)}for(var[p,v,m]of(u.push([()=>this[n](...e),{},null]),u))if(v.once&&m.delete(p),i=p(t),t.cancelable&&!1===i)break;return t.cancelable&&(t.cancelBubble||!1===i)||this[s](...e),this[r]||Object.freeze(t.cvPath),t.returnValue},addEventListener(e,t,i={}){!0===i&&(i={useCapture:!0});var r=a;i.useCapture&&(r=l),this[r].has(e)||this[r].set(e,new Map),this[r].get(e).set(t,i),i.signal&&i.signal.addEventListener("abort",r=>this.removeEventListener(e,t,i),{once:!0})},removeEventListener(e,t,i={}){!0===i&&(i={useCapture:!0});var r=a;i.useCapture&&(r=l),this[r].has(e)&&this[r].get(e).delete(t)},[o](...e){var t=e[0];if(t.cvPath.push(this),this[r]){var i=this[r][o](...e);if((!t.cancelable||!1!==i&&!t.cancelBubble)&&this[r][l].has(t.type)){t.cvCurrentTarget=this[r];var{type:n}=t,s=this[r][l].get(n);for(var[a,u]of s)if(u.once&&s.delete(a),i=a(t),t.cancelable&&(!1===i||t.cancelBubble))break;return i}}},[s](...e){var t=e[0];if(t.bubbles&&this[r]&&!t.cancelBubble){if(!this[r][a].has(t.type))return this[r][s](...e);var i;t.cvCurrentTarget=this[r];var{type:o}=t,l=this[r][a].get(t.type);for(var[u,c]of l)if(c.once&&l.delete(u),i=u(t),t.cancelable&&!1===i)return i;return i=this[r][n](...e),t.cancelable&&(!1===i||t.cancelBubble)?i:this[r][s](...e)}},[n](...e){var t=e[0];if(!t.defaultPrevented){var i=`on${t.type[0].toUpperCase()+t.type.slice(1)}`;return"function"==typeof this[i]?this[i](t):void 0}}};Object.defineProperty(u,"Parent",{value:r})}()}),require.register("Config.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Config=void 0,(e.Config=function(e,t,i){return t&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}(function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)})).title="tigl"}),require.register("gl2d/Gl2d.js",function(e,t,i){"use strict";function r(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,a(r.key),r)}}function o(e,t,i){return t&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}function s(e,t,i){return(t=a(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function a(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Gl2d=void 0;let l=function(){return o(function e(t){let i=t.gl,n=t.vertexShader,o=t.fragmentShader,a=t.uniforms,l=t.attributes;r(this,e),s(this,"context",null),s(this,"program",null),s(this,"attributes",{}),s(this,"buffers",{}),s(this,"uniforms",{}),this.context=i,this.program=i.createProgram(),i.attachShader(this.program,n),i.attachShader(this.program,o),i.linkProgram(this.program),i.detachShader(this.program,n),i.detachShader(this.program,o),i.deleteShader(n),i.deleteShader(o),i.getProgramParameter(this.program,i.LINK_STATUS)||(console.error(i.getProgramInfoLog(this.program)),i.deleteProgram(this.program));for(const e of a){const t=i.getUniformLocation(this.program,e);null!==t?this.uniforms[e]=t:console.warn(`Uniform ${e} not found.`)}for(const e of l){const t=i.getAttribLocation(this.program,e);if(null===t){console.warn(`Attribute ${e} not found.`);continue}const r=i.createBuffer();i.bindBuffer(i.ARRAY_BUFFER,r),i.enableVertexAttribArray(t),i.vertexAttribPointer(t,2,i.FLOAT,!1,0,0),this.attributes[e]=t,this.buffers[e]=r}},[{key:"use",value:function(){this.context.useProgram(this.program)}},{key:"uniformF",value:function(e){const t=this.context;for(var i=arguments.length,r=new Array(i>1?i-1:0),n=1;n<i;n++)r[n-1]=arguments[n];t[`uniform${r.length}f`](this.uniforms[e],...r)}},{key:"uniformI",value:function(e){const t=this.context;for(var i=arguments.length,r=new Array(i>1?i-1:0),n=1;n<i;n++)r[n-1]=arguments[n];t[`uniform${r.length}i`](this.uniforms[e],...r)}}])}();e.Gl2d=function(){return o(function e(t){r(this,e),this.element=t||document.createElement("canvas"),this.context=this.element.getContext("webgl")},[{key:"createShader",value:function(e){let i=null;switch(e.substring(e.lastIndexOf(".")+1).toUpperCase()){case"VERT":i=this.context.VERTEX_SHADER;break;case"FRAG":i=this.context.FRAGMENT_SHADER}const r=this.context.createShader(i),n=t(e);if(this.context.shaderSource(r,n),this.context.compileShader(r),this.context.getShaderParameter(r,this.context.COMPILE_STATUS))return r;console.error(this.context.getShaderInfoLog(r)),this.context.deleteShader(r)}},{key:"createProgram",value:function(e){let t=e.vertexShader,i=e.fragmentShader,r=e.uniforms,n=e.attributes;const o=this.context;return new l({gl:o,vertexShader:t,fragmentShader:i,uniforms:r,attributes:n})}},{key:"createTexture",value:function(e,t){const i=this.context,r=i.createTexture();return i.bindTexture(i.TEXTURE_2D,r),i.texImage2D(i.TEXTURE_2D,0,i.RGBA,e,t,0,i.RGBA,i.UNSIGNED_BYTE,null),i.texParameteri(i.TEXTURE_2D,i.TEXTURE_WRAP_S,i.CLAMP_TO_EDGE),i.texParameteri(i.TEXTURE_2D,i.TEXTURE_WRAP_T,i.CLAMP_TO_EDGE),i.texParameteri(i.TEXTURE_2D,i.TEXTURE_MIN_FILTER,i.NEAREST),i.texParameteri(i.TEXTURE_2D,i.TEXTURE_MAG_FILTER,i.NEAREST),r}},{key:"createFramebuffer",value:function(e){const t=this.context,i=t.createFramebuffer();return t.bindFramebuffer(t.FRAMEBUFFER,i),t.framebufferTexture2D(t.FRAMEBUFFER,t.COLOR_ATTACHMENT0,t.TEXTURE_2D,e,0),i}},{key:"enableBlending",value:function(){const e=this.context;e.blendFunc(e.SRC_ALPHA,e.ONE_MINUS_SRC_ALPHA),e.enable(e.BLEND)}}])}()}),require.register("home/View.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.View=void 0;var r=t("curvature/base/View"),n=t("../sprite/Camera"),o=t("../ui/OnScreenJoyPad"),s=t("curvature/input/Keyboard"),a=t("../session/Session");t("Config");function l(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,u(r.key),r)}}function u(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function c(e,t,i){return t=h(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],h(e).constructor):t.apply(e,i))}function h(e){return(h=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function f(e,t){return(f=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}const d={};d.onScreenJoyPad=new o.OnScreenJoyPad,d.keyboard=s.Keyboard.get();e.View=function(e){function i(e){var r;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,i),window.smProfiling=!0,(r=c(this,i,[e])).template=t("./view.tmp"),r.routes=[],r.keyboard=d.keyboard,r.speed=24,r.maxSpeed=r.speed,r.args.joypad=d.onScreenJoyPad,r.args.fps=0,r.args.sps=0,r.args.camX=0,r.args.camY=0,r.args.showEditor=!1,r.keyboard.listening=!0,r.keyboard.keys.bindTo("Home",(e,t,i,n)=>{!r.session||e<0||e%5==0&&(r.session.frameLock++,r.args.frameLock=r.session.frameLock)}),r.keyboard.keys.bindTo("End",(e,t,i,n)=>{!r.session||e<0||e%5==0&&(r.session.frameLock--,r.session.frameLock<0&&(r.session.frameLock=0),r.args.frameLock=r.session.frameLock)}),r.keyboard.keys.bindTo("PageUp",(e,t,i,n)=>{!r.session||e<0||(e%5==0&&r.session.simulationLock++,r.args.simulationLock=r.session.simulationLock)}),r.keyboard.keys.bindTo("PageDown",(e,t,i,n)=>{!r.session||e<0||(e%5==0&&(r.session.simulationLock--,r.session.simulationLock<0&&(r.session.simulationLock=0)),r.args.simulationLock=r.session.simulationLock)}),r.keyboard.keys.bindTo("=",(e,t,i,n)=>{e>0&&r.zoom(1)}),r.keyboard.keys.bindTo("+",(e,t,i,n)=>{e>0&&r.zoom(1)}),r.keyboard.keys.bindTo("-",(e,t,i,n)=>{e>0&&r.zoom(-1)}),r}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&f(e,t)}(i,r.View),o=i,(s=[{key:"onRendered",value:function(){this.session=new a.Session({onScreenJoyPad:this.args.joypad,keyboard:this.keyboard,element:this.tags.canvas.element,world:"/world.json"}),this.args.frameLock=this.session.frameLock,this.args.simulationLock=this.session.simulationLock,window.addEventListener("resize",()=>this.resize());let e=0,t=0;const i=e=>{document.hidden||this.session.simulate(e)&&(this.args.sps=(1e3/(e-t)).toFixed(3),t=e)},r=t=>{document.hidden?window.requestAnimationFrame(r):(window.requestAnimationFrame(r),this.session.draw(t)&&(this.args.fps=(1e3/(t-e)).toFixed(3),this.args.camX=Number(n.Camera.x).toFixed(3),this.args.camY=Number(n.Camera.y).toFixed(3),e=t,this.session.spriteBoard.following&&(this.args.posX=Number(this.session.spriteBoard.following.sprite.x).toFixed(3),this.args.posY=Number(this.session.spriteBoard.following.sprite.y).toFixed(3))))};this.session.spriteBoard.zoomLevel=document.body.clientHeight/1280*4,this.resize(),setInterval(()=>i(performance.now()),0),r(performance.now())}},{key:"resize",value:function(e,t){const i=this.session.spriteBoard.screenScale;this.session.spriteBoard.screenScale=document.body.clientHeight/1280,this.session.spriteBoard.zoomLevel*=this.session.spriteBoard.screenScale/i,this.args.width=this.tags.canvas.element.width=e||document.body.clientWidth,this.args.height=this.tags.canvas.element.height=t||document.body.clientHeight,this.args.rwidth=Math.trunc((e||document.body.clientWidth)/this.session.spriteBoard.zoomLevel),this.args.rheight=Math.trunc((t||document.body.clientHeight)/this.session.spriteBoard.zoomLevel),this.session.spriteBoard.resize()}},{key:"scroll",value:function(e){let t=e.deltaY>0?-1:e.deltaY<0?1:0;this.zoom(t)}},{key:"zoom",value:function(e){this.session&&this.session.spriteBoard.zoom(e)}}])&&l(o.prototype,s),u&&l(o,u),Object.defineProperty(o,"prototype",{writable:!1}),o;var o,s,u}()}),require.register("home/view.tmp.html",function(e,t,i){i.exports='<canvas\n\tcv-ref = "canvas:curvature/base/Tag"\n\tcv-on  = "wheel:scroll(event);"\n></canvas>\n\n<div class = "hud fps">[[sps]] simulations/s / [[simulationLock]]\n[[fps]] frames/s      / [[frameLock]]\n\nRes [[rwidth]] x [[rheight]]\n    [[width]] x [[height]]\n\nCam [[camX]] x [[camY]]\nPos [[posX]] x [[posY]]\n\n𝚫 Sim:   Pg Up / Dn\n𝚫 Frame: Home / End\n𝚫 Scale: + / -\n</div>\n<div class = "reticle"></div>\n\n[[joypad]]\n'}),require.register("initialize.js",function(e,t,i){"use strict";var r=t("curvature/base/Router");const n=new(t("home/View").View);r.Router.listen(n,{"*":function(){for(var e=arguments.length,t=new Array(e),i=0;i<e;i++)t[i]=arguments[i];console.log(t)}}),document.addEventListener("DOMContentLoaded",()=>n.render(document.body))}),require.register("inject/Container.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Container=void 0;var r=t("./Injectable");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function s(e,t,i){return t=a(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],a(e).constructor):t.apply(e,i))}function a(e){return(a=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function l(e,t){return(l=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}e.Container=function(e){function t(){return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),s(this,t,arguments)}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&l(e,t)}(t,r.Injectable),i=t,(o=[{key:"inject",value:function(e){return new this.constructor(Object.assign({},this,e))}}])&&n(i.prototype,o),a&&n(i,a),Object.defineProperty(i,"prototype",{writable:!1}),i;var i,o,a}()}),require.register("inject/Injectable.js",function(e,t,i){"use strict";function r(e,t,i){return t=n(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],n(e).constructor):t.apply(e,i))}function n(e){return(n=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function o(e,t){return(o=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}function s(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function a(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,u(r.key),r)}}function l(e,t,i){return t&&a(e.prototype,t),i&&a(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}function u(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Injectable=void 0;let c={},h={};e.Injectable=function(){function e(){s(this,e);let t=this.constructor.injections(),i=this.constructor.context();c[i]||(c[i]={}),h[i]||(h[i]={});for(let e in t){let r=t[e];!c[i][e]&&r.prototype&&(/[A-Z]/.test(String(e)[0])&&(c[i][e]=r))}for(let e in t){let r=void 0,n=c[i][e]||t[e];/[A-Z]/.test(String(e)[0])?(n.prototype?h[i][e]||(h[i][e]=new n):h[i][e]=n,r=h[i][e]):r=n.prototype?new n:n,Object.defineProperty(this,e,{enumerable:!1,writable:!1,value:r})}}return l(e,null,[{key:"injections",value:function(){return{}}},{key:"context",value:function(){return"."}},{key:"inject",value:function(t){let i=arguments.length>1&&void 0!==arguments[1]?arguments[1]:".";if(!(this.prototype instanceof e||this===e))throw new Error("Cannot access injectable subclass!\n\nAre you trying to instantiate like this?\n\n\tnew X.inject({...});\n\nIf so please try:\n\n\tnew (X.inject({...}));\n\nPlease note the parenthesis.\n");let n=this.injections();return function(e){function a(){return s(this,a),r(this,a,arguments)}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&o(e,t)}(a,e),l(a,null,[{key:"injections",value:function(){return Object.assign({},n,t)}},{key:"context",value:function(){return i}}])}(this)}}])}()}),require.register("inject/Single.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.single=e.Single=void 0;let o=e.Single=function(e,t,i){return t&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}(function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this.name="sss."+Math.random()});e.single=new o}),require.register("input/Axis.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function n(e,t,i){return(t=o(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Axis=void 0;e.Axis=function(){return e=function e(t){let i=t.deadZone,r=void 0===i?0:i,o=t.proportional,s=void 0===o||o;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),n(this,"magnitude",0),n(this,"delta",0),r&&(this.proportional=s,this.deadZone=r)},(t=[{key:"tilt",value:function(e){e=this.deadZone&&Math.abs(e)>=this.deadZone?(Math.abs(e)-this.deadZone)/(1-this.deadZone)*Math.sign(e):0,this.delta=Number(e-this.magnitude).toFixed(3)-0,this.magnitude=Number(e).toFixed(3)-0}},{key:"zero",value:function(){this.magnitude=this.delta=0}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("input/Button.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function n(e,t,i){return(t=o(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Button=void 0;e.Button=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),n(this,"active",!1),n(this,"pressure",0),n(this,"delta",0),n(this,"time",0)},(t=[{key:"update",value:function(){arguments.length>0&&void 0!==arguments[0]&&arguments[0];this.pressure?this.time++:!this.pressure&&this.time>0?this.time=-1:!this.pressure&&this.time<0&&this.time--,this.time<-1&&-1===this.delta&&(this.delta=0)}},{key:"press",value:function(e){this.delta=Number(e-this.pressure).toFixed(3)-0,this.pressure=Number(e).toFixed(3)-0,this.active=!0,this.time=this.time>0?this.time:0}},{key:"release",value:function(){this.delta=Number(-this.pressure).toFixed(3)-0,this.pressure=0,this.active=!1}},{key:"zero",value:function(){this.pressure=this.delta=0,this.active=!1}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("input/Controller.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Controller=void 0;var r=t("./Axis"),n=t("./Button");function o(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}const a={Space:0,Enter:0,NumpadEnter:0,ControlLeft:1,ControlRight:1,ShiftLeft:2,ShiftRight:2,KeyZ:3,KeyQ:4,KeyE:5,Digit1:6,Digit3:7,KeyBackspace:8,KeyW:12,KeyA:14,KeyS:13,KeyD:15,KeyH:112,KeyJ:113,KeyK:114,KeyL:115,KeyP:1020,KeyO:1209,Pause:1020,Tab:11,ArrowUp:12,ArrowDown:13,ArrowLeft:14,ArrowRight:15,KeyMeta:16,Numpad4:112,Numpad2:113,Numpad8:114,Numpad6:115,Backquote:1010,NumpadAdd:1011,NumpadSubtract:1012,NumpadMultiply:1013,NumpadDivide:1014,PageUp:1022,PageDown:1023,Home:1024,End:1025,Escape:[1020,1050],KeyB:1201};[...Array(12)].map((e,t)=>a[`F${t}`]=2e3+t);const l={12:-1,13:1,14:-0,15:0,112:-2,113:3,114:-3,115:2},u={"-6":14,"+6":15,"-7":12,"+7":13},c={0:1200,1:1201,9:1020,4:1022,5:1023};e.Controller=function(){return e=function e(t){t.keys;let i=t.deadZone,r=void 0===i?0:i;t.gamepad,t.keyboard;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this.deadZone=r,Object.defineProperties(this,{buttons:{value:{}},pressure:{value:{}},axes:{value:{}},keys:{value:{}}})},(t=[{key:"update",value:function(){let e=(arguments.length>0&&void 0!==arguments[0]?arguments[0]:{}).gamepad;for(const e in this.buttons){this.buttons[e].update()}if(e&&this.willRumble){if("object"!=typeof this.willRumble&&(this.willRumble={duration:1e3,strongMagnitude:1,weakMagnitude:1}),e.id&&String(e.id).match(/playstation.{0,5}3/i)){this.willRumble.duration<100&&this.willRumble.strongMagnitude<.75&&(this.willRumble.duration=0,this.willRumble.weakMagnitude=0,this.willRumble.strongMagnitude=0),setTimeout(()=>{this.willRumble||e.vibrationActuator.playEffect("dual-rumble",{duration:0,weakMagnitude:0,strongMagnitude:0})},this.willRumble.duration+-1)}e.vibrationActuator&&e.vibrationActuator.playEffect&&e.vibrationActuator.playEffect("dual-rumble",this.willRumble),this.willRumble=!1}}},{key:"rumble",value:function(){let e=!(arguments.length>0&&void 0!==arguments[0])||arguments[0];this.willRumble=e}},{key:"readInput",value:function(e){let t=e.keyboard,i=e.gamepads,o=void 0===i?[]:i;const s={},h={},f={},d=new Set;for(let e=0;e<o.length;e++){const t=o[e];if(t)for(const e in t.buttons){const i=t.buttons[e];i.pressed&&(this.press(e,i.value),h[e]=!0,d.add(t))}}if(t){for(const e in[...Array(10)])h[e]||t.getKeyCode(e)>0&&(this.press(e,1),h[e]=!0,d.add(t));for(let e in a){if(h[e])continue;let i=a[e];Array.isArray(i)||(i=a[e]=[i]);for(const r of i)t.getKeyCode(e)>0&&(this.press(r,1),h[r]=!0)}}for(const e of o)if(e)for(const t in e.buttons){if(f[t])continue;if(h[t])continue;const i=e.buttons[t];this.buttons[t]&&!i.pressed&&this.buttons[t].active&&(this.release(t),f[t]=!0)}if(t){for(const e in[...Array(10)])f[e]||h[e]||t.getKeyCode(e)<0&&(this.release(e),f[e]=!0);for(let e in a){let i=a[e];Array.isArray(i)||(i=a[e]=[i]);for(const r of i)f[r]||h[r]||t.getKeyCode(e)<0&&(this.release(r),f[e]=!0)}}for(let e=0;e<o.length;e++){const t=o[e];if(t)for(const e in t.axes){const i=t.axes[e];Math.abs(i)<this.deadZone?s[e]||this.tilt(e,0):(s[e]=!0,this.tilt(e,i))}}for(let e in l){this.buttons[e]||(this.buttons[e]=new n.Button);const t=l[e],i=Math.sign(1/t),r=Math.abs(t);s[r]||(this.buttons[e].active?(s[r]=!0,this.tilt(r,i)):s[r]||this.tilt(r,0))}for(let e in u){const t=u[e];if(f[t])continue;if(h[t])continue;const i=[e.slice(0,1),e.slice(1)],n=(i[0],i[1]);this.axes[n]||(this.axes[n]=new r.Axis({deadZone:this.deadZone}));const o=this.axes[n];if(o.magnitude&&Math.sign(e)!==Math.sign(o.magnitude))continue;const s=Math.abs(o.magnitude);s?(this.press(t,s),h[t]=!0):(this.release(t,s),f[t]=!0)}for(const e in c){const t=c[e];f[t]||(h[t]||(this.buttons[t]||(this.buttons[t]=new n.Button),this.buttons[e]||(this.buttons[e]=new n.Button),this.buttons[e].active?(this.press(t,this.buttons[e].pressure),h[t]=!0):h[t]||(this.release(t,this.buttons[e].pressure),f[t]=!0)))}return d}},{key:"tilt",value:function(e,t){this.axes[e]||(this.axes[e]=new r.Axis({deadZone:this.deadZone})),this.axes[e].tilt(t)}},{key:"press",value:function(e){let t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:1;this.buttons[e]||(this.buttons[e]=new n.Button),this.buttons[e].press(t)}},{key:"release",value:function(e){this.buttons[e]||(this.buttons[e]=new n.Button),this.buttons[e].release()}},{key:"serialize",value:function(){const e={};for(const t in this.buttons)e[t]=this.buttons[t].pressure;const t={};for(const e in this.axes)t[e]=this.axes[e].magnitude;return{axes:t,buttons:e}}},{key:"replay",value:function(e){if(e.buttons)for(const t in e.buttons)e.buttons[t]>0?this.press(t,e.buttons[t]):this.release(t);if(e.axes)for(const t in e.axes)e.axes[t].magnitude!==e.axes[t]&&this.tilt(t,e.axes[t])}},{key:"zero",value:function(){for(const e in this.axes)this.axes[e].zero();for(const e in this.buttons)this.buttons[e].zero()}},{key:"buttonIsMapped",value:function(e){return e in c}},{key:"keyIsMapped",value:function(e){return e in a}}])&&o(e.prototype,t),i&&o(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("math/Geometry.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Geometry=void 0;e.Geometry=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"lineIntersectsLine",value:function(e,t,i,r,n,o,s,a){const l=i-e,u=r-t,c=s-n,h=a-o,f=l*h-u*c;if(0===f)return!1;const d=n-e,p=o-t,v=(d*u-p*l)/f;if(v<0||v>1)return!1;const m=(d*h-p*c)/f;return!(m<0||m>1)&&[e+m*l,t+m*u]}}],(t=null)&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("math/Matrix.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Matrix=void 0;e.Matrix=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"identity",value:function(){return[[1,0,0],[0,1,0],[0,0,1]]}},{key:"translate",value:function(e,t){return[[1,0,e],[0,1,t],[0,0,1]]}},{key:"scale",value:function(e,t){return[[e,0,0],[0,t,0],[0,0,1]]}},{key:"rotate",value:function(e){const t=Math.sin(e),i=Math.cos(e);return[[i,-t,0],[t,i,0],[0,0,1]]}},{key:"shearX",value:function(e){return[[1,e,0],[0,1,0],[0,0,1]]}},{key:"shearY",value:function(e){return[[1,0,0],[e,1,0],[0,0,1]]}},{key:"multiply",value:function(e,t){if(e.length!==t.length)throw new Error("Invalid matrices");if(e[0].length!==t.length)throw new Error("Incompatible matrices");const i=Array(e.length).fill().map(()=>Array(t[0].length).fill(0));for(let r=0;r<e.length;r++)for(let n=0;n<t[0].length;n++)for(let o=0;o<e[0].length;o++)i[r][n]+=e[r][o]*t[o][n];return i}},{key:"composite",value:function(){let e=this.identity();for(let t=0;t<arguments.length;t++)e=this.multiply(e,t<0||arguments.length<=t?void 0:arguments[t]);return e}},{key:"transform",value:function(e,t){const i=[];for(let r=0;r<e.length;r+=2){const n=[e[r],e[r+1],1];for(const e of t)i.push(n[0]*e[0]+n[1]*e[1]+n[2]*e[2])}return new Float32Array(i.filter((e,t)=>(1+t)%3))}}],(t=null)&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("math/Quadtree.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Quadtree=void 0;var r=t("curvature/base/Bindable"),n=t("./Rectangle");function o(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function a(e,t,i){return t=l(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],l(e).constructor):t.apply(e,i))}function l(e){return(l=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function u(e,t){return(u=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}e.Quadtree=function(e){function t(e,i,n,o){var s;let l=arguments.length>4&&void 0!==arguments[4]?arguments[4]:0,u=arguments.length>5&&void 0!==arguments[5]?arguments[5]:null;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),(s=a(this,t,[e,i,n,o]))[r.Bindable.Prevent]=!0,s.items=new Set,s.split=!1,s.minSize=l||10,s.backMap=u?u.backMap:new Map,s.parent=u,s.ulCell=null,s.urCell=null,s.blCell=null,s.brCell=null,s}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&u(e,t)}(t,n.Rectangle),i=t,(s=[{key:"add",value:function(e){if(!this.contains(e.x,e.y))return!1;const i=this.x2-this.x1,r=this.y2-this.y1;if(this.split)return this.ulCell.add(e)||this.urCell.add(e)||this.blCell.add(e)||this.brCell.add(e);if(this.items.size&&i>this.minSize&&r>this.minSize){this.split=!0;const n=.5*i,o=.5*r;this.ulCell=new t(this.x1,this.y1,this.x1+n,this.y1+o,this.minSize,this),this.blCell=new t(this.x1,this.y1+o,this.x1+n,this.y2,this.minSize,this),this.urCell=new t(this.x1+n,this.y1,this.x2,this.y1+o,this.minSize,this),this.brCell=new t(this.x1+n,this.y1+o,this.x2,this.y2,this.minSize,this);for(const e of this.items)this.items.delete(e),this.ulCell.add(e)||this.urCell.add(e)||this.blCell.add(e)||this.brCell.add(e);return this.ulCell.add(e)||this.urCell.add(e)||this.blCell.add(e)||this.brCell.add(e)}return this.backMap.set(e,this),this.items.add(e),!0}},{key:"move",value:function(e){if(!this.backMap.has(e))return this.add(e);const t=this.backMap.get(e);let i=t;for(;i&&!i.contains(e.x,e.y);)i=i.parent;return i?(i!==t&&(t.delete(e),i.add(e)),!0):(t.delete(e),!1)}},{key:"delete",value:function(e){if(!this.backMap.has(e))return console.warn("Entity not in Quadtree."),!1;const t=this.backMap.get(e);return t.items.delete(e),t.parent&&t.parent.prune(),this.backMap.delete(e),!0}},{key:"isPrunable",value:function(){return this.split?this.ulCell.isPrunable()&&this.urCell.isPrunable()&&this.blCell.isPrunable()&&this.brCell.isPrunable():0===this.items.size}},{key:"prune",value:function(){return!!this.isPrunable()&&(this.split=!1,this.ulCell=null,this.urCell=null,this.blCell=null,this.brCell=null,!0)}},{key:"findLeaf",value:function(e,t){var i,r,n;return this.contains(e,t)?this.split?null!==(i=null!==(r=null!==(n=this.ulCell.findLeaf(e,t))&&void 0!==n?n:this.urCell.findLeaf(e,t))&&void 0!==r?r:this.blCell.findLeaf(e,t))&&void 0!==i?i:this.brCell.findLeaf(e,t):this:null}},{key:"has",value:function(e){return this.split?this.ulCell.has(e)||this.urCell.has(e)||this.blCell.has(e)||this.brCell.has(e):this.items.has(e)}},{key:"select",value:function(e,t,i,r){const n=t+r;return e+i<this.x1||e>this.x2?new Set:n<this.y1||t>this.y2?new Set:this.split?new Set([...this.ulCell.select(e,t,i,r),...this.urCell.select(e,t,i,r),...this.blCell.select(e,t,i,r),...this.brCell.select(e,t,i,r)]):this.items}},{key:"dump",value:function(){return this.split?new Set([...this.ulCell.dump(),...this.urCell.dump(),...this.blCell.dump(),...this.brCell.dump()]):this.items}}])&&o(i.prototype,s),l&&o(i,l),Object.defineProperty(i,"prototype",{writable:!1}),i;var i,s,l}()}),require.register("math/QuickTree.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.QuickTree=void 0;var r=t("./Quadtree"),n=t("./Rectangle");function o(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function a(e,t,i){return t=c(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],c(e).constructor):t.apply(e,i))}function l(e,t,i,r){var n=u(c(1&r?e.prototype:e),t,i);return 2&r&&"function"==typeof n?function(e){return n.apply(i,e)}:n}function u(){return(u="undefined"!=typeof Reflect&&Reflect.get?Reflect.get.bind():function(e,t,i){var r=function(e,t){for(;!{}.hasOwnProperty.call(e,t)&&null!==(e=c(e)););return e}(e,t);if(r){var n=Object.getOwnPropertyDescriptor(r,t);return n.get?n.get.call(arguments.length<3?e:i):n.value}}).apply(null,arguments)}function c(e){return(c=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function h(e,t){return(h=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}const f=new WeakMap;e.QuickTree=function(e){function t(){return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),a(this,t,arguments)}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&h(e,t)}(t,r.Quadtree),i=t,u=[{key:"deleteFromAllTrees",value:function(e){f.has(e)&&f.get(e).forEach(t=>t.delete(e))}}],(s=[{key:"add",value:function(e){l(t,"add",this,3)([e])?(f.has(e)||f.set(e,new Set),f.get(e).add(this)):this.parent||console.warn("Failed to add object to QuickTree.")}},{key:"delete",value:function(e){l(t,"delete",this,3)([e])&&f.has(e)&&f.get(e).delete(this)}},{key:"select",value:function(e,i,r,o){const s=new n.Rectangle(e,i,e+r,i+o),a=l(t,"select",this,3)([e,i,r,o]);for(const e of a)s.contains(e.x,e.y)||a.delete(e);return a}}])&&o(i.prototype,s),u&&o(i,u),Object.defineProperty(i,"prototype",{writable:!1}),i;var i,s,u}()}),require.register("math/Ray.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Ray=void 0;var r=t("./Geometry");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function o(e,t,i){return(t=s(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}let a=e.Ray=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"cast",value:function(e,t,i,r,n){let o=arguments.length>5&&void 0!==arguments[5]?arguments[5]:320,s=arguments.length>6&&void 0!==arguments[6]?arguments[6]:this.DEFAULT_FLAGS;const a=t+Math.cos(n)*o,l=i+Math.sin(n)*o;return{terrain:this.castTerrain(e,t,i,r,n,o,s),entities:this.castEntity(e,t,i,a,l,s)}}},{key:"castEntity",value:function(e,t,i,n,o){arguments.length>5&&void 0!==arguments[5]?arguments[5]:this.DEFAULT_FLAGS;const s=.5*(t+n),a=.5*(i+o),l=Math.max(320,Math.abs(t-n)),u=Math.max(320,Math.abs(i-o)),c=e.getEntitiesForRect(s,a,l,u),h=new Map;for(const e of c){const s=e.rect.toLines();for(let a=0;a<s.length;a+=4){const l=s[a+0],u=s[a+1],c=s[a+2],f=s[a+3],d=r.Geometry.lineIntersectsLine(l,u,c,f,t,i,n,o);if(d)if(h.has(e)){const r=h.get(e);Math.hypot(t-d[0],i-d[1])<Math.hypot(t-r[0],i-r[1])&&h.set(e,d)}else h.set(e,d)}}return h}},{key:"castTerrain",value:function(e,t,i,r,n){let o=arguments.length>5&&void 0!==arguments[5]?arguments[5]:320,s=arguments.length>6&&void 0!==arguments[6]?arguments[6]:this.DEFAULT_FLAGS;o=Math.ceil(o);const a=Math.cos(n),l=Math.sin(n),u=t+(Math.abs(a)>Number.EPSILON?a:0)*o,c=i+(Math.abs(l)>Number.EPSILON?l:0)*o,h=u-t,f=c-i,d=Math.sign(h),p=Math.sign(f),v=h?Math.hypot(1,f/h):0,m=f?Math.hypot(1,h/f):0;let y=0;if(e.getSolid(t,i,r))return[t,i];const b=null===e.getCollisionTile(t,i,r)?0:1;let g=b,w=b,x=!1,T=!1,_=1;let P=b?0:d>0?32-t%32:t%32+1,E=b?0:p>0?32-i%32:i%32+1,S=P*v*d,j=E*m*p;const O=new Set,C=new Set;window.logPoints&&console.time("rayCast");for(;Math.abs(y)<o&&!O.size&&!C.size;){if(d&&(!p||Math.abs(S)<Math.abs(j))){const n=Math.abs(S);let o=t+n*a,s=i+n*l;if(d>=0&&o%1>.99999&&(o=Math.round(o)),p>=0&&s%1>.99999&&(s=Math.round(s)),d<=0&&o%1<1e-5&&(o=Math.round(o)),p<=0&&s%1<1e-5&&(s=Math.round(s)),x=g,_=(g=e.getCollisionTile(o,s,r))?1:32,!g&&x&&(_=d<0?(t+-P+1)%32:32-(t+P)%32),e.getSolid(o,s,r)){O.add([o,s]);break}y=Math.abs(S),S=(P+=_)*v*d}else{const n=Math.abs(j);let o=t+n*a,s=i+n*l;if(d>=0&&o%1>.99999&&(o=Math.round(o)),p>=0&&s%1>.99999&&(s=Math.round(s)),d<=0&&o%1<1e-5&&(o=Math.round(o)),p<=0&&s%1<1e-5&&(s=Math.round(s)),T=w,_=(w=e.getCollisionTile(o,s,r))?1:32,!w&&T&&(_=p<0?(i+-E+1)%32:32-(i+E)%32),e.getSolid(o,s,r)){C.add([o,s]);break}y=Math.abs(j),j=(E+=_)*m*p}0}const R=[...O,...C];if(s&this.ALL_POINTS)return new O.union(C);const k=R.map(e=>Math.pow(e[0]-t,2)+Math.pow(e[1]-i,2)),M=Math.min(...k),B=R[k.indexOf(M)];return B&&(d>0&&B[0]%1>.99999&&(B[0]=Math.round(B[0])),d<0&&B[0]%1<1e-5&&(B[0]=Math.round(B[0])),p>0&&B[1]%1>.99999&&(B[1]=Math.round(B[1])),p<0&&B[1]%1<1e-5&&(B[1]=Math.round(B[1]))),Math.sqrt(M)>o?void 0:s&this.T_LAST_EMPTY?[B[0]+-a*Math.sign(S),B[1]+-l*Math.sign(j)]:B}}],(t=null)&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}();o(a,"T_LAST_EMPTY",1),o(a,"T_ALL_POINTS",2),o(a,"DEFAULT_FLAGS",0)}),require.register("math/Rectangle.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Rectangle=void 0;e.Rectangle=function(){return e=function e(t,i,r,n){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this.x1=t,this.y1=i,this.x2=r,this.y2=n},(t=[{key:"contains",value:function(e,t){return!(e<this.x1||e>this.x2)&&!(t<this.y1||t>this.y2)}},{key:"isOverlapping",value:function(e){return!(this.x1>=e.x2||this.x2<=e.x1)&&!(this.y1>=e.y2||this.y2<=e.y1)}},{key:"isFlushWith",value:function(e){return!(this.x1>e.x2||e.x1>this.x2)&&(!(this.y1>e.y2||e.y1>this.y2)&&(this.x1===e.x2||e.x1===this.x2||(this.y1===e.y2||e.y1===this.y2||void 0)))}},{key:"intersection",value:function(e){if(this.isOverlapping(e))return new this.constructor(Math.max(this.x1,e.x1),Math.max(this.y1,e.y1),Math.min(this.x2,e.x2),Math.min(this.y2,e.y2))}},{key:"isInside",value:function(e){return this.x1>=e.x1&&this.y1>=e.y1&&this.x2<=e.x2&&this.y2<=e.y2}},{key:"isOutside",value:function(e){return e.isInside(this)}},{key:"toLines",value:function(){return[this.x1,this.y1,this.x2,this.y1,this.x2,this.y1,this.x2,this.y2,this.x1,this.y2,this.x2,this.y2,this.x1,this.y1,this.x1,this.y2]}},{key:"toTriangles",value:function(){let e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:2;return 2===e?[this.x1,this.y1,this.x2,this.y1,this.x1,this.y2,this.x1,this.y2,this.x2,this.y1,this.x2,this.y2]:3===e?[this.x1,this.y1,1,this.x2,this.y1,1,this.x1,this.y2,1,this.x1,this.y2,1,this.x2,this.y1,1,this.x2,this.y2,1]:4===e?[this.x1,this.y1,0,1,this.x2,this.y1,0,1,this.x1,this.y2,0,1,this.x1,this.y2,0,1,this.x2,this.y1,0,1,this.x2,this.y2,0,1]:[this.x1,this.y1,...e>2?Array(-2+e).fill(0):[],this.x2,this.y1,...e>2?Array(-2+e).fill(0):[],this.x1,this.y2,...e>2?Array(-2+e).fill(0):[],this.x1,this.y2,...e>2?Array(-2+e).fill(0):[],this.x2,this.y1,...e>2?Array(-2+e).fill(0):[],this.x2,this.y2,...e>2?Array(-2+e).fill(0):[]]}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("math/SMTree.js",function(e,t,i){"use strict";function r(e,t,i){return(t=a(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function n(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function o(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,a(r.key),r)}}function s(e,t,i){return t&&o(e.prototype,t),i&&o(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}function a(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.SMTree=void 0;const l=Symbol("depth");let u=function(){function e(t,i,o){let s=arguments.length>3&&void 0!==arguments[3]?arguments[3]:2,a=arguments.length>4&&void 0!==arguments[4]?arguments[4]:0;n(this,e),this.start=t,this.end=i,this.depth=a,this.dimension=s,this.size=0,this.rectangles=new Set,this.subTree=a<1?new h(r({dimension:s},l,1+a)):null,this.prev=o}return s(e,[{key:"split",value:function(t){if(t<this.start||t>this.end)throw new RangeError("Splitting segment out of bounds!");if(t===this.start)return[this];if(t===this.end)return[this];const i=new e(this.start,t,this.prev,this.dimension,this.depth),r=new e(t,this.end,i,this.dimension,this.depth);for(const e of this.rectangles){const n=0===this.depth?e.x1:e.y1;(0===this.depth?e.x2:e.y2)<t?i.add(e):n>t?r.add(e):(i.add(e),r.add(e))}return[i,r]}},{key:"add",value:function(e){Object.freeze(e),this.subTree&&this.subTree.add(e),this.rectangles.add(e),this.size=this.rectangles.size}},{key:"delete",value:function(e){return this.subTree&&this.subTree.delete(e),this.rectangles.delete(e),this.size=this.rectangles.size,!this.rectangles.size&&this.start>-1/0}}])}();const c=e=>"x1"in e&&"y1"in e&&"x2"in e&&"y2"in e&&e.x1<e.x2&&e.y1<e.y2;let h=e.SMTree=function(){return s(function e(){let t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:r({dimension:2},l,0);n(this,e),this.depth=t[l],this.dimension=t.dimension,this.segments=[new u(-1/0,1/0,null,this.dimension,this.depth)]},[{key:"add",value:function(e){if(!c(e))throw new Error("Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.");const t=0===this.depth?e.x1:e.y1,i=0===this.depth?e.x2:e.y2,r=this.findSegment(t);this.splitSegment(r,t);const n=this.findSegment(i);if(this.splitSegment(n,i),r!==n)for(let t=1+r;t<=n;t++)this.segments[t].add(e);else this.segments[r].add(e)}},{key:"delete",value:function(e){if(!c(e))throw new Error("Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.");const t=0===this.depth?e.x1:e.y1,i=0===this.depth?e.x2:e.y2,r=this.findSegment(t),n=this.findSegment(i),o=[];for(let t=r;t<=n;t++)t>0&&this.segments[t].delete(e)&&o.push(t);for(let e=-1+o.length;e>=0;e--){const t=o[e];if(!this.segments[-1+t])throw new Error("Cannot delete segment without predecessor.");this.segments[-1+t].end=this.segments[t].end,this.segments[1+t].prev=this.segments[-1+t],this.segments.splice(t,1)}2===this.segments.length&&0==this.segments[0].size&&0===this.segments[1].size&&(this.segments[0].end=this.segments[1].end,this.segments.length=1)}},{key:"query",value:function(e,t,i,r){const n=new Set,o=this.findSegment(e),s=this.findSegment(i);for(let e=o;e<=s;e++){const i=this.segments[e];if(!i.subTree)continue;const o=i.subTree.findSegment(t),s=i.subTree.findSegment(r);for(let e=o;e<=s;e++)for(const t of i.subTree.segments[e].rectangles)n.add(t)}return n}},{key:"splitSegment",value:function(e,t){if(t<=this.segments[e].start||t>=this.segments[e].end)return;const i=this.segments[e].split(t);this.segments.splice(e,1,...i)}},{key:"findSegment",value:function(e){let t=0,i=-1+this.segments.length;do{const r=Math.floor(.5*(t+i)),n=this.segments[r];if(n.start<e&&n.end>=e)return r;n.start<e&&(t=1+r),n.end>e&&(i=-1+r)}while(t<=i);return-1}}])}()}),require.register("math/Split.js",function(e,t,i){"use strict";var r;function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function o(e,t,i){return(t=s(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Split=void 0;let a=e.Split=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"intToBytes",value:function(e){return this.value[0]=e,[...this.bytes]}},{key:"bytesToInt",value:function(e){return this.bytes[0]=e[0],this.bytes[1]=e[1],this.bytes[2]=e[2],this.bytes[3]=e[3],this.value[0]}},{key:"bytesToInt3",value:function(e){return this.bytes[0]=e[0],this.bytes[1]=e[1],this.bytes[2]=e[2],this.bytes[3]=0,this.value[0]}}],(t=null)&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}();r=a,o(a,"bytes",new Uint8ClampedArray(4)),o(a,"words",new Uint16Array(r.bytes.buffer)),o(a,"value",new Uint32Array(r.bytes.buffer))}),require.register("model/BalllController.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.BallController=void 0;let o=e.BallController=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},(t=[{key:"onCreate",value:function(e,t){e.xSpeed=0,e.ySpeed=0,e.height=32,e.width=32}},{key:"simulate",value:function(e){const t=e.session.world;if(e.xSpeed||e.ySpeed){let i=e.xSpeed,r=e.ySpeed;const n=t.castTerrainRay(t,e.x+0,e.y+-16,0,e.xSpeed<0?Math.PI:0,Math.abs(e.xSpeed)+16,1),o=t.castTerrainRay(t,e.x+0,e.y+-16,0,.5*Math.PI*Math.sign(e.ySpeed),Math.abs(e.ySpeed)+16,1);if(n){i=n[0]-e.x+-16*Math.sign(e.xSpeed),e.xSpeed=-e.xSpeed}if(o){r=o[1]-(e.y+-16)+-16*Math.sign(e.ySpeed),e.ySpeed=-e.ySpeed}e.x+=i,e.y+=r}else{const t=2*Math.PI*Math.random(),i=6;e.xSpeed=Math.cos(t)*i,e.ySpeed=Math.sin(t)*i}}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}();var s,a,l;s=o,l="./sphere.png",(a=n(a="spriteImage"))in s?Object.defineProperty(s,a,{value:l,enumerable:!0,configurable:!0,writable:!0}):s[a]=l}),require.register("model/BarrelController.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.BarrelController=void 0;let o=e.BarrelController=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},(t=[{key:"onCreate",value:function(e,t){e.xSpeed=0,e.ySpeed=0,e.height=48,e.width=32,e.grounded=!0,e.ySpriteOffset=6}},{key:"simulate",value:function(e){const t=e.session.world;for(t.getSolid(e.x,e.y+1)?(e.ySpeed=Math.min(0,e.ySpeed),e.grounded=!0):(e.ySpeed=Math.min(8,e.ySpeed+.5),e.grounded=!1),t.getSolid(e.x,e.y)&&!t.getSolid(e.x,e.y-1)&&(e.ySpeed=0,e.y--);t.getSolid(e.x,e.y+-e.height)&&!t.getSolid(e.x,e.y);)e.ySpeed=0,e.y++;for(;t.getSolid(e.x+.5*-e.width,e.y+-8)&&!t.getSolid(e.x+.5*e.width,e.y+-8);)e.xSpeed=0,e.x++;for(;t.getSolid(e.x+.5*e.width,e.y+-8)&&!t.getSolid(e.x-.5*e.width,e.y+-8);)e.xSpeed=0,e.x--;if(e.xSpeed||e.ySpeed){const i=Math.atan2(e.ySpeed,e.xSpeed),r=Math.hypot(e.ySpeed,e.xSpeed),n=t.castRay(e.x,e.y,0,i,r,1);let o=e.xSpeed,s=e.ySpeed;if(n.terrain){const t=Math.hypot(e.x-n.terrain[0],e.y-n.terrain[1]);o=Math.cos(i)*t,s=Math.sin(i)*t}e.x+=o,e.y+=s}}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}();var s,a,l;s=o,l="/barrel.png",(a=n(a="spriteImage"))in s?Object.defineProperty(s,a,{value:l,enumerable:!0,configurable:!0,writable:!0}):s[a]=l}),require.register("model/Entity.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Entity=void 0;var r=t("curvature/base/Bindable"),n=t("../math/Rectangle"),o=t("../sprite/Sprite");function s(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,a(r.key),r)}}function a(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.Entity=function(){return e=function e(t){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e);const i=t.controller,s=t.session,a=t.inputManager,l=t.sprite,u=t.x,c=void 0===u?0:u,h=t.y,f=void 0===h?0:h,d=t.width,p=void 0===d?32:d,v=t.height,m=void 0===v?32:v;this[r.Bindable.Prevent]=!0,this.controller=i,this.sprite=l||new o.Sprite({session:s,src:"/thing.png",width:32,height:32}),this.inputManager=a,this.session=s,this.x=c,this.y=f,this.xSpriteOffset=0,this.ySpriteOffset=0,this.width=p,this.height=m,this.rect=new n.Rectangle(c-.5*p,f-m,c+.5*p,f),i&&i.onCreate(this,t)},(t=[{key:"simulate",value:function(){this.controller&&this.controller.simulate(this),this.rect.x1=this.x-.5*this.width,this.rect.x2=this.x+.5*this.width,this.rect.y1=this.y-this.height,this.rect.y2=this.y,this.sprite.x=this.x+this.xSpriteOffset,this.sprite.y=this.y+this.ySpriteOffset,this.fixFPE()}},{key:"destroy",value:function(){this.controller&&controller.destroy(this)}},{key:"fixFPE",value:function(){this.x%1>.99999&&(this.x=Math.round(this.x)),this.y%1>.99999&&(this.y=Math.round(this.y)),this.x%1<1e-5&&(this.x=Math.round(this.x)),this.y%1<1e-5&&(this.y=Math.round(this.y))}}])&&s(e.prototype,t),i&&s(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("model/InputManager.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.InputManager=void 0;var r=t("curvature/base/Bindable");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,s(r.key),r)}}function o(e,t,i){return(t=s(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function s(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.InputManager=function(){return e=function e(t){let i=t.keyboard,n=t.onScreenJoyPad;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),o(this,"triggers",r.Bindable.makeBindable({})),o(this,"axis",r.Bindable.makeBindable({})),i.keys.bindTo((e,t,i,r)=>{e>0?this.keyPress(t,e,i[t]):-1!==e||this.keyRelease(t,e,i[t])}),n.args.bindTo("x",e=>{this.axis[0]=e/50}),n.args.bindTo("y",e=>{this.axis[1]=e/50})},(t=[{key:"keyPress",value:function(e,t,i){if(/^[0-9]$/.test(e))this.triggers[e]=!0;else switch(e){case"ArrowRight":this.axis[0]=1;break;case"ArrowDown":this.axis[1]=1;break;case"ArrowLeft":this.axis[0]=-1;break;case"ArrowUp":this.axis[1]=-1;break;case" ":this.triggers[0]=!0}}},{key:"keyRelease",value:function(e,t,i){if(/^[0-9]$/.test(e))this.triggers[e]=!1;else switch(e){case"ArrowRight":this.axis[0]>0&&(this.axis[0]=0),this.axis[0]=0;case"ArrowLeft":this.axis[0]<0&&(this.axis[0]=0);break;case"ArrowDown":this.axis[1]>0&&(this.axis[1]=0);case"ArrowUp":this.axis[1]<0&&(this.axis[1]=0);break;case" ":this.triggers[0]=!1}}}])&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("model/PlayerController.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.PlayerController=void 0;var r=t("../math/Ray");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}let s=e.PlayerController=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},(t=[{key:"onCreate",value:function(e,t){e.direction="south",e.state="standing",e.xSpeed=0,e.ySpeed=0,e.grounded=!0,e.xDirection=0,e.ySpriteOffset=1}},{key:"simulate",value:function(e){"jumping"===e.state?e.height=24:e.height=48;const t=e.inputManager&&Math.min(1,Math.max(e.inputManager.axes[0].magnitude||0,-1))||0,i=(e.inputManager&&Math.min(1,Math.max(e.inputManager.axes[1].magnitude||0,-1)),e.session.world);for(i.getSolid(e.x,e.y+1)?e.ySpeed>=0&&(e.ySpeed=Math.min(0,e.ySpeed),e.grounded=!0):(e.ySpeed=Math.min(8,e.ySpeed+.5),e.grounded=!1),t?(e.xDirection=Math.sign(t),i.getSolid(e.x+Math.sign(t)*e.width*.5+Math.sign(t),e.y)||(e.xSpeed+=t*(e.grounded?.2:.4)),Math.abs(e.xSpeed)>8&&(e.xSpeed=8*Math.sign(e.xSpeed)),e.grounded&&t&&Math.sign(t)!==Math.sign(e.xSpeed)&&(e.xSpeed*=.75)):e.grounded?e.xSpeed*=.9:e.xSpeed*=.99,i.getSolid(e.x,e.y)&&!i.getSolid(e.x,e.y+-e.height)&&(e.ySpeed=0,e.y--);i.getSolid(e.x,e.y+-e.height)&&!i.getSolid(e.x,e.y);)e.ySpeed=0,e.y++;for(;i.getSolid(e.x+.5*-e.width,e.y+-8)&&!i.getSolid(e.x+.5*e.width,e.y+-8);)e.xSpeed=0,e.x++;for(;i.getSolid(e.x+.5*e.width,e.y+-8)&&!i.getSolid(e.x-.5*e.width,e.y+-8);)e.xSpeed=0,e.x--;if(e.xSpeed||e.ySpeed){const t=Math.atan2(e.ySpeed,e.xSpeed),n=Math.hypot(e.ySpeed,e.xSpeed),o=r.Ray.cast(i,e.x,e.y,0,t,n,r.Ray.T_LAST_EMPTY);let s=e.xSpeed,a=e.ySpeed;if(o.terrain){const i=Math.hypot(e.x-o.terrain[0],e.y-o.terrain[1]);s=Math.cos(t)*i,a=Math.sin(t)*i}e.x+=s,e.y+=a}e.grounded&&(e.state=t?"walking":"standing",t<0?e.direction="west":t>0&&(e.direction="east")),e.grounded&&e.inputManager.buttons[0]&&1===e.inputManager.buttons[0].time&&(e.grounded=!1,e.state="jumping",e.ySpeed=-10),e.sprite.changeAnimation(`${e.state}-${e.direction}`)}}])&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}();var a,l,u;a=s,u="/player.tsj",(l=o(l="spriteSheet"))in a?Object.defineProperty(a,l,{value:u,enumerable:!0,configurable:!0,writable:!0}):a[l]=u}),require.register("model/Spawner.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Spawner=void 0;var r=t("../sprite/SpriteSheet"),n=t("../sprite/Sprite"),o=t("./Entity");function s(e,t){var i=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),i.push.apply(i,r)}return i}function a(e){for(var t=1;t<arguments.length;t++){var i=null!=arguments[t]?arguments[t]:{};t%2?s(Object(i),!0).forEach(function(t){l(e,t,i[t])}):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(i)):s(Object(i)).forEach(function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(i,t))})}return e}function l(e,t,i){return(t=c(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function u(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,c(r.key),r)}}function c(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function h(e,t,i){return t=d(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],d(e).constructor):t.apply(e,i))}function f(){return(f="undefined"!=typeof Reflect&&Reflect.get?Reflect.get.bind():function(e,t,i){var r=function(e,t){for(;!{}.hasOwnProperty.call(e,t)&&null!==(e=d(e)););return e}(e,t);if(r){var n=Object.getOwnPropertyDescriptor(r,t);return n.get?n.get.call(arguments.length<3?e:i):n.value}}).apply(null,arguments)}function d(e){return(d=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function p(e,t){return(p=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}e.Spawner=function(e){function t(e){var i;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),(i=h(this,t,[e])).entityData=e,i.spawnType=e.spawnType,i.spawnClass=e.spawnClass,i.session=e.session,i.i=0,i}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&p(e,t)}(t,o.Entity),i=t,(s=[{key:"simulate",value:function(){const e=a({},this.entityData),i=this.entityData.spawnClass,s=new i;e.sprite||(i.spriteSheet?e.sprite=new n.Sprite({session:e.session,spriteSheet:new r.SpriteSheet({source:i.spriteSheet})}):i.spriteImage&&(e.sprite=new n.Sprite({session:e.session,src:e.spawnClass.spriteImage})));const l=new o.Entity(a(a({},e),{},{controller:s,session:this.session,x:this.x,y:this.y}));var u,c,h,p,v;this.session.addEntity(l),this.session.removeEntity(this),(u=t,c="simulate",h=this,v=f(d(1&(p=3)?u.prototype:u),c,h),2&p&&"function"==typeof v?function(e){return v.apply(h,e)}:v)([])}}])&&u(i.prototype,s),l&&u(i,l),Object.defineProperty(i,"prototype",{writable:!1}),i;var i,s,l}()}),require.register("overlay/overlay.frag",function(e,t,i){i.exports="precision mediump float;\n\nuniform vec4 u_color;\nvarying vec2 v_texCoord;\n\nvoid main() {\n  // gl_FragColor = texture2D(u_image, v_texCoord);\n  gl_FragColor = vec4(1.0, 1.0, 0.0, 0.25);\n}\n"}),require.register("overlay/overlay.vert",function(e,t,i){i.exports="attribute vec2 a_position;\nattribute vec2 a_texCoord;\n\nuniform vec2 u_resolution;\nvarying vec2 v_texCoord;\n\nvoid main()\n{\n  vec2 zeroToOne = a_position / u_resolution;\n  vec2 zeroToTwo = zeroToOne * 2.0;\n  vec2 clipSpace = zeroToTwo - 1.0;\n\n  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);\n  v_texCoord  = a_texCoord;\n}\n"}),require.register("session/Session.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Session=void 0;var r=t("../math/QuickTree"),n=t("../sprite/SpriteBoard"),o=t("../sprite/SpriteSheet"),s=t("../sprite/Sprite"),a=t("../model/Entity"),l=t("../sprite/Camera"),u=t("../world/World"),c=t("../input/Controller"),h=t("../world/EntityPallet"),f=t("../model/PlayerController"),d=t("../model/BalllController"),p=t("../model/BarrelController");function v(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,m(r.key),r)}}function m(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}h.EntityPallet.register("@basic-platformer",f.PlayerController),h.EntityPallet.register("@barrel",p.BarrelController),h.EntityPallet.register("@ball",d.BallController);e.Session=function(){return e=function e(t){let i=t.element,r=t.world,o=t.keyboard,s=t.onScreenJoyPad;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this.fThen=0,this.sThen=0,this.frameLock=60,this.simulationLock=60,this.entities=new Set,this.removed=new WeakSet,this.paused=!1,this.loaded=!1,this.world=new u.World({source:new URL(r,location).href,session:this}),this.spriteBoard=new n.SpriteBoard({element:i,world:this.world,session:this}),this.keyboard=o,this.world.ready.then(()=>this.initialize({keyboard:o,onScreenJoyPad:s})),this.controller=new c.Controller({deadZone:.2}),this.controller.zero(),this.gamepad=null,window.addEventListener("gamepadconnected",e=>{console.log(e),this.gamepad=e.gamepad}),window.addEventListener("gamepaddisconnected",e=>{this.gamepad&&(this.gamepad=null)})},(t=[{key:"initialize",value:async function(){this.loaded=!0;for(const e of this.world.maps){if(!e.properties["player-start"])continue;const t=e.properties["player-start"],i=e.entityDefs[t],r=await h.EntityPallet.resolve(i.type),n=this.player=new a.Entity({controller:new r,session:this,x:i.x,y:i.y,inputManager:this.controller,sprite:new s.Sprite({session:this,spriteSheet:new o.SpriteSheet({source:"/player.tsj"}),width:32,height:48}),camera:l.Camera});this.spriteBoard.following=n,this.addEntity(n)}}},{key:"addEntity",value:function(e){if(this.entities.has(e))return;this.entities.add(e),this.spriteBoard.sprites.add(e.sprite),this.world.getMapsForPoint(e.x,e.y).forEach(t=>t.quadTree.add(e))}},{key:"removeEntity",value:function(e){this.entities.delete(e),this.spriteBoard.sprites.delete(e.sprite),r.QuickTree.deleteFromAllTrees(e),this.removed.add(e)}},{key:"simulate",value:function(e){if(!this.loaded)return!1;const t=e-this.sThen;if(0==this.simulationLock||.2+t<1e3/this.simulationLock)return!1;if(this.sThen=e,this.keyboard.update(),this.controller.update({gamepad:this.gamepad}),this.controller.readInput({gamepads:navigator.getGamepads(),keyboard:this.keyboard}),this.controller.buttons[1020]&&1===this.controller.buttons[1020].time&&(this.paused=!this.paused),this.paused||!this.player)return!1;this.entities.forEach(e=>e.sprite.visible=!1);const i=this.player,r=this.world.getEntitiesForRect(i.x,i.y,1*l.Camera.width+64,1*l.Camera.height+64);return r.delete(i),r.add(i),r.forEach(e=>{e.simulate(t),this.world.getMapsForRect(e.x,e.y,100,100).forEach(t=>this.removed.has(e)||t.quadTree.move(e)),e.sprite.visible=!0}),!0}},{key:"draw",value:function(e){if(!this.loaded)return;const t=e-this.fThen;return!(0==this.frameLock||.2+t<1e3/this.frameLock)&&(this.spriteBoard.draw(t),this.fThen=e,!0)}}])&&v(e.prototype,t),i&&v(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("sprite/Camera.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function n(e,t,i){return(t=o(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Camera=void 0;let s=e.Camera=function(e,t,i){return t&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}(function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)});n(s,"x",0),n(s,"y",0),n(s,"width",0),n(s,"height",0)}),require.register("sprite/MapRenderer.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.MapRenderer=void 0;var r=t("curvature/base/Bindable");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.MapRenderer=function(){return e=function e(t){let i=t.spriteBoard,n=t.map;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this[r.Bindable.Prevent]=!0,this.spriteBoard=i,this.loaded=!1,this.map=n,this.width=0,this.height=0,this.tileWidth=0,this.tileHeight=0,this.xOffset=0,this.yOffset=0;const o=this.spriteBoard.gl2d.context;this.tileMapping=this.spriteBoard.gl2d.createTexture(1,1),this.tileTexture=this.spriteBoard.gl2d.createTexture(1,1);const s=()=>parseInt(255*Math.random());new Uint8Array([s(),s(),s(),255]);n.ready.then(()=>{this.loaded=!0,this.tileWidth=n.tileWidth,this.tileHeight=n.tileHeight,o.bindTexture(o.TEXTURE_2D,this.tileTexture),o.texImage2D(o.TEXTURE_2D,0,o.RGBA,n.tileSetWidth,n.tileSetHeight,0,o.RGBA,o.UNSIGNED_BYTE,n.pixels),o.bindTexture(o.TEXTURE_2D,null)})},(t=[{key:"negSafeMod",value:function(e,t){return e>=0?e%t:(t+e%t)%t}},{key:"draw",value:function(){if(!this.loaded)return;const e=this.spriteBoard.gl2d.context,t=this.spriteBoard.following.sprite.x,i=this.spriteBoard.following.sprite.y,r=this.spriteBoard.zoomLevel,n=.5*this.tileWidth,o=.5*this.tileHeight,s=Math.floor(this.width/this.tileWidth),a=Math.floor(this.height/this.tileHeight),l=64*Math.floor(Math.floor(.5*this.width/64)+0),u=64*Math.floor(Math.floor(.5*this.height/64)+0),c=(t+n)/this.tileWidth+-this.negSafeMod(t+n,64)/this.tileWidth+-this.map.xWorld/this.tileWidth+-l/this.tileWidth,h=(i+o)/this.tileHeight+-this.negSafeMod(i+o,64)/this.tileHeight+-this.map.yWorld/this.tileHeight+-u/this.tileHeight;if(c+s<0||h+a<0)return;const f=r*(.5*(this.width+this.xOffset)-this.negSafeMod(t+n,64)-l),d=r*(.5*(this.height+this.yOffset)-this.negSafeMod(i+o,64)-u);this.spriteBoard.drawProgram.uniformF("u_size",this.width,this.height),this.spriteBoard.drawProgram.uniformF("u_tileSize",this.tileWidth,this.tileHeight),this.spriteBoard.drawProgram.uniformF("u_mapTextureSize",this.map.tileSetWidth,this.map.tileSetHeight),this.spriteBoard.drawProgram.uniformI("u_renderTiles",1),e.activeTexture(e.TEXTURE2),e.bindTexture(e.TEXTURE_2D,this.tileTexture),this.spriteBoard.drawProgram.uniformI("u_tiles",2),e.activeTexture(e.TEXTURE3),e.bindTexture(e.TEXTURE_2D,this.tileMapping),this.spriteBoard.drawProgram.uniformI("u_tileMapping",3);const p=this.map.getSlice(c,h,s,a,performance.now()/1e3);for(const t of p)e.texImage2D(e.TEXTURE_2D,0,e.RGBA,s,a,0,e.RGBA,e.UNSIGNED_BYTE,t),this.setRectangle(f+.5*this.tileWidth*r,d+this.tileHeight*r,this.width*r,this.height*r),e.bindFramebuffer(e.FRAMEBUFFER,this.spriteBoard.drawBuffer),e.drawArrays(e.TRIANGLES,0,6);this.spriteBoard.drawProgram.uniformI("u_renderTiles",0),e.bindFramebuffer(e.FRAMEBUFFER,null),e.activeTexture(e.TEXTURE2),e.bindTexture(e.TEXTURE_2D,null),e.activeTexture(e.TEXTURE3),e.bindTexture(e.TEXTURE_2D,null),e.activeTexture(e.TEXTURE0),e.bindTexture(e.TEXTURE_2D,null)}},{key:"resize",value:function(e,t){this.width=e+0,this.height=t+0,this.width=128*Math.ceil(e/128)+128,this.height=128*Math.ceil(t/128)+128,this.xOffset=e-this.width,this.yOffset=t-this.height}},{key:"simulate",value:function(){}},{key:"setRectangle",value:function(e,t,i,r){const n=this.spriteBoard.gl2d.context;n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_texCoord),n.bufferData(n.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,0,1,1,0,1,1]),n.STATIC_DRAW);const o=e,s=e+i,a=t,l=t+r;n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_position),n.bufferData(n.ARRAY_BUFFER,new Float32Array([o,l,s,l,o,a,o,a,s,l,s,a]),n.STATIC_DRAW)}}])&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("sprite/Parallax.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Parallax=void 0;var r=t("curvature/base/Bindable");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,l(r.key),r)}}function o(e,t,i){return t&&n(e.prototype,t),i&&n(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}function s(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}function a(e,t,i){return(t=l(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function l(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}let u=o(function e(){s(this,e),a(this,"texture",null),a(this,"width",0),a(this,"height",0),a(this,"offset",0),a(this,"parallax",0)});e.Parallax=function(){return o(function e(t){let i=t.spriteBoard,n=t.map;s(this,e),this[r.Bindable.Prevent]=!0,this.spriteBoard=i;this.spriteBoard.gl2d.context;this.map=n,this.texture=null,this.height=0,this.slices=["parallax/mountains-0.png","parallax/sky-0-recolor.png","parallax/sky-1-recolor.png","parallax/sky-1b-recolor.png","parallax/sky-2-recolor.png"],this.parallaxLayers=[],this.textures=[],this.ready=n.ready.then(()=>this.assemble(n)).then(()=>{this.loaded=!0}),this.loaded=!1,this.x=0,this.y=0},[{key:"assemble",value:function(){const e=this.spriteBoard.gl2d.context,t=this.map.imageLayers.map((t,i)=>this.constructor.loadImage(t.image).then(r=>{var n,o;const s=this.textures[i]=e.createTexture(),a=this.parallaxLayers[i]=new u,l=r.height+t.offsety;this.height<l&&(this.height=l),a.texture=s,a.width=r.width,a.height=r.height,a.offset=null!==(n=t.offsety)&&void 0!==n?n:0,a.parallax=null!==(o=t.parallaxx)&&void 0!==o?o:1,e.bindTexture(e.TEXTURE_2D,s),e.texImage2D(e.TEXTURE_2D,0,e.RGBA,e.RGBA,e.UNSIGNED_BYTE,r),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_S,e.REPEAT),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_WRAP_T,e.CLAMP_TO_EDGE),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MIN_FILTER,e.NEAREST),e.texParameteri(e.TEXTURE_2D,e.TEXTURE_MAG_FILTER,e.NEAREST)}));return Promise.all(t)}},{key:"draw",value:function(){if(!this.loaded)return;const e=this.spriteBoard.gl2d.context,t=this.spriteBoard.zoomLevel;this.x=this.spriteBoard.following.sprite.x+-this.spriteBoard.width/t*.5,this.y=this.spriteBoard.following.sprite.y,this.spriteBoard.drawProgram.uniformI("u_renderParallax",1),this.spriteBoard.drawProgram.uniformF("u_scroll",this.x,this.y),e.activeTexture(e.TEXTURE0);for(const i of this.parallaxLayers)e.bindTexture(e.TEXTURE_2D,i.texture),this.spriteBoard.drawProgram.uniformF("u_size",i.width,i.width),this.spriteBoard.drawProgram.uniformF("u_parallax",i.parallax,0),this.setRectangle(0,this.spriteBoard.height+(-this.height+i.offset)*t,i.width*t,i.height*t,i.width),e.bindFramebuffer(e.FRAMEBUFFER,this.spriteBoard.drawBuffer),e.drawArrays(e.TRIANGLES,0,6);this.spriteBoard.drawProgram.uniformI("u_renderParallax",0),e.bindFramebuffer(e.FRAMEBUFFER,null),e.bindTexture(e.TEXTURE_2D,null)}},{key:"setRectangle",value:function(e,t,i,r){const n=this.spriteBoard.gl2d.context,o=this.spriteBoard.width/i;n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_texCoord),n.bufferData(n.ARRAY_BUFFER,new Float32Array([0,0,o,0,0,1,0,1,o,0,o,1]),n.STATIC_DRAW);const s=e-0,a=e+this.spriteBoard.width,l=t,u=t+r;n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_position),n.bufferData(n.ARRAY_BUFFER,new Float32Array([s,u,a,u,s,l,s,l,a,u,a,l]),n.STATIC_DRAW)}}],[{key:"loadImage",value:function(e){return this.imagePromises||(this.imagePromises={}),this.imagePromises[e]?this.imagePromises[e]:(this.imagePromises[e]=new Promise((t,i)=>{const r=new Image;r.src=e,r.addEventListener("load",e=>{t(r)})}),this.imagePromises[e])}}])}()}),require.register("sprite/Sprite.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.Sprite=void 0;var r=t("curvature/base/Bindable"),n=t("./SpriteSheet"),o=t("../math/Matrix"),s=t("./Camera");function a(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,l(r.key),r)}}function l(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.Sprite=function(){return e=function e(t){let i=t.src,o=t.session,s=t.spriteSheet,a=(t.width,t.height,t.x),l=t.y,u=t.z;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this[r.Bindable.Prevent]=!0,this.x=a||0,this.y=l||0,this.z=u||0,this.currentAnimation=null,this.width=32,this.height=32,this.scale=1,this.visible=!1,this.moving=!1,this.textures=[],this.frames=[],this.currentDelay=0,this.currentFrame=0,this.currentFrames="",this.speed=0,this.maxSpeed=4,this.RIGHT=0,this.DOWN=1,this.LEFT=2,this.UP=3,this.EAST=this.RIGHT,this.SOUTH=this.DOWN,this.WEST=this.LEFT,this.NORTH=this.UP,this.region=[0,0,0,1],this.spriteBoard=o.spriteBoard;const c=this.spriteBoard.gl2d.context;this.texture=c.createTexture(),c.bindTexture(c.TEXTURE_2D,this.texture);const h=()=>parseInt(255*Math.random()),f=new Uint8Array([h(),h(),h(),255]);c.texImage2D(c.TEXTURE_2D,0,c.RGBA,1,1,0,c.RGBA,c.UNSIGNED_BYTE,f),i&&!s&&(s=new n.SpriteSheet({image:i})),this.spriteSheet=s,s&&s.ready.then(()=>{this.width=s.tileWidth,this.height=s.tileHeight,this.texture=this.createTexture(s.getFrame(0));for(let e=0;e<s.tileCount;e++)this.textures[e]=this.createTexture(s.getFrame(e));this.changeAnimation("default")})},(t=[{key:"draw",value:function(e){if(this.currentDelay>0)this.currentDelay-=e;else if(this.currentFrame++,this.spriteSheet&&this.spriteSheet.animations[this.currentAnimation]){const e=this.spriteSheet.animations[this.currentAnimation];this.currentFrame>=e.length&&(this.currentFrame=this.currentFrame%e.length);const t=e[this.currentFrame].tileid,i=this.textures[t];i&&(this.currentDelay=e[this.currentFrame].duration,this.texture=i)}const t=this.spriteBoard.gl2d.context,i=this.spriteBoard.zoomLevel;this.spriteBoard.drawProgram.uniformF("u_region",0,0,0,0),t.activeTexture(t.TEXTURE0),t.bindTexture(t.TEXTURE_2D,this.texture),this.setRectangle(this.x*i-s.Camera.x+this.spriteBoard.width/2,this.y*i-s.Camera.y+this.spriteBoard.height/2+-this.height*i,this.width*i,this.height*i),t.bindFramebuffer(t.FRAMEBUFFER,this.spriteBoard.drawBuffer),t.drawArrays(t.TRIANGLES,0,6),this.spriteBoard.drawProgram.uniformF("u_region",...Object.assign(this.region||[0,0,0],{3:1})),t.bindFramebuffer(t.FRAMEBUFFER,this.spriteBoard.effectBuffer),t.drawArrays(t.TRIANGLES,0,6),this.spriteBoard.drawProgram.uniformF("u_region",0,0,0,0),t.bindFramebuffer(t.FRAMEBUFFER,null),t.bindTexture(t.TEXTURE_2D,null)}},{key:"changeAnimation",value:function(e){this.spriteSheet&&this.spriteSheet.animations[e]?this.currentAnimation!==e&&(this.currentAnimation=e,this.currentDelay=0):console.warn(`Animation ${e} not found.`)}},{key:"createTexture",value:function(e){const t=this.spriteBoard.gl2d.context,i=t.createTexture();return t.bindTexture(t.TEXTURE_2D,i),t.texParameteri(t.TEXTURE_2D,t.TEXTURE_WRAP_S,t.CLAMP_TO_EDGE),t.texParameteri(t.TEXTURE_2D,t.TEXTURE_WRAP_T,t.CLAMP_TO_EDGE),t.texParameteri(t.TEXTURE_2D,t.TEXTURE_MIN_FILTER,t.NEAREST),t.texParameteri(t.TEXTURE_2D,t.TEXTURE_MAG_FILTER,t.NEAREST),t.texImage2D(t.TEXTURE_2D,0,t.RGBA,this.width,this.height,0,t.RGBA,t.UNSIGNED_BYTE,e),t.bindTexture(t.TEXTURE_2D,null),i}},{key:"setRectangle",value:function(e,t,i,r){arguments.length>4&&void 0!==arguments[4]&&arguments[4];const n=this.spriteBoard.gl2d.context,s=this.spriteBoard.zoomLevel;n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_texCoord),n.bufferData(n.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,0,1,1,0,1,1]),n.STATIC_DRAW);const a=t+32*s,l=e+i,u=t+r+32*s,c=new Float32Array([e,a,l,a,e,u,e,u,l,a,l,u]),h=e+.5*i,f=t+.5*r,d=o.Matrix.transform(c,o.Matrix.composite(o.Matrix.translate(h,f),o.Matrix.translate(-h,-f)));n.bindBuffer(n.ARRAY_BUFFER,this.spriteBoard.drawProgram.buffers.a_position),n.bufferData(n.ARRAY_BUFFER,d,n.STATIC_DRAW)}}])&&a(e.prototype,t),i&&a(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("sprite/SpriteBoard.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.SpriteBoard=void 0;var r=t("curvature/base/Bindable"),n=t("./MapRenderer"),o=t("./Parallax"),s=t("../gl2d/Gl2d"),a=t("./Camera");function l(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,u(r.key),r)}}function u(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.SpriteBoard=function(){return e=function e(t){let i=t.element,n=t.world;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this[r.Bindable.Prevent]=!0,this.maps=[],this.world=n,this.sprites=new Set,this.currentMap=null,this.screenScale=1,this.zoomLevel=2,this.mouse={x:null,y:null,clickX:null,clickY:null},this.parallax=null,this.width=i.width,this.height=i.height,a.Camera.width=i.width,a.Camera.height=i.height,this.gl2d=new s.Gl2d(i),this.gl2d.enableBlending();this.renderMode=0,this.drawProgram=this.gl2d.createProgram({vertexShader:this.gl2d.createShader("sprite/texture.vert"),fragmentShader:this.gl2d.createShader("sprite/texture.frag"),attributes:["a_position","a_texCoord"],uniforms:["u_image","u_effect","u_tiles","u_tileMapping","u_size","u_scale","u_scroll","u_stretch","u_tileSize","u_resolution","u_mapTextureSize","u_region","u_parallax","u_time","u_renderTiles","u_renderParallax","u_renderMode"]}),this.drawProgram.use(),this.colorLocation=this.drawProgram.uniforms.u_color,this.tilePosLocation=this.drawProgram.uniforms.u_tileNo,this.regionLocation=this.drawProgram.uniforms.u_region,this.drawLayer=this.gl2d.createTexture(1e3,1e3),this.effectLayer=this.gl2d.createTexture(1e3,1e3),this.drawBuffer=this.gl2d.createFramebuffer(this.drawLayer),this.effectBuffer=this.gl2d.createFramebuffer(this.effectLayer),document.addEventListener("mousemove",e=>{this.mouse.x=e.clientX,this.mouse.y=e.clientY}),this.mapRenderers=new Map,this.following=null},(t=[{key:"draw",value:function(e){if(this.following){a.Camera.x=(16+this.following.sprite.x)*this.zoomLevel||0,a.Camera.y=(16+this.following.sprite.y)*this.zoomLevel||0;const e=[...this.world.getMapsForPoint(this.following.x,this.following.y)];if(e[0]&&this.currentMap!==e[0]){const t=this.nextParallax=new o.Parallax({spriteBoard:this,map:e[0]});this.nextParallax.ready.then(()=>{this.nextParallax===t&&(this.parallax=t)}),this.currentMap=e[0]}const t=this.world.getMapsForRect(this.following.sprite.x,this.following.sprite.y,a.Camera.width,a.Camera.height),i=new Set;t.forEach(e=>{if(e.visible=!0,this.mapRenderers.has(e))return void i.add(this.mapRenderers.get(e));const t=new n.MapRenderer({spriteBoard:this,map:e});i.add(t),t.resize(a.Camera.width,a.Camera.height),this.mapRenderers.set(e,t)}),new Set(this.mapRenderers.keys()).difference(t).forEach(e=>{this.mapRenderers.delete(e),e.visible=!1})}const t=this.gl2d.context;if(this.drawProgram.uniformF("u_size",a.Camera.width,a.Camera.height),this.drawProgram.uniformF("u_resolution",t.canvas.width,t.canvas.height),this.drawProgram.uniformI("u_renderMode",this.renderMode),this.drawProgram.uniformF("u_time",performance.now()),this.drawProgram.uniformF("u_region",0,0,0,0),t.viewport(0,0,t.canvas.width,t.canvas.height),t.clearColor(0,0,0,1),t.bindFramebuffer(t.FRAMEBUFFER,this.effectBuffer),t.clear(t.COLOR_BUFFER_BIT),this.currentMap&&this.currentMap.backgroundColor){const e=this.currentMap.backgroundColor.substr(1),i=parseInt(e.substr(-6,2),16)/255,r=parseInt(e.substr(-4,2),16)/255,n=parseInt(e.substr(-2,2),16)/255,o=8===e.length?parseInt(e.substr(-8,2),16)/255:1;t.clearColor(i,n,r,o)}else t.clearColor(0,0,0,1);t.bindFramebuffer(t.FRAMEBUFFER,this.drawBuffer),t.clear(t.COLOR_BUFFER_BIT),t.clearColor(0,0,0,0),t.bindFramebuffer(t.FRAMEBUFFER,null),t.clear(t.COLOR_BUFFER_BIT),this.drawProgram.uniformF("u_size",a.Camera.width,a.Camera.height),window.smProfiling&&console.time("draw-parallax"),this.parallax&&this.parallax.draw(),window.smProfiling&&console.timeEnd("draw-parallax"),window.smProfiling&&console.time("draw-tiles"),this.mapRenderers.forEach(e=>e.draw()),window.smProfiling&&console.timeEnd("draw-tiles"),window.smProfiling&&console.time("draw-sprites");let i=[...this.sprites];i.sort((e,t)=>void 0===e.y?-1:void 0===t.y?1:e.y-t.y),i.forEach(t=>t.visible&&t.draw(e)),window.smProfiling&&console.timeEnd("draw-sprites"),window.smProfiling&&(window.smProfiling=!1),this.setRectangle(0,this.gl2d.element.height,this.gl2d.element.width,-this.gl2d.element.height),t.bindFramebuffer(t.FRAMEBUFFER,null),t.activeTexture(t.TEXTURE0),t.bindTexture(t.TEXTURE_2D,this.drawLayer),this.drawProgram.uniformI("u_image",0),t.activeTexture(t.TEXTURE1),t.bindTexture(t.TEXTURE_2D,this.effectLayer),this.drawProgram.uniformI("u_effect",1),t.drawArrays(t.TRIANGLES,0,6),t.activeTexture(t.TEXTURE0),t.bindTexture(t.TEXTURE_2D,null),t.activeTexture(t.TEXTURE1),t.bindTexture(t.TEXTURE_2D,null),t.activeTexture(t.TEXTURE4),t.bindTexture(t.TEXTURE_2D,null)}},{key:"resize",value:function(e,t){const i=this.gl2d.context;e=e||this.gl2d.element.width,t=t||this.gl2d.element.height,this.width=e,this.height=t,a.Camera.x*=this.zoomLevel,a.Camera.y*=this.zoomLevel,a.Camera.width=e/this.zoomLevel,a.Camera.height=t/this.zoomLevel,this.mapRenderers.forEach(e=>e.resize(a.Camera.width,a.Camera.height)),i.bindTexture(i.TEXTURE_2D,this.drawLayer),i.texImage2D(i.TEXTURE_2D,0,i.RGBA,this.width,this.height,0,i.RGBA,i.UNSIGNED_BYTE,null),i.bindTexture(i.TEXTURE_2D,this.effectLayer),i.texImage2D(i.TEXTURE_2D,0,i.RGBA,this.width,this.height,0,i.RGBA,i.UNSIGNED_BYTE,null),i.bindTexture(i.TEXTURE_2D,null)}},{key:"zoom",value:function(e){const t=32*this.screenScale,i=.2*this.screenScale;let r=e*(.05*this.zoomLevel)+this.zoomLevel;r<i?r=i:r>t&&(r=t),Math.abs(r-1)<.05&&(r=1),this.zoomLevel!==r&&(this.zoomLevel=r,this.resize())}},{key:"setRectangle",value:function(e,t,i,r){const n=this.gl2d.context;n.bindBuffer(n.ARRAY_BUFFER,this.drawProgram.buffers.a_texCoord),n.bufferData(n.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,0,1,1,0,1,1]),n.STATIC_DRAW);const o=e,s=e+i,a=t,l=t+r;n.bindBuffer(n.ARRAY_BUFFER,this.drawProgram.buffers.a_position),n.bufferData(n.ARRAY_BUFFER,new Float32Array([o,a,s,a,o,l,o,l,s,a,s,l]),n.STREAM_DRAW)}}])&&l(e.prototype,t),i&&l(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("sprite/SpriteSheet.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.SpriteSheet=void 0;var r=t("./Tileset");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function s(e,t,i){return t=a(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],a(e).constructor):t.apply(e,i))}function a(e){return(a=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function l(e,t){return(l=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}e.SpriteSheet=function(e){function t(e){var i;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,t),(i=s(this,t,[e])).frames=[],i.animations={default:[{tileid:0,duration:1/0}]},i.canvas=document.createElement("canvas"),i.context=i.canvas.getContext("2d",{willReadFrequently:!0}),i.ready=i.ready.then(()=>{i.processImage();for(const e of i.tiles)e.animation?i.animations[e.type]=e.animation:e.type&&(i.animations[e.type]=[{duration:1/0,tileid:e.id}])}),i}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&l(e,t)}(t,r.Tileset),i=t,(o=[{key:"processImage",value:function(){this.canvas.width=this.image.width,this.canvas.height=this.image.height,this.context.drawImage(this.image,0,0);for(let e=0;e<this.tileCount;e++)this.frames[e]=this.getFrame(e)}},{key:"getFrame",value:function(e){const t=(e%=this.tileCount)%this.columns,i=Math.floor(e/this.columns);return this.context.getImageData(t*this.tileWidth,i*this.tileHeight,this.tileWidth,this.tileHeight).data}}])&&n(i.prototype,o),a&&n(i,a),Object.defineProperty(i,"prototype",{writable:!1}),i;var i,o,a}()}),require.register("sprite/TextureBank.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.TextureBank=void 0;e.TextureBank=function(e,t,i){return t&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e}(function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)})}),require.register("sprite/Tileset.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.Tileset=void 0;e.Tileset=function(){return e=function e(t){let i=t.source,r=t.map,n=t.firstgid,o=t.columns,s=t.image,a=t.imageheight,l=t.imagewidth,u=t.margin,c=t.name,h=t.spacing,f=t.tilecount,d=t.tileheight,p=t.tilewidth,v=t.tiles;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this.firstGid=null!==n&&void 0!==n?n:0,this.tileCount=null!==f&&void 0!==f?f:0,this.tileHeight=null!==d&&void 0!==d?d:0,this.tileWidth=null!==p&&void 0!==p?p:0,i&&(this.source=new URL(i,location)),this.map=r,this.ready=this.getReady({source:i,columns:o,image:s,imageheight:a,imagewidth:l,margin:u,name:c,spacing:h,tilecount:f,tileheight:d,tilewidth:p,tiles:v})},(t=[{key:"getReady",value:async function(e){let t=e.source,i=e.columns,r=e.image,n=e.imageheight,o=e.imagewidth,s=e.margin,a=e.name,l=e.spacing,u=e.tilecount,c=e.tileheight,h=e.tilewidth,f=e.tiles;if(t){var d=await(await fetch(t)).json();i=d.columns,r=d.image,n=d.imageheight,o=d.imagewidth,s=d.margin,a=d.name,l=d.spacing,u=d.tilecount,c=d.tileheight,h=d.tilewidth,f=d.tiles;for(const e of f)e.id+=this.firstGid}this.columns=null!==i&&void 0!==i?i:1,this.margin=null!==s&&void 0!==s?s:0,this.name=null!==a&&void 0!==a?a:r,this.spacing=null!==l&&void 0!==l?l:0,this.tiles=null!==f&&void 0!==f?f:[],this.tileCount=null!==u&&void 0!==u?u:1,this.image=new Image,this.source?this.image.src=new URL(r,this.source):this.map?this.image.src=new URL(r,this.map.src):this.image.src=new URL(r,location),await new Promise(e=>this.image.onload=(()=>e())),this.imageWidth=null!==o&&void 0!==o?o:this.image.width,this.imageHeight=null!==n&&void 0!==n?n:this.image.height,this.tileWidth=null!==h&&void 0!==h?h:this.imageWidth,this.tileHeight=null!==c&&void 0!==c?c:this.imageHeight,this.rows=Math.ceil(n/c)||1}}])&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("sprite/texture.frag",function(e,t,i){i.exports="// texture.frag\n#define M_PI 3.1415926535897932384626433832795\n#define M_TAU M_PI / 2.0\nprecision mediump float;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nuniform sampler2D u_image;\nuniform sampler2D u_effect;\nuniform sampler2D u_tiles;\nuniform sampler2D u_tileMapping;\n\nuniform vec2 u_size;\nuniform vec2 u_tileSize;\nuniform vec2 u_resolution;\nuniform vec2 u_mapTextureSize;\n\nuniform vec4 u_color;\nuniform vec4 u_region;\nuniform vec2 u_parallax;\nuniform vec2 u_scroll;\nuniform vec2 u_stretch;\n\nuniform float u_time;\nuniform float u_scale;\n\nuniform int u_renderTiles;\nuniform int u_renderParallax;\nuniform int u_renderMode;\n\nfloat masked = 0.0;\nfloat sorted = 1.0;\nfloat displace = 1.0;\nfloat blur = 1.0;\n\nvec2 rippleX(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(\n    v_texCoord.x + sin(v_texCoord.y * (a * u_size.y) + b) * c / u_size.x,\n    v_texCoord.y\n  );\n\n  if (rippled.x < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.x > u_size.x) {\n    rippled.x = u_size.x - (rippled.x - u_size.x);\n  }\n\n  return rippled;\n}\n\nvec2 rippleY(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(v_texCoord.x, v_texCoord.y + sin(v_texCoord.x * (a * u_size.x) + b) * c / u_size.y);\n\n  if (rippled.y < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.y > u_size.y) {\n    rippled.y = u_size.y - (rippled.y - u_size.y);\n  }\n\n  return rippled;\n}\n\nvec4 motionBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = originalColor;\n\n  const float max = 10.0;\n  float weight = 0.85;\n\n  for (float i = 0.0; i < max; i += 1.0) {\n    if(i > abs(magnitude) || originalColor.a < 1.0) {\n      break;\n    }\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight;\n    weight *= 0.8;\n  }\n\n  return dispColor;\n}\n\nvec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = texture2D(image, textCoord);\n\n  const float max = 10.0;\n  float weight = 0.65;\n\n  for (float i = 0.0; i < max; i += 0.25) {\n    if(i > abs(magnitude)) {\n      break;\n    }\n    vec4 dispColorUp = texture2D(image, textCoord + vec2(\n      cos(angle) * -i * sign(magnitude) / u_size.x,\n      sin(angle) * -i * sign(magnitude) / u_size.y\n    ));\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight * 0.5 + dispColorUp * weight * 0.5;\n    weight *= 0.70;\n  }\n\n  return dispColor;\n}\n\nvoid main() {\n  vec4 originalColor = texture2D(u_image, v_texCoord);\n  vec4 effectColor = texture2D(u_effect,  v_texCoord);\n\n  // This only applies when drawing the parallax background\n  if (u_renderParallax == 1) {\n\n    float texelSize = 1.0 / u_size.x;\n\n    vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)\n      + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);\n      // + vec2(u_time / 10000.0, 0.0);\n      // + vec2(, 0.0);\n      ;\n\n    gl_FragColor = texture2D(u_image,  parallaxCoord);\n\n    return;\n  }\n\n  // This only applies when drawing tiles.\n  if (u_renderTiles == 1) {\n    float xTiles = floor(u_size.x / u_tileSize.x);\n    float yTiles = floor(u_size.y / u_tileSize.y);\n\n    float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;\n    float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;\n\n    float inv_xTiles = 1.0 / xTiles;\n    float inv_yTiles = 1.0 / yTiles;\n\n    float xTile = floor(xT) * inv_xTiles;\n    float yTile = floor(yT) * inv_yTiles;\n\n    float xOff = (xT * inv_xTiles - xTile) * xTiles;\n    float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;\n\n    float xWrap = u_mapTextureSize.x / u_tileSize.x;\n    float yWrap = u_mapTextureSize.y / u_tileSize.y;\n\n    // Mode 1 draws tiles' x/y values as red & green\n    if (u_renderMode == 1) {\n      gl_FragColor = vec4(xTile, yTile, 0, 1.0);\n      return;\n    }\n\n    // Mode 2 is the same as mode 1 but adds combines\n    // internal tile x/y to the blue channel\n    if (u_renderMode == 2) {\n      gl_FragColor = vec4(xTile, yTile, (xOff + yOff) * 0.5, 1.0);\n      return;\n    }\n\n    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));\n\n    float lo = tile.r * 256.0;\n    float hi = tile.g * 256.0 * 256.0;\n\n    float tileNumber = lo + hi;\n\n    if (tileNumber == 0.0) {\n      gl_FragColor.a = 0.0;\n      return;\n    }\n\n    // Mode 3 uses the tile number for the red/green channels\n    if (u_renderMode == 3) {\n      gl_FragColor = tile;\n      gl_FragColor.b = 0.5;\n      gl_FragColor.a = 1.0;\n      return;\n    }\n\n    // Mode 4 normalizes the tile number to all channels\n    if (u_renderMode == 4) {\n      gl_FragColor = vec4(\n        mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , 1.0\n      );\n      return;\n    }\n\n    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));\n    float tileSetY = floor((-1.0 + tileNumber) / xWrap);\n\n    vec4 tileColor = texture2D(u_tiles, vec2(\n      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)\n      , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)\n    ));\n\n    gl_FragColor = tileColor;\n\n    return;\n  }\n\n  // This if/else block only applies\n  // when we're drawing the effectBuffer\n  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) {\n    if (masked < 1.0 || originalColor.a > 0.0) {\n      gl_FragColor = u_region;\n    }\n    return;\n  }\n  else if (u_region.a > 0.0) {\n    if (sorted > 0.0) {\n      gl_FragColor = vec4(0, 0, 0, originalColor.a > 0.0 ? 1.0 : 0.0);\n    }\n    else {\n      gl_FragColor = vec4(0, 0, 0, 0.0);\n    }\n    return;\n  };\n\n  // Mode 5 draws the effect buffer to the screen\n  if (u_renderMode == 5) {\n    gl_FragColor = effectColor;\n    return;\n  }\n\n  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);\n\n  // This if/else block only applies\n  // when we're drawing the drawBuffer\n  if (effectColor == vec4(0, 1, 1, 1)) { // Water region\n    vec2 texCoord = v_texCoord;\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      texCoord = rippleX(v_texCoord, ripple.x, ripple.y, ripple.z);\n      v_blurredColor = texture2D(u_image, texCoord);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = linearBlur(u_image, 0.0, 1.0, texCoord);\n    }\n    gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;\n  }\n  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region\n    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      v_blurredColor = texture2D(u_image, v_displacement);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = motionBlur(u_image, -M_TAU, 1.0, v_displacement);\n    }\n    gl_FragColor = v_blurredColor * 0.75 + effectColor * 0.25;\n  }\n  else { // Null region\n    gl_FragColor = originalColor;\n  }\n}\n"}),require.register("sprite/texture.vert",function(e,t,i){i.exports="// texture.vert\nprecision mediump float;\n\nattribute vec2 a_position;\nattribute vec2 a_texCoord;\n\nuniform vec2 u_resolution;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nvoid main()\n{\n  vec2 zeroToOne = a_position / u_resolution;\n  vec2 zeroToTwo = zeroToOne * 2.0;\n  vec2 clipSpace = zeroToTwo - 1.0;\n\n  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);\n  v_texCoord  = a_texCoord;\n  v_position  = a_position;\n}\n"}),require.register("ui/OnScreenJoyPad.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.OnScreenJoyPad=void 0;var r=t("curvature/base/View");function n(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,o(r.key),r)}}function o(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}function s(e,t,i){return t=a(t),function(e,t){if(t&&("object"==typeof t||"function"==typeof t))return t;if(void 0!==t)throw new TypeError("Derived constructors may only return object or undefined");return function(e){if(void 0===e)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return e}(e)}(e,function(){try{var e=!Boolean.prototype.valueOf.call(Reflect.construct(Boolean,[],function(){}))}catch(e){}return function(){return!!e}()}()?Reflect.construct(t,i||[],a(e).constructor):t.apply(e,i))}function a(e){return(a=Object.setPrototypeOf?Object.getPrototypeOf.bind():function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function l(e,t){return(l=Object.setPrototypeOf?Object.setPrototypeOf.bind():function(e,t){return e.__proto__=t,e})(e,t)}e.OnScreenJoyPad=function(e){function i(e){var r;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,i),(r=s(this,i,[e])).template=t("./onScreenJoyPad.tmp"),r.dragStart=!1,r.args.dragging=!1,r.args.x=0,r.args.y=0,window.addEventListener("mousemove",e=>{r.moveStick(e)}),window.addEventListener("mouseup",e=>{r.dropStick(e)}),window.addEventListener("touchmove",e=>{r.moveStick(e)}),window.addEventListener("touchend",e=>{r.dropStick(e)}),r}return function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),Object.defineProperty(e,"prototype",{writable:!1}),t&&l(e,t)}(i,r.View),o=i,(a=[{key:"dragStick",value:function(e){let t=e;e.preventDefault(),e.touches&&e.touches[0]&&(t=e.touches[0]),this.args.dragging=!0,this.dragStart={x:t.clientX,y:t.clientY}}},{key:"moveStick",value:function(e){if(this.args.dragging){let t=e;e.touches&&e.touches[0]&&(t=e.touches[0]),this.args.xx=t.clientX-this.dragStart.x,this.args.yy=t.clientY-this.dragStart.y;const i=50;this.args.xx<-i?this.args.x=-i:this.args.xx>i?this.args.x=i:this.args.x=this.args.xx,this.args.yy<-i?this.args.y=-i:this.args.yy>i?this.args.y=i:this.args.y=this.args.yy}}},{key:"dropStick",value:function(e){this.args.dragging=!1,this.args.x=0,this.args.y=0}}])&&n(o.prototype,a),u&&n(o,u),Object.defineProperty(o,"prototype",{writable:!1}),o;var o,a,u}()}),require.register("ui/onScreenJoyPad.tmp.html",function(e,t,i){i.exports='<div class = "controller">\n\t<div class = "joystick" cv-on = "\n\t\ttouchstart:dragStick(event);\n\t\tmousedown:dragStick(event);\n\t">\n\t\t<div class = "pad" style = "position: relative; transform:translate([[x]]px,[[y]]px);"></div>\n\t</div>\n\n\t<div class = "button">A</div>\n\t<div class = "button">B</div>\n\t<div class = "button">C</div>\n</div>'}),require.register("world/EntityPallet.js",function(e,t,i){"use strict";function r(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,n(r.key),r)}}function n(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}Object.defineProperty(e,"__esModule",{value:!0}),e.EntityPallet=void 0;const o={};e.EntityPallet=function(){return e=function e(){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e)},i=[{key:"resolve",value:async function(e){if("@"===e[0]){if(o[e])return o[e]}else if("http://"===e||"https://"===e)return(await import(e)).default}},{key:"register",value:function(e,t){o[e]&&console.warn("Overwriting spawnclass!"),o[e]=t}}],(t=null)&&r(e.prototype,t),i&&r(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("world/TileMap.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.TileMap=void 0;var r=t("curvature/base/Bindable"),n=t("./EntityPallet"),o=t("../sprite/Tileset"),s=t("../math/QuickTree"),a=t("../model/Spawner");function l(e,t){var i=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),i.push.apply(i,r)}return i}function u(e){for(var t=1;t<arguments.length;t++){var i=null!=arguments[t]?arguments[t]:{};t%2?l(Object(i),!0).forEach(function(t){c(e,t,i[t])}):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(i)):l(Object(i)).forEach(function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(i,t))})}return e}function c(e,t,i){return(t=f(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function h(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,f(r.key),r)}}function f(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.TileMap=function(){return e=function e(t){let i=t.fileName,n=t.session,o=t.x,a=t.y,l=t.width,u=t.height;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this[r.Bindable.Prevent]=!0,this.src=i,this.backgroundColor=null,this.tileCount=0,this.xWorld=o,this.yWorld=a,this.width=l,this.height=u,this.tileWidth=0,this.tileHeight=0,this.tileSetWidth=0,this.tileSetHeight=0,this.pixels=[],this.image=document.createElement("img"),this.session=n,this.properties={},this.entityDefs={},this.emptyTiles=new Set,this.tilesIndexes=new Map,this.canvases=new Map,this.contexts=new Map,this.tiles=null,this.tileLayers=[],this.imageLayers=[],this.objectLayers=[],this.ready=this.getReady(i),this.animations=new Map,this.visible=!1,this.quadTree=new s.QuickTree(o,o,o+this.width,a+this.height)},(t=[{key:"getReady",value:async function(e){const t=await(await fetch(e)).json();if(this.collisionLayers=t.layers.filter(e=>"tilelayer"===e.type&&"collision"===e.class),this.tileLayers=t.layers.filter(e=>"tilelayer"===e.type&&"collision"!==e.class),this.imageLayers=t.layers.filter(e=>"imagelayer"===e.type),this.objectLayers=t.layers.filter(e=>"objectgroup"===e.type),this.backgroundColor=t.backgroundcolor,t.properties)for(const e of t.properties)this.properties[e.name]=e.value;this.properties.backgroundColor&&(this.backgroundColor=this.properties.backgroundColor);const i=t.tilesets.map(t=>(t.source?t.source=new URL(t.source,e).href:t.map=this,new o.Tileset(t)));return this.width=t.width,this.height=t.height,this.tileWidth=t.tilewidth,this.tileHeight=t.tileheight,await Promise.all(i.map(e=>e.ready)),this.assemble(i),await this.spawn(),this}},{key:"assemble",value:function(e){e.sort((e,t)=>e.firstGid-t.firstGid);const t=this.tileCount=e.reduce((e,t)=>e.tileCount+t.tileCount,{tileCount:0}),i=Math.ceil(Math.sqrt(t)),r=document.createElement("canvas");this.tileSetWidth=r.width=i*this.tileWidth,this.tileSetHeight=r.height=Math.ceil(t/i)*this.tileHeight;const n=r.getContext("2d",{willReadFrequently:!0});for(const t of e){const e=t.image,i=document.createElement("canvas");i.width=e.width,i.height=e.height;const o=i.getContext("2d",{willReadFrequently:!0});o.drawImage(e,0,0);for(let e=0;e<t.tileCount;e++){const i=e*this.tileWidth%t.imageWidth,s=Math.floor(e*this.tileWidth/t.imageWidth)*this.tileHeight,a=e*this.tileWidth%r.width,l=Math.floor(e*this.tileWidth/r.width)*this.tileHeight,u=o.getImageData(i,s,this.tileWidth,this.tileHeight);n.putImageData(u,a,l);const c=new Uint32Array(u.data.buffer);let h=!0;for(const e of c)e>0&&(h=!1);h&&this.emptyTiles.add(e)}for(const e of t.tiles)e.animation&&this.animations.set(e.id,e.animation)}this.pixels=n.getImageData(0,0,r.width,r.height).data,this.tiles=n;for(const e of[...this.tileLayers,...this.collisionLayers]){const t=document.createElement("canvas"),i=t.getContext("2d",{willReadFrequently:!0});this.canvases.set(e,t),this.contexts.set(e,i);const r=new Uint32Array(e.data.map(e=>0+e)),n=new Uint8ClampedArray(r.buffer);for(const e in r){const t=r[e];this.animations.has(t)&&console.log({i:e,tile:t},this.animations.get(t))}for(let e=3;e<n.length;e+=4)n[e]=255;this.tilesIndexes.set(e,r),t.width=this.width,t.height=this.height,i.putImageData(new ImageData(n,this.width,this.height),0,0)}}},{key:"spawn",value:async function(){for(const e of this.objectLayers){const t=e.objects;for(const e of t){if(this.entityDefs[e.id]=e,"player-start"===e.name||!e.type)continue;const t=await n.EntityPallet.resolve(e.type),i=new a.Spawner(u(u({spawnType:e.type,spawnClass:t},e),{},{spriteBoard:this.session.spriteBoard,session:this.session,world:this.session.world}));i.x+=this.xWorld,i.y+=this.yWorld,this.session.addEntity(i),this.quadTree.add(i)}}}},{key:"getCollisionTile",value:function(e,t,i){return!(!this.collisionLayers||!this.collisionLayers[i])&&this.getTileFromLayer(this.collisionLayers[i],e,t)}},{key:"getColor",value:function(e,t){let i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:0;return this.getPixel(this.tileLayers[i],e,t,i)}},{key:"getSolid",value:function(e,t){let i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:0;if(!this.collisionLayers||!this.collisionLayers[i])return!1;const r=this.getPixel(this.collisionLayers[i],e,t,i);return 0===r||r}},{key:"getPixel",value:function(e,t,i){const r=this.getTileFromLayer(e,t,i);if(!1===r||-1===r)return!1;const n=Math.trunc(t%this.tileWidth),o=Math.trunc(i%this.tileHeight),s=r*this.tileWidth%this.tileSetWidth,a=Math.floor(r*this.tileWidth/this.tileSetWidth);return this.pixels[s+n+(a+o)*this.tileSetWidth]}},{key:"getTileFromLayer",value:function(e,t,i){const r=-this.xWorld+t,n=-this.yWorld+i;if(r<0||r>=this.width*this.tileWidth||n<0||n>=this.height*this.tileWidth)return!1;const o=Math.floor(r/this.tileWidth),s=Math.floor(n/this.tileHeight);return-1+e.data[o+s*this.width]}},{key:"getSlice",value:function(e,t,i,r){arguments.length>4&&void 0!==arguments[4]&&arguments[4];return this.tileLayers.map(e=>this.contexts.get(e)).map(n=>n.getImageData(e,t,i,r).data)}}])&&h(e.prototype,t),i&&h(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("world/World.js",function(e,t,i){"use strict";Object.defineProperty(e,"__esModule",{value:!0}),e.World=void 0;var r=t("curvature/base/Bindable"),n=t("../math/Rectangle"),o=t("./TileMap"),s=t("../math/SMTree"),a=t("../math/Ray");function l(e,t){var i=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),i.push.apply(i,r)}return i}function u(e){for(var t=1;t<arguments.length;t++){var i=null!=arguments[t]?arguments[t]:{};t%2?l(Object(i),!0).forEach(function(t){c(e,t,i[t])}):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(i)):l(Object(i)).forEach(function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(i,t))})}return e}function c(e,t,i){return(t=f(t))in e?Object.defineProperty(e,t,{value:i,enumerable:!0,configurable:!0,writable:!0}):e[t]=i,e}function h(e,t){for(var i=0;i<t.length;i++){var r=t[i];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,f(r.key),r)}}function f(e){var t=function(e,t){if("object"!=typeof e||!e)return e;var i=e[Symbol.toPrimitive];if(void 0!==i){var r=i.call(e,t||"default");if("object"!=typeof r)return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)}(e,"string");return"symbol"==typeof t?t:t+""}e.World=function(){return e=function e(t){let i=t.source,n=t.session;!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,e),this[r.Bindable.Prevent]=!0,this.ready=this.getReady(i),this.maps=[],this.mTree=new s.SMTree,this.rectMap=new Map,this.session=n,this.source=i},(t=[{key:"getReady",value:async function(e){const t=await(await fetch(e)).json();return await Promise.all(t.maps.map((t,i)=>{t.fileName=new URL(t.fileName,e).href;const r=new o.TileMap(u(u({},t),{},{session:this.session}));r.xWorld=t.x,r.yWorld=t.y,this.maps[i]=r;const s=new n.Rectangle(t.x,t.y,t.x+t.width,t.y+t.height);return this.rectMap.set(s,r),this.mTree.add(s),console.log(this),r.ready}))}},{key:"getMapsForPoint",value:function(e,t){const i=this.mTree.query(e,t,e,t),r=new Set;for(const e of i){const t=this.rectMap.get(e);r.add(t)}return r}},{key:"getMapsForRect",value:function(e,t,i,r){const n=new Set,o=this.mTree.query(e+.5*-i,t+.5*-r,e+.5*i,t+.5*r);window.smProfiling&&console.time("query mapTree");for(const e of o)n.add(this.rectMap.get(e));return window.smProfiling&&console.timeEnd("query mapTree"),n}},{key:"getSolid",value:function(e,t,i){const r=this.getMapsForPoint(e,t);for(const n of r){const r=n.getSolid(e,t,i);if(r)return r}return null}},{key:"getCollisionTile",value:function(e,t,i){const r=this.getMapsForPoint(e,t);for(const n of r){const r=n.getCollisionTile(e,t,i);if(r>0)return r}return null}},{key:"getEntitiesForRect",value:function(e,t,i,r){const n=this.getMapsForRect(e,t,i,r);let o=new Set;window.smProfiling&&console.time("query quadTree");for(const s of n)s.visible&&(o=o.union(s.quadTree.select(e+.5*-i,t+.5*-r,i,r)));return window.smProfiling&&console.timeEnd("query quadTree"),o}},{key:"castRay",value:function(e,t,i,r){let n=arguments.length>4&&void 0!==arguments[4]?arguments[4]:320,o=arguments.length>5&&void 0!==arguments[5]?arguments[5]:a.Ray.DEFAULT_FLAGS;return a.Ray.cast(this,e,t,i,r,n,o)}},{key:"castTerrainRay",value:function(e,t,i,r){let n=arguments.length>4&&void 0!==arguments[4]?arguments[4]:320,o=arguments.length>5&&void 0!==arguments[5]?arguments[5]:a.Ray.DEFAULT_FLAGS;return a.Ray.castTerrain(this,e,t,i,r,n,o)}},{key:"castEntityRay",value:function(e,t,i,r){let n=arguments.length>4&&void 0!==arguments[4]?arguments[4]:a.Ray.DEFAULT_FLAGS;return a.Ray.castEntity(this,e,t,i,r,n)}}])&&h(e.prototype,t),i&&h(e,i),Object.defineProperty(e,"prototype",{writable:!1}),e;var e,t,i}()}),require.register("___globals___",function(e,t,i){})}(),require("___globals___");
+(function() {
+  'use strict';
+
+  var globals = typeof global === 'undefined' ? self : global;
+  if (typeof globals.require === 'function') return;
+
+  var modules = {};
+  var cache = {};
+  var aliases = {};
+  var has = {}.hasOwnProperty;
+
+  var expRe = /^\.\.?(\/|$)/;
+  var expand = function(root, name) {
+    var results = [], part;
+    var parts = (expRe.test(name) ? root + '/' + name : name).split('/');
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
+      }
+    }
+    return results.join('/');
+  };
+
+  var dirname = function(path) {
+    return path.split('/').slice(0, -1).join('/');
+  };
+
+  var localRequire = function(path) {
+    return function expanded(name) {
+      var absolute = expand(dirname(path), name);
+      return globals.require(absolute, path);
+    };
+  };
+
+  var initModule = function(name, definition) {
+    var hot = hmr && hmr.createHot(name);
+    var module = {id: name, exports: {}, hot: hot};
+    cache[name] = module;
+    definition(module.exports, localRequire(name), module);
+    return module.exports;
+  };
+
+  var expandAlias = function(name) {
+    var val = aliases[name];
+    return (val && name !== val) ? expandAlias(val) : name;
+  };
+
+  var _resolve = function(name, dep) {
+    return expandAlias(expand(dirname(name), dep));
+  };
+
+  var require = function(name, loaderPath) {
+    if (loaderPath == null) loaderPath = '/';
+    var path = expandAlias(name);
+
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
+
+    throw new Error("Cannot find module '" + name + "' from '" + loaderPath + "'");
+  };
+
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  var extRe = /\.[^.\/]+$/;
+  var indexRe = /\/index(\.[^\/]+)?$/;
+  var addExtensions = function(bundle) {
+    if (extRe.test(bundle)) {
+      var alias = bundle.replace(extRe, '');
+      if (!has.call(aliases, alias) || aliases[alias].replace(extRe, '') === alias + '/index') {
+        aliases[alias] = bundle;
+      }
+    }
+
+    if (indexRe.test(bundle)) {
+      var iAlias = bundle.replace(indexRe, '');
+      if (!has.call(aliases, iAlias)) {
+        aliases[iAlias] = bundle;
+      }
+    }
+  };
+
+  require.register = require.define = function(bundle, fn) {
+    if (bundle && typeof bundle === 'object') {
+      for (var key in bundle) {
+        if (has.call(bundle, key)) {
+          require.register(key, bundle[key]);
+        }
+      }
+    } else {
+      modules[bundle] = fn;
+      delete cache[bundle];
+      addExtensions(bundle);
+    }
+  };
+
+  require.list = function() {
+    var list = [];
+    for (var item in modules) {
+      if (has.call(modules, item)) {
+        list.push(item);
+      }
+    }
+    return list;
+  };
+
+  var hmr = globals._hmr && new globals._hmr(_resolve, require, modules, cache);
+  require._cache = cache;
+  require.hmr = hmr && hmr.wrap;
+  require.brunch = true;
+  globals.require = require;
+})();
+
+(function() {
+var global = typeof window === 'undefined' ? this : window;
+var __makeRelativeRequire = function(require, mappings, pref) {
+  var none = {};
+  var tryReq = function(name, pref) {
+    var val;
+    try {
+      val = require(pref + '/node_modules/' + name);
+      return val;
+    } catch (e) {
+      if (e.toString().indexOf('Cannot find module') === -1) {
+        throw e;
+      }
+
+      if (pref.indexOf('node_modules') !== -1) {
+        var s = pref.split('/');
+        var i = s.lastIndexOf('node_modules');
+        var newPref = s.slice(0, i).join('/');
+        return tryReq(name, newPref);
+      }
+    }
+    return none;
+  };
+  return function(name) {
+    if (name in mappings) name = mappings[name];
+    if (!name) return;
+    if (name[0] !== '.' && pref) {
+      var val = tryReq(name, pref);
+      if (val !== none) return val;
+    }
+    return require(name);
+  }
+};
+
+require.register("curvature/base/Bag.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Bag = void 0;
+var _Bindable = require("./Bindable");
+var _Mixin = require("./Mixin");
+var _EventTargetMixin = require("../mixin/EventTargetMixin");
+var toId = int => Number(int);
+var fromId = id => parseInt(id);
+var Mapped = Symbol('Mapped');
+var Has = Symbol('Has');
+var Add = Symbol('Add');
+var Remove = Symbol('Remove');
+var Delete = Symbol('Delete');
+class Bag extends _Mixin.Mixin.with(_EventTargetMixin.EventTargetMixin) {
+  constructor(changeCallback = undefined) {
+    super();
+    this.changeCallback = changeCallback;
+    this.content = new Map();
+    this.current = 0;
+    this.length = 0;
+    this.list = _Bindable.Bindable.makeBindable([]);
+    this.meta = Symbol('meta');
+    this.type = undefined;
+  }
+  has(item) {
+    if (this[Mapped]) {
+      return this[Mapped].has(item);
+    }
+    return this[Has](item);
+  }
+  [Has](item) {
+    return this.content.has(item);
+  }
+  add(item) {
+    if (this[Mapped]) {
+      return this[Mapped].add(item);
+    }
+    return this[Add](item);
+  }
+  [Add](item) {
+    if (item === undefined || !(item instanceof Object)) {
+      throw new Error('Only objects may be added to Bags.');
+    }
+    if (this.type && !(item instanceof this.type)) {
+      console.error(this.type, item);
+      throw new Error(`Only objects of type ${this.type} may be added to this Bag.`);
+    }
+    item = _Bindable.Bindable.make(item);
+    if (this.content.has(item)) {
+      return;
+    }
+    var adding = new CustomEvent('adding', {
+      detail: {
+        item
+      }
+    });
+    if (!this.dispatchEvent(adding)) {
+      return;
+    }
+    var id = toId(this.current++);
+    this.content.set(item, id);
+    this.list[id] = item;
+    if (this.changeCallback) {
+      this.changeCallback(item, this.meta, Bag.ITEM_ADDED, id);
+    }
+    var add = new CustomEvent('added', {
+      detail: {
+        item,
+        id
+      }
+    });
+    this.dispatchEvent(add);
+    this.length = this.size;
+    return id;
+  }
+  remove(item) {
+    if (this[Mapped]) {
+      return this[Mapped].remove(item);
+    }
+    return this[Remove](item);
+  }
+  [Remove](item) {
+    if (item === undefined || !(item instanceof Object)) {
+      throw new Error('Only objects may be removed from Bags.');
+    }
+    if (this.type && !(item instanceof this.type)) {
+      console.error(this.type, item);
+      throw new Error(`Only objects of type ${this.type} may be removed from this Bag.`);
+    }
+    item = _Bindable.Bindable.make(item);
+    if (!this.content.has(item)) {
+      if (this.changeCallback) {
+        this.changeCallback(item, this.meta, 0, undefined);
+      }
+      return false;
+    }
+    var removing = new CustomEvent('removing', {
+      detail: {
+        item
+      }
+    });
+    if (!this.dispatchEvent(removing)) {
+      return;
+    }
+    var id = this.content.get(item);
+    delete this.list[id];
+    this.content.delete(item);
+    if (this.changeCallback) {
+      this.changeCallback(item, this.meta, Bag.ITEM_REMOVED, id);
+    }
+    var remove = new CustomEvent('removed', {
+      detail: {
+        item,
+        id
+      }
+    });
+    this.dispatchEvent(remove);
+    this.length = this.size;
+    return item;
+  }
+  delete(item) {
+    if (this[Mapped]) {
+      return this[Mapped].delete(item);
+    }
+    this[Delete](item);
+  }
+  [Delete](item) {
+    this.remove(item);
+  }
+  map(mapper = x => x, filter = x => x) {
+    var mappedItems = new WeakMap();
+    var mappedBag = new Bag();
+    mappedBag[Mapped] = this;
+    this.addEventListener('added', event => {
+      var item = event.detail.item;
+      if (!filter(item)) {
+        return;
+      }
+      if (mappedItems.has(item)) {
+        return;
+      }
+      var mapped = mapper(item);
+      mappedItems.set(item, mapped);
+      mappedBag[Add](mapped);
+    });
+    this.addEventListener('removed', event => {
+      var item = event.detail.item;
+      if (!mappedItems.has(item)) {
+        return;
+      }
+      var mapped = mappedItems.get(item);
+      mappedItems.delete(item);
+      mappedBag[Remove](mapped);
+    });
+    return mappedBag;
+  }
+  get size() {
+    return this.content.size;
+  }
+  items() {
+    return Array.from(this.content.entries()).map(entry => entry[0]);
+  }
+}
+exports.Bag = Bag;
+Object.defineProperty(Bag, 'ITEM_ADDED', {
+  configurable: false,
+  enumerable: false,
+  writable: true,
+  value: 1
+});
+Object.defineProperty(Bag, 'ITEM_REMOVED', {
+  configurable: false,
+  enumerable: false,
+  writable: true,
+  value: -1
+});
+  })();
+});
+
+require.register("curvature/base/Bindable.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Bindable = void 0;
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var Ref = Symbol('ref');
+var Original = Symbol('original');
+var Deck = Symbol('deck');
+var Binding = Symbol('binding');
+var SubBinding = Symbol('subBinding');
+var BindingAll = Symbol('bindingAll');
+var IsBindable = Symbol('isBindable');
+var Wrapping = Symbol('wrapping');
+var Names = Symbol('Names');
+var Executing = Symbol('executing');
+var Stack = Symbol('stack');
+var ObjSymbol = Symbol('object');
+var Wrapped = Symbol('wrapped');
+var Unwrapped = Symbol('unwrapped');
+var GetProto = Symbol('getProto');
+var OnGet = Symbol('onGet');
+var OnAllGet = Symbol('onAllGet');
+var BindChain = Symbol('bindChain');
+var Descriptors = Symbol('Descriptors');
+var Before = Symbol('Before');
+var After = Symbol('After');
+var NoGetters = Symbol('NoGetters');
+var Prevent = Symbol('Prevent');
+var TypedArray = Object.getPrototypeOf(Int8Array);
+var SetIterator = Set.prototype[Symbol.iterator];
+var MapIterator = Map.prototype[Symbol.iterator];
+var win = typeof globalThis === 'object' ? globalThis : typeof window === 'object' ? window : typeof self === 'object' ? self : void 0;
+var isExcluded = object => typeof win.Map === 'function' && object instanceof win.Map || typeof win.Set === 'function' && object instanceof win.Set || typeof win.Node === 'function' && object instanceof win.Node || typeof win.WeakMap === 'function' && object instanceof win.WeakMap || typeof win.Location === 'function' && object instanceof win.Location || typeof win.Storage === 'function' && object instanceof win.Storage || typeof win.WeakSet === 'function' && object instanceof win.WeakSet || typeof win.ArrayBuffer === 'function' && object instanceof win.ArrayBuffer || typeof win.Promise === 'function' && object instanceof win.Promise || typeof win.File === 'function' && object instanceof win.File || typeof win.Event === 'function' && object instanceof win.Event || typeof win.CustomEvent === 'function' && object instanceof win.CustomEvent || typeof win.Gamepad === 'function' && object instanceof win.Gamepad || typeof win.ResizeObserver === 'function' && object instanceof win.ResizeObserver || typeof win.MutationObserver === 'function' && object instanceof win.MutationObserver || typeof win.PerformanceObserver === 'function' && object instanceof win.PerformanceObserver || typeof win.IntersectionObserver === 'function' && object instanceof win.IntersectionObserver || typeof win.IDBCursor === 'function' && object instanceof win.IDBCursor || typeof win.IDBCursorWithValue === 'function' && object instanceof win.IDBCursorWithValue || typeof win.IDBDatabase === 'function' && object instanceof win.IDBDatabase || typeof win.IDBFactory === 'function' && object instanceof win.IDBFactory || typeof win.IDBIndex === 'function' && object instanceof win.IDBIndex || typeof win.IDBKeyRange === 'function' && object instanceof win.IDBKeyRange || typeof win.IDBObjectStore === 'function' && object instanceof win.IDBObjectStore || typeof win.IDBOpenDBRequest === 'function' && object instanceof win.IDBOpenDBRequest || typeof win.IDBRequest === 'function' && object instanceof win.IDBRequest || typeof win.IDBTransaction === 'function' && object instanceof win.IDBTransaction || typeof win.IDBVersionChangeEvent === 'function' && object instanceof win.IDBVersionChangeEvent || typeof win.FileSystemFileHandle === 'function' && object instanceof win.FileSystemFileHandle || typeof win.RTCPeerConnection === 'function' && object instanceof win.RTCPeerConnection || typeof win.ServiceWorkerRegistration === 'function' && object instanceof win.ServiceWorkerRegistration || typeof win.WebGLTexture === 'function' && object instanceof win.WebGLTexture;
+class Bindable {
+  static isBindable(object) {
+    if (!object || !object[IsBindable] || !object[Prevent]) {
+      return false;
+    }
+    return object[IsBindable] === Bindable;
+  }
+  static onDeck(object, key) {
+    return object[Deck].get(key) || false;
+  }
+  static ref(object) {
+    return object[Ref] || object || false;
+  }
+  static makeBindable(object) {
+    return this.make(object);
+  }
+  static shuck(original, seen) {
+    seen = seen || new Map();
+    var clone = Object.create({});
+    if (original instanceof TypedArray || original instanceof ArrayBuffer) {
+      var _clone = original.slice(0);
+      seen.set(original, _clone);
+      return _clone;
+    }
+    var properties = Object.keys(original);
+    for (var i in properties) {
+      var ii = properties[i];
+      if (ii.substring(0, 3) === '___') {
+        continue;
+      }
+      var alreadyCloned = seen.get(original[ii]);
+      if (alreadyCloned) {
+        clone[ii] = alreadyCloned;
+        continue;
+      }
+      if (original[ii] === original) {
+        seen.set(original[ii], clone);
+        clone[ii] = clone;
+        continue;
+      }
+      if (original[ii] && typeof original[ii] === 'object') {
+        var originalProp = original[ii];
+        if (Bindable.isBindable(original[ii])) {
+          originalProp = original[ii][Original];
+        }
+        clone[ii] = this.shuck(originalProp, seen);
+      } else {
+        clone[ii] = original[ii];
+      }
+      seen.set(original[ii], clone[ii]);
+    }
+    if (Bindable.isBindable(original)) {
+      delete clone.bindTo;
+      delete clone.isBound;
+    }
+    return clone;
+  }
+  static make(object) {
+    if (object[Prevent]) {
+      return object;
+    }
+    if (!object || !['function', 'object'].includes(typeof object)) {
+      return object;
+    }
+    if (Ref in object) {
+      return object[Ref];
+    }
+    if (object[IsBindable]) {
+      return object;
+    }
+    if (Object.isSealed(object) || Object.isFrozen(object) || !Object.isExtensible(object) || isExcluded(object)) {
+      return object;
+    }
+    Object.defineProperty(object, IsBindable, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: Bindable
+    });
+    Object.defineProperty(object, Ref, {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value: false
+    });
+    Object.defineProperty(object, Original, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: object
+    });
+    Object.defineProperty(object, Deck, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Map()
+    });
+    Object.defineProperty(object, Binding, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: Object.create(null)
+    });
+    Object.defineProperty(object, SubBinding, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Map()
+    });
+    Object.defineProperty(object, BindingAll, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Set()
+    });
+    Object.defineProperty(object, Executing, {
+      enumerable: false,
+      writable: true
+    });
+    Object.defineProperty(object, Wrapping, {
+      enumerable: false,
+      writable: true
+    });
+    Object.defineProperty(object, Stack, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: []
+    });
+    Object.defineProperty(object, Before, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Set()
+    });
+    Object.defineProperty(object, After, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Set()
+    });
+    Object.defineProperty(object, Wrapped, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: Object.preventExtensions(new Map())
+    });
+    Object.defineProperty(object, Unwrapped, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: Object.preventExtensions(new Map())
+    });
+    Object.defineProperty(object, Descriptors, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: Object.preventExtensions(new Map())
+    });
+    var bindTo = (property, callback = null, options = {}) => {
+      var bindToAll = false;
+      if (Array.isArray(property)) {
+        var debinders = property.map(p => bindTo(p, callback, options));
+        return () => debinders.forEach(d => d());
+      }
+      if (property instanceof Function) {
+        options = callback || {};
+        callback = property;
+        bindToAll = true;
+      }
+      if (options.delay >= 0) {
+        callback = this.wrapDelayCallback(callback, options.delay);
+      }
+      if (options.throttle >= 0) {
+        callback = this.wrapThrottleCallback(callback, options.throttle);
+      }
+      if (options.wait >= 0) {
+        callback = this.wrapWaitCallback(callback, options.wait);
+      }
+      if (options.frame) {
+        callback = this.wrapFrameCallback(callback, options.frame);
+      }
+      if (options.idle) {
+        callback = this.wrapIdleCallback(callback);
+      }
+      if (bindToAll) {
+        object[BindingAll].add(callback);
+        if (!('now' in options) || options.now) {
+          for (var i in object) {
+            callback(object[i], i, object, false);
+          }
+        }
+        return () => {
+          object[BindingAll].delete(callback);
+        };
+      }
+      if (!object[Binding][property]) {
+        object[Binding][property] = new Set();
+      }
+
+      // let bindIndex = object[Binding][property].length;
+
+      if (options.children) {
+        var original = callback;
+        callback = (...args) => {
+          var v = args[0];
+          var subDebind = object[SubBinding].get(original);
+          if (subDebind) {
+            object[SubBinding].delete(original);
+            subDebind();
+          }
+          if (typeof v !== 'object') {
+            original(...args);
+            return;
+          }
+          var vv = Bindable.make(v);
+          if (Bindable.isBindable(vv)) {
+            object[SubBinding].set(original, vv.bindTo((...subArgs) => original(...args, ...subArgs), Object.assign({}, options, {
+              children: false
+            })));
+          }
+          original(...args);
+        };
+      }
+      object[Binding][property].add(callback);
+      if (!('now' in options) || options.now) {
+        callback(object[property], property, object, false);
+      }
+      var debinder = () => {
+        var subDebind = object[SubBinding].get(callback);
+        if (subDebind) {
+          object[SubBinding].delete(callback);
+          subDebind();
+        }
+        if (!object[Binding][property]) {
+          return;
+        }
+        if (!object[Binding][property].has(callback)) {
+          return;
+        }
+        object[Binding][property].delete(callback);
+      };
+      if (options.removeWith && options.removeWith instanceof View) {
+        options.removeWith.onRemove(() => debinder);
+      }
+      return debinder;
+    };
+    Object.defineProperty(object, 'bindTo', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: bindTo
+    });
+    var ___before = callback => {
+      object[Before].add(callback);
+      return () => object[Before].delete(callback);
+    };
+    var ___after = callback => {
+      object[After].add(callback);
+      return () => object[After].delete(callback);
+    };
+    Object.defineProperty(object, BindChain, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: (path, callback) => {
+        var parts = path.split('.');
+        var node = parts.shift();
+        var subParts = parts.slice(0);
+        var debind = [];
+        debind.push(object.bindTo(node, (v, k, t, d) => {
+          var rest = subParts.join('.');
+          if (subParts.length === 0) {
+            callback(v, k, t, d);
+            return;
+          }
+          if (v === undefined) {
+            v = t[k] = this.make({});
+          }
+          debind = debind.concat(v[BindChain](rest, callback));
+        }));
+        return () => debind.forEach(x => x());
+      }
+    });
+    Object.defineProperty(object, '___before', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: ___before
+    });
+    Object.defineProperty(object, '___after', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: ___after
+    });
+    var isBound = () => {
+      if (object[BindingAll].size) {
+        return true;
+      }
+      for (var callbacks of Object.values(object[Binding])) {
+        if (callbacks.size) {
+          return true;
+        }
+        // for(let callback of callbacks)
+        // {
+        // 	if(callback)
+        // 	{
+        // 		return true;
+        // 	}
+        // }
+      }
+      return false;
+    };
+    Object.defineProperty(object, 'isBound', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: isBound
+    });
+    for (var i in object) {
+      // const descriptors = Object.getOwnPropertyDescriptors(object);
+
+      if (!object[i] || typeof object[i] !== 'object') {
+        continue;
+      }
+      if (object[i][Ref] || object[i] instanceof Promise) {
+        continue;
+      }
+      if (!Object.isExtensible(object[i]) || Object.isSealed(object[i])) {
+        continue;
+      }
+      if (!isExcluded(object[i])) {
+        object[i] = Bindable.make(object[i]);
+      }
+    }
+    var descriptors = object[Descriptors];
+    var wrapped = object[Wrapped];
+    var stack = object[Stack];
+    var set = (target, key, value) => {
+      if (value && typeof value === 'object') {
+        value = Bindable.make(value);
+        if (target[key] === value) {
+          return true;
+        }
+      }
+      if (wrapped.has(key)) {
+        wrapped.delete(key);
+      }
+      var onDeck = object[Deck];
+      var isOnDeck = onDeck.has(key);
+      var valOnDeck = isOnDeck && onDeck.get(key);
+
+      // if(onDeck[key] !== undefined && onDeck[key] === value)
+      if (isOnDeck && valOnDeck === value) {
+        return true;
+      }
+      if (key.slice && key.slice(-3) === '___') {
+        return true;
+      }
+      if (target[key] === value || typeof value === 'number' && isNaN(valOnDeck) && isNaN(value)) {
+        return true;
+      }
+      onDeck.set(key, value);
+      for (var callback of object[BindingAll]) {
+        callback(value, key, target, false);
+      }
+      if (key in object[Binding]) {
+        for (var _callback of object[Binding][key]) {
+          _callback(value, key, target, false, target[key]);
+        }
+      }
+      onDeck.delete(key);
+      var excluded = win.File && target instanceof win.File && key == 'lastModifiedDate';
+      if (!excluded) {
+        Reflect.set(target, key, value);
+      }
+      if (Array.isArray(target) && object[Binding]['length']) {
+        for (var _i in object[Binding]['length']) {
+          var _callback2 = object[Binding]['length'][_i];
+          _callback2(target.length, 'length', target, false, target.length);
+        }
+      }
+      return true;
+    };
+    var deleteProperty = (target, key) => {
+      var onDeck = object[Deck];
+      var isOnDeck = onDeck.has(key);
+      if (isOnDeck) {
+        return true;
+      }
+      if (!(key in target)) {
+        return true;
+      }
+      if (descriptors.has(key)) {
+        var descriptor = descriptors.get(key);
+        if (descriptor && !descriptor.configurable) {
+          return false;
+        }
+        descriptors.delete(key);
+      }
+      onDeck.set(key, null);
+      if (wrapped.has(key)) {
+        wrapped.delete(key);
+      }
+      for (var callback of object[BindingAll]) {
+        callback(undefined, key, target, true, target[key]);
+      }
+      if (key in object[Binding]) {
+        for (var binding of object[Binding][key]) {
+          binding(undefined, key, target, true, target[key]);
+        }
+      }
+      Reflect.deleteProperty(target, key);
+      onDeck.delete(key);
+      return true;
+    };
+    var construct = (target, args) => {
+      var key = 'constructor';
+      for (var callback of target[Before]) {
+        callback(target, key, object[Stack], undefined, args);
+      }
+      var instance = Bindable.make(new target[Original](...args));
+      for (var _callback3 of target[After]) {
+        _callback3(target, key, object[Stack], instance, args);
+      }
+      return instance;
+    };
+    var get = (target, key) => {
+      if (wrapped.has(key)) {
+        return wrapped.get(key);
+      }
+      if (key === Ref || key === Original || key === 'apply' || key === 'isBound' || key === 'bindTo' || key === '__proto__' || key === 'constructor') {
+        return object[key];
+      }
+      var descriptor;
+      if (descriptors.has(key)) {
+        descriptor = descriptors.get(key);
+      } else {
+        descriptor = Object.getOwnPropertyDescriptor(object, key);
+        descriptors.set(key, descriptor);
+      }
+      if (descriptor && !descriptor.configurable && !descriptor.writable) {
+        return object[key];
+      }
+      if (OnAllGet in object) {
+        return object[OnAllGet](key);
+      }
+      if (OnGet in object && !(key in object)) {
+        return object[OnGet](key);
+      }
+      if (descriptor && !descriptor.configurable && !descriptor.writable) {
+        wrapped.set(key, object[key]);
+        return object[key];
+      }
+      if (typeof object[key] === 'function') {
+        if (Names in object[key]) {
+          return object[key];
+        }
+        object[Unwrapped].set(key, object[key]);
+        var prototype = Object.getPrototypeOf(object);
+        var isMethod = prototype[key] === object[key];
+        var objRef =
+        // (typeof Promise === 'function'                    && object instanceof Promise)
+        // || (typeof Storage === 'function'                 && object instanceof Storage)
+        // || (typeof Map === 'function'                     && object instanceof Map)
+        // || (typeof Set === 'function'                     && object instanceof Set)
+        // || (typeof WeakMap === 'function'                 && object instanceof WeakMap)
+        // || (typeof WeakSet === 'function'                 && object instanceof WeakSet)
+        // || (typeof ArrayBuffer === 'function'             && object instanceof ArrayBuffer)
+        // || (typeof ResizeObserver === 'function'          && object instanceof ResizeObserver)
+        // || (typeof MutationObserver === 'function'        && object instanceof MutationObserver)
+        // || (typeof PerformanceObserver === 'function'     && object instanceof PerformanceObserver)
+        // || (typeof IntersectionObserver === 'function'    && object instanceof IntersectionObserver)
+        isExcluded(object) || typeof object[Symbol.iterator] === 'function' && key === 'next' || typeof TypedArray === 'function' && object instanceof TypedArray || typeof EventTarget === 'function' && object instanceof EventTarget || typeof Date === 'function' && object instanceof Date || typeof MapIterator === 'function' && object.prototype === MapIterator || typeof SetIterator === 'function' && object.prototype === SetIterator ? object : object[Ref];
+        var wrappedMethod = function (...providedArgs) {
+          object[Executing] = key;
+          stack.unshift(key);
+          for (var beforeCallback of object[Before]) {
+            beforeCallback(object, key, stack, object, providedArgs);
+          }
+          var ret;
+          if (new.target) {
+            ret = new (object[Unwrapped].get(key))(...providedArgs);
+          } else {
+            var func = object[Unwrapped].get(key);
+            if (isMethod) {
+              ret = func.apply(objRef || object, providedArgs);
+            } else {
+              ret = func(...providedArgs);
+            }
+          }
+          for (var afterCallback of object[After]) {
+            afterCallback(object, key, stack, object, providedArgs);
+          }
+          object[Executing] = null;
+          stack.shift();
+          return ret;
+        };
+        wrappedMethod[OnAllGet] = _key => object[key][_key];
+        var result = Bindable.make(wrappedMethod);
+        wrapped.set(key, result);
+        return result;
+      }
+      return object[key];
+    };
+    var getPrototypeOf = target => {
+      if (GetProto in object) {
+        return object[GetProto];
+      }
+      return Reflect.getPrototypeOf(target);
+    };
+    var handlerDef = Object.create(null);
+    handlerDef.set = set;
+    handlerDef.construct = construct;
+    handlerDef.deleteProperty = deleteProperty;
+    if (!object[NoGetters]) {
+      handlerDef.getPrototypeOf = getPrototypeOf;
+      handlerDef.get = get;
+    }
+    Object.defineProperty(object, Ref, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: new Proxy(object, handlerDef)
+    });
+    return object[Ref];
+  }
+  static clearBindings(object) {
+    var maps = func => (...os) => os.map(func);
+    var clearObj = o => Object.keys(o).map(k => delete o[k]);
+    var clearObjs = maps(clearObj);
+    object[BindingAll].clear();
+    clearObjs(object[Wrapped], object[Binding], object[After], object[Before]);
+  }
+  static resolve(object, path, owner = false) {
+    var node;
+    var pathParts = path.split('.');
+    var top = pathParts[0];
+    while (pathParts.length) {
+      if (owner && pathParts.length === 1) {
+        var obj = this.make(object);
+        return [obj, pathParts.shift(), top];
+      }
+      node = pathParts.shift();
+      if (!(node in object) || !object[node] || !(typeof object[node] === 'object')) {
+        object[node] = Object.create(null);
+      }
+      object = this.make(object[node]);
+    }
+    return [this.make(object), node, top];
+  }
+  static wrapDelayCallback(callback, delay) {
+    return (...args) => setTimeout(() => callback(...args), delay);
+  }
+  static wrapThrottleCallback(callback, throttle) {
+    this.throttles.set(callback, false);
+    return (...args) => {
+      if (this.throttles.get(callback, true)) {
+        return;
+      }
+      callback(...args);
+      this.throttles.set(callback, true);
+      setTimeout(() => {
+        this.throttles.set(callback, false);
+      }, throttle);
+    };
+  }
+  static wrapWaitCallback(callback, wait) {
+    return (...args) => {
+      var waiter;
+      if (waiter = this.waiters.get(callback)) {
+        this.waiters.delete(callback);
+        clearTimeout(waiter);
+      }
+      waiter = setTimeout(() => callback(...args), wait);
+      this.waiters.set(callback, waiter);
+    };
+  }
+  static wrapFrameCallback(callback, frames) {
+    return (...args) => {
+      requestAnimationFrame(() => callback(...args));
+    };
+  }
+  static wrapIdleCallback(callback) {
+    return (...args) => {
+      // Compatibility for Safari 08/2020
+      var req = window.requestIdleCallback || requestAnimationFrame;
+      req(() => callback(...args));
+    };
+  }
+}
+exports.Bindable = Bindable;
+_defineProperty(Bindable, "waiters", new WeakMap());
+_defineProperty(Bindable, "throttles", new WeakMap());
+Object.defineProperty(Bindable, 'Prevent', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: Prevent
+});
+Object.defineProperty(Bindable, 'OnGet', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: OnGet
+});
+Object.defineProperty(Bindable, 'NoGetters', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: NoGetters
+});
+Object.defineProperty(Bindable, 'GetProto', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: GetProto
+});
+Object.defineProperty(Bindable, 'OnAllGet', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: OnAllGet
+});
+  })();
+});
+
+require.register("curvature/base/Cache.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Cache = void 0;
+class Cache {
+  static store(key, value, expiry, bucket = 'standard') {
+    var expiration = 0;
+    if (expiry) {
+      expiration = expiry * 1000 + new Date().getTime();
+    }
+    if (!this.buckets) {
+      this.buckets = new Map();
+    }
+    if (!this.buckets.has(bucket)) {
+      this.buckets.set(bucket, new Map());
+    }
+    var eventEnd = new CustomEvent('cvCacheStore', {
+      cancelable: true,
+      detail: {
+        key,
+        value,
+        expiry,
+        bucket
+      }
+    });
+    if (document.dispatchEvent(eventEnd)) {
+      this.buckets.get(bucket).set(key, {
+        value,
+        expiration
+      });
+    }
+  }
+  static load(key, defaultvalue = false, bucket = 'standard') {
+    var eventEnd = new CustomEvent('cvCacheLoad', {
+      cancelable: true,
+      detail: {
+        key,
+        defaultvalue,
+        bucket
+      }
+    });
+    if (!document.dispatchEvent(eventEnd)) {
+      return defaultvalue;
+    }
+    if (this.buckets && this.buckets.has(bucket) && this.buckets.get(bucket).has(key)) {
+      var entry = this.buckets.get(bucket).get(key);
+      // console.log(this.bucket[bucket][key].expiration, (new Date).getTime());
+      if (entry.expiration === 0 || entry.expiration > new Date().getTime()) {
+        return this.buckets.get(bucket).get(key).value;
+      }
+    }
+    return defaultvalue;
+  }
+}
+exports.Cache = Cache;
+  })();
+});
+
+require.register("curvature/base/Config.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Config = void 0;
+var AppConfig = {};
+var _require = require;
+var win = typeof globalThis === 'object' ? globalThis : typeof window === 'object' ? window : typeof self === 'object' ? self : void 0;
+try {
+  AppConfig = _require('/Config').Config;
+} catch (error) {
+  win.devMode === true && console.error(error);
+  AppConfig = {};
+}
+class Config {
+  static get(name) {
+    return this.configs[name];
+  }
+  static set(name, value) {
+    this.configs[name] = value;
+    return this;
+  }
+  static dump() {
+    return this.configs;
+  }
+  static init(...configs) {
+    for (var i in configs) {
+      var config = configs[i];
+      if (typeof config === 'string') {
+        config = JSON.parse(config);
+      }
+      for (var name in config) {
+        var value = config[name];
+        return this.configs[name] = value;
+      }
+    }
+    return this;
+  }
+}
+exports.Config = Config;
+Object.defineProperty(Config, 'configs', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: AppConfig
+});
+  })();
+});
+
+require.register("curvature/base/Dom.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Dom = void 0;
+var traversals = 0;
+class Dom {
+  static mapTags(doc, selector, callback, startNode, endNode) {
+    var result = [];
+    var started = true;
+    if (startNode) {
+      started = false;
+    }
+    var ended = false;
+    var {
+      Node,
+      Element,
+      NodeFilter,
+      document
+    } = globalThis.window;
+    var treeWalker = document.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+      acceptNode: (node, walker) => {
+        if (!started) {
+          if (node === startNode) {
+            started = true;
+          } else {
+            return NodeFilter.FILTER_SKIP;
+          }
+        }
+        if (endNode && node === endNode) {
+          ended = true;
+        }
+        if (ended) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        if (selector) {
+          if (node instanceof Element) {
+            if (node.matches(selector)) {
+              return NodeFilter.FILTER_ACCEPT;
+            }
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
+    var traversal = traversals++;
+    while (treeWalker.nextNode()) {
+      result.push(callback(treeWalker.currentNode, treeWalker));
+    }
+    return result;
+  }
+  static dispatchEvent(doc, event) {
+    doc.dispatchEvent(event);
+    this.mapTags(doc, false, node => {
+      node.dispatchEvent(event);
+    });
+  }
+}
+exports.Dom = Dom;
+  })();
+});
+
+require.register("curvature/base/Mixin.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Mixin = void 0;
+var _Bindable = require("./Bindable");
+var Constructor = Symbol('constructor');
+var MixinList = Symbol('mixinList');
+class Mixin {
+  static from(baseClass, ...mixins) {
+    var newClass = class extends baseClass {
+      constructor(...args) {
+        var instance = baseClass.constructor ? super(...args) : null;
+        for (var mixin of mixins) {
+          if (mixin[Mixin.Constructor]) {
+            mixin[Mixin.Constructor].apply(this);
+          }
+          switch (typeof mixin) {
+            case 'function':
+              Mixin.mixClass(mixin, newClass);
+              break;
+            case 'object':
+              Mixin.mixObject(mixin, this);
+              break;
+          }
+        }
+        return instance;
+      }
+    };
+    return newClass;
+  }
+  static make(...classes) {
+    var base = classes.pop();
+    return Mixin.to(base, ...classes);
+  }
+  static to(base, ...mixins) {
+    var descriptors = {};
+    mixins.map(mixin => {
+      switch (typeof mixin) {
+        case 'object':
+          Object.assign(descriptors, Object.getOwnPropertyDescriptors(mixin));
+          break;
+        case 'function':
+          Object.assign(descriptors, Object.getOwnPropertyDescriptors(mixin.prototype));
+          break;
+      }
+      delete descriptors.constructor;
+      Object.defineProperties(base.prototype, descriptors);
+    });
+  }
+  static with(...mixins) {
+    return this.from(class {
+      constructor() {}
+    }, ...mixins);
+  }
+  static mixObject(mixin, instance) {
+    for (var func of Object.getOwnPropertyNames(mixin)) {
+      if (typeof mixin[func] === 'function') {
+        instance[func] = mixin[func].bind(instance);
+        continue;
+      }
+      instance[func] = mixin[func];
+    }
+    for (var _func of Object.getOwnPropertySymbols(mixin)) {
+      if (typeof mixin[_func] === 'function') {
+        instance[_func] = mixin[_func].bind(instance);
+        continue;
+      }
+      instance[_func] = mixin[_func];
+    }
+  }
+  static mixClass(cls, newClass) {
+    for (var func of Object.getOwnPropertyNames(cls.prototype)) {
+      if (['name', 'prototype', 'length'].includes(func)) {
+        continue;
+      }
+      var descriptor = Object.getOwnPropertyDescriptor(newClass, func);
+      if (descriptor && !descriptor.writable) {
+        continue;
+      }
+      if (typeof cls[func] !== 'function') {
+        newClass.prototype[func] = cls.prototype[func];
+        continue;
+      }
+      newClass.prototype[func] = cls.prototype[func].bind(newClass.prototype);
+    }
+    for (var _func2 of Object.getOwnPropertySymbols(cls.prototype)) {
+      if (typeof cls[_func2] !== 'function') {
+        newClass.prototype[_func2] = cls.prototype[_func2];
+        continue;
+      }
+      newClass.prototype[_func2] = cls.prototype[_func2].bind(newClass.prototype);
+    }
+    var _loop = function () {
+        if (['name', 'prototype', 'length'].includes(_func3)) {
+          return 0; // continue
+        }
+        var descriptor = Object.getOwnPropertyDescriptor(newClass, _func3);
+        if (descriptor && !descriptor.writable) {
+          return 0; // continue
+        }
+        if (typeof cls[_func3] !== 'function') {
+          newClass[_func3] = cls[_func3];
+          return 0; // continue
+        }
+        var prev = newClass[_func3] || false;
+        var meth = cls[_func3].bind(newClass);
+        newClass[_func3] = (...args) => {
+          prev && prev(...args);
+          return meth(...args);
+        };
+      },
+      _ret;
+    for (var _func3 of Object.getOwnPropertyNames(cls)) {
+      _ret = _loop();
+      if (_ret === 0) continue;
+    }
+    var _loop2 = function () {
+      if (typeof cls[_func4] !== 'function') {
+        newClass.prototype[_func4] = cls[_func4];
+        return 1; // continue
+      }
+      var prev = newClass[_func4] || false;
+      var meth = cls[_func4].bind(newClass);
+      newClass[_func4] = (...args) => {
+        prev && prev(...args);
+        return meth(...args);
+      };
+    };
+    for (var _func4 of Object.getOwnPropertySymbols(cls)) {
+      if (_loop2()) continue;
+    }
+  }
+  static mix(mixinTo) {
+    var constructors = [];
+    var allStatic = {};
+    var allInstance = {};
+    var mixable = _Bindable.Bindable.makeBindable(mixinTo);
+    var _loop3 = function (base) {
+      var instanceNames = Object.getOwnPropertyNames(base.prototype);
+      var staticNames = Object.getOwnPropertyNames(base);
+      var prefix = /^(before|after)__(.+)/;
+      var _loop5 = function (_methodName2) {
+          var match = _methodName2.match(prefix);
+          if (match) {
+            switch (match[1]) {
+              case 'before':
+                mixable.___before((t, e, s, o, a) => {
+                  if (e !== match[2]) {
+                    return;
+                  }
+                  var method = base[_methodName2].bind(o);
+                  return method(...a);
+                });
+                break;
+              case 'after':
+                mixable.___after((t, e, s, o, a) => {
+                  if (e !== match[2]) {
+                    return;
+                  }
+                  var method = base[_methodName2].bind(o);
+                  return method(...a);
+                });
+                break;
+            }
+            return 0; // continue
+          }
+          if (allStatic[_methodName2]) {
+            return 0; // continue
+          }
+          if (typeof base[_methodName2] !== 'function') {
+            return 0; // continue
+          }
+          allStatic[_methodName2] = base[_methodName2];
+        },
+        _ret2;
+      for (var _methodName2 of staticNames) {
+        _ret2 = _loop5(_methodName2);
+        if (_ret2 === 0) continue;
+      }
+      var _loop6 = function (_methodName3) {
+          var match = _methodName3.match(prefix);
+          if (match) {
+            switch (match[1]) {
+              case 'before':
+                mixable.___before((t, e, s, o, a) => {
+                  if (e !== match[2]) {
+                    return;
+                  }
+                  var method = base.prototype[_methodName3].bind(o);
+                  return method(...a);
+                });
+                break;
+              case 'after':
+                mixable.___after((t, e, s, o, a) => {
+                  if (e !== match[2]) {
+                    return;
+                  }
+                  var method = base.prototype[_methodName3].bind(o);
+                  return method(...a);
+                });
+                break;
+            }
+            return 0; // continue
+          }
+          if (allInstance[_methodName3]) {
+            return 0; // continue
+          }
+          if (typeof base.prototype[_methodName3] !== 'function') {
+            return 0; // continue
+          }
+          allInstance[_methodName3] = base.prototype[_methodName3];
+        },
+        _ret3;
+      for (var _methodName3 of instanceNames) {
+        _ret3 = _loop6(_methodName3);
+        if (_ret3 === 0) continue;
+      }
+    };
+    for (var base = this; base && base.prototype; base = Object.getPrototypeOf(base)) {
+      _loop3(base);
+    }
+    for (var methodName in allStatic) {
+      mixinTo[methodName] = allStatic[methodName].bind(mixinTo);
+    }
+    var _loop4 = function (_methodName) {
+      mixinTo.prototype[_methodName] = function (...args) {
+        return allInstance[_methodName].apply(this, args);
+      };
+    };
+    for (var _methodName in allInstance) {
+      _loop4(_methodName);
+    }
+    return mixable;
+  }
+}
+exports.Mixin = Mixin;
+Mixin.Constructor = Constructor;
+  })();
+});
+
+require.register("curvature/base/Router.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Router = void 0;
+var _View = require("./View");
+var _Cache = require("./Cache");
+var _Config = require("./Config");
+var _Routes = require("./Routes");
+var _win$CustomEvent;
+var NotFoundError = Symbol('NotFound');
+var InternalError = Symbol('Internal');
+var win = typeof globalThis === 'object' ? globalThis : typeof window === 'object' ? window : typeof self === 'object' ? self : void 0;
+win.CustomEvent = (_win$CustomEvent = win.CustomEvent) !== null && _win$CustomEvent !== void 0 ? _win$CustomEvent : win.Event;
+class Router {
+  static wait(view, event = 'DOMContentLoaded', node = document) {
+    node.addEventListener(event, () => {
+      this.listen(view);
+    });
+  }
+  static listen(listener, routes = false) {
+    this.listener = listener || this.listener;
+    this.routes = routes || listener.routes;
+    Object.assign(this.query, this.queryOver({}));
+    var listen = event => {
+      event.preventDefault();
+      if (event.state && 'routedId' in event.state) {
+        if (event.state.routedId <= this.routeCount) {
+          this.history.splice(event.state.routedId);
+          this.routeCount = event.state.routedId;
+        } else if (event.state.routedId > this.routeCount) {
+          this.history.push(event.state.prev);
+          this.routeCount = event.state.routedId;
+        }
+        this.state = event.state;
+      } else {
+        if (this.prevPath !== null && this.prevPath !== location.pathname) {
+          this.history.push(this.prevPath);
+        }
+      }
+      if (!this.isOriginLimited(location)) {
+        this.match(location.pathname, listener);
+      } else {
+        this.match(this.nextPath, listener);
+      }
+    };
+    window.addEventListener('cvUrlChanged', listen);
+    window.addEventListener('popstate', listen);
+    var route = !this.isOriginLimited(location) ? location.pathname + location.search : false;
+    if (!this.isOriginLimited(location) && location.hash) {
+      route += location.hash;
+    }
+    var state = {
+      routedId: this.routeCount,
+      url: location.pathname,
+      prev: this.prevPath
+    };
+    if (!this.isOriginLimited(location)) {
+      history.replaceState(state, null, location.pathname);
+    }
+    this.go(route !== false ? route : '/');
+  }
+  static go(path, silent = false) {
+    var configTitle = _Config.Config.get('title');
+    if (configTitle) {
+      document.title = configTitle;
+    }
+    var state = {
+      routedId: this.routeCount,
+      prev: this.prevPath,
+      url: location.pathname
+    };
+    if (silent === -1) {
+      this.match(path, this.listener, true);
+    } else if (this.isOriginLimited(location)) {
+      this.nextPath = path;
+    } else if (silent === 2 && location.pathname !== path) {
+      history.replaceState(state, null, path);
+    } else if (location.pathname !== path) {
+      history.pushState(state, null, path);
+    }
+    if (!silent || silent < 0) {
+      if (silent === false) {
+        this.path = null;
+      }
+      if (!silent) {
+        if (path.substring(0, 1) === '#') {
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } else {
+          window.dispatchEvent(new CustomEvent('cvUrlChanged'));
+        }
+      }
+    }
+    this.prevPath = path;
+  }
+  static processRoute(routes, selected, args) {
+    var result = false;
+    if (typeof routes[selected] === 'function') {
+      if (routes[selected].prototype instanceof _View.View) {
+        result = new routes[selected](args);
+      } else {
+        result = routes[selected](args);
+      }
+    } else {
+      result = routes[selected];
+    }
+    return result;
+  }
+  static handleError(error, routes, selected, args, listener, path, prev, forceRefresh) {
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('cvRouteError', {
+        detail: {
+          error,
+          path,
+          prev,
+          view: listener,
+          routes,
+          selected
+        }
+      }));
+    }
+    var result = win['devMode'] ? 'Unexpected error: ' + String(error) : 'Unexpected error.';
+    if (routes[InternalError]) {
+      args[InternalError] = error;
+      result = this.processRoute(routes, InternalError, args);
+    }
+    this.update(listener, path, result, routes, selected, args, forceRefresh);
+  }
+  static match(path, listener, options = false) {
+    var event = null,
+      request = null,
+      forceRefresh = false;
+    if (options === true) {
+      forceRefresh = options;
+    }
+    if (options && typeof options === 'object') {
+      forceRefresh = options.forceRefresh;
+      event = options.event;
+    }
+    if (typeof document !== 'undefined' && this.path === path && !forceRefresh) {
+      return;
+    }
+    var origin = 'http://example.com';
+    if (typeof document !== 'undefined') {
+      origin = this.isOriginLimited(location) ? origin : location.origin;
+      this.queryString = location.search;
+    }
+    var url = new URL(path, origin);
+    path = this.path = url.pathname;
+    if (typeof document === 'undefined') {
+      this.queryString = url.search;
+    }
+    var prev = this.prevPath;
+    var current = listener && listener.args ? listener.args.content : null;
+    var routes = this.routes || listener && listener.routes || _Routes.Routes.dump();
+    var query = new URLSearchParams(this.queryString);
+    if (event && event.request) {
+      this.request = event.request;
+    }
+    for (var key in Object.keys(this.query)) {
+      delete this.query[key];
+    }
+    for (var [_key, value] of query) {
+      this.query[_key] = value;
+    }
+    var args = {},
+      selected = false,
+      result = '';
+    if (path.substring(0, 1) === '/') {
+      path = path.substring(1);
+    }
+    path = path.split('/');
+    for (var i in this.query) {
+      args[i] = this.query[i];
+    }
+    L1: for (var _i in routes) {
+      var route = _i.split('/');
+      if (route.length < path.length && route[route.length - 1] !== '*') {
+        continue;
+      }
+      L2: for (var j in route) {
+        if (route[j].substr(0, 1) == '%') {
+          var argName = null;
+          var groups = /^%(\w+)\??/.exec(route[j]);
+          if (groups && groups[1]) {
+            argName = groups[1];
+          }
+          if (!argName) {
+            throw new Error(`${route[j]} is not a valid argument segment in route "${_i}"`);
+          }
+          if (!path[j]) {
+            if (route[j].substr(route[j].length - 1, 1) == '?') {
+              args[argName] = '';
+            } else {
+              continue L1;
+            }
+          } else {
+            args[argName] = path[j];
+          }
+        } else if (route[j] !== '*' && path[j] !== route[j]) {
+          continue L1;
+        }
+      }
+      selected = _i;
+      result = routes[_i];
+      if (route[route.length - 1] === '*') {
+        args.pathparts = path.slice(route.length - 1);
+      }
+      break;
+    }
+    var eventStart = new CustomEvent('cvRouteStart', {
+      cancelable: true,
+      detail: {
+        path,
+        prev,
+        root: listener,
+        selected,
+        routes
+      }
+    });
+    if (typeof document !== 'undefined') {
+      if (!document.dispatchEvent(eventStart)) {
+        return;
+      }
+    }
+    if (!forceRefresh && listener && current && typeof result === 'object' && current.constructor === result.constructor && !(result instanceof Promise) && current.update(args)) {
+      listener.args.content = current;
+      return true;
+    }
+    if (!(selected in routes)) {
+      routes[selected] = routes[NotFoundError];
+    }
+    try {
+      result = this.processRoute(routes, selected, args);
+      if (result === false) {
+        result = this.processRoute(routes, NotFoundError, args);
+      }
+      if (typeof document === 'undefined') {
+        if (!(result instanceof Promise)) {
+          return Promise.resolve(result);
+        }
+        return result;
+      }
+      if (!(result instanceof Promise)) {
+        return this.update(listener, path, result, routes, selected, args, forceRefresh);
+      }
+      return result.then(realResult => this.update(listener, path, realResult, routes, selected, args, forceRefresh)).catch(error => {
+        this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh);
+      });
+    } catch (error) {
+      this.handleError(error, routes, selected, args, listener, path, prev, forceRefresh);
+    }
+  }
+  static update(listener, path, result, routes, selected, args, forceRefresh) {
+    if (!listener) {
+      return;
+    }
+    var prev = this.prevPath;
+    var event = new CustomEvent('cvRoute', {
+      cancelable: true,
+      detail: {
+        result,
+        path,
+        prev,
+        view: listener,
+        routes,
+        selected
+      }
+    });
+    if (result !== false) {
+      if (listener.args.content instanceof _View.View) {
+        listener.args.content.pause(true);
+        listener.args.content.remove();
+      }
+      if (document.dispatchEvent(event)) {
+        listener.args.content = result;
+      }
+      if (result instanceof _View.View) {
+        result.pause(false);
+        result.update(args, forceRefresh);
+      }
+    }
+    var eventEnd = new CustomEvent('cvRouteEnd', {
+      cancelable: true,
+      detail: {
+        result,
+        path,
+        prev,
+        view: listener,
+        routes,
+        selected
+      }
+    });
+    document.dispatchEvent(eventEnd);
+  }
+  static isOriginLimited({
+    origin
+  }) {
+    return origin === 'null' || origin === 'file://';
+  }
+  static queryOver(args = {}) {
+    var params = new URLSearchParams(location.search);
+    var finalArgs = {};
+    var query = {};
+    for (var pair of params) {
+      query[pair[0]] = pair[1];
+    }
+    finalArgs = Object.assign(finalArgs, query, args);
+    delete finalArgs['api'];
+    return finalArgs;
+
+    // for(let i in query)
+    // {
+    // 	finalArgs[i] = query[i];
+    // }
+
+    // for(let i in args)
+    // {
+    // 	finalArgs[i] = args[i];
+    // }
+  }
+  static queryToString(args = {}, fresh = false) {
+    var parts = [],
+      finalArgs = args;
+    if (!fresh) {
+      finalArgs = this.queryOver(args);
+    }
+    for (var i in finalArgs) {
+      if (finalArgs[i] === '') {
+        continue;
+      }
+      parts.push(i + '=' + encodeURIComponent(finalArgs[i]));
+    }
+    return parts.join('&');
+  }
+  static setQuery(name, value, silent) {
+    var args = this.queryOver();
+    args[name] = value;
+    if (value === undefined) {
+      delete args[name];
+    }
+    var queryString = this.queryToString(args, true);
+    this.go(location.pathname + (queryString ? '?' + queryString : '?'), silent);
+  }
+}
+exports.Router = Router;
+Object.defineProperty(Router, 'query', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: {}
+});
+Object.defineProperty(Router, 'history', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: []
+});
+Object.defineProperty(Router, 'routeCount', {
+  configurable: false,
+  enumerable: false,
+  writable: true,
+  value: 0
+});
+Object.defineProperty(Router, 'prevPath', {
+  configurable: false,
+  enumerable: false,
+  writable: true,
+  value: null
+});
+Object.defineProperty(Router, 'queryString', {
+  configurable: false,
+  enumerable: false,
+  writable: true,
+  value: null
+});
+Object.defineProperty(Router, 'InternalError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: InternalError
+});
+Object.defineProperty(Router, 'NotFoundError', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: NotFoundError
+});
+  })();
+});
+
+require.register("curvature/base/Routes.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Routes = void 0;
+var AppRoutes = {};
+var _require = require;
+var imported = false;
+var runImport = () => {
+  if (imported) {
+    return;
+  }
+  ;
+  try {
+    Object.assign(AppRoutes, _require('Routes').Routes || {});
+  } catch (error) {
+    globalThis.devMode === true && console.warn(error);
+  }
+  imported = true;
+};
+class Routes {
+  static get(name) {
+    runImport();
+    return this.routes[name];
+  }
+  static dump() {
+    runImport();
+    return this.routes;
+  }
+}
+exports.Routes = Routes;
+Object.defineProperty(Routes, 'routes', {
+  configurable: false,
+  enumerable: false,
+  writable: false,
+  value: AppRoutes
+});
+  })();
+});
+
+require.register("curvature/base/RuleSet.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.RuleSet = void 0;
+var _Dom = require("./Dom");
+var _Tag = require("./Tag");
+var _View = require("./View");
+class RuleSet {
+  static add(selector, callback) {
+    this.globalRules = this.globalRules || {};
+    this.globalRules[selector] = this.globalRules[selector] || [];
+    this.globalRules[selector].push(callback);
+    return this;
+  }
+  static apply(doc = document, view = null) {
+    for (var selector in this.globalRules) {
+      for (var i in this.globalRules[selector]) {
+        var callback = this.globalRules[selector][i];
+        var wrapped = this.wrap(doc, callback, view);
+        var nodes = doc.querySelectorAll(selector);
+        for (var node of nodes) {
+          wrapped(node);
+        }
+      }
+    }
+  }
+  add(selector, callback) {
+    this.rules = this.rules || {};
+    this.rules[selector] = this.rules[selector] || [];
+    this.rules[selector].push(callback);
+    return this;
+  }
+  apply(doc = document, view = null) {
+    RuleSet.apply(doc, view);
+    for (var selector in this.rules) {
+      for (var i in this.rules[selector]) {
+        var callback = this.rules[selector][i];
+        var wrapped = RuleSet.wrap(doc, callback, view);
+        var nodes = doc.querySelectorAll(selector);
+        for (var node of nodes) {
+          wrapped(node);
+        }
+      }
+    }
+  }
+  purge() {
+    if (!this.rules) {
+      return;
+    }
+    for (var [k, v] of Object.entries(this.rules)) {
+      if (!this.rules[k]) {
+        continue;
+      }
+      for (var kk in this.rules[k]) {
+        delete this.rules[k][kk];
+      }
+    }
+  }
+  static wait(event = 'DOMContentLoaded', node = document) {
+    var listener = ((event, node) => () => {
+      node.removeEventListener(event, listener);
+      return this.apply();
+    })(event, node);
+    node.addEventListener(event, listener);
+  }
+  static wrap(doc, originalCallback, view = null) {
+    var callback = originalCallback;
+    if (originalCallback instanceof _View.View || originalCallback && originalCallback.prototype && originalCallback.prototype instanceof _View.View) {
+      callback = () => originalCallback;
+    }
+    return element => {
+      if (typeof element.___cvApplied___ === 'undefined') {
+        Object.defineProperty(element, '___cvApplied___', {
+          enumerable: false,
+          writable: false,
+          value: new WeakSet()
+        });
+      }
+      if (element.___cvApplied___.has(originalCallback)) {
+        return;
+      }
+      var direct, parentView;
+      if (view) {
+        direct = parentView = view;
+        if (view.viewList) {
+          parentView = view.viewList.parent;
+        }
+      }
+      var tag = new _Tag.Tag(element, parentView, null, undefined, direct);
+      var parent = tag.element.parentNode;
+      var sibling = tag.element.nextSibling;
+      var result = callback(tag);
+      if (result !== false) {
+        element.___cvApplied___.add(originalCallback);
+      }
+      if (result instanceof HTMLElement) {
+        result = new _Tag.Tag(result);
+      }
+      if (result instanceof _Tag.Tag) {
+        if (!result.element.contains(tag.element)) {
+          while (tag.element.firstChild) {
+            result.element.appendChild(tag.element.firstChild);
+          }
+          tag.remove();
+        }
+        if (sibling) {
+          parent.insertBefore(result.element, sibling);
+        } else {
+          parent.appendChild(result.element);
+        }
+      }
+      if (result && result.prototype && result.prototype instanceof _View.View) {
+        result = new result({}, view);
+      }
+      if (result instanceof _View.View) {
+        if (view) {
+          view.cleanup.push(() => result.remove());
+          view.cleanup.push(view.args.bindTo((v, k, t) => {
+            t[k] = v;
+            result.args[k] = v;
+          }));
+          view.cleanup.push(result.args.bindTo((v, k, t, d) => {
+            t[k] = v;
+            view.args[k] = v;
+          }));
+        }
+        tag.clear();
+        result.render(tag.element);
+      }
+    };
+  }
+}
+exports.RuleSet = RuleSet;
+  })();
+});
+
+require.register("curvature/base/SetMap.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SetMap = void 0;
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+class SetMap {
+  constructor() {
+    _defineProperty(this, "_map", new Map());
+  }
+  has(key) {
+    return this._map.has(key);
+  }
+  get(key) {
+    return this._map.get(key);
+  }
+  getOne(key) {
+    var set = this.get(key);
+    for (var entry of set) {
+      return entry;
+    }
+  }
+  add(key, value) {
+    var set = this._map.get(key);
+    if (!set) {
+      this._map.set(key, set = new Set());
+    }
+    return set.add(value);
+  }
+  remove(key, value) {
+    var set = this._map.get(key);
+    if (!set) {
+      return;
+    }
+    var res = set.delete(value);
+    if (!set.size) {
+      this._map.delete(key);
+    }
+    return res;
+  }
+  values() {
+    return new Set(...[...this._map.values()].map(set => [...set.values()]));
+  }
+}
+exports.SetMap = SetMap;
+  })();
+});
+
+require.register("curvature/base/Tag.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Tag = void 0;
+var _Bindable = require("./Bindable");
+var CurrentStyle = Symbol('CurrentStyle');
+var CurrentAttrs = Symbol('CurrentAttrs');
+var styler = function (styles) {
+  if (!this.node) {
+    return;
+  }
+  for (var property in styles) {
+    var stringedProperty = String(styles[property]);
+    if (this[CurrentStyle].has(property) && this[CurrentStyle].get(property) === styles[property] || Number.isNaN(styles[property])) {
+      continue;
+    }
+    if (property[0] === '-') {
+      this.node.style.setProperty(property, stringedProperty);
+    } else {
+      this.node.style[property] = stringedProperty;
+    }
+    if (styles[property] !== undefined) {
+      this[CurrentStyle].set(property, styles[property]);
+    } else {
+      this[CurrentStyle].delete(property);
+    }
+  }
+};
+var getter = function (name) {
+  if (typeof this[name] === 'function') {
+    return this[name];
+  }
+  if (this.node && typeof this.node[name] === 'function') {
+    return this[name] = (...args) => this.node[name](...args);
+  }
+  if (name === 'style') {
+    return this.proxy.style;
+  }
+  if (this.node && name in this.node) {
+    return this.node[name];
+  }
+  return this[name];
+};
+class Tag {
+  constructor(element, parent, ref, index, direct) {
+    if (typeof element === 'string') {
+      var subdoc = document.createRange().createContextualFragment(element);
+      element = subdoc.firstChild;
+    }
+    this.element = _Bindable.Bindable.makeBindable(element);
+    this.node = this.element;
+    this.parent = parent;
+    this.direct = direct;
+    this.ref = ref;
+    this.index = index;
+    this.cleanup = [];
+    this[_Bindable.Bindable.OnAllGet] = getter.bind(this);
+    this[CurrentStyle] = new Map();
+    this[CurrentAttrs] = new Map();
+    var boundStyler = _Bindable.Bindable.make(styler.bind(this));
+    Object.defineProperty(this, 'style', {
+      value: boundStyler
+    });
+    this.proxy = _Bindable.Bindable.make(this);
+    this.proxy.style.bindTo((v, k, t, d) => {
+      if (this[CurrentStyle].has(k) && this[CurrentStyle].get(k) === v) {
+        return;
+      }
+      this.node.style[k] = v;
+      if (!d && v !== undefined) {
+        this[CurrentStyle].set(k, v);
+      } else {
+        this[CurrentStyle].delete(k);
+      }
+    });
+    this.proxy.bindTo((v, k) => {
+      if (k === 'index') {
+        return;
+      }
+      if (k in element && element[k] !== v) {
+        element[k] = v;
+      }
+      return false;
+    });
+    return this.proxy;
+  }
+  attr(attributes) {
+    for (var attribute in attributes) {
+      if (this[CurrentAttrs].has(attribute) && attributes[attribute] === undefined) {
+        this.node.removeAttribute(attribute);
+        this[CurrentAttrs].delete(attribute);
+      } else if (!this[CurrentAttrs].has(attribute) || this[CurrentAttrs].get(attribute) !== attributes[attribute]) {
+        if (attributes[attribute] === null) {
+          this.node.setAttribute(attribute, '');
+          this[CurrentAttrs].set(attribute, '');
+        } else {
+          this.node.setAttribute(attribute, attributes[attribute]);
+          this[CurrentAttrs].set(attribute, attributes[attribute]);
+        }
+      }
+    }
+    return this;
+  }
+  remove() {
+    if (this.node) {
+      this.node.remove();
+    }
+    _Bindable.Bindable.clearBindings(this);
+    var cleanup;
+    while (cleanup = this.cleanup.shift()) {
+      cleanup();
+    }
+    this.clear();
+    if (!this.node) {
+      return;
+    }
+    var detachEvent = new Event('cvDomDetached');
+    this.node.dispatchEvent(detachEvent);
+    this.node = this.element = this.ref = this.parent = undefined;
+  }
+  clear() {
+    if (!this.node) {
+      return;
+    }
+    var detachEvent = new Event('cvDomDetached');
+    while (this.node.firstChild) {
+      this.node.firstChild.dispatchEvent(detachEvent);
+      this.node.removeChild(this.node.firstChild);
+    }
+  }
+  pause(paused = true) {}
+  listen(eventName, callback, options) {
+    var node = this.node;
+    node.addEventListener(eventName, callback, options);
+    var remove = () => {
+      node.removeEventListener(eventName, callback, options);
+    };
+    var remover = () => {
+      remove();
+      remove = () => console.warn('Already removed!');
+    };
+    this.parent.onRemove(() => remover());
+    return remover;
+  }
+}
+exports.Tag = Tag;
+  })();
+});
+
+require.register("curvature/base/Uuid.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Uuid = void 0;
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var win = typeof globalThis === 'object' ? globalThis : typeof window === 'object' ? window : typeof self === 'object' ? self : void 0;
+var crypto = win.crypto;
+class Uuid {
+  constructor(uuid = null, version = 4) {
+    _defineProperty(this, "uuid", null);
+    _defineProperty(this, "version", 4);
+    if (uuid) {
+      if (typeof uuid !== 'string' && !(uuid instanceof Uuid) || !uuid.match(/[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}/)) {
+        throw new Error(`Invalid input for Uuid: "${uuid}"`);
+      }
+      this.version = version;
+      this.uuid = uuid;
+    } else if (crypto && typeof crypto.randomUUID === 'function') {
+      this.uuid = crypto.randomUUID();
+    } else {
+      var init = [1e7] + -1e3 + -4e3 + -8e3 + -1e11;
+      var rand = crypto && typeof crypto.randomUUID === 'function' ? () => crypto.getRandomValues(new Uint8Array(1))[0] : () => Math.trunc(Math.random() * 256);
+      this.uuid = init.replace(/[018]/g, c => (c ^ rand() & 15 >> c / 4).toString(16));
+    }
+    Object.freeze(this);
+  }
+  [Symbol.toPrimitive]() {
+    return this.toString();
+  }
+  toString() {
+    return this.uuid;
+  }
+  toJson() {
+    return {
+      version: this.version,
+      uuid: this.uuid
+    };
+  }
+}
+exports.Uuid = Uuid;
+  })();
+});
+
+require.register("curvature/base/View.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.View = void 0;
+var _Bindable = require("./Bindable");
+var _ViewList = require("./ViewList");
+var _Router = require("./Router");
+var _Uuid = require("./Uuid");
+var _Dom = require("./Dom");
+var _Tag = require("./Tag");
+var _Bag = require("./Bag");
+var _RuleSet = require("./RuleSet");
+var _Mixin = require("./Mixin");
+var _EventTargetMixin = require("../mixin/EventTargetMixin");
+var dontParse = Symbol('dontParse');
+var expandBind = Symbol('expandBind');
+var uuid = Symbol('uuid');
+class View extends _Mixin.Mixin.with(_EventTargetMixin.EventTargetMixin) {
+  get _id() {
+    return this[uuid];
+  }
+  static from(template, args = {}, mainView = null) {
+    var view = new this(args, mainView);
+    view.template = template;
+    return view;
+  }
+  constructor(args = {}, mainView = null) {
+    super(args, mainView);
+    this[_EventTargetMixin.EventTargetMixin.Parent] = mainView;
+    Object.defineProperty(this, 'args', {
+      value: _Bindable.Bindable.make(args)
+    });
+    Object.defineProperty(this, uuid, {
+      value: this.constructor.uuid()
+    });
+    Object.defineProperty(this, 'nodesAttached', {
+      value: new _Bag.Bag((i, s, a) => {})
+    });
+    Object.defineProperty(this, 'nodesDetached', {
+      value: new _Bag.Bag((i, s, a) => {})
+    });
+    Object.defineProperty(this, '_onRemove', {
+      value: new _Bag.Bag((i, s, a) => {})
+    });
+    Object.defineProperty(this, 'cleanup', {
+      value: []
+    });
+    Object.defineProperty(this, 'parent', {
+      value: mainView,
+      writable: true
+    });
+    Object.defineProperty(this, 'views', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'viewLists', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'withViews', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'tags', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'nodes', {
+      value: _Bindable.Bindable.make([])
+    });
+    Object.defineProperty(this, 'timeouts', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'intervals', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'frames', {
+      value: []
+    });
+    Object.defineProperty(this, 'ruleSet', {
+      value: new _RuleSet.RuleSet()
+    });
+    Object.defineProperty(this, 'preRuleSet', {
+      value: new _RuleSet.RuleSet()
+    });
+    Object.defineProperty(this, 'subBindings', {
+      value: {}
+    });
+    Object.defineProperty(this, 'templates', {
+      value: {}
+    });
+    Object.defineProperty(this, 'postMapping', {
+      value: new Set()
+    });
+    Object.defineProperty(this, 'eventCleanup', {
+      value: []
+    });
+    Object.defineProperty(this, 'unpauseCallbacks', {
+      value: new Map()
+    });
+    Object.defineProperty(this, 'interpolateRegex', {
+      value: /(\[\[((?:\$+)?[\w\.\|-]+)\]\])/g
+    });
+    Object.defineProperty(this, 'rendered', {
+      value: new Promise((accept, reject) => Object.defineProperty(this, 'renderComplete', {
+        value: accept
+      }))
+    });
+    this.onRemove(() => {
+      if (!this[_EventTargetMixin.EventTargetMixin.Parent]) {
+        return;
+      }
+      this[_EventTargetMixin.EventTargetMixin.Parent] = null;
+    });
+    this.controller = this;
+    this.template = ``;
+    this.firstNode = null;
+    this.lastNode = null;
+    this.viewList = null;
+    this.mainView = null;
+    this.preserve = false;
+    this.removed = false;
+    this.loaded = Promise.resolve(this);
+
+    // return Bindable.make(this);
+  }
+  static isView() {
+    return View;
+  }
+  onFrame(callback) {
+    var stopped = false;
+    var cancel = () => {
+      stopped = true;
+    };
+    var c = timestamp => {
+      if (this.removed || stopped) {
+        return;
+      }
+      if (!this.paused) {
+        callback(Date.now());
+      }
+      requestAnimationFrame(c);
+    };
+    requestAnimationFrame(() => c(Date.now()));
+    this.frames.push(cancel);
+    return cancel;
+  }
+  onNextFrame(callback) {
+    return requestAnimationFrame(() => callback(Date.now()));
+  }
+  onIdle(callback) {
+    return requestIdleCallback(() => callback(Date.now()));
+  }
+  onTimeout(time, callback) {
+    var timeoutInfo = {
+      timeout: null,
+      callback: null,
+      time: time,
+      fired: false,
+      created: new Date().getTime(),
+      paused: false
+    };
+    var wrappedCallback = () => {
+      callback();
+      timeoutInfo.fired = true;
+      this.timeouts.delete(timeoutInfo.timeout);
+    };
+    var timeout = setTimeout(wrappedCallback, time);
+    timeoutInfo.callback = wrappedCallback;
+    timeoutInfo.timeout = timeout;
+    this.timeouts.set(timeoutInfo.timeout, timeoutInfo);
+    return timeout;
+  }
+  clearTimeout(timeout) {
+    if (!this.timeouts.has(timeout)) {
+      return;
+    }
+    var timeoutInfo = this.timeouts.get(timeout);
+    clearTimeout(timeoutInfo.timeout);
+    this.timeouts.delete(timeoutInfo.timeout);
+  }
+  onInterval(time, callback) {
+    var timeout = setInterval(callback, time);
+    this.intervals.set(timeout, {
+      timeout: timeout,
+      callback: callback,
+      time: time,
+      paused: false
+    });
+    return timeout;
+  }
+  clearInterval(timeout) {
+    if (!this.intervals.has(timeout)) {
+      return;
+    }
+    var timeoutInfo = this.intervals.get(timeout);
+    clearTimeout(timeoutInfo.timeout);
+    this.intervals.delete(timeoutInfo.timeout);
+  }
+  pause(paused = undefined) {
+    if (paused === undefined) {
+      this.paused = !this.paused;
+    }
+    this.paused = paused;
+    if (this.paused) {
+      for (var [callback, timeout] of this.timeouts) {
+        if (timeout.fired) {
+          this.timeouts.delete(timeout.timeout);
+          continue;
+        }
+        clearTimeout(timeout.timeout);
+        timeout.paused = true;
+        timeout.time = Math.max(0, timeout.time - (Date.now() - timeout.created));
+      }
+      for (var [_callback, _timeout] of this.intervals) {
+        clearInterval(_timeout.timeout);
+        _timeout.paused = true;
+      }
+    } else {
+      for (var [_callback2, _timeout2] of this.timeouts) {
+        if (!_timeout2.paused) {
+          continue;
+        }
+        if (_timeout2.fired) {
+          this.timeouts.delete(_timeout2.timeout);
+          continue;
+        }
+        _timeout2.timeout = setTimeout(_timeout2.callback, _timeout2.time);
+        _timeout2.paused = false;
+      }
+      for (var [_callback3, _timeout3] of this.intervals) {
+        if (!_timeout3.paused) {
+          continue;
+        }
+        _timeout3.timeout = setInterval(_timeout3.callback, _timeout3.time);
+        _timeout3.paused = false;
+      }
+      for (var [, _callback4] of this.unpauseCallbacks) {
+        _callback4();
+      }
+      this.unpauseCallbacks.clear();
+    }
+    for (var [tag, viewList] of this.viewLists) {
+      viewList.pause(!!paused);
+    }
+    for (var i in this.tags) {
+      if (Array.isArray(this.tags[i])) {
+        for (var j in this.tags[i]) {
+          this.tags[i][j].pause(!!paused);
+        }
+        continue;
+      }
+      this.tags[i].pause(!!paused);
+    }
+  }
+  render(parentNode = null, insertPoint = null, outerView = null) {
+    var {
+      document
+    } = globalThis.window;
+    if (parentNode instanceof View) {
+      parentNode = parentNode.firstNode.parentNode;
+    }
+    if (insertPoint instanceof View) {
+      insertPoint = insertPoint.firstNode;
+    }
+    if (this.firstNode) {
+      return this.reRender(parentNode, insertPoint, outerView);
+    }
+    this.dispatchEvent(new CustomEvent('render'));
+    var templateIsFragment = typeof this.template === 'object' && typeof this.template.cloneNode === 'function';
+    var templateParsed = templateIsFragment || View.templates.has(this.template);
+    var subDoc;
+    if (templateParsed) {
+      if (templateIsFragment) {
+        subDoc = this.template.cloneNode(true);
+      } else {
+        subDoc = View.templates.get(this.template).cloneNode(true);
+      }
+    } else {
+      subDoc = document.createRange().createContextualFragment(this.template);
+    }
+    if (!templateParsed && !templateIsFragment) {
+      View.templates.set(this.template, subDoc.cloneNode(true));
+    }
+    this.mainView || this.preRuleSet.apply(subDoc, this);
+    this.mapTags(subDoc);
+    this.mainView || this.ruleSet.apply(subDoc, this);
+    if (globalThis.devMode === true) {
+      this.firstNode = document.createComment(`Template ${this._id} Start`);
+      this.lastNode = document.createComment(`Template ${this._id} End`);
+    } else {
+      this.firstNode = document.createTextNode('');
+      this.lastNode = document.createTextNode('');
+    }
+    this.nodes.push(this.firstNode, ...Array.from(subDoc.childNodes), this.lastNode);
+    this.postRender(parentNode);
+    this.dispatchEvent(new CustomEvent('rendered'));
+    if (!this.dispatchAttach()) {
+      return;
+    }
+    if (parentNode) {
+      if (insertPoint) {
+        parentNode.insertBefore(this.firstNode, insertPoint);
+        parentNode.insertBefore(this.lastNode, insertPoint);
+      } else {
+        parentNode.insertBefore(this.firstNode, null);
+        parentNode.insertBefore(this.lastNode, null);
+      }
+      parentNode.insertBefore(subDoc, this.lastNode);
+      var rootNode = parentNode.getRootNode();
+      if (rootNode.isConnected) {
+        this.attached(rootNode, parentNode);
+        this.dispatchAttached(rootNode, parentNode, outerView);
+      } else if (outerView) {
+        var firstDomAttach = event => {
+          var rootNode = parentNode.getRootNode();
+          this.attached(rootNode, parentNode);
+          this.dispatchAttached(rootNode, parentNode, outerView);
+          outerView.removeEventListener('attached', firstDomAttach);
+        };
+        outerView.addEventListener('attached', firstDomAttach);
+      }
+    }
+    this.renderComplete(this.nodes);
+    return this.nodes;
+  }
+  dispatchAttach() {
+    var {
+      CustomEvent
+    } = globalThis.window;
+    return this.dispatchEvent(new CustomEvent('attach', {
+      cancelable: true,
+      target: this
+    }));
+  }
+  dispatchAttached(rootNode, parentNode, view = undefined) {
+    var {
+      CustomEvent
+    } = globalThis.window;
+    this.dispatchEvent(new CustomEvent('attached', {
+      detail: {
+        view: view || this,
+        node: parentNode,
+        root: rootNode,
+        mainView: this
+      }
+    }));
+    this.dispatchDomAttached(view);
+    for (var callback of this.nodesAttached.items()) {
+      callback(rootNode, parentNode);
+    }
+  }
+  dispatchDomAttached(view) {
+    var {
+      Node,
+      CustomEvent
+    } = globalThis.window;
+    this.nodes.filter(n => n.nodeType !== Node.COMMENT_NODE).forEach(child => {
+      if (!child.matches) {
+        return;
+      }
+      child.dispatchEvent(new CustomEvent('cvDomAttached', {
+        target: child,
+        detail: {
+          view: view || this,
+          mainView: this
+        }
+      }));
+      _Dom.Dom.mapTags(child, false, (tag, walker) => {
+        if (!tag.matches) {
+          return;
+        }
+        tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+          target: tag,
+          detail: {
+            view: view || this,
+            mainView: this
+          }
+        }));
+      });
+    });
+  }
+  reRender(parentNode, insertPoint, outerView) {
+    var {
+      CustomEvent
+    } = globalThis.window;
+    var willReRender = this.dispatchEvent(new CustomEvent('reRender'), {
+      cancelable: true,
+      target: this,
+      view: outerView
+    });
+    if (!willReRender) {
+      return;
+    }
+    var subDoc = new DocumentFragment();
+    if (this.firstNode.isConnected) {
+      var detach = this.nodesDetached.items();
+      for (var i in detach) {
+        detach[i]();
+      }
+    }
+    subDoc.append(...this.nodes);
+    if (parentNode) {
+      if (insertPoint) {
+        parentNode.insertBefore(this.firstNode, insertPoint);
+        parentNode.insertBefore(this.lastNode, insertPoint);
+      } else {
+        parentNode.insertBefore(this.firstNode, null);
+        parentNode.insertBefore(this.lastNode, null);
+      }
+      parentNode.insertBefore(subDoc, this.lastNode);
+      this.dispatchEvent(new CustomEvent('reRendered'), {
+        cancelable: true,
+        target: this,
+        view: outerView
+      });
+      var rootNode = parentNode.getRootNode();
+      if (rootNode.isConnected) {
+        this.attached(rootNode, parentNode);
+        this.dispatchAttached(rootNode, parentNode);
+      }
+    }
+    return this.nodes;
+  }
+  mapTags(subDoc) {
+    _Dom.Dom.mapTags(subDoc, false, (tag, walker) => {
+      if (tag[dontParse]) {
+        return;
+      }
+      if (tag.matches) {
+        tag = this.mapInterpolatableTag(tag);
+        tag = tag.matches('[cv-template]') && this.mapTemplateTag(tag) || tag;
+        tag = tag.matches('[cv-slot]') && this.mapSlotTag(tag) || tag;
+        tag = tag.matches('[cv-prerender]') && this.mapPrendererTag(tag) || tag;
+        tag = tag.matches('[cv-link]') && this.mapLinkTag(tag) || tag;
+        tag = tag.matches('[cv-attr]') && this.mapAttrTag(tag) || tag;
+        tag = tag.matches('[cv-expand]') && this.mapExpandableTag(tag) || tag;
+        tag = tag.matches('[cv-ref]') && this.mapRefTag(tag) || tag;
+        tag = tag.matches('[cv-on]') && this.mapOnTag(tag) || tag;
+        tag = tag.matches('[cv-each]') && this.mapEachTag(tag) || tag;
+        tag = tag.matches('[cv-bind]') && this.mapBindTag(tag) || tag;
+        tag = tag.matches('[cv-with]') && this.mapWithTag(tag) || tag;
+        tag = tag.matches('[cv-if]') && this.mapIfTag(tag) || tag;
+        tag = tag.matches('[cv-view]') && this.mapViewTag(tag) || tag;
+      } else {
+        tag = this.mapInterpolatableTag(tag);
+      }
+      if (tag !== walker.currentNode) {
+        walker.currentNode = tag;
+      }
+    });
+    this.postMapping.forEach(c => c());
+  }
+  mapExpandableTag(tag) {
+    // const tagCompiler = this.compileExpandableTag(tag);
+    // const newTag = tagCompiler(this);
+    // tag.replaceWith(newTag);
+    // return newTag;
+
+    var existing = tag[expandBind];
+    if (existing) {
+      existing();
+      tag[expandBind] = false;
+    }
+    var [proxy, expandProperty] = _Bindable.Bindable.resolve(this.args, tag.getAttribute('cv-expand'), true);
+    tag.removeAttribute('cv-expand');
+    if (!proxy[expandProperty]) {
+      proxy[expandProperty] = {};
+    }
+    proxy[expandProperty] = _Bindable.Bindable.make(proxy[expandProperty]);
+    this.onRemove(tag[expandBind] = proxy[expandProperty].bindTo((v, k, t, d, p) => {
+      if (d || v === undefined) {
+        tag.removeAttribute(k, v);
+        return;
+      }
+      if (v === null) {
+        tag.setAttribute(k, '');
+        return;
+      }
+      tag.setAttribute(k, v);
+    }));
+
+    // let expandProperty = tag.getAttribute('cv-expand');
+    // let expandArg = Bindable.makeBindable(
+    // 	this.args[expandProperty] || {}
+    // );
+
+    // tag.removeAttribute('cv-expand');
+
+    // for(let i in expandArg)
+    // {
+    // 	if(i === 'name' || i === 'type')
+    // 	{
+    // 		continue;
+    // 	}
+
+    // 	let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
+    // 		tag.setAttribute(i, v);
+    // 	})(tag,i));
+
+    // 	this.onRemove(()=>{
+    // 		debind();
+    // 		if(expandArg.isBound())
+    // 		{
+    // 			Bindable.clearBindings(expandArg);
+    // 		}
+    // 	});
+    // }
+
+    return tag;
+  }
+
+  // compileExpandableTag(sourceTag)
+  // {
+  // 	return (bindingView) => {
+
+  // 		const tag = sourceTag.cloneNode(true);
+
+  // 		let expandProperty = tag.getAttribute('cv-expand');
+  // 		let expandArg = Bindable.make(
+  // 			bindingView.args[expandProperty] || {}
+  // 		);
+
+  // 		tag.removeAttribute('cv-expand');
+
+  // 		for(let i in expandArg)
+  // 		{
+  // 			if(i === 'name' || i === 'type')
+  // 			{
+  // 				continue;
+  // 			}
+
+  // 			let debind = expandArg.bindTo(i, ((tag,i)=>(v)=>{
+  // 				tag.setAttribute(i, v);
+  // 			})(tag,i));
+
+  // 			bindingView.onRemove(()=>{
+  // 				debind();
+  // 				if(expandArg.isBound())
+  // 				{
+  // 					Bindable.clearBindings(expandArg);
+  // 				}
+  // 			});
+  // 		}
+
+  // 		return tag;
+  // 	};
+  // }
+
+  mapAttrTag(tag) {
+    var tagCompiler = this.compileAttrTag(tag);
+    var newTag = tagCompiler(this);
+    tag.replaceWith(newTag);
+    return newTag;
+
+    // let attrProperty = tag.getAttribute('cv-attr');
+
+    // tag.removeAttribute('cv-attr');
+
+    // let pairs = attrProperty.split(',');
+    // let attrs = pairs.map((p) => p.split(':'));
+
+    // for (let i in attrs)
+    // {
+    // 	let proxy        = this.args;
+    // 	let bindProperty = attrs[i][1];
+    // 	let property     = bindProperty;
+
+    // 	if(bindProperty.match(/\./))
+    // 	{
+    // 		[proxy, property] = Bindable.resolve(
+    // 			this.args
+    // 			, bindProperty
+    // 			, true
+    // 		);
+    // 	}
+
+    // 	let attrib = attrs[i][0];
+
+    // 	this.onRemove(proxy.bindTo(
+    // 		property
+    // 		, (v)=>{
+    // 			if(v == null)
+    // 			{
+    // 				tag.setAttribute(attrib, '');
+    // 				return;
+    // 			}
+    // 			tag.setAttribute(attrib, v);
+    // 		}
+    // 	));
+    // }
+
+    // return tag;
+  }
+  compileAttrTag(sourceTag) {
+    var attrProperty = sourceTag.getAttribute('cv-attr');
+    var pairs = attrProperty.split(/[,;]/);
+    var attrs = pairs.map(p => p.split(':'));
+    sourceTag.removeAttribute('cv-attr');
+    return bindingView => {
+      var tag = sourceTag.cloneNode(true);
+      var _loop = function () {
+        var bindProperty = attrs[i][1] || attrs[i][0];
+        var [proxy, property] = _Bindable.Bindable.resolve(bindingView.args, bindProperty, true);
+        var attrib = attrs[i][0];
+        bindingView.onRemove(proxy.bindTo(property, (v, k, t, d) => {
+          if (d || v === undefined) {
+            tag.removeAttribute(attrib, v);
+            return;
+          }
+          if (v === null) {
+            tag.setAttribute(attrib, '');
+            return;
+          }
+          tag.setAttribute(attrib, v);
+        }));
+      };
+      for (var i in attrs) {
+        _loop();
+      }
+      return tag;
+    };
+  }
+  mapInterpolatableTag(tag) {
+    var _this = this;
+    var regex = this.interpolateRegex;
+    var {
+      Node,
+      document
+    } = globalThis.window;
+    if (tag.nodeType === Node.TEXT_NODE) {
+      var original = tag.nodeValue;
+      if (!this.interpolatable(original)) {
+        return tag;
+      }
+      var header = 0;
+      var match;
+      var _loop2 = function () {
+          var bindProperty = match[2];
+          var unsafeHtml = false;
+          var unsafeView = false;
+          var propertySplit = bindProperty.split('|');
+          var transformer = false;
+          if (propertySplit.length > 1) {
+            transformer = _this.stringTransformer(propertySplit.slice(1));
+            bindProperty = propertySplit[0];
+          }
+          if (bindProperty.substr(0, 2) === '$$') {
+            unsafeHtml = true;
+            unsafeView = true;
+            bindProperty = bindProperty.substr(2);
+          }
+          if (bindProperty.substr(0, 1) === '$') {
+            unsafeHtml = true;
+            bindProperty = bindProperty.substr(1);
+          }
+          if (bindProperty.substr(0, 3) === '000') {
+            expand = true;
+            bindProperty = bindProperty.substr(3);
+            return 0; // continue
+          }
+          var staticPrefix = original.substring(header, match.index);
+          header = match.index + match[1].length;
+          var staticNode = document.createTextNode(staticPrefix);
+          staticNode[dontParse] = true;
+          tag.parentNode.insertBefore(staticNode, tag);
+          var dynamicNode;
+          if (unsafeHtml) {
+            dynamicNode = document.createElement('div');
+          } else {
+            dynamicNode = document.createTextNode('');
+          }
+          dynamicNode[dontParse] = true;
+          var proxy = _this.args;
+          var property = bindProperty;
+          if (bindProperty.match(/\./)) {
+            [proxy, property] = _Bindable.Bindable.resolve(_this.args, bindProperty, true);
+          }
+          tag.parentNode.insertBefore(dynamicNode, tag);
+          if (typeof proxy !== 'object') {
+            return 1; // break
+          }
+          proxy = _Bindable.Bindable.make(proxy);
+          var debind = proxy.bindTo(property, (v, k, t) => {
+            if (t[k] !== v && (t[k] instanceof View || t[k] instanceof Node || t[k] instanceof _Tag.Tag)) {
+              if (!t[k].preserve) {
+                t[k].remove();
+              }
+            }
+            if (unsafeView && !(v instanceof View)) {
+              var unsafeTemplate = v !== null && v !== void 0 ? v : '';
+              v = new View(_this.args, _this);
+              v.template = unsafeTemplate;
+            }
+            if (transformer) {
+              v = transformer(v);
+            }
+            if (v instanceof View) {
+              dynamicNode.nodeValue = '';
+              v[_EventTargetMixin.EventTargetMixin.Parent] = _this;
+              v.render(tag.parentNode, dynamicNode, _this);
+              var cleanup = () => {
+                if (!v.preserve) {
+                  v.remove();
+                }
+              };
+              _this.onRemove(cleanup);
+              v.onRemove(() => _this._onRemove.remove(cleanup));
+            } else if (v instanceof Node) {
+              dynamicNode.nodeValue = '';
+              tag.parentNode.insertBefore(v, dynamicNode);
+              _this.onRemove(() => v.remove());
+            } else if (v instanceof _Tag.Tag) {
+              dynamicNode.nodeValue = '';
+              if (v.node) {
+                tag.parentNode.insertBefore(v.node, dynamicNode);
+                _this.onRemove(() => v.remove());
+              } else {
+                v.remove();
+              }
+            } else {
+              if (v instanceof Object && v.__toString instanceof Function) {
+                v = v.__toString();
+              }
+              if (unsafeHtml) {
+                dynamicNode.innerHTML = v;
+              } else {
+                dynamicNode.nodeValue = v;
+              }
+            }
+            dynamicNode[dontParse] = true;
+          });
+          _this.onRemove(debind);
+        },
+        _ret;
+      while (match = regex.exec(original)) {
+        _ret = _loop2();
+        if (_ret === 0) continue;
+        if (_ret === 1) break;
+      }
+      var staticSuffix = original.substring(header);
+      var staticNode = document.createTextNode(staticSuffix);
+      staticNode[dontParse] = true;
+      tag.parentNode.insertBefore(staticNode, tag);
+      tag.nodeValue = '';
+    } else if (tag.nodeType === Node.ELEMENT_NODE) {
+      var _loop3 = function () {
+        if (!_this.interpolatable(tag.attributes[i].value)) {
+          return 1; // continue
+        }
+        var header = 0;
+        var match;
+        var original = tag.attributes[i].value;
+        var attribute = tag.attributes[i];
+        var bindProperties = {};
+        var segments = [];
+        while (match = regex.exec(original)) {
+          segments.push(original.substring(header, match.index));
+          if (!bindProperties[match[2]]) {
+            bindProperties[match[2]] = [];
+          }
+          bindProperties[match[2]].push(segments.length);
+          segments.push(match[1]);
+          header = match.index + match[1].length;
+        }
+        segments.push(original.substring(header));
+        var _loop4 = function () {
+          var proxy = _this.args;
+          var property = j;
+          var propertySplit = j.split('|');
+          var transformer = false;
+          var longProperty = j;
+          if (propertySplit.length > 1) {
+            transformer = _this.stringTransformer(propertySplit.slice(1));
+            property = propertySplit[0];
+          }
+          if (property.match(/\./)) {
+            [proxy, property] = _Bindable.Bindable.resolve(_this.args, property, true);
+          }
+          var matching = [];
+          var bindProperty = j;
+          var matchingSegments = bindProperties[longProperty];
+          _this.onRemove(proxy.bindTo(property, (v, k, t, d) => {
+            if (transformer) {
+              v = transformer(v);
+            }
+            for (var _i in bindProperties) {
+              for (var _j in bindProperties[longProperty]) {
+                segments[bindProperties[longProperty][_j]] = t[_i];
+                if (k === property) {
+                  segments[bindProperties[longProperty][_j]] = v;
+                }
+              }
+            }
+            if (!_this.paused) {
+              tag.setAttribute(attribute.name, segments.join(''));
+            } else {
+              _this.unpauseCallbacks.set(attribute, () => tag.setAttribute(attribute.name, segments.join('')));
+            }
+          }));
+        };
+        for (var j in bindProperties) {
+          _loop4();
+        }
+      };
+      for (var i = 0; i < tag.attributes.length; i++) {
+        if (_loop3()) continue;
+      }
+    }
+    return tag;
+  }
+  mapRefTag(tag) {
+    var refAttr = tag.getAttribute('cv-ref');
+    var [refProp, refClassname = null, refKey = null] = refAttr.split(':');
+    var refClass = _Tag.Tag;
+    if (refClassname) {
+      refClass = this.stringToClass(refClassname);
+    }
+    tag.removeAttribute('cv-ref');
+    Object.defineProperty(tag, '___tag___', {
+      enumerable: false,
+      writable: true
+    });
+    this.onRemove(() => {
+      tag.___tag___ = null;
+      tag.remove();
+    });
+    var parent = this;
+    var direct = this;
+    if (this.viewList) {
+      parent = this.viewList.parent;
+      // if(!this.viewList.parent.tags[refProp])
+      // {
+      // 	this.viewList.parent.tags[refProp] = [];
+      // }
+
+      // let refKeyVal = this.args[refKey];
+
+      // this.viewList.parent.tags[refProp][refKeyVal] = new refClass(
+      // 	tag, this, refProp, refKeyVal
+      // );
+    }
+    // else
+    // {
+    // 	this.tags[refProp] = new refClass(
+    // 		tag, this, refProp
+    // 	);
+    // }
+
+    var tagObject = new refClass(tag, this, refProp, undefined, direct);
+    tag.___tag___ = tagObject;
+    this.tags[refProp] = tagObject;
+    while (parent) {
+      var refKeyVal = this.args[refKey];
+      if (refKeyVal !== undefined) {
+        if (!parent.tags[refProp]) {
+          parent.tags[refProp] = [];
+        }
+        parent.tags[refProp][refKeyVal] = tagObject;
+      } else {
+        parent.tags[refProp] = tagObject;
+      }
+      if (!parent.parent) {
+        break;
+      }
+      parent = parent.parent;
+    }
+    return tag;
+  }
+  mapBindTag(tag) {
+    var bindArg = tag.getAttribute('cv-bind');
+    var proxy = this.args;
+    var property = bindArg;
+    var top = null;
+    if (bindArg.match(/\./)) {
+      [proxy, property, top] = _Bindable.Bindable.resolve(this.args, bindArg, true);
+    }
+    if (proxy !== this.args) {
+      this.subBindings[bindArg] = this.subBindings[bindArg] || [];
+      this.onRemove(this.args.bindTo(top, () => {
+        while (this.subBindings.length) {
+          this.subBindings.shift()();
+        }
+      }));
+    }
+    var unsafeHtml = false;
+    if (property.substr(0, 1) === '$') {
+      property = property.substr(1);
+      unsafeHtml = true;
+    }
+    var autoEventStarted = false;
+    var debind = proxy.bindTo(property, (v, k, t, d, p) => {
+      if ((p instanceof View || p instanceof Node || p instanceof _Tag.Tag) && p !== v) {
+        p.remove();
+      }
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(tag.tagName)) {
+        var _type = tag.getAttribute('type');
+        if (_type && _type.toLowerCase() === 'checkbox') {
+          tag.checked = !!v;
+        } else if (_type && _type.toLowerCase() === 'radio') {
+          tag.checked = v == tag.value;
+        } else if (_type !== 'file') {
+          if (tag.tagName === 'SELECT') {
+            var selectOption = () => {
+              for (var i = 0; i < tag.options.length; i++) {
+                var option = tag.options[i];
+                if (option.value == v) {
+                  tag.selectedIndex = i;
+                }
+              }
+            };
+            selectOption();
+            this.nodesAttached.add(selectOption);
+          } else {
+            tag.value = v == null ? '' : v;
+          }
+        }
+        if (autoEventStarted) {
+          tag.dispatchEvent(new CustomEvent('cvAutoChanged', {
+            bubbles: true
+          }));
+        }
+        autoEventStarted = true;
+      } else {
+        if (v instanceof View) {
+          for (var node of tag.childNodes) {
+            node.remove();
+          }
+          v[_EventTargetMixin.EventTargetMixin.Parent] = this;
+          v.render(tag, null, this);
+        } else if (v instanceof Node) {
+          tag.insert(v);
+        } else if (v instanceof _Tag.Tag) {
+          tag.append(v.node);
+        } else if (unsafeHtml) {
+          if (tag.innerHTML !== v) {
+            v = String(v);
+            if (tag.innerHTML === v.substring(0, tag.innerHTML.length)) {
+              tag.innerHTML += v.substring(tag.innerHTML.length);
+            } else {
+              for (var _node of tag.childNodes) {
+                _node.remove();
+              }
+              tag.innerHTML = v;
+            }
+            _Dom.Dom.mapTags(tag, false, t => t[dontParse] = true);
+          }
+        } else {
+          if (tag.textContent !== v) {
+            for (var _node2 of tag.childNodes) {
+              _node2.remove();
+            }
+            tag.textContent = v;
+          }
+        }
+      }
+    });
+    if (proxy !== this.args) {
+      this.subBindings[bindArg].push(debind);
+    }
+    this.onRemove(debind);
+    var type = tag.getAttribute('type');
+    var multi = tag.getAttribute('multiple');
+    var inputListener = event => {
+      if (event.target !== tag) {
+        return;
+      }
+      if (type && type.toLowerCase() === 'checkbox') {
+        if (tag.checked) {
+          proxy[property] = event.target.getAttribute('value');
+        } else {
+          proxy[property] = false;
+        }
+      } else if (event.target.matches('[contenteditable=true]')) {
+        proxy[property] = event.target.innerHTML;
+      } else if (type === 'file' && multi) {
+        var files = Array.from(event.target.files);
+        var current = proxy[property] || _Bindable.Bindable.onDeck(proxy, property);
+        if (!current || !files.length) {
+          proxy[property] = files;
+        } else {
+          var _loop5 = function (i) {
+            if (files[i] !== current[i]) {
+              files[i].toJSON = () => {
+                return {
+                  name: file[i].name,
+                  size: file[i].size,
+                  type: file[i].type,
+                  date: file[i].lastModified
+                };
+              };
+              current[i] = files[i];
+              return 1; // break
+            }
+          };
+          for (var i in files) {
+            if (_loop5(i)) break;
+          }
+        }
+      } else if (type === 'file' && !multi && event.target.files.length) {
+        var _file = event.target.files.item(0);
+        _file.toJSON = () => {
+          return {
+            name: _file.name,
+            size: _file.size,
+            type: _file.type,
+            date: _file.lastModified
+          };
+        };
+        proxy[property] = _file;
+      } else {
+        proxy[property] = event.target.value;
+      }
+    };
+    if (type === 'file' || type === 'radio') {
+      tag.addEventListener('change', inputListener);
+    } else {
+      tag.addEventListener('input', inputListener);
+      tag.addEventListener('change', inputListener);
+      tag.addEventListener('value-changed', inputListener);
+    }
+    this.onRemove(() => {
+      if (type === 'file' || type === 'radio') {
+        tag.removeEventListener('change', inputListener);
+      } else {
+        tag.removeEventListener('input', inputListener);
+        tag.removeEventListener('change', inputListener);
+        tag.removeEventListener('value-changed', inputListener);
+      }
+    });
+    tag.removeAttribute('cv-bind');
+    return tag;
+  }
+  mapOnTag(tag) {
+    var referents = String(tag.getAttribute('cv-on'));
+    referents.split(';').map(a => a.split(':')).forEach(a => {
+      a = a.map(a => a.trim());
+      var argLen = a.length;
+      var eventName = String(a.shift()).trim();
+      var callbackName = String(a.shift() || eventName).trim();
+      var eventFlags = String(a.shift() || '').trim();
+      var argList = [];
+      var groups = /(\w+)(?:\(([$\w\s-'",]+)\))?/.exec(callbackName);
+      if (groups) {
+        callbackName = groups[1].replace(/(^[\s\n]+|[\s\n]+$)/, '');
+        if (groups[2]) {
+          argList = groups[2].split(',').map(s => s.trim());
+        }
+      }
+      if (!argList.length) {
+        argList.push('$event');
+      }
+      if (!eventName || argLen === 1) {
+        eventName = callbackName;
+      }
+      var eventListener = event => {
+        var eventMethod;
+        var parent = this;
+        var _loop6 = function () {
+            var controller = parent.controller;
+            if (typeof controller[callbackName] === 'function') {
+              eventMethod = (...args) => {
+                controller[callbackName](...args);
+              };
+              return 0; // break
+            } else if (typeof parent[callbackName] === 'function') {
+              eventMethod = (...args) => {
+                parent[callbackName](...args);
+              };
+              return 0; // break
+            }
+            if (parent.parent) {
+              parent = parent.parent;
+            } else {
+              return 0; // break
+            }
+          },
+          _ret2;
+        while (parent) {
+          _ret2 = _loop6();
+          if (_ret2 === 0) break;
+        }
+        var argRefs = argList.map(arg => {
+          var match;
+          if (Number(arg) == arg) {
+            return arg;
+          } else if (arg === 'event' || arg === '$event') {
+            return event;
+          } else if (arg === '$view') {
+            return parent;
+          } else if (arg === '$controller') {
+            return controller;
+          } else if (arg === '$tag') {
+            return tag;
+          } else if (arg === '$parent') {
+            return this.parent;
+          } else if (arg === '$subview') {
+            return this;
+          } else if (arg in this.args) {
+            return this.args[arg];
+          } else if (match = /^['"]([\w-]+?)["']$/.exec(arg)) {
+            return match[1];
+          }
+        });
+        if (!(typeof eventMethod === 'function')) {
+          throw new Error(`${callbackName} is not defined on View object.` + "\n" + `Tag:` + "\n" + `${tag.outerHTML}`);
+        }
+        eventMethod(...argRefs);
+      };
+      var eventOptions = {};
+      if (eventFlags.includes('p')) {
+        eventOptions.passive = true;
+      } else if (eventFlags.includes('P')) {
+        eventOptions.passive = false;
+      }
+      if (eventFlags.includes('c')) {
+        eventOptions.capture = true;
+      } else if (eventFlags.includes('C')) {
+        eventOptions.capture = false;
+      }
+      if (eventFlags.includes('o')) {
+        eventOptions.once = true;
+      } else if (eventFlags.includes('O')) {
+        eventOptions.once = false;
+      }
+      switch (eventName) {
+        case '_init':
+          eventListener();
+          break;
+        case '_attach':
+          this.nodesAttached.add(eventListener);
+          break;
+        case '_detach':
+          this.nodesDetached.add(eventListener);
+          break;
+        default:
+          tag.addEventListener(eventName, eventListener, eventOptions);
+          this.onRemove(() => {
+            tag.removeEventListener(eventName, eventListener, eventOptions);
+          });
+          break;
+      }
+      return [eventName, callbackName, argList];
+    });
+    tag.removeAttribute('cv-on');
+    return tag;
+  }
+  mapLinkTag(tag) {
+    // const tagCompiler = this.compileLinkTag(tag);
+
+    // const newTag = tagCompiler(this);
+
+    // tag.replaceWith(newTag);
+
+    // return newTag;
+
+    var linkAttr = tag.getAttribute('cv-link');
+    tag.setAttribute('href', linkAttr);
+    var linkClick = event => {
+      event.preventDefault();
+      if (linkAttr.substring(0, 4) === 'http' || linkAttr.substring(0, 2) === '//') {
+        globalThis.open(tag.getAttribute('href', linkAttr));
+        return;
+      }
+      _Router.Router.go(tag.getAttribute('href'));
+    };
+    tag.addEventListener('click', linkClick);
+    this.onRemove(((tag, eventListener) => () => {
+      tag.removeEventListener('click', eventListener);
+      tag = undefined;
+      eventListener = undefined;
+    })(tag, linkClick));
+    tag.removeAttribute('cv-link');
+    return tag;
+  }
+
+  // compileLinkTag(sourceTag)
+  // {
+  // 	const linkAttr = sourceTag.getAttribute('cv-link');
+  // 	sourceTag.removeAttribute('cv-link');
+  // 	return (bindingView) => {
+  // 		const tag = sourceTag.cloneNode(true);
+  // 		tag.setAttribute('href', linkAttr);
+  // 		return tag;
+  // 	};
+  // }
+
+  mapPrendererTag(tag) {
+    var prerenderAttr = tag.getAttribute('cv-prerender');
+    var prerendering = globalThis.prerenderer || navigator.userAgent.match(/prerender/i);
+    tag.removeAttribute('cv-prerender');
+    if (prerendering) {
+      globalThis.prerenderer = globalThis.prerenderer || true;
+    }
+    if (prerenderAttr === 'never' && prerendering || prerenderAttr === 'only' && !prerendering) {
+      this.postMapping.add(() => tag.parentNode.removeChild(tag));
+    }
+    return tag;
+  }
+  mapWithTag(tag) {
+    var _this2 = this;
+    var withAttr = tag.getAttribute('cv-with');
+    var carryAttr = tag.getAttribute('cv-carry');
+    var viewAttr = tag.getAttribute('cv-view');
+    tag.removeAttribute('cv-with');
+    tag.removeAttribute('cv-carry');
+    tag.removeAttribute('cv-view');
+    var viewClass = viewAttr ? this.stringToClass(viewAttr) : View;
+    var subTemplate = new DocumentFragment();
+    [...tag.childNodes].forEach(n => subTemplate.appendChild(n));
+    var carryProps = [];
+    if (carryAttr) {
+      carryProps = carryAttr.split(',').map(s => s.trim());
+    }
+    var debind = this.args.bindTo(withAttr, (v, k, t, d) => {
+      if (this.withViews.has(tag)) {
+        this.withViews.delete(tag);
+      }
+      while (tag.firstChild) {
+        tag.removeChild(tag.firstChild);
+      }
+      var view = new viewClass({}, this);
+      this.onRemove((view => () => {
+        view.remove();
+      })(view));
+      view.template = subTemplate;
+      var _loop7 = function () {
+        var debind = _this2.args.bindTo(carryProps[i], (v, k) => {
+          view.args[k] = v;
+        });
+        view.onRemove(debind);
+        _this2.onRemove(() => {
+          debind();
+          view.remove();
+        });
+      };
+      for (var i in carryProps) {
+        _loop7();
+      }
+      var _loop8 = function () {
+        if (typeof v !== 'object') {
+          return 1; // continue
+        }
+        v = _Bindable.Bindable.make(v);
+        var debind = v.bindTo(_i2, (vv, kk, tt, dd) => {
+          if (!dd) {
+            view.args[kk] = vv;
+          } else if (kk in view.args) {
+            delete view.args[kk];
+          }
+        });
+        var debindUp = view.args.bindTo(_i2, (vv, kk, tt, dd) => {
+          if (!dd) {
+            v[kk] = vv;
+          } else if (kk in v) {
+            delete v[kk];
+          }
+        });
+        _this2.onRemove(() => {
+          debind();
+          if (!v.isBound()) {
+            _Bindable.Bindable.clearBindings(v);
+          }
+          view.remove();
+        });
+        view.onRemove(() => {
+          debind();
+          if (!v.isBound()) {
+            _Bindable.Bindable.clearBindings(v);
+          }
+        });
+      };
+      for (var _i2 in v) {
+        if (_loop8()) continue;
+      }
+      view.render(tag, null, this);
+      this.withViews.set(tag, view);
+    });
+    this.onRemove(() => {
+      this.withViews.delete(tag);
+      debind();
+    });
+    return tag;
+  }
+  mapViewTag(tag) {
+    var viewAttr = tag.getAttribute('cv-view');
+    tag.removeAttribute('cv-view');
+    var subTemplate = new DocumentFragment();
+    [...tag.childNodes].forEach(n => subTemplate.appendChild(n));
+    var parts = viewAttr.split(':');
+    var viewName = parts.shift();
+    var viewClass = parts.length ? this.stringToClass(parts[0]) : View;
+    var view = new viewClass(this.args, this);
+    this.views.set(tag, view);
+    this.views.set(viewName, view);
+    this.onRemove(() => {
+      view.remove();
+      this.views.delete(tag);
+      this.views.delete(viewName);
+    });
+    view.template = subTemplate;
+    view.render(tag, null, this);
+    return tag;
+  }
+  mapEachTag(tag) {
+    var eachAttr = tag.getAttribute('cv-each');
+    var viewAttr = tag.getAttribute('cv-view');
+    tag.removeAttribute('cv-each');
+    tag.removeAttribute('cv-view');
+    var viewClass = viewAttr ? this.stringToClass(viewAttr) : View;
+    var subTemplate = new DocumentFragment();
+    [...tag.childNodes].forEach(n => subTemplate.appendChild(n));
+    var [eachProp, asProp, keyProp] = eachAttr.split(':');
+    var proxy = this.args;
+    var property = eachProp;
+    if (eachProp.match(/\./)) {
+      [proxy, property] = _Bindable.Bindable.resolve(this.args, eachProp, true);
+    }
+    var debind = proxy.bindTo(property, (v, k, t, d, p) => {
+      if (v instanceof _Bag.Bag) {
+        v = v.list;
+      }
+      if (this.viewLists.has(tag)) {
+        this.viewLists.get(tag).remove();
+      }
+      var viewList = new _ViewList.ViewList(subTemplate, asProp, v, this, keyProp, viewClass);
+      var viewListRemover = () => viewList.remove();
+      this.onRemove(viewListRemover);
+      viewList.onRemove(() => this._onRemove.remove(viewListRemover));
+      var debindA = this.args.bindTo((v, k, t, d) => {
+        if (k === '_id') {
+          return;
+        }
+        if (!d) {
+          viewList.subArgs[k] = v;
+        } else {
+          if (k in viewList.subArgs) {
+            delete viewList.subArgs[k];
+          }
+        }
+      });
+      var debindB = viewList.args.bindTo((v, k, t, d, p) => {
+        if (k === '_id' || k === 'value' || String(k).substring(0, 3) === '___') {
+          return;
+        }
+        if (!d) {
+          if (k in this.args) {
+            this.args[k] = v;
+          }
+        } else {
+          delete this.args[k];
+        }
+      });
+      viewList.onRemove(debindA);
+      viewList.onRemove(debindB);
+      this.onRemove(debindA);
+      this.onRemove(debindB);
+      while (tag.firstChild) {
+        tag.removeChild(tag.firstChild);
+      }
+      this.viewLists.set(tag, viewList);
+      viewList.render(tag, null, this);
+      if (tag.tagName === 'SELECT') {
+        viewList.reRender();
+      }
+    });
+    this.onRemove(debind);
+    return tag;
+  }
+  mapIfTag(tag) {
+    var sourceTag = tag;
+    var viewProperty = sourceTag.getAttribute('cv-view');
+    var ifProperty = sourceTag.getAttribute('cv-if');
+    var isProperty = sourceTag.getAttribute('cv-is');
+    var inverted = false;
+    var defined = false;
+    sourceTag.removeAttribute('cv-view');
+    sourceTag.removeAttribute('cv-if');
+    sourceTag.removeAttribute('cv-is');
+    var viewClass = viewProperty ? this.stringToClass(viewProperty) : View;
+    if (ifProperty.substr(0, 1) === '!') {
+      ifProperty = ifProperty.substr(1);
+      inverted = true;
+    }
+    if (ifProperty.substr(0, 1) === '?') {
+      ifProperty = ifProperty.substr(1);
+      defined = true;
+    }
+    var subTemplate = new DocumentFragment();
+    [...sourceTag.childNodes].forEach(n => subTemplate.appendChild(n));
+    var bindingView = this;
+    var ifDoc = new DocumentFragment();
+
+    // let view = new viewClass(Object.assign({}, this.args), bindingView);
+    var view = new viewClass(this.args, bindingView);
+    view.tags.bindTo((v, k) => this.tags[k] = v, {
+      removeWith: this
+    });
+    view.template = subTemplate;
+    var proxy = bindingView.args;
+    var property = ifProperty;
+    if (ifProperty.match(/\./)) {
+      [proxy, property] = _Bindable.Bindable.resolve(bindingView.args, ifProperty, true);
+    }
+    view.render(ifDoc, null, this);
+    var propertyDebind = proxy.bindTo(property, (v, k) => {
+      var o = v;
+      if (defined) {
+        v = v !== null && v !== undefined;
+      }
+      if (v instanceof _Bag.Bag) {
+        v = v.list;
+      }
+      if (Array.isArray(v)) {
+        v = !!v.length;
+      }
+      if (isProperty !== null) {
+        v = o == isProperty;
+      }
+      if (inverted) {
+        v = !v;
+      }
+      if (v) {
+        tag.appendChild(ifDoc);
+        [...ifDoc.childNodes].forEach(node => _Dom.Dom.mapTags(node, false, (tag, walker) => {
+          if (!tag.matches) {
+            return;
+          }
+          tag.dispatchEvent(new CustomEvent('cvDomAttached', {
+            target: tag,
+            detail: {
+              view: view || this,
+              mainView: this
+            }
+          }));
+        }));
+      } else {
+        view.nodes.forEach(n => ifDoc.appendChild(n));
+        _Dom.Dom.mapTags(ifDoc, false, (tag, walker) => {
+          if (!tag.matches) {
+            return;
+          }
+          new CustomEvent('cvDomDetached', {
+            target: tag,
+            detail: {
+              view: view || this,
+              mainView: this
+            }
+          });
+        });
+      }
+    }, {
+      children: Array.isArray(proxy[property])
+    });
+
+    // const propertyDebind = this.args.bindChain(property, onUpdate);
+
+    bindingView.onRemove(propertyDebind);
+
+    // const debindA = this.args.bindTo((v,k,t,d) => {
+    // 	if(k === '_id')
+    // 	{
+    // 		return;
+    // 	}
+
+    // 	if(!d)
+    // 	{
+    // 		view.args[k] = v;
+    // 	}
+    // 	else if(k in view.args)
+    // 	{
+    // 		delete view.args[k];
+    // 	}
+
+    // });
+
+    // const debindB = view.args.bindTo((v,k,t,d,p) => {
+    // 	if(k === '_id' || String(k).substring(0,3) === '___')
+    // 	{
+    // 		return;
+    // 	}
+
+    // 	if(k in this.args)
+    // 	{
+    // 		if(!d)
+    // 		{
+    // 			this.args[k] = v;
+    // 		}
+    // 		else
+    // 		{
+    // 			delete this.args[k];
+    // 		}
+    // 	}
+    // });
+
+    var viewDebind = () => {
+      propertyDebind();
+      // debindA();
+      // debindB();
+      bindingView._onRemove.remove(propertyDebind);
+      // bindingView._onRemove.remove(bindableDebind);
+    };
+    bindingView.onRemove(viewDebind);
+    this.onRemove(() => {
+      // debindA();
+      // debindB();
+      view.remove();
+      if (bindingView !== this) {
+        bindingView.remove();
+      }
+    });
+    return tag;
+  }
+
+  // compileIfTag(sourceTag)
+  // {
+  // 	let ifProperty = sourceTag.getAttribute('cv-if');
+  // 	let inverted   = false;
+
+  // 	sourceTag.removeAttribute('cv-if');
+
+  // 	if(ifProperty.substr(0, 1) === '!')
+  // 	{
+  // 		ifProperty = ifProperty.substr(1);
+  // 		inverted   = true;
+  // 	}
+
+  // 	const subTemplate = new DocumentFragment;
+
+  // 	[...sourceTag.childNodes].forEach(
+  // 		n => subTemplate.appendChild(n.cloneNode(true))
+  // 	);
+
+  // 	return (bindingView) => {
+
+  // 		const tag = sourceTag.cloneNode();
+
+  // 		const ifDoc = new DocumentFragment;
+
+  // 		let view = new View({}, bindingView);
+
+  // 		view.template = subTemplate;
+  // 		// view.parent   = bindingView;
+
+  // 		bindingView.syncBind(view);
+
+  // 		let proxy    = bindingView.args;
+  // 		let property = ifProperty;
+
+  // 		if(ifProperty.match(/\./))
+  // 		{
+  // 			[proxy, property] = Bindable.resolve(
+  // 				bindingView.args
+  // 				, ifProperty
+  // 				, true
+  // 			);
+  // 		}
+
+  // 		let hasRendered = false;
+
+  // 		const propertyDebind = proxy.bindTo(property, (v,k) => {
+
+  // 			if(!hasRendered)
+  // 			{
+  // 				const renderDoc = (bindingView.args[property] || inverted)
+  // 					? tag : ifDoc;
+
+  // 				view.render(renderDoc);
+
+  // 				hasRendered = true;
+
+  // 				return;
+  // 			}
+
+  // 			if(Array.isArray(v))
+  // 			{
+  // 				v = !!v.length;
+  // 			}
+
+  // 			if(inverted)
+  // 			{
+  // 				v = !v;
+  // 			}
+
+  // 			if(v)
+  // 			{
+  // 				tag.appendChild(ifDoc);
+  // 			}
+  // 			else
+  // 			{
+  // 				view.nodes.forEach(n=>ifDoc.appendChild(n));
+  // 			}
+
+  // 		});
+
+  // 		// let cleaner = bindingView;
+
+  // 		// while(cleaner.parent)
+  // 		// {
+  // 		// 	cleaner = cleaner.parent;
+  // 		// }
+
+  // 		bindingView.onRemove(propertyDebind);
+
+  // 		let bindableDebind = () => {
+
+  // 			if(!proxy.isBound())
+  // 			{
+  // 				Bindable.clearBindings(proxy);
+  // 			}
+
+  // 		};
+
+  // 		let viewDebind = ()=>{
+  // 			propertyDebind();
+  // 			bindableDebind();
+  // 			bindingView._onRemove.remove(propertyDebind);
+  // 			bindingView._onRemove.remove(bindableDebind);
+  // 		};
+
+  // 		view.onRemove(viewDebind);
+
+  // 		return tag;
+  // 	};
+  // }
+
+  mapTemplateTag(tag) {
+    // const templateName = tag.getAttribute('cv-template');
+
+    // tag.removeAttribute('cv-template');
+
+    // this.templates[ templateName ] = tag.tagName === 'TEMPLATE'
+    // 	? tag.cloneNode(true).content
+    // 	: new DocumentFragment(tag.innerHTML);
+
+    var templateName = tag.getAttribute('cv-template');
+    tag.removeAttribute('cv-template');
+    var source = tag.innerHTML;
+    if (!View.templates.has(source)) {
+      View.templates.set(source, document.createRange().createContextualFragment(tag.innerHTML));
+    }
+    this.templates[templateName] = View.templates.get(source);
+    this.postMapping.add(() => tag.remove());
+    return tag;
+  }
+  mapSlotTag(tag) {
+    var templateName = tag.getAttribute('cv-slot');
+    var template = this.templates[templateName];
+    if (!template) {
+      var parent = this;
+      while (parent) {
+        template = parent.templates[templateName];
+        if (template) {
+          break;
+        }
+        parent = parent.parent;
+      }
+      if (!template) {
+        console.error(`Template ${templateName} not found.`);
+        return;
+      }
+    }
+    tag.removeAttribute('cv-slot');
+    while (tag.firstChild) {
+      tag.firstChild.remove();
+    }
+    if (typeof template === 'string') {
+      if (!View.templates.has(template)) {
+        View.templates.set(template, document.createRange().createContextualFragment(template));
+      }
+      template = View.templates.get(template);
+    }
+    tag.appendChild(template.cloneNode(true));
+    return tag;
+  }
+
+  // syncBind(subView)
+  // {
+  // 	let debindA = this.args.bindTo((v,k,t,d)=>{
+  // 		if(k === '_id')
+  // 		{
+  // 			return;
+  // 		}
+
+  // 		if(subView.args[k] !== v)
+  // 		{
+  // 			subView.args[k] = v;
+  // 		}
+  // 	});
+
+  // 	let debindB = subView.args.bindTo((v,k,t,d,p)=>{
+
+  // 		if(k === '_id')
+  // 		{
+  // 			return;
+  // 		}
+
+  // 		let newRef = v;
+  // 		let oldRef = p;
+
+  // 		if(newRef instanceof View)
+  // 		{
+  // 			newRef = newRef.___ref___;
+  // 		}
+
+  // 		if(oldRef instanceof View)
+  // 		{
+  // 			oldRef = oldRef.___ref___;
+  // 		}
+
+  // 		if(newRef !== oldRef && oldRef instanceof View)
+  // 		{
+  // 			p.remove();
+  // 		}
+
+  // 		if(k in this.args)
+  // 		{
+  // 			this.args[k] = v;
+  // 		}
+
+  // 	});
+
+  // 	this.onRemove(debindA);
+  // 	this.onRemove(debindB);
+
+  // 	subView.onRemove(()=>{
+  // 		this._onRemove.remove(debindA);
+  // 		this._onRemove.remove(debindB);
+  // 	});
+  // }
+
+  postRender(parentNode) {}
+  attached(parentNode) {}
+  interpolatable(str) {
+    return !!String(str).match(this.interpolateRegex);
+  }
+  static uuid() {
+    return new _Uuid.Uuid();
+  }
+  remove(now = false) {
+    if (!this.dispatchEvent(new CustomEvent('remove', {
+      detail: {
+        view: this
+      },
+      cancelable: true
+    }))) {
+      return;
+    }
+    var remover = () => {
+      for (var i in this.tags) {
+        if (Array.isArray(this.tags[i])) {
+          this.tags[i] && this.tags[i].forEach(t => t.remove());
+          this.tags[i].splice(0);
+        } else {
+          this.tags[i] && this.tags[i].remove();
+          this.tags[i] = undefined;
+        }
+      }
+      for (var _i3 in this.nodes) {
+        this.nodes[_i3] && this.nodes[_i3].dispatchEvent(new Event('cvDomDetached'));
+        this.nodes[_i3] && this.nodes[_i3].remove();
+        this.nodes[_i3] = undefined;
+      }
+      this.nodes.splice(0);
+      this.firstNode = this.lastNode = undefined;
+    };
+    if (now) {
+      remover();
+    } else {
+      requestAnimationFrame(remover);
+    }
+    var callbacks = this._onRemove.items();
+    for (var callback of callbacks) {
+      callback();
+      this._onRemove.remove(callback);
+    }
+    for (var cleanup of this.cleanup) {
+      cleanup && cleanup();
+    }
+    this.cleanup.length = 0;
+    for (var [tag, viewList] of this.viewLists) {
+      viewList.remove();
+    }
+    this.viewLists.clear();
+    for (var [_callback5, timeout] of this.timeouts) {
+      clearTimeout(timeout.timeout);
+      this.timeouts.delete(timeout.timeout);
+    }
+    for (var interval of this.intervals) {
+      clearInterval(interval);
+    }
+    this.intervals.length = 0;
+    for (var frame of this.frames) {
+      frame();
+    }
+    this.frames.length = 0;
+    this.preRuleSet.purge();
+    this.ruleSet.purge();
+    this.removed = true;
+    this.dispatchEvent(new CustomEvent('removed', {
+      detail: {
+        view: this
+      },
+      cancelable: true
+    }));
+  }
+  findTag(selector) {
+    for (var i in this.nodes) {
+      var result = void 0;
+      if (!this.nodes[i].querySelector) {
+        continue;
+      }
+      if (this.nodes[i].matches(selector)) {
+        return new _Tag.Tag(this.nodes[i], this, undefined, undefined, this);
+      }
+      if (result = this.nodes[i].querySelector(selector)) {
+        return new _Tag.Tag(result, this, undefined, undefined, this);
+      }
+    }
+  }
+  findTags(selector) {
+    var topLevel = this.nodes.filter(n => n.matches && n.matches(selector));
+    var subLevel = this.nodes.filter(n => n.querySelectorAll).map(n => [...n.querySelectorAll(selector)]).flat().map(n => new _Tag.Tag(n, this, undefined, undefined, this)) || [];
+    return topLevel.concat(subLevel);
+  }
+  onRemove(callback) {
+    if (callback instanceof Event) {
+      return;
+    }
+    this._onRemove.add(callback);
+  }
+  update() {}
+  beforeUpdate(args) {}
+  afterUpdate(args) {}
+  stringTransformer(methods) {
+    return x => {
+      for (var m in methods) {
+        var parent = this;
+        var method = methods[m];
+        while (parent && !parent[method]) {
+          parent = parent.parent;
+        }
+        if (!parent) {
+          return;
+        }
+        x = parent[methods[m]](x);
+      }
+      return x;
+    };
+  }
+  stringToClass(refClassname) {
+    if (View.refClasses.has(refClassname)) {
+      return View.refClasses.get(refClassname);
+    }
+    var refClassSplit = refClassname.split('/');
+    var refShortClass = refClassSplit[refClassSplit.length - 1];
+    var refClass = require(refClassname);
+    View.refClasses.set(refClassname, refClass[refShortClass]);
+    return refClass[refShortClass];
+  }
+  preventParsing(node) {
+    node[dontParse] = true;
+  }
+  toString() {
+    return this.nodes.map(n => n.outerHTML).join(' ');
+  }
+  listen(node, eventName, callback, options) {
+    if (typeof node === 'string') {
+      options = callback;
+      callback = eventName;
+      eventName = node;
+      node = this;
+    }
+    if (node instanceof View) {
+      return this.listen(node.nodes, eventName, callback, options);
+    }
+    if (Array.isArray(node)) {
+      return node.map(n => this.listen(n, eventName, callback, options));
+      // .forEach(r => r());
+    }
+    if (node instanceof _Tag.Tag) {
+      return this.listen(node.element, eventName, callback, options);
+    }
+    node.addEventListener(eventName, callback, options);
+    var remove = () => node.removeEventListener(eventName, callback, options);
+    var remover = () => {
+      remove();
+      remove = () => {};
+    };
+    this.onRemove(() => remover());
+    return remover;
+  }
+  detach() {
+    for (var n in this.nodes) {
+      this.nodes[n].remove();
+    }
+    return this.nodes;
+  }
+}
+exports.View = View;
+Object.defineProperty(View, 'templates', {
+  value: new Map()
+});
+Object.defineProperty(View, 'refClasses', {
+  value: new Map()
+});
+  })();
+});
+
+require.register("curvature/base/ViewList.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ViewList = void 0;
+var _Bindable = require("./Bindable");
+var _SetMap = require("./SetMap");
+var _Bag = require("./Bag");
+class ViewList {
+  constructor(template, subProperty, list, parent, keyProperty = null, viewClass = null) {
+    this.removed = false;
+    this.args = _Bindable.Bindable.makeBindable(Object.create(null));
+    this.args.value = _Bindable.Bindable.makeBindable(list || Object.create(null));
+    this.subArgs = _Bindable.Bindable.makeBindable(Object.create(null));
+    this.views = [];
+    this.cleanup = [];
+    this.viewClass = viewClass;
+    this._onRemove = new _Bag.Bag();
+    this.template = template;
+    this.subProperty = subProperty;
+    this.keyProperty = keyProperty;
+    this.tag = null;
+    this.downDebind = [];
+    this.upDebind = [];
+    this.paused = false;
+    this.parent = parent;
+    this.viewCount = 0;
+    this.rendered = new Promise((accept, reject) => {
+      Object.defineProperty(this, 'renderComplete', {
+        configurable: false,
+        writable: true,
+        value: accept
+      });
+    });
+    this.willReRender = false;
+    this.args.___before((t, e, s, o, a) => {
+      if (e == 'bindTo') {
+        return;
+      }
+      this.paused = true;
+    });
+    this.args.___after((t, e, s, o, a) => {
+      if (e == 'bindTo') {
+        return;
+      }
+      this.paused = s.length > 1;
+      this.reRender();
+    });
+    var debind = this.args.value.bindTo((v, k, t, d) => {
+      if (this.paused) {
+        return;
+      }
+      var kk = k;
+      if (typeof k === 'symbol') {
+        return;
+      }
+      if (isNaN(k)) {
+        kk = '_' + k;
+      }
+      if (d) {
+        if (this.views[kk]) {
+          this.views[kk].remove(true);
+        }
+        delete this.views[kk];
+        for (var i in this.views) {
+          if (!this.views[i]) {
+            continue;
+          }
+          if (isNaN(i)) {
+            this.views[i].args[this.keyProperty] = i.substr(1);
+            continue;
+          }
+          this.views[i].args[this.keyProperty] = i;
+        }
+      } else if (!this.views[kk]) {
+        if (!this.viewCount) {
+          this.reRender();
+        } else {
+          if (this.willReRender === false) {
+            this.willReRender = requestAnimationFrame(() => {
+              this.willReRender = false;
+              this.reRender();
+            });
+          }
+        }
+      } else if (this.views[kk] && this.views[kk].args) {
+        this.views[kk].args[this.keyProperty] = k;
+        this.views[kk].args[this.subProperty] = v;
+      }
+    }, {
+      wait: 0
+    });
+    this._onRemove.add(debind);
+    Object.preventExtensions(this);
+  }
+  render(tag) {
+    var _this = this;
+    var renders = [];
+    var _loop = function (view) {
+      view.viewList = _this;
+      view.render(tag, null, _this.parent);
+      renders.push(view.rendered.then(() => view));
+    };
+    for (var view of this.views) {
+      _loop(view);
+    }
+    this.tag = tag;
+    Promise.all(renders).then(views => this.renderComplete(views));
+    this.parent.dispatchEvent(new CustomEvent('listRendered', {
+      detail: {
+        detail: {
+          key: this.subProperty,
+          value: this.args.value
+        }
+      }
+    }));
+  }
+  reRender() {
+    var _this2 = this;
+    if (this.paused || !this.tag) {
+      return;
+    }
+    var views = [];
+    var existingViews = new _SetMap.SetMap();
+    for (var i in this.views) {
+      var view = this.views[i];
+      if (view === undefined) {
+        views[i] = view;
+        continue;
+      }
+      var rawValue = view.args[this.subProperty];
+      existingViews.add(rawValue, view);
+      views[i] = view;
+    }
+    var finalViews = [];
+    var finalViewSet = new Set();
+    this.downDebind.length && this.downDebind.forEach(d => d && d());
+    this.upDebind.length && this.upDebind.forEach(d => d && d());
+    this.upDebind.length = 0;
+    this.downDebind.length = 0;
+    var minKey = Infinity;
+    var anteMinKey = Infinity;
+    var _loop2 = function () {
+      var found = false;
+      var k = _i;
+      if (isNaN(k)) {
+        k = '_' + _i;
+      } else if (String(k).length) {
+        k = Number(k);
+      }
+      if (_this2.args.value[_i] !== undefined && existingViews.has(_this2.args.value[_i])) {
+        var existingView = existingViews.getOne(_this2.args.value[_i]);
+        if (existingView) {
+          existingView.args[_this2.keyProperty] = _i;
+          finalViews[k] = existingView;
+          finalViewSet.add(existingView);
+          found = true;
+          if (!isNaN(k)) {
+            minKey = Math.min(minKey, k);
+            k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+          }
+          existingViews.remove(_this2.args.value[_i], existingView);
+        }
+      }
+      if (!found) {
+        var viewArgs = Object.create(null);
+        var _view = finalViews[k] = new _this2.viewClass(viewArgs, _this2.parent);
+        if (!isNaN(k)) {
+          minKey = Math.min(minKey, k);
+          k > 0 && (anteMinKey = Math.min(anteMinKey, k));
+        }
+        finalViews[k].template = _this2.template;
+        finalViews[k].viewList = _this2;
+        finalViews[k].args[_this2.keyProperty] = _i;
+        finalViews[k].args[_this2.subProperty] = _this2.args.value[_i];
+        _this2.upDebind[k] = viewArgs.bindTo(_this2.subProperty, (v, k, t, d) => {
+          var index = viewArgs[_this2.keyProperty];
+          if (d) {
+            delete _this2.args.value[index];
+            return;
+          }
+          _this2.args.value[index] = v;
+        });
+        _this2.downDebind[k] = _this2.subArgs.bindTo((v, k, t, d) => {
+          if (d) {
+            delete viewArgs[k];
+            return;
+          }
+          viewArgs[k] = v;
+        });
+        var upDebind = () => {
+          _this2.upDebind.filter(x => x).forEach(d => d());
+          _this2.upDebind.length = 0;
+        };
+        var downDebind = () => {
+          _this2.downDebind.filter(x => x).forEach(d => d());
+          _this2.downDebind.length = 0;
+        };
+        _view.onRemove(() => {
+          _this2._onRemove.remove(upDebind);
+          _this2._onRemove.remove(downDebind);
+          _this2.upDebind[k] && _this2.upDebind[k]();
+          _this2.downDebind[k] && _this2.downDebind[k]();
+          delete _this2.upDebind[k];
+          delete _this2.downDebind[k];
+        });
+        _this2._onRemove.add(upDebind);
+        _this2._onRemove.add(downDebind);
+        viewArgs[_this2.subProperty] = _this2.args.value[_i];
+      }
+    };
+    for (var _i in this.args.value) {
+      _loop2();
+    }
+    for (var _i2 in views) {
+      if (views[_i2] && !finalViewSet.has(views[_i2])) {
+        views[_i2].remove(true);
+      }
+    }
+    if (Array.isArray(this.args.value)) {
+      var localMin = minKey === 0 && finalViews[1] !== undefined && finalViews.length > 1 || anteMinKey === Infinity ? minKey : anteMinKey;
+      var renderRecurse = (i = 0) => {
+        var ii = finalViews.length - i - 1;
+        while (ii > localMin && finalViews[ii] === undefined) {
+          ii--;
+        }
+        if (ii < localMin) {
+          return Promise.resolve();
+        }
+        if (finalViews[ii] === this.views[ii]) {
+          if (finalViews[ii] && !finalViews[ii].firstNode) {
+            finalViews[ii].render(this.tag, finalViews[ii + 1], this.parent);
+            return finalViews[ii].rendered.then(() => renderRecurse(Number(i) + 1));
+          } else {
+            var split = 500;
+            if (i === 0 || i % split) {
+              return renderRecurse(Number(i) + 1);
+            } else {
+              return new Promise(accept => requestAnimationFrame(() => accept(renderRecurse(Number(i) + 1))));
+            }
+          }
+        }
+        finalViews[ii].render(this.tag, finalViews[ii + 1], this.parent);
+        this.views.splice(ii, 0, finalViews[ii]);
+        return finalViews[ii].rendered.then(() => renderRecurse(i + 1));
+      };
+      this.rendered = renderRecurse();
+    } else {
+      var renders = [];
+      var leftovers = Object.assign(Object.create(null), finalViews);
+      var isInt = x => parseInt(x) === x - 0;
+      var keys = Object.keys(finalViews).sort((a, b) => {
+        if (isInt(a) && isInt(b)) {
+          return Math.sign(a - b);
+        }
+        if (!isInt(a) && !isInt(b)) {
+          return 0;
+        }
+        if (!isInt(a) && isInt(b)) {
+          return -1;
+        }
+        if (isInt(a) && !isInt(b)) {
+          return 1;
+        }
+      });
+      var _loop3 = function (_i3) {
+        delete leftovers[_i3];
+        if (finalViews[_i3].firstNode && finalViews[_i3] === _this2.views[_i3]) {
+          return 1; // continue
+        }
+        finalViews[_i3].render(_this2.tag, null, _this2.parent);
+        renders.push(finalViews[_i3].rendered.then(() => finalViews[_i3]));
+      };
+      for (var _i3 of keys) {
+        if (_loop3(_i3)) continue;
+      }
+      for (var _i4 in leftovers) {
+        delete this.args.views[_i4];
+        leftovers.remove(true);
+      }
+      this.rendered = Promise.all(renders);
+    }
+    for (var _i5 in finalViews) {
+      if (isNaN(_i5)) {
+        finalViews[_i5].args[this.keyProperty] = _i5.substr(1);
+        continue;
+      }
+      finalViews[_i5].args[this.keyProperty] = _i5;
+    }
+    this.views = Array.isArray(this.args.value) ? [...finalViews] : finalViews;
+    this.viewCount = finalViews.length;
+    finalViewSet.clear();
+    this.willReRender = false;
+    this.rendered.then(() => {
+      this.parent.dispatchEvent(new CustomEvent('listRendered', {
+        detail: {
+          detail: {
+            key: this.subProperty,
+            value: this.args.value,
+            tag: this.tag
+          }
+        }
+      }));
+      this.tag.dispatchEvent(new CustomEvent('listRendered', {
+        detail: {
+          detail: {
+            key: this.subProperty,
+            value: this.args.value,
+            tag: this.tag
+          }
+        }
+      }));
+    });
+    return this.rendered;
+  }
+  pause(pause = true) {
+    for (var i in this.views) {
+      this.views[i].pause(pause);
+    }
+  }
+  onRemove(callback) {
+    this._onRemove.add(callback);
+  }
+  remove() {
+    for (var i in this.views) {
+      this.views[i] && this.views[i].remove(true);
+    }
+    var onRemove = this._onRemove.items();
+    for (var _i6 in onRemove) {
+      this._onRemove.remove(onRemove[_i6]);
+      onRemove[_i6]();
+    }
+    var cleanup;
+    while (this.cleanup.length) {
+      cleanup = this.cleanup.pop();
+      cleanup();
+    }
+    this.views = [];
+    while (this.tag && this.tag.firstChild) {
+      this.tag.removeChild(this.tag.firstChild);
+    }
+    if (this.subArgs) {
+      _Bindable.Bindable.clearBindings(this.subArgs);
+    }
+    _Bindable.Bindable.clearBindings(this.args);
+
+    // if(this.args.value && !this.args.value.isBound())
+    // {
+    // 	Bindable.clearBindings(this.args.value);
+    // }
+
+    this.removed = true;
+  }
+}
+exports.ViewList = ViewList;
+  })();
+});
+
+require.register("curvature/input/Keyboard.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Keyboard = void 0;
+var _Bindable = require("../base/Bindable");
+class Keyboard {
+  static get() {
+    return this.instance = this.instance || _Bindable.Bindable.make(new this());
+  }
+  constructor() {
+    this.maxDecay = 120;
+    this.comboTime = 500;
+    this.listening = false;
+    this.focusElement = document.body;
+    this[_Bindable.Bindable.NoGetters] = true;
+    Object.defineProperty(this, 'combo', {
+      value: _Bindable.Bindable.make([])
+    });
+    Object.defineProperty(this, 'whichs', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'codes', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'keys', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedWhich', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedCode', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'pressedKey', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedWhich', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedCode', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'releasedKey', {
+      value: _Bindable.Bindable.make({})
+    });
+    Object.defineProperty(this, 'keyRefs', {
+      value: _Bindable.Bindable.make({})
+    });
+    document.addEventListener('keyup', event => {
+      if (!this.listening) {
+        return;
+      }
+      if (!(this.keys[event.key] > 0) && this.focusElement && document.activeElement !== this.focusElement && (!this.focusElement.contains(document.activeElement) || document.activeElement.matches('input,textarea'))) {
+        return;
+      }
+      event.preventDefault();
+      this.releasedWhich[event.which] = Date.now();
+      this.releasedCode[event.code] = Date.now();
+      this.releasedKey[event.key] = Date.now();
+      this.whichs[event.which] = -1;
+      this.codes[event.code] = -1;
+      this.keys[event.key] = -1;
+    });
+    document.addEventListener('keydown', event => {
+      if (!this.listening) {
+        return;
+      }
+      if (this.focusElement && document.activeElement !== this.focusElement && (!this.focusElement.contains(document.activeElement) || document.activeElement.matches('input,textarea'))) {
+        return;
+      }
+      event.preventDefault();
+      if (event.repeat) {
+        return;
+      }
+      this.combo.push(event.code);
+      clearTimeout(this.comboTimer);
+      this.comboTimer = setTimeout(() => this.combo.splice(0), this.comboTime);
+      this.pressedWhich[event.which] = Date.now();
+      this.pressedCode[event.code] = Date.now();
+      this.pressedKey[event.key] = Date.now();
+      if (this.keys[event.key] > 0) {
+        return;
+      }
+      this.whichs[event.which] = 1;
+      this.codes[event.code] = 1;
+      this.keys[event.key] = 1;
+    });
+    var windowBlur = event => {
+      for (var i in this.keys) {
+        if (this.keys[i] < 0) {
+          continue;
+        }
+        this.releasedKey[i] = Date.now();
+        this.keys[i] = -1;
+      }
+      for (var _i in this.codes) {
+        if (this.codes[_i] < 0) {
+          continue;
+        }
+        this.releasedCode[_i] = Date.now();
+        this.codes[_i] = -1;
+      }
+      for (var _i2 in this.whichs) {
+        if (this.whichs[_i2] < 0) {
+          continue;
+        }
+        this.releasedWhich[_i2] = Date.now();
+        this.whichs[_i2] = -1;
+      }
+    };
+    window.addEventListener('blur', windowBlur);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        return;
+      }
+      windowBlur();
+    });
+  }
+  getKeyRef(keyCode) {
+    var keyRef = this.keyRefs[keyCode] = this.keyRefs[keyCode] || _Bindable.Bindable.make({});
+    return keyRef;
+  }
+  getKeyTime(key) {
+    var released = this.releasedKey[key];
+    var pressed = this.pressedKey[key];
+    if (!pressed) {
+      return 0;
+    }
+    if (!released || released < pressed) {
+      return Date.now() - pressed;
+    }
+    return (Date.now() - released) * -1;
+  }
+  getCodeTime(code) {
+    var released = this.releasedCode[code];
+    var pressed = this.pressedCode[code];
+    if (!pressed) {
+      return 0;
+    }
+    if (!released || released < pressed) {
+      return Date.now() - pressed;
+    }
+    return (Date.now() - released) * -1;
+  }
+  getWhichTime(code) {
+    var released = this.releasedWhich[code];
+    var pressed = this.pressedWhich[code];
+    if (!pressed) {
+      return 0;
+    }
+    if (!released || released < pressed) {
+      return Date.now() - pressed;
+    }
+    return (Date.now() - released) * -1;
+  }
+  getKey(key) {
+    if (!this.keys[key]) {
+      return 0;
+    }
+    return this.keys[key];
+  }
+  getKeyCode(code) {
+    if (!this.codes[code]) {
+      return 0;
+    }
+    return this.codes[code];
+  }
+  reset() {
+    for (var i in this.keys) {
+      delete this.keys[i];
+    }
+    for (var i in this.codes) {
+      delete this.codes[i];
+    }
+    for (var i in this.whichs) {
+      delete this.whichs[i];
+    }
+  }
+  update() {
+    for (var i in this.keys) {
+      if (this.keys[i] > 0) {
+        this.keys[i]++;
+      } else if (this.keys[i] > -this.maxDecay) {
+        this.keys[i]--;
+      } else {
+        delete this.keys[i];
+      }
+    }
+    for (var i in this.codes) {
+      var released = this.releasedCode[i];
+      var pressed = this.pressedCode[i];
+      var keyRef = this.getKeyRef(i);
+      if (this.codes[i] > 0) {
+        keyRef.frames = this.codes[i]++;
+        keyRef.time = pressed ? Date.now() - pressed : 0;
+        keyRef.down = true;
+        if (!released || released < pressed) {
+          return;
+        }
+        return (Date.now() - released) * -1;
+      } else if (this.codes[i] > -this.maxDecay) {
+        keyRef.frames = this.codes[i]--;
+        keyRef.time = released - Date.now();
+        keyRef.down = false;
+      } else {
+        keyRef.frames = 0;
+        keyRef.time = 0;
+        keyRef.down = false;
+        delete this.codes[i];
+      }
+    }
+    for (var i in this.whichs) {
+      if (this.whichs[i] > 0) {
+        this.whichs[i]++;
+      } else if (this.whichs[i] > -this.maxDecay) {
+        this.whichs[i]--;
+      } else {
+        delete this.whichs[i];
+      }
+    }
+  }
+}
+exports.Keyboard = Keyboard;
+  })();
+});
+
+require.register("curvature/mixin/EventTargetMixin.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "curvature");
+  (function() {
+    "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.EventTargetMixin = void 0;
+var _Mixin = require("../base/Mixin");
+var EventTargetParent = Symbol('EventTargetParent');
+var CallHandler = Symbol('CallHandler');
+var Capture = Symbol('Capture');
+var Bubble = Symbol('Bubble');
+var Target = Symbol('Target');
+var HandlersBubble = Symbol('HandlersBubble');
+var HandlersCapture = Symbol('HandlersCapture');
+var EventTargetMixin = exports.EventTargetMixin = {
+  [_Mixin.Mixin.Constructor]() {
+    this[HandlersCapture] = new Map();
+    this[HandlersBubble] = new Map();
+  },
+  dispatchEvent(...args) {
+    var event = args[0];
+    if (typeof event === 'string') {
+      event = new CustomEvent(event);
+      args[0] = event;
+    }
+    event.cvPath = event.cvPath || [];
+    event.cvTarget = event.cvCurrentTarget = this;
+    var result = this[Capture](...args);
+    if (event.cancelable && (result === false || event.cancelBubble)) {
+      return result;
+    }
+    var handlers = [];
+    if (this[HandlersCapture].has(event.type)) {
+      var handlerMap = this[HandlersCapture].get(event.type);
+      var newHandlers = [...handlerMap];
+      newHandlers.forEach(h => h.push(handlerMap));
+      handlers.push(...newHandlers);
+    }
+    if (this[HandlersBubble].has(event.type)) {
+      var _handlerMap = this[HandlersBubble].get(event.type);
+      var _newHandlers = [..._handlerMap];
+      _newHandlers.forEach(h => h.push(_handlerMap));
+      handlers.push(..._newHandlers);
+    }
+    handlers.push([() => this[CallHandler](...args), {}, null]);
+    for (var [handler, options, map] of handlers) {
+      if (options.once) {
+        map.delete(handler);
+      }
+      result = handler(event);
+      if (event.cancelable && result === false) {
+        break;
+      }
+    }
+    if (!event.cancelable || !event.cancelBubble && result !== false) {
+      this[Bubble](...args);
+    }
+    if (!this[EventTargetParent]) {
+      Object.freeze(event.cvPath);
+    }
+    return event.returnValue;
+  },
+  addEventListener(type, callback, options = {}) {
+    if (options === true) {
+      options = {
+        useCapture: true
+      };
+    }
+    var handlers = HandlersBubble;
+    if (options.useCapture) {
+      handlers = HandlersCapture;
+    }
+    if (!this[handlers].has(type)) {
+      this[handlers].set(type, new Map());
+    }
+    this[handlers].get(type).set(callback, options);
+    if (options.signal) {
+      options.signal.addEventListener('abort', event => this.removeEventListener(type, callback, options), {
+        once: true
+      });
+    }
+  },
+  removeEventListener(type, callback, options = {}) {
+    if (options === true) {
+      options = {
+        useCapture: true
+      };
+    }
+    var handlers = HandlersBubble;
+    if (options.useCapture) {
+      handlers = HandlersCapture;
+    }
+    if (!this[handlers].has(type)) {
+      return;
+    }
+    this[handlers].get(type).delete(callback);
+  },
+  [Capture](...args) {
+    var event = args[0];
+    event.cvPath.push(this);
+    if (!this[EventTargetParent]) {
+      return;
+    }
+    var result = this[EventTargetParent][Capture](...args);
+    if (event.cancelable && (result === false || event.cancelBubble)) {
+      return;
+    }
+    if (!this[EventTargetParent][HandlersCapture].has(event.type)) {
+      return;
+    }
+    event.cvCurrentTarget = this[EventTargetParent];
+    var {
+      type
+    } = event;
+    var handlers = this[EventTargetParent][HandlersCapture].get(type);
+    for (var [handler, options] of handlers) {
+      if (options.once) {
+        handlers.delete(handler);
+      }
+      result = handler(event);
+      if (event.cancelable && (result === false || event.cancelBubble)) {
+        break;
+      }
+    }
+    return result;
+  },
+  [Bubble](...args) {
+    var event = args[0];
+    if (!event.bubbles || !this[EventTargetParent] || event.cancelBubble) {
+      return;
+    }
+    if (!this[EventTargetParent][HandlersBubble].has(event.type)) {
+      return this[EventTargetParent][Bubble](...args);
+    }
+    var result;
+    event.cvCurrentTarget = this[EventTargetParent];
+    var {
+      type
+    } = event;
+    var handlers = this[EventTargetParent][HandlersBubble].get(event.type);
+    for (var [handler, options] of handlers) {
+      if (options.once) {
+        handlers.delete(handler);
+      }
+      result = handler(event);
+      if (event.cancelable && result === false) {
+        return result;
+      }
+    }
+    result = this[EventTargetParent][CallHandler](...args);
+    if (event.cancelable && (result === false || event.cancelBubble)) {
+      return result;
+    }
+    return this[EventTargetParent][Bubble](...args);
+  },
+  [CallHandler](...args) {
+    var event = args[0];
+    if (event.defaultPrevented) {
+      return;
+    }
+    var defaultHandler = `on${event.type[0].toUpperCase() + event.type.slice(1)}`;
+    if (typeof this[defaultHandler] === 'function') {
+      return this[defaultHandler](event);
+    }
+  }
+};
+Object.defineProperty(EventTargetMixin, 'Parent', {
+  value: EventTargetParent
+});
+  })();
+});
+
+require.register("import-mapper/ImportMapper.js", function(exports, require, module) {
+  require = __makeRelativeRequire(require, {}, "import-mapper");
+  (function() {
+    const globalImports = globalThis['##IMPORTS##'] = globalThis['##IMPORTS##'] ?? {};
+const schema = 'data:application/javascript;charset=utf-8,';
+
+const processIterable = Symbol('processRequires');
+const forceDefault    = Symbol('forceDefault');
+
+const wrapRequire   = (names, path) => schema + encodeURIComponent(`export const { ${names.join(',')} } = globalThis.require(${JSON.stringify(path)});`);
+const wrapScalar    = (scalar)      => schema + encodeURIComponent(`export default ${JSON.stringify(scalar)};`);
+const wrapSomething = (names, something) => {
+	let type = typeof something;
+
+	if(names[0] === forceDefault)
+	{
+		type = 'default-object';
+	}
+
+	const uuid = crypto.randomUUID();
+
+	if(type === 'object')
+	{
+		globalImports[uuid] = something;
+		return schema + encodeURIComponent(`export const { ${names.join(',')} } = globalThis['##IMPORTS##']['${uuid}'];`);
+	}
+
+	globalImports[uuid] = something;
+	return schema + encodeURIComponent(`export default globalThis['##IMPORTS##']['${uuid}'];`);
+};
+
+module.exports.ImportMapper = class ImportMapper
+{
+	constructor(imports, options)
+	{
+		if(imports)
+		{
+			if(typeof imports[Symbol.iterator] !== 'function')
+			{
+				imports = Object.entries(imports);
+			}
+
+			Object.assign(this.imports = {}, this[processIterable](imports));
+		}
+	}
+
+	add(name, module)
+	{
+		this.imports[name] = module;
+	}
+
+	generate()
+	{
+		const script  = document.createElement('script');
+		const imports = this.imports;
+
+		script.setAttribute('type', 'importmap');
+		script.innerHTML = JSON.stringify({imports}, null, 4);
+		return script;
+	}
+
+	register()
+	{
+		const importMap = this.generate();
+		document.head.append(importMap);
+		importMap.remove();
+	}
+
+	[processIterable](list)
+	{
+		const pairs = [...list].map(path => {
+
+			if(Array.isArray(path) && path.length === 2)
+			{
+				let names = Object.keys(path[1]);
+
+				if(typeof path[1] === 'object' && path[1][ forceDefault ])
+				{
+					path[1] = path[1][ forceDefault ];
+					names   = [forceDefault];
+				}
+
+				return [path[0], wrapSomething(names, path[1])];
+			}
+
+			const stuff = globalThis.require(path);
+			const names = Object.keys(stuff);
+
+			if(!names.length)
+			{
+				return;
+			}
+
+			if(typeof stuff === 'object' || typeof stuff === 'function')
+			{
+				return [path, wrapRequire(names, path)];
+			}
+			else
+			{
+				return [path, wrapScalar(stuff)];
+			}
+		});
+
+		return Object.fromEntries(pairs.filter(x => x));
+	}
+
+	static forceDefault(object)
+	{
+		return {[forceDefault]: object};
+	}
+}
+  })();
+});
+require.register("Config.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Config = void 0;
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+let Config = exports.Config = /*#__PURE__*/_createClass(function Config() {
+  _classCallCheck(this, Config);
+});
+;
+Config.title = 'tigl';
+// Config.
+});
+
+;require.register("gl2d/Gl2d.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Gl2d = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Program = /*#__PURE__*/function () {
+  function Program(_ref) {
+    let gl = _ref.gl,
+      vertexShader = _ref.vertexShader,
+      fragmentShader = _ref.fragmentShader,
+      uniforms = _ref.uniforms,
+      attributes = _ref.attributes;
+    _classCallCheck(this, Program);
+    _defineProperty(this, "context", null);
+    _defineProperty(this, "program", null);
+    _defineProperty(this, "attributes", {});
+    _defineProperty(this, "buffers", {});
+    _defineProperty(this, "uniforms", {});
+    this.context = gl;
+    this.program = gl.createProgram();
+    gl.attachShader(this.program, vertexShader);
+    gl.attachShader(this.program, fragmentShader);
+    gl.linkProgram(this.program);
+    gl.detachShader(this.program, vertexShader);
+    gl.detachShader(this.program, fragmentShader);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      console.error(gl.getProgramInfoLog(this.program));
+      gl.deleteProgram(this.program);
+    }
+    for (const uniform of uniforms) {
+      const location = gl.getUniformLocation(this.program, uniform);
+      if (location === null) {
+        console.warn(`Uniform ${uniform} not found.`);
+        continue;
+      }
+      this.uniforms[uniform] = location;
+    }
+    for (const attribute of attributes) {
+      const location = gl.getAttribLocation(this.program, attribute);
+      if (location === null) {
+        console.warn(`Attribute ${attribute} not found.`);
+        continue;
+      }
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.enableVertexAttribArray(location);
+      gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
+      this.attributes[attribute] = location;
+      this.buffers[attribute] = buffer;
+    }
+  }
+  return _createClass(Program, [{
+    key: "use",
+    value: function use() {
+      this.context.useProgram(this.program);
+    }
+  }, {
+    key: "uniformF",
+    value: function uniformF(name) {
+      const gl = this.context;
+      for (var _len = arguments.length, floats = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        floats[_key - 1] = arguments[_key];
+      }
+      gl[`uniform${floats.length}f`](this.uniforms[name], ...floats);
+    }
+  }, {
+    key: "uniformI",
+    value: function uniformI(name) {
+      const gl = this.context;
+      for (var _len2 = arguments.length, ints = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+        ints[_key2 - 1] = arguments[_key2];
+      }
+      gl[`uniform${ints.length}i`](this.uniforms[name], ...ints);
+    }
+  }]);
+}();
+let Gl2d = exports.Gl2d = /*#__PURE__*/function () {
+  function Gl2d(element) {
+    _classCallCheck(this, Gl2d);
+    this.element = element || document.createElement('canvas');
+    this.context = this.element.getContext('webgl');
+  }
+  return _createClass(Gl2d, [{
+    key: "createShader",
+    value: function createShader(location) {
+      const extension = location.substring(location.lastIndexOf('.') + 1);
+      let type = null;
+      switch (extension.toUpperCase()) {
+        case 'VERT':
+          type = this.context.VERTEX_SHADER;
+          break;
+        case 'FRAG':
+          type = this.context.FRAGMENT_SHADER;
+          break;
+      }
+      const shader = this.context.createShader(type);
+      const source = require(location);
+      this.context.shaderSource(shader, source);
+      this.context.compileShader(shader);
+      const success = this.context.getShaderParameter(shader, this.context.COMPILE_STATUS);
+      if (success) {
+        return shader;
+      }
+      console.error(this.context.getShaderInfoLog(shader));
+      this.context.deleteShader(shader);
+    }
+  }, {
+    key: "createProgram",
+    value: function createProgram(_ref2) {
+      let vertexShader = _ref2.vertexShader,
+        fragmentShader = _ref2.fragmentShader,
+        uniforms = _ref2.uniforms,
+        attributes = _ref2.attributes;
+      const gl = this.context;
+      return new Program({
+        gl: gl,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        uniforms: uniforms,
+        attributes: attributes
+      });
+    }
+  }, {
+    key: "createTexture",
+    value: function createTexture(width, height) {
+      const gl = this.context;
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      return texture;
+    }
+  }, {
+    key: "createFramebuffer",
+    value: function createFramebuffer(texture) {
+      const gl = this.context;
+      const framebuffer = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+      return framebuffer;
+    }
+  }, {
+    key: "enableBlending",
+    value: function enableBlending() {
+      const gl = this.context;
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.enable(gl.BLEND);
+    }
+  }]);
+}();
+});
+
+;require.register("home/View.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.View = void 0;
+var _View = require("curvature/base/View");
+var _Camera = require("../sprite/Camera");
+var _OnScreenJoyPad = require("../ui/OnScreenJoyPad");
+var _Keyboard = require("curvature/input/Keyboard");
+var _Session = require("../session/Session");
+var _Config = require("Config");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+const Application = {};
+Application.onScreenJoyPad = new _OnScreenJoyPad.OnScreenJoyPad();
+Application.keyboard = _Keyboard.Keyboard.get();
+let View = exports.View = /*#__PURE__*/function (_BaseView) {
+  function View(args) {
+    var _this;
+    _classCallCheck(this, View);
+    window.smProfiling = true;
+    _this = _callSuper(this, View, [args]);
+    _this.template = require('./view.tmp');
+    _this.routes = [];
+    _this.keyboard = Application.keyboard;
+    _this.speed = 24;
+    _this.maxSpeed = _this.speed;
+    _this.args.joypad = Application.onScreenJoyPad;
+    _this.args.fps = 0;
+    _this.args.sps = 0;
+    _this.args.camX = 0;
+    _this.args.camY = 0;
+    _this.args.showEditor = false;
+    _this.keyboard.listening = true;
+    _this.keyboard.keys.bindTo('Home', (v, k, t, d) => {
+      if (!_this.session || v < 0) return;
+      if (v % 5 === 0) {
+        _this.session.frameLock++;
+        _this.args.frameLock = _this.session.frameLock;
+      }
+    });
+    _this.keyboard.keys.bindTo('End', (v, k, t, d) => {
+      if (!_this.session || v < 0) return;
+      if (v % 5 === 0) {
+        _this.session.frameLock--;
+        if (_this.session.frameLock < 0) {
+          _this.session.frameLock = 0;
+        }
+        _this.args.frameLock = _this.session.frameLock;
+      }
+    });
+    _this.keyboard.keys.bindTo('PageUp', (v, k, t, d) => {
+      if (!_this.session || v < 0) return;
+      if (v % 5 === 0) {
+        _this.session.simulationLock++;
+      }
+      _this.args.simulationLock = _this.session.simulationLock;
+    });
+    _this.keyboard.keys.bindTo('PageDown', (v, k, t, d) => {
+      if (!_this.session || v < 0) return;
+      if (v % 5 === 0) {
+        _this.session.simulationLock--;
+        if (_this.session.simulationLock < 0) {
+          _this.session.simulationLock = 0;
+        }
+      }
+      _this.args.simulationLock = _this.session.simulationLock;
+    });
+    _this.keyboard.keys.bindTo('=', (v, k, t, d) => {
+      if (v > 0) {
+        _this.zoom(1);
+      }
+    });
+    _this.keyboard.keys.bindTo('+', (v, k, t, d) => {
+      if (v > 0) {
+        _this.zoom(1);
+      }
+    });
+    _this.keyboard.keys.bindTo('-', (v, k, t, d) => {
+      if (v > 0) {
+        _this.zoom(-1);
+      }
+    });
+    return _this;
+  }
+  _inherits(View, _BaseView);
+  return _createClass(View, [{
+    key: "onRendered",
+    value: function onRendered() {
+      this.session = new _Session.Session({
+        onScreenJoyPad: this.args.joypad,
+        keyboard: this.keyboard,
+        element: this.tags.canvas.element,
+        world: '/tile-world.world'
+      });
+      this.args.frameLock = this.session.frameLock;
+      this.args.simulationLock = this.session.simulationLock;
+      window.addEventListener('resize', () => this.resize());
+      let fThen = 0;
+      let sThen = 0;
+      const simulate = now => {
+        if (document.hidden) {
+          return;
+        }
+        if (!this.session.simulate(now)) {
+          return;
+        }
+        this.args.sps = (1000 / (now - sThen)).toFixed(3);
+        sThen = now;
+      };
+      const draw = now => {
+        if (document.hidden) {
+          window.requestAnimationFrame(draw);
+          return;
+        }
+        window.requestAnimationFrame(draw);
+        if (!this.session.draw(now)) {
+          return;
+        }
+        this.args.fps = (1000 / (now - fThen)).toFixed(3);
+        this.args.camX = Number(_Camera.Camera.x).toFixed(3);
+        this.args.camY = Number(_Camera.Camera.y).toFixed(3);
+        fThen = now;
+        if (this.session.spriteBoard.following) {
+          this.args.posX = Number(this.session.spriteBoard.following.x).toFixed(3);
+          this.args.posY = Number(this.session.spriteBoard.following.y).toFixed(3);
+        }
+      };
+      this.session.spriteBoard.zoomLevel = document.body.clientWidth / 1280 * 2;
+      this.resize();
+      setInterval(() => simulate(performance.now()), 0);
+      draw(performance.now());
+    }
+  }, {
+    key: "resize",
+    value: function resize(x, y) {
+      const oldScale = this.session.spriteBoard.screenScale;
+      this.session.spriteBoard.screenScale = document.body.clientWidth / 1280;
+      this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.screenScale / oldScale;
+      this.args.width = this.tags.canvas.element.width = x || document.body.clientWidth;
+      this.args.height = this.tags.canvas.element.height = y || document.body.clientHeight;
+      this.args.rwidth = Math.trunc((x || document.body.clientWidth) / this.session.spriteBoard.zoomLevel);
+      this.args.rheight = Math.trunc((y || document.body.clientHeight) / this.session.spriteBoard.zoomLevel);
+      this.session.spriteBoard.resize();
+    }
+  }, {
+    key: "scroll",
+    value: function scroll(event) {
+      let delta = event.deltaY > 0 ? -1 : event.deltaY < 0 ? 1 : 0;
+      this.zoom(delta);
+    }
+  }, {
+    key: "zoom",
+    value: function zoom(delta) {
+      if (!this.session) {
+        return;
+      }
+      this.session.spriteBoard.zoom(delta);
+      // this.resize();
+    }
+  }]);
+}(_View.View);
+});
+
+;require.register("home/view.tmp.html", function(exports, require, module) {
+module.exports = "<canvas\n\tcv-ref = \"canvas:curvature/base/Tag\"\n\tcv-on  = \"wheel:scroll(event):p;\"\n></canvas>\n\n<div class = \"hud fps\">[[sps]] simulations/s / [[simulationLock]]\n[[fps]] frames/s      / [[frameLock]]\n\nRes [[rwidth]] x [[rheight]]\n    [[width]] x [[height]]\n\nCam [[camX]] x [[camY]]\nPos [[posX]] x [[posY]]\n\n𝚫 Sim:   Pg Up / Dn\n𝚫 Frame: Home / End\n𝚫 Scale: + / -\n</div>\n<div class = \"reticle\"></div>\n\n[[joypad]]\n"
+});
+
+;require.register("initialize.js", function(exports, require, module) {
+"use strict";
+
+var _Router = require("curvature/base/Router");
+var _View = require("home/View");
+var _ImportMapper = require("import-mapper/ImportMapper");
+const importMapper = new _ImportMapper.ImportMapper(globalThis.require.list());
+const view = new _View.View();
+_Router.Router.listen(view, {
+  '*': function _() {
+    // console.log(args);
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  importMapper.register();
+  view.render(document.body);
+});
+});
+
+require.register("inject/Container.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Container = void 0;
+var _Injectable2 = require("./Injectable");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+let Container = exports.Container = /*#__PURE__*/function (_Injectable) {
+  function Container() {
+    _classCallCheck(this, Container);
+    return _callSuper(this, Container, arguments);
+  }
+  _inherits(Container, _Injectable);
+  return _createClass(Container, [{
+    key: "inject",
+    value: function inject(injections) {
+      return new this.constructor(Object.assign({}, this, injections));
+    }
+  }]);
+}(_Injectable2.Injectable);
+});
+
+;require.register("inject/Injectable.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Injectable = void 0;
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let classes = {};
+let objects = {};
+let Injectable = exports.Injectable = /*#__PURE__*/function () {
+  function Injectable() {
+    _classCallCheck(this, Injectable);
+    let injections = this.constructor.injections();
+    let context = this.constructor.context();
+    if (!classes[context]) {
+      classes[context] = {};
+    }
+    if (!objects[context]) {
+      objects[context] = {};
+    }
+    for (let name in injections) {
+      let injection = injections[name];
+      if (classes[context][name] || !injection.prototype) {
+        continue;
+      }
+      if (/[A-Z]/.test(String(name)[0])) {
+        classes[context][name] = injection;
+      }
+    }
+    for (let name in injections) {
+      let instance = undefined;
+      let injection = classes[context][name] || injections[name];
+      if (/[A-Z]/.test(String(name)[0])) {
+        if (injection.prototype) {
+          if (!objects[context][name]) {
+            objects[context][name] = new injection();
+          }
+        } else {
+          objects[context][name] = injection;
+        }
+        instance = objects[context][name];
+      } else {
+        if (injection.prototype) {
+          instance = new injection();
+        } else {
+          instance = injection;
+        }
+      }
+      Object.defineProperty(this, name, {
+        enumerable: false,
+        writable: false,
+        value: instance
+      });
+    }
+  }
+  return _createClass(Injectable, null, [{
+    key: "injections",
+    value: function injections() {
+      return {};
+    }
+  }, {
+    key: "context",
+    value: function context() {
+      return '.';
+    }
+  }, {
+    key: "inject",
+    value: function inject(_injections) {
+      let _context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '.';
+      if (!(this.prototype instanceof Injectable || this === Injectable)) {
+        throw new Error(`Cannot access injectable subclass!
+
+Are you trying to instantiate like this?
+
+	new X.inject({...});
+
+If so please try:
+
+	new (X.inject({...}));
+
+Please note the parenthesis.
+`);
+      }
+      let existingInjections = this.injections();
+      return /*#__PURE__*/function (_this) {
+        function _class() {
+          _classCallCheck(this, _class);
+          return _callSuper(this, _class, arguments);
+        }
+        _inherits(_class, _this);
+        return _createClass(_class, null, [{
+          key: "injections",
+          value: function injections() {
+            return Object.assign({}, existingInjections, _injections);
+          }
+        }, {
+          key: "context",
+          value: function context() {
+            return _context;
+          }
+        }]);
+      }(this);
+    }
+  }]);
+}();
+});
+
+;require.register("inject/Single.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.single = exports.Single = void 0;
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+let Single = exports.Single = /*#__PURE__*/_createClass(function Single() {
+  _classCallCheck(this, Single);
+  this.name = 'sss.' + Math.random();
+});
+let single = exports.single = new Single();
+});
+
+require.register("input/Axis.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Axis = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Axis = exports.Axis = /*#__PURE__*/function () {
+  function Axis(_ref) {
+    let _ref$deadZone = _ref.deadZone,
+      deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone,
+      _ref$proportional = _ref.proportional,
+      proportional = _ref$proportional === void 0 ? true : _ref$proportional;
+    _classCallCheck(this, Axis);
+    _defineProperty(this, "magnitude", 0);
+    _defineProperty(this, "delta", 0);
+    if (deadZone) {
+      this.proportional = proportional;
+      this.deadZone = deadZone;
+    }
+  }
+  return _createClass(Axis, [{
+    key: "tilt",
+    value: function tilt(magnitude) {
+      if (this.deadZone && Math.abs(magnitude) >= this.deadZone) {
+        magnitude = (Math.abs(magnitude) - this.deadZone) / (1 - this.deadZone) * Math.sign(magnitude);
+      } else {
+        magnitude = 0;
+      }
+      this.delta = Number(magnitude - this.magnitude).toFixed(3) - 0;
+      this.magnitude = Number(magnitude).toFixed(3) - 0;
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      this.magnitude = this.delta = 0;
+    }
+  }]);
+}();
+});
+
+;require.register("input/Button.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Button = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Button = exports.Button = /*#__PURE__*/function () {
+  function Button() {
+    _classCallCheck(this, Button);
+    _defineProperty(this, "active", false);
+    _defineProperty(this, "pressure", 0);
+    _defineProperty(this, "delta", 0);
+    _defineProperty(this, "time", 0);
+  }
+  return _createClass(Button, [{
+    key: "update",
+    value: function update() {
+      let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      if (this.pressure) {
+        this.time++;
+      } else if (!this.pressure && this.time > 0) {
+        this.time = -1;
+      } else if (!this.pressure && this.time < 0) {
+        this.time--;
+      }
+      if (this.time < -1 && this.delta === -1) {
+        this.delta = 0;
+      }
+    }
+  }, {
+    key: "press",
+    value: function press(pressure) {
+      this.delta = Number(pressure - this.pressure).toFixed(3) - 0;
+      this.pressure = Number(pressure).toFixed(3) - 0;
+      this.active = true;
+      this.time = this.time > 0 ? this.time : 0;
+    }
+  }, {
+    key: "release",
+    value: function release() {
+      // if(!this.active)
+      // {
+      // 	return;
+      // }
+
+      this.delta = Number(-this.pressure).toFixed(3) - 0;
+      this.pressure = 0;
+      this.active = false;
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      this.pressure = this.delta = 0;
+      this.active = false;
+    }
+  }]);
+}();
+});
+
+;require.register("input/Controller.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Controller = void 0;
+var _Axis = require("./Axis");
+var _Button = require("./Button");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const keys = {
+  'Space': 0,
+  'Enter': 0,
+  'NumpadEnter': 0,
+  'ControlLeft': 1,
+  'ControlRight': 1,
+  'ShiftLeft': 2,
+  'ShiftRight': 2,
+  'KeyZ': 3,
+  'KeyQ': 4,
+  'KeyE': 5,
+  'Digit1': 6,
+  'Digit3': 7,
+  'KeyBackspace': 8,
+  'KeyW': 12,
+  'KeyA': 14,
+  'KeyS': 13,
+  'KeyD': 15,
+  'KeyH': 112,
+  'KeyJ': 113,
+  'KeyK': 114,
+  'KeyL': 115,
+  'KeyP': 1020,
+  'KeyO': 1209,
+  'Pause': 1020,
+  'Tab': 11,
+  'ArrowUp': 12,
+  'ArrowDown': 13,
+  'ArrowLeft': 14,
+  'ArrowRight': 15,
+  'KeyMeta': 16,
+  'Numpad4': 112,
+  'Numpad2': 113,
+  'Numpad8': 114,
+  'Numpad6': 115,
+  'Backquote': 1010,
+  'NumpadAdd': 1011,
+  'NumpadSubtract': 1012,
+  'NumpadMultiply': 1013,
+  'NumpadDivide': 1014,
+  'PageUp': 1022,
+  'PageDown': 1023,
+  'Home': 1024,
+  'End': 1025,
+  'Escape': [1020, 1050],
+  'KeyB': 1201
+};
+[...Array(12)].map((x, fn) => keys[`F${fn}`] = 2000 + fn);
+const axisMap = {
+  12: -1,
+  13: +1,
+  14: -0,
+  15: +0,
+  112: -2,
+  113: +3,
+  114: -3,
+  115: +2
+};
+const buttonMap = {
+  '-6': 14,
+  '+6': 15,
+  '-7': 12,
+  '+7': 13
+};
+const buttonRemap = {
+  0: 1200,
+  1: 1201,
+  9: 1020,
+  4: 1022,
+  5: 1023
+};
+let Controller = exports.Controller = /*#__PURE__*/function () {
+  function Controller(_ref) {
+    let _ref$keys = _ref.keys,
+      keys = _ref$keys === void 0 ? {} : _ref$keys,
+      _ref$deadZone = _ref.deadZone,
+      deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone,
+      _ref$gamepad = _ref.gamepad,
+      gamepad = _ref$gamepad === void 0 ? null : _ref$gamepad,
+      _ref$keyboard = _ref.keyboard,
+      keyboard = _ref$keyboard === void 0 ? null : _ref$keyboard;
+    _classCallCheck(this, Controller);
+    this.deadZone = deadZone;
+    Object.defineProperties(this, {
+      buttons: {
+        value: {}
+      },
+      pressure: {
+        value: {}
+      },
+      axes: {
+        value: {}
+      },
+      keys: {
+        value: {}
+      }
+    });
+  }
+  return _createClass(Controller, [{
+    key: "update",
+    value: function update() {
+      let _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        gamepad = _ref2.gamepad;
+      for (const i in this.buttons) {
+        const button = this.buttons[i];
+        button.update();
+      }
+      if (gamepad && this.willRumble) {
+        // let vibeFactor = 1;
+
+        if (typeof this.willRumble !== 'object') {
+          this.willRumble = {
+            duration: 1000,
+            strongMagnitude: 1.0,
+            weakMagnitude: 1.0
+          };
+        }
+        if (gamepad.id && String(gamepad.id).match(/playstation.{0,5}3/i)) {
+          if (this.willRumble.duration < 100 && this.willRumble.strongMagnitude < 0.75) {
+            this.willRumble.duration = 0;
+            this.willRumble.weakMagnitude = 0;
+            this.willRumble.strongMagnitude = 0;
+          }
+          const stopVibing = () => {
+            if (this.willRumble) {
+              return;
+            }
+            gamepad.vibrationActuator.playEffect("dual-rumble", {
+              duration: 0,
+              weakMagnitude: 0,
+              strongMagnitude: 0
+            });
+          };
+          setTimeout(stopVibing, this.willRumble.duration + -1);
+        }
+
+        // console.log({...this.willRumble, id: gamepad.id});
+
+        if (gamepad.vibrationActuator && gamepad.vibrationActuator.playEffect) {
+          gamepad.vibrationActuator.playEffect("dual-rumble", this.willRumble);
+        }
+        this.willRumble = false;
+      }
+    }
+  }, {
+    key: "rumble",
+    value: function rumble() {
+      let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+      this.willRumble = options;
+    }
+  }, {
+    key: "readInput",
+    value: function readInput(_ref3) {
+      let keyboard = _ref3.keyboard,
+        _ref3$gamepads = _ref3.gamepads,
+        gamepads = _ref3$gamepads === void 0 ? [] : _ref3$gamepads;
+      const tilted = {};
+      const pressed = {};
+      const released = {};
+      const tookInput = new Set();
+      for (let i = 0; i < gamepads.length; i++) {
+        const gamepad = gamepads[i];
+        if (!gamepad) {
+          continue;
+        }
+        for (const i in gamepad.buttons) {
+          const button = gamepad.buttons[i];
+          if (button.pressed) {
+            this.press(i, button.value);
+            pressed[i] = true;
+            tookInput.add(gamepad);
+          }
+        }
+      }
+      if (keyboard) {
+        for (const i in [...Array(10)]) {
+          if (pressed[i]) {
+            continue;
+          }
+          if (keyboard.getKeyCode(i) > 0) {
+            this.press(i, 1);
+            pressed[i] = true;
+            tookInput.add(keyboard);
+          }
+        }
+        for (let keycode in keys) {
+          if (pressed[keycode]) {
+            continue;
+          }
+          let buttonIds = keys[keycode];
+          if (!Array.isArray(buttonIds)) {
+            buttonIds = keys[keycode] = [buttonIds];
+          }
+          for (const buttonId of buttonIds) {
+            if (keyboard.getKeyCode(keycode) > 0) {
+              this.press(buttonId, 1);
+              pressed[buttonId] = true;
+            }
+          }
+        }
+      }
+      for (const gamepad of gamepads) {
+        if (!gamepad) {
+          continue;
+        }
+        for (const i in gamepad.buttons) {
+          if (released[i]) {
+            continue;
+          }
+          if (pressed[i]) {
+            continue;
+          }
+          const button = gamepad.buttons[i];
+          if (this.buttons[i] && !button.pressed && this.buttons[i].active) {
+            this.release(i);
+            released[i] = true;
+          }
+        }
+      }
+      if (keyboard) {
+        for (const i in [...Array(10)]) {
+          if (released[i]) {
+            continue;
+          }
+          if (pressed[i]) {
+            continue;
+          }
+          if (keyboard.getKeyCode(i) < 0) {
+            this.release(i);
+            released[i] = true;
+          }
+        }
+        for (let keycode in keys) {
+          let buttonIds = keys[keycode];
+          if (!Array.isArray(buttonIds)) {
+            buttonIds = keys[keycode] = [buttonIds];
+          }
+          for (const buttonId of buttonIds) {
+            if (released[buttonId]) {
+              continue;
+            }
+            if (pressed[buttonId]) {
+              continue;
+            }
+            if (keyboard.getKeyCode(keycode) < 0) {
+              this.release(buttonId);
+              released[keycode] = true;
+            }
+          }
+        }
+      }
+      for (let i = 0; i < gamepads.length; i++) {
+        const gamepad = gamepads[i];
+        if (!gamepad) {
+          continue;
+        }
+        for (const i in gamepad.axes) {
+          const axis = gamepad.axes[i];
+          if (Math.abs(axis) < this.deadZone) {
+            if (!tilted[i]) {
+              this.tilt(i, 0);
+            }
+            continue;
+          }
+          tilted[i] = true;
+          this.tilt(i, axis);
+        }
+      }
+      for (let inputId in axisMap) {
+        if (!this.buttons[inputId]) {
+          this.buttons[inputId] = new _Button.Button();
+        }
+        const axis = axisMap[inputId];
+        const value = Math.sign(1 / axis);
+        const axisId = Math.abs(axis);
+        if (tilted[axisId]) {
+          continue;
+        }
+        if (this.buttons[inputId].active) {
+          tilted[axisId] = true;
+          this.tilt(axisId, value);
+        } else if (!tilted[axisId]) {
+          this.tilt(axisId, 0);
+        }
+      }
+      for (let axisMove in buttonMap) {
+        const buttonId = buttonMap[axisMove];
+        if (released[buttonId]) {
+          continue;
+        }
+        if (pressed[buttonId]) {
+          continue;
+        }
+        const _ref4 = [axisMove.slice(0, 1), axisMove.slice(1)],
+          move = _ref4[0],
+          axisId = _ref4[1];
+        if (!this.axes[axisId]) {
+          this.axes[axisId] = new _Axis.Axis({
+            deadZone: this.deadZone
+          });
+        }
+        const axis = this.axes[axisId];
+        if (axis.magnitude && Math.sign(axisMove) !== Math.sign(axis.magnitude)) {
+          continue;
+        }
+        const pressure = Math.abs(axis.magnitude);
+        if (pressure) {
+          this.press(buttonId, pressure);
+          pressed[buttonId] = true;
+        } else {
+          this.release(buttonId, pressure);
+          released[buttonId] = true;
+        }
+      }
+      for (const concreteId in buttonRemap) {
+        const abstractId = buttonRemap[concreteId];
+        if (released[abstractId]) {
+          continue;
+        }
+        if (pressed[abstractId]) {
+          continue;
+        }
+        if (!this.buttons[abstractId]) {
+          this.buttons[abstractId] = new _Button.Button();
+        }
+        if (!this.buttons[concreteId]) {
+          this.buttons[concreteId] = new _Button.Button();
+        }
+        if (this.buttons[concreteId].active) {
+          this.press(abstractId, this.buttons[concreteId].pressure);
+          pressed[abstractId] = true;
+        } else if (!pressed[abstractId]) {
+          this.release(abstractId, this.buttons[concreteId].pressure);
+          released[abstractId] = true;
+        }
+      }
+      return tookInput;
+    }
+  }, {
+    key: "tilt",
+    value: function tilt(axisId, magnitude) {
+      if (!this.axes[axisId]) {
+        this.axes[axisId] = new _Axis.Axis({
+          deadZone: this.deadZone
+        });
+      }
+      this.axes[axisId].tilt(magnitude);
+    }
+  }, {
+    key: "press",
+    value: function press(buttonId) {
+      let pressure = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+      if (!this.buttons[buttonId]) {
+        this.buttons[buttonId] = new _Button.Button();
+      }
+      this.buttons[buttonId].press(pressure);
+    }
+  }, {
+    key: "release",
+    value: function release(buttonId) {
+      if (!this.buttons[buttonId]) {
+        this.buttons[buttonId] = new _Button.Button();
+      }
+      this.buttons[buttonId].release();
+    }
+  }, {
+    key: "serialize",
+    value: function serialize() {
+      const buttons = {};
+      for (const i in this.buttons) {
+        buttons[i] = this.buttons[i].pressure;
+      }
+      const axes = {};
+      for (const i in this.axes) {
+        axes[i] = this.axes[i].magnitude;
+      }
+      return {
+        axes: axes,
+        buttons: buttons
+      };
+    }
+  }, {
+    key: "replay",
+    value: function replay(input) {
+      if (input.buttons) {
+        for (const i in input.buttons) {
+          if (input.buttons[i] > 0) {
+            this.press(i, input.buttons[i]);
+          } else {
+            this.release(i);
+          }
+        }
+      }
+      if (input.axes) {
+        for (const i in input.axes) {
+          if (input.axes[i].magnitude !== input.axes[i]) {
+            this.tilt(i, input.axes[i]);
+          }
+        }
+      }
+    }
+  }, {
+    key: "zero",
+    value: function zero() {
+      for (const i in this.axes) {
+        this.axes[i].zero();
+      }
+      for (const i in this.buttons) {
+        this.buttons[i].zero();
+      }
+    }
+  }, {
+    key: "buttonIsMapped",
+    value: function buttonIsMapped(buttonId) {
+      return buttonId in buttonRemap;
+    }
+  }, {
+    key: "keyIsMapped",
+    value: function keyIsMapped(keyCode) {
+      return keyCode in keys;
+    }
+  }]);
+}();
+});
+
+;require.register("math/Geometry.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Geometry = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Geometry = exports.Geometry = /*#__PURE__*/function () {
+  function Geometry() {
+    _classCallCheck(this, Geometry);
+  }
+  return _createClass(Geometry, null, [{
+    key: "lineIntersectsLine",
+    value: function lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b) {
+      const ax = x2a - x1a;
+      const ay = y2a - y1a;
+      const bx = x2b - x1b;
+      const by = y2b - y1b;
+      const crossProduct = ax * by - ay * bx;
+
+      // Parallel Lines cannot intersect
+      if (crossProduct === 0) {
+        return false;
+      }
+      const cx = x1b - x1a;
+      const cy = y1b - y1a;
+
+      // Is our point within the bounds of line a?
+      const d = (cx * ay - cy * ax) / crossProduct;
+      if (d < 0 || d > 1) {
+        return false;
+      }
+
+      // Is our point within the bounds of line b?
+      const e = (cx * by - cy * bx) / crossProduct;
+      if (e < 0 || e > 1) {
+        return false;
+      }
+      return [x1a + e * ax, y1a + e * ay];
+    }
+  }]);
+}();
+});
+
+;require.register("math/Matrix.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Matrix = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Matrix = exports.Matrix = /*#__PURE__*/function () {
+  function Matrix() {
+    _classCallCheck(this, Matrix);
+  }
+  return _createClass(Matrix, null, [{
+    key: "identity",
+    value: function identity() {
+      return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    }
+  }, {
+    key: "translate",
+    value: function translate(dx, dy) {
+      return [[1, 0, dx], [0, 1, dy], [0, 0, 1]];
+    }
+  }, {
+    key: "scale",
+    value: function scale(dx, dy) {
+      return [[dx, 0, 0], [0, dy, 0], [0, 0, 1]];
+    }
+  }, {
+    key: "rotate",
+    value: function rotate(theta) {
+      const s = Math.sin(theta);
+      const c = Math.cos(theta);
+      return [[c, -s, 0], [s, c, 0], [0, 0, 1]];
+    }
+  }, {
+    key: "shearX",
+    value: function shearX(s) {
+      return [[1, s, 0], [0, 1, 0], [0, 0, 1]];
+    }
+  }, {
+    key: "shearY",
+    value: function shearY(s) {
+      return [[1, 0, 0], [s, 1, 0], [0, 0, 1]];
+    }
+  }, {
+    key: "multiply",
+    value: function multiply(matA, matB) {
+      if (matA.length !== matB.length) {
+        throw new Error('Invalid matrices');
+      }
+      if (matA[0].length !== matB.length) {
+        throw new Error('Incompatible matrices');
+      }
+      const output = Array(matA.length).fill().map(() => Array(matB[0].length).fill(0));
+      for (let i = 0; i < matA.length; i++) {
+        for (let j = 0; j < matB[0].length; j++) {
+          for (let k = 0; k < matA[0].length; k++) {
+            output[i][j] += matA[i][k] * matB[k][j];
+          }
+        }
+      }
+      return output;
+    }
+  }, {
+    key: "composite",
+    value: function composite() {
+      let output = this.identity();
+      for (let i = 0; i < arguments.length; i++) {
+        output = this.multiply(output, i < 0 || arguments.length <= i ? undefined : arguments[i]);
+      }
+      return output;
+    }
+  }, {
+    key: "transform",
+    value: function transform(points, matrix) {
+      const output = [];
+      for (let i = 0; i < points.length; i += 2) {
+        const point = [points[i], points[i + 1], 1];
+        for (const row of matrix) {
+          output.push(point[0] * row[0] + point[1] * row[1] + point[2] * row[2]);
+        }
+      }
+      return new Float32Array(output.filter((_, k) => (1 + k) % 3));
+    }
+  }]);
+}();
+});
+
+;require.register("math/MotionGraph.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MotionGraph = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
+  function MotionGraph() {
+    _classCallCheck(this, MotionGraph);
+    _defineProperty(this, "entities", new Map());
+  }
+  return _createClass(MotionGraph, [{
+    key: "add",
+    value: function add(entity) {
+      if (this.entities.has(entity)) {
+        return;
+      }
+      this.entities.set(entity, new MotionGraph());
+    }
+  }, {
+    key: "delete",
+    value: function _delete(entity) {
+      this.entities.delete(entity);
+    }
+  }]);
+}();
+});
+
+;require.register("math/QuadTree.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.QuadTree = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _Rectangle2 = require("./Rectangle");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
+  function QuadTree(x1, y1, x2, y2) {
+    var _this;
+    let minSize = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+    let parent = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
+    _classCallCheck(this, QuadTree);
+    _this = _callSuper(this, QuadTree, [x1, y1, x2, y2]);
+    _this[_Bindable.Bindable.Prevent] = true;
+    _this.items = new Set();
+    _this.split = false;
+    _this.minSize = minSize || 10;
+    _this.backMap = parent ? parent.backMap : new Map();
+    _this.parent = parent;
+    _this.ulCell = null;
+    _this.urCell = null;
+    _this.blCell = null;
+    _this.brCell = null;
+    _this.count = 0;
+    return _this;
+  }
+  _inherits(QuadTree, _Rectangle);
+  return _createClass(QuadTree, [{
+    key: "add",
+    value: function add(entity) {
+      if (!this.contains(entity.x, entity.y)) {
+        // console.warn('No QuadTree cell found!');
+        return false;
+      }
+      const xSize = this.x2 - this.x1;
+      const ySize = this.y2 - this.y1;
+      if (this.split) {
+        return this.ulCell.add(entity) || this.urCell.add(entity) || this.blCell.add(entity) || this.brCell.add(entity);
+      } else if (this.items.size && xSize > this.minSize && ySize > this.minSize) {
+        this.split = true;
+        const xSizeHalf = 0.5 * xSize;
+        const ySizeHalf = 0.5 * ySize;
+        this.ulCell = new QuadTree(this.x1, this.y1, this.x1 + xSizeHalf, this.y1 + ySizeHalf, this.minSize, this);
+        this.blCell = new QuadTree(this.x1, this.y1 + ySizeHalf, this.x1 + xSizeHalf, this.y2, this.minSize, this);
+        this.urCell = new QuadTree(this.x1 + xSizeHalf, this.y1, this.x2, this.y1 + ySizeHalf, this.minSize, this);
+        this.brCell = new QuadTree(this.x1 + xSizeHalf, this.y1 + ySizeHalf, this.x2, this.y2, this.minSize, this);
+        let parent = this;
+        while (parent) {
+          parent.count -= this.items.size;
+          parent = parent.parent;
+        }
+        for (const item of this.items) {
+          let parent = this;
+          let added = false;
+          while (parent) {
+            added = parent.ulCell.add(item) || parent.urCell.add(item) || parent.blCell.add(item) || parent.brCell.add(item);
+            if (added) break;
+            parent = parent.parent;
+          }
+          if (!added) {
+            console.warn('Bad split!');
+          }
+          this.items.delete(item);
+        }
+        return this.ulCell.add(entity) || this.urCell.add(entity) || this.blCell.add(entity) || this.brCell.add(entity);
+      } else {
+        if (!this.items.has(entity)) {
+          let parent = this;
+          while (parent) {
+            parent.count++;
+            parent = parent.parent;
+          }
+        }
+        this.backMap.set(entity, this);
+        this.items.add(entity);
+        return true;
+      }
+    }
+  }, {
+    key: "move",
+    value: function move(entity) {
+      if (!this.backMap.has(entity)) {
+        // console.warn('Entity not in QuadTree.');
+        return this.add(entity);
+      }
+      const startCell = this.backMap.get(entity);
+      let cell = startCell;
+      while (cell && !cell.contains(entity.x, entity.y)) {
+        cell = cell.parent;
+      }
+      if (!cell) {
+        console.warn('No QuadTree cell found!');
+        startCell.delete(entity);
+        return false;
+      }
+      if (cell !== startCell) {
+        startCell.delete(entity);
+        cell.add(entity);
+      }
+      return true;
+    }
+  }, {
+    key: "delete",
+    value: function _delete(entity) {
+      if (!this.backMap.has(entity)) {
+        console.warn('Entity not in QuadTree.');
+        return false;
+      }
+      const cell = this.backMap.get(entity);
+      cell.items.delete(entity);
+      if (cell.parent) {
+        cell.parent.prune();
+      }
+      this.backMap.delete(entity);
+      let parent = cell;
+      while (parent) {
+        parent.count--;
+        parent = parent.parent;
+      }
+      return true;
+    }
+  }, {
+    key: "isPrunable",
+    value: function isPrunable() {
+      if (this.split) {
+        return this.ulCell.isPrunable() && this.urCell.isPrunable() && this.blCell.isPrunable() && this.brCell.isPrunable();
+      } else {
+        return this.items.size === 0;
+      }
+    }
+  }, {
+    key: "prune",
+    value: function prune() {
+      if (!this.isPrunable()) {
+        return false;
+      }
+      this.split = false;
+      this.ulCell = null;
+      this.urCell = null;
+      this.blCell = null;
+      this.brCell = null;
+      return true;
+    }
+  }, {
+    key: "findLeaf",
+    value: function findLeaf(x, y) {
+      var _ref, _ref2, _this$ulCell$findLeaf;
+      if (!this.contains(x, y)) {
+        return null;
+      }
+      if (!this.split) {
+        return this;
+      }
+      return (_ref = (_ref2 = (_this$ulCell$findLeaf = this.ulCell.findLeaf(x, y)) !== null && _this$ulCell$findLeaf !== void 0 ? _this$ulCell$findLeaf : this.urCell.findLeaf(x, y)) !== null && _ref2 !== void 0 ? _ref2 : this.blCell.findLeaf(x, y)) !== null && _ref !== void 0 ? _ref : this.brCell.findLeaf(x, y);
+    }
+  }, {
+    key: "has",
+    value: function has(entity) {
+      if (this.split) {
+        return this.ulCell.has(entity) || this.urCell.has(entity) || this.blCell.has(entity) || this.brCell.has(entity);
+      }
+      return this.items.has(entity);
+    }
+  }, {
+    key: "select",
+    value: function select(x1, y1, x2, y2) {
+      if (x1 > this.x2 || x2 < this.x1) {
+        return new Set();
+      }
+      if (y1 > this.y2 || y2 < this.y1) {
+        return new Set();
+      }
+      if (this.split) {
+        return new Set([...this.ulCell.select(x1, y1, x2, y2), ...this.urCell.select(x1, y1, x2, y2), ...this.blCell.select(x1, y1, x2, y2), ...this.brCell.select(x1, y1, x2, y2)]);
+      }
+      return new Set(this.items);
+    }
+  }, {
+    key: "dump",
+    value: function dump() {
+      if (this.split) {
+        return new Set([...this.ulCell.dump(), ...this.urCell.dump(), ...this.blCell.dump(), ...this.brCell.dump()]);
+      }
+      return new Set(this.items);
+    }
+  }]);
+}(_Rectangle2.Rectangle);
+});
+
+;require.register("math/QuickTree.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.QuickTree = void 0;
+var _QuadTree2 = require("./QuadTree");
+var _Rectangle = require("./Rectangle");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+const registry = new WeakMap();
+let QuickTree = exports.QuickTree = /*#__PURE__*/function (_QuadTree) {
+  function QuickTree() {
+    _classCallCheck(this, QuickTree);
+    return _callSuper(this, QuickTree, arguments);
+  }
+  _inherits(QuickTree, _QuadTree);
+  return _createClass(QuickTree, [{
+    key: "add",
+    value: function add(entity) {
+      if (!_superPropGet(QuickTree, "add", this, 3)([entity])) {
+        if (!this.parent) {
+          console.warn('Failed to add object to QuickTree.');
+        }
+        return;
+      }
+      if (!registry.has(entity)) {
+        registry.set(entity, new Set());
+      }
+      registry.get(entity).add(this);
+    }
+  }, {
+    key: "delete",
+    value: function _delete(entity) {
+      if (!_superPropGet(QuickTree, "delete", this, 3)([entity])) {
+        return;
+      }
+      if (registry.has(entity)) {
+        registry.get(entity).delete(this);
+      }
+    }
+  }, {
+    key: "select",
+    value: function select(x1, y1, x2, y2) {
+      const selectRect = new _Rectangle.Rectangle(x1, y1, x2, y2);
+      const result = _superPropGet(QuickTree, "select", this, 3)([x1, y1, x2, y2]);
+      for (const entity of result) {
+        if (!selectRect.contains(entity.x, entity.y)) {
+          result.delete(entity);
+        }
+      }
+      return result;
+    }
+  }], [{
+    key: "deleteFromAllTrees",
+    value: function deleteFromAllTrees(entity) {
+      if (!registry.has(entity)) {
+        return;
+      }
+      registry.get(entity).forEach(tree => tree.delete(entity));
+    }
+  }]);
+}(_QuadTree2.QuadTree);
+});
+
+;require.register("math/Ray.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Ray = void 0;
+var _Geometry = require("./Geometry");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Ray = exports.Ray = /*#__PURE__*/function () {
+  function Ray() {
+    _classCallCheck(this, Ray);
+  }
+  return _createClass(Ray, null, [{
+    key: "cast",
+    value: function cast(world, startX, startY, layerId, angle) {
+      let maxDistance = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 320;
+      let rayFlags = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : this.DEFAULT_FLAGS;
+      const endX = startX + Math.cos(angle) * maxDistance;
+      const endY = startY + Math.sin(angle) * maxDistance;
+      const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
+      const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags);
+      return {
+        terrain: terrain,
+        entities: entities
+      };
+    }
+  }, {
+    key: "castEntity",
+    value: function castEntity(world, startX, startY, endX, endY) {
+      let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
+      const centerX = (startX + endX) * 0.5;
+      const centerY = (startY + endY) * 0.5;
+      const sizeX = Math.max(320, Math.abs(startX - endX));
+      const sizeY = Math.max(320, Math.abs(startY - endY));
+      const candidates = world.getEntitiesForRect(centerX, centerY, sizeX, sizeY);
+      const collisions = new Map();
+      for (const candidate of candidates) {
+        const points = candidate.rect.toLines();
+        for (let i = 0; i < points.length; i += 4) {
+          const x1 = points[i + 0];
+          const y1 = points[i + 1];
+          const x2 = points[i + 2];
+          const y2 = points[i + 3];
+          const intersection = _Geometry.Geometry.lineIntersectsLine(x1, y1, x2, y2, startX, startY, endX, endY);
+          if (intersection) {
+            if (collisions.has(candidate)) {
+              const existing = collisions.get(candidate);
+              if (Math.hypot(startX - intersection[0], startY - intersection[1]) < Math.hypot(startX - existing[0], startY - existing[1])) {
+                collisions.set(candidate, intersection);
+              }
+            } else {
+              collisions.set(candidate, intersection);
+            }
+          }
+        }
+      }
+      return collisions;
+    }
+  }, {
+    key: "castTerrain",
+    value: function castTerrain(world, startX, startY, layerId, angle) {
+      let maxDistance = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 320;
+      let rayFlags = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : this.DEFAULT_FLAGS;
+      maxDistance = Math.ceil(maxDistance);
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * maxDistance;
+      const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * maxDistance;
+      const bs = 32;
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const ox = Math.sign(dx);
+      const oy = Math.sign(dy);
+      const sx = dx ? Math.hypot(1, dy / dx) : 0;
+      const sy = dy ? Math.hypot(1, dx / dy) : 0;
+      let currentDistance = 0;
+      if (world.getSolid(startX, startY, layerId)) {
+        return [startX, startY];
+      }
+      const startTile = world.getCollisionTile(startX, startY, layerId);
+      const initMode = startTile === null ? 0 : 1;
+      let modeX = initMode;
+      let modeY = initMode;
+      let oldModeX = false;
+      let oldModeY = false;
+      let bf = initMode ? 1 : 1;
+      const ax = ox > 0 ? bs - startX % bs : startX % bs + 1;
+      const ay = oy > 0 ? bs - startY % bs : startY % bs + 1;
+      let checkX = initMode ? 0 : ax;
+      let checkY = initMode ? 0 : ay;
+      let rayX = checkX * sx * ox;
+      let rayY = checkY * sy * oy;
+      const solidsX = new Set();
+      const solidsY = new Set();
+      window.logPoints && console.time('rayCast');
+      let iterations = 0;
+      while (Math.abs(currentDistance) < maxDistance && !solidsX.size && !solidsY.size) {
+        if (ox && (!oy || Math.abs(rayX) < Math.abs(rayY))) {
+          const mag = Math.abs(rayX);
+          let px = startX + mag * cos;
+          let py = startY + mag * sin;
+          if (ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
+          if (oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
+          if (ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
+          if (oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+          oldModeX = modeX;
+          modeX = world.getCollisionTile(px, py, layerId);
+          bf = modeX ? 1 : bs;
+          if (!modeX && oldModeX) {
+            bf = ox < 0 ? (startX + -checkX + 1) % bs : bs - (startX + checkX) % bs;
+          }
+          if (world.getSolid(px, py, layerId)) {
+            solidsX.add([px, py]);
+            break;
+          }
+          currentDistance = Math.abs(rayX);
+          checkX += bf;
+          rayX = checkX * sx * ox;
+        } else {
+          const mag = Math.abs(rayY);
+          let px = startX + mag * cos;
+          let py = startY + mag * sin;
+          if (ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
+          if (oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
+          if (ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
+          if (oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+          oldModeY = modeY;
+          modeY = world.getCollisionTile(px, py, layerId);
+          bf = modeY ? 1 : bs;
+          if (!modeY && oldModeY) {
+            bf = oy < 0 ? (startY + -checkY + 1) % bs : bs - (startY + checkY) % bs;
+          }
+          if (world.getSolid(px, py, layerId)) {
+            solidsY.add([px, py]);
+            break;
+          }
+          currentDistance = Math.abs(rayY);
+          checkY += bf;
+          rayY = checkY * sy * oy;
+        }
+        iterations++;
+      }
+      const points = [...solidsX, ...solidsY];
+      if (rayFlags & this.ALL_POINTS) {
+        return new solidsX.union(solidsY);
+      }
+      const distSquares = points.map(s => Math.pow(s[0] - startX, 2) + Math.pow(s[1] - startY, 2));
+      const minDistSq = Math.min(...distSquares);
+      const nearest = points[distSquares.indexOf(minDistSq)];
+      if (nearest) {
+        if (ox > 0 && nearest[0] % 1 > 0.99999) nearest[0] = Math.round(nearest[0]);
+        if (ox < 0 && nearest[0] % 1 < 0.00001) nearest[0] = Math.round(nearest[0]);
+        if (oy > 0 && nearest[1] % 1 > 0.99999) nearest[1] = Math.round(nearest[1]);
+        if (oy < 0 && nearest[1] % 1 < 0.00001) nearest[1] = Math.round(nearest[1]);
+      }
+      if (Math.sqrt(minDistSq) > maxDistance) {
+        return;
+      }
+      if (rayFlags & this.T_LAST_EMPTY) {
+        return [nearest[0] + -cos * Math.sign(rayX), nearest[1] + -sin * Math.sign(rayY)];
+      }
+      return nearest;
+    }
+  }]);
+}();
+_defineProperty(Ray, "T_LAST_EMPTY", 1);
+_defineProperty(Ray, "T_ALL_POINTS", 2);
+// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
+_defineProperty(Ray, "DEFAULT_FLAGS", 0);
+});
+
+;require.register("math/Rectangle.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Rectangle = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Rectangle = exports.Rectangle = /*#__PURE__*/function () {
+  function Rectangle(x1, y1, x2, y2) {
+    _classCallCheck(this, Rectangle);
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+  }
+  return _createClass(Rectangle, [{
+    key: "contains",
+    value: function contains(x, y) {
+      if (x < this.x1 || x > this.x2) {
+        return false;
+      }
+      if (y < this.y1 || y > this.y2) {
+        return false;
+      }
+      return true;
+    }
+  }, {
+    key: "isOverlapping",
+    value: function isOverlapping(other) {
+      if (this.x1 >= other.x2 || this.x2 <= other.x1) {
+        return false;
+      }
+      if (this.y1 >= other.y2 || this.y2 <= other.y1) {
+        return false;
+      }
+      return true;
+    }
+  }, {
+    key: "isFlushWith",
+    value: function isFlushWith(other) {
+      if (this.x1 > other.x2 || other.x1 > this.x2) {
+        return false;
+      }
+      if (this.y1 > other.y2 || other.y1 > this.y2) {
+        return false;
+      }
+      if (this.x1 === other.x2 || other.x1 === this.x2) {
+        return true;
+      }
+      if (this.y1 === other.y2 || other.y1 === this.y2) {
+        return true;
+      }
+    }
+  }, {
+    key: "intersection",
+    value: function intersection(other) {
+      if (!this.isOverlapping(other)) {
+        return;
+      }
+      return new this.constructor(Math.max(this.x1, other.x1), Math.max(this.y1, other.y1), Math.min(this.x2, other.x2), Math.min(this.y2, other.y2));
+    }
+  }, {
+    key: "isInside",
+    value: function isInside(other) {
+      return this.x1 >= other.x1 && this.y1 >= other.y1 && this.x2 <= other.x2 && this.y2 <= other.y2;
+    }
+  }, {
+    key: "isOutside",
+    value: function isOutside(other) {
+      return other.isInside(this);
+    }
+  }, {
+    key: "toLines",
+    value: function toLines() {
+      return [this.x1, this.y1, this.x2, this.y1,
+      // Top
+      this.x2, this.y1, this.x2, this.y2,
+      // Right
+      this.x1, this.y2, this.x2, this.y2,
+      // Bottom
+      this.x1, this.y1, this.x1, this.y2 // Left
+      ];
+    }
+  }, {
+    key: "toTriangles",
+    value: function toTriangles() {
+      let dim = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 2;
+      if (dim === 2) {
+        return [this.x1, this.y1, this.x2, this.y1, this.x1, this.y2, this.x1, this.y2, this.x2, this.y1, this.x2, this.y2];
+      }
+      if (dim === 3) {
+        return [this.x1, this.y1, 1, this.x2, this.y1, 1, this.x1, this.y2, 1, this.x1, this.y2, 1, this.x2, this.y1, 1, this.x2, this.y2, 1];
+      }
+      if (dim === 4) {
+        return [this.x1, this.y1, 0, 1, this.x2, this.y1, 0, 1, this.x1, this.y2, 0, 1, this.x1, this.y2, 0, 1, this.x2, this.y1, 0, 1, this.x2, this.y2, 0, 1];
+      }
+      return [this.x1, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x1, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x1, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : [])];
+    }
+  }]);
+}();
+});
+
+;require.register("math/SMTree.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SMTree = void 0;
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const depthSymbol = Symbol('depth');
+let Segment = /*#__PURE__*/function () {
+  function Segment(start, end, prev) {
+    let dimension = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
+    let depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+    _classCallCheck(this, Segment);
+    this.start = start;
+    this.end = end;
+    this.depth = depth;
+    this.dimension = dimension;
+    this.size = 0;
+    this.rectangles = new Set();
+    this.subTree = depth < 1 ? new SMTree(_defineProperty({
+      dimension: dimension
+    }, depthSymbol, 1 + depth)) : null;
+    this.prev = prev;
+  }
+  return _createClass(Segment, [{
+    key: "split",
+    value: function split(at) {
+      if (at < this.start || at > this.end) {
+        throw new RangeError('Splitting segment out of bounds!');
+      }
+      if (at === this.start) {
+        return [this];
+      }
+      if (at === this.end) {
+        return [this];
+      }
+      const a = new Segment(this.start, at, this.prev, this.dimension, this.depth);
+      const b = new Segment(at, this.end, a, this.dimension, this.depth);
+      for (const rectangle of this.rectangles) {
+        const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
+        const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
+        if (rectMax < at) {
+          a.add(rectangle);
+          continue;
+        }
+        if (rectMin > at) {
+          b.add(rectangle);
+          continue;
+        }
+        a.add(rectangle);
+        b.add(rectangle);
+      }
+      return [a, b];
+    }
+  }, {
+    key: "add",
+    value: function add(rectangle) {
+      Object.freeze(rectangle);
+      if (this.subTree) {
+        this.subTree.add(rectangle);
+      }
+      this.rectangles.add(rectangle);
+      this.size = this.rectangles.size;
+    }
+  }, {
+    key: "delete",
+    value: function _delete(rectangle) {
+      if (this.subTree) {
+        this.subTree.delete(rectangle);
+      }
+      this.rectangles.delete(rectangle);
+      this.size = this.rectangles.size;
+      const empty = !this.rectangles.size && this.start > -Infinity;
+      return empty;
+    }
+  }]);
+}();
+const isRectangle = object => {
+  return 'x1' in object && 'y1' in object && 'x2' in object && 'y2' in object && object.x1 < object.x2 && object.y1 < object.y2;
+};
+let SMTree = exports.SMTree = /*#__PURE__*/function () {
+  function SMTree() {
+    let args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _defineProperty({
+      dimension: 2
+    }, depthSymbol, 0);
+    _classCallCheck(this, SMTree);
+    this.depth = args[depthSymbol];
+    this.dimension = args.dimension;
+    this.segments = [new Segment(-Infinity, Infinity, null, this.dimension, this.depth)];
+  }
+  return _createClass(SMTree, [{
+    key: "add",
+    value: function add(rectangle) {
+      if (!isRectangle(rectangle)) {
+        throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
+      }
+      const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
+      const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
+      const startIndex = this.findSegment(rectMin);
+      this.splitSegment(startIndex, rectMin);
+      const endIndex = this.findSegment(rectMax);
+      this.splitSegment(endIndex, rectMax);
+      if (startIndex === endIndex) {
+        this.segments[startIndex].add(rectangle);
+        return;
+      }
+      for (let i = 1 + startIndex; i <= endIndex; i++) {
+        this.segments[i].add(rectangle);
+      }
+    }
+  }, {
+    key: "delete",
+    value: function _delete(rectangle) {
+      if (!isRectangle(rectangle)) {
+        throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
+      }
+      const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
+      const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
+      const startIndex = this.findSegment(rectMin);
+      const endIndex = this.findSegment(rectMax);
+      const empty = [];
+      for (let i = startIndex; i <= endIndex; i++) {
+        if (i > 0 && this.segments[i].delete(rectangle)) {
+          empty.push(i);
+        }
+      }
+      for (let i = -1 + empty.length; i >= 0; i--) {
+        const e = empty[i];
+        if (!this.segments[-1 + e]) {
+          throw new Error('Cannot delete segment without predecessor.');
+        }
+        this.segments[-1 + e].end = this.segments[e].end;
+        this.segments[1 + e].prev = this.segments[-1 + e];
+        this.segments.splice(e, 1);
+      }
+      if (this.segments.length === 2 && this.segments[0].size == 0 && this.segments[1].size === 0) {
+        this.segments[0].end = this.segments[1].end;
+        this.segments.length = 1;
+      }
+    }
+  }, {
+    key: "query",
+    value: function query(x1, y1, x2, y2) {
+      const xStartIndex = this.findSegment(x1);
+      const xEndIndex = this.findSegment(x2);
+      let results = new Set();
+      for (let i = xStartIndex; i <= xEndIndex; i++) {
+        const segment = this.segments[i];
+        if (!segment.subTree) {
+          continue;
+        }
+        const yStartIndex = segment.subTree.findSegment(y1);
+        const yEndIndex = segment.subTree.findSegment(y2);
+        for (let j = yStartIndex; j <= yEndIndex; j++) {
+          results = results.union(segment.subTree.segments[j].rectangles);
+        }
+      }
+      return results;
+    }
+  }, {
+    key: "splitSegment",
+    value: function splitSegment(index, at) {
+      if (at <= this.segments[index].start || at >= this.segments[index].end) {
+        return;
+      }
+      const splitSegments = this.segments[index].split(at);
+      this.segments.splice(index, 1, ...splitSegments);
+    }
+  }, {
+    key: "findSegment",
+    value: function findSegment(at) {
+      if (isNaN(at)) {
+        throw new Error('World.findSegment takes a number param.');
+      }
+      let lo = 0;
+      let hi = -1 + this.segments.length;
+      do {
+        const current = Math.floor((lo + hi) * 0.5);
+        const segment = this.segments[current];
+        if (segment.start < at && segment.end >= at) {
+          return current;
+        }
+        if (segment.start < at) {
+          lo = 1 + current;
+        }
+        if (segment.end > at) {
+          hi = -1 + current;
+        }
+      } while (lo <= hi);
+      return -1;
+    }
+  }]);
+}();
+});
+
+;require.register("math/Split.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Split = void 0;
+var _Split;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Split = exports.Split = /*#__PURE__*/function () {
+  function Split() {
+    _classCallCheck(this, Split);
+  }
+  return _createClass(Split, null, [{
+    key: "intToBytes",
+    value: function intToBytes(value) {
+      this.value[0] = value;
+      return [...this.bytes];
+    }
+  }, {
+    key: "bytesToInt",
+    value: function bytesToInt(bytes) {
+      this.bytes[0] = bytes[0];
+      this.bytes[1] = bytes[1];
+      this.bytes[2] = bytes[2];
+      this.bytes[3] = bytes[3];
+      return this.value[0];
+    }
+  }, {
+    key: "bytesToInt3",
+    value: function bytesToInt3(bytes) {
+      this.bytes[0] = bytes[0];
+      this.bytes[1] = bytes[1];
+      this.bytes[2] = bytes[2];
+      this.bytes[3] = 0;
+      return this.value[0];
+    }
+  }]);
+}();
+_Split = Split;
+_defineProperty(Split, "bytes", new Uint8ClampedArray(4));
+_defineProperty(Split, "words", new Uint16Array(_Split.bytes.buffer));
+_defineProperty(Split, "value", new Uint32Array(_Split.bytes.buffer));
+});
+
+;require.register("model/BallController.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BallController = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let BallController = exports.BallController = /*#__PURE__*/function () {
+  function BallController() {
+    _classCallCheck(this, BallController);
+  }
+  return _createClass(BallController, [{
+    key: "create",
+    value: function create(entity, entityData) {
+      entity.xSpeed = 0;
+      entity.ySpeed = 0;
+      entity.height = 32;
+      entity.width = 32;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(entity) {
+      const world = entity.session.world;
+      if (entity.xSpeed || entity.ySpeed) {
+        let xMove = entity.xSpeed;
+        let yMove = entity.ySpeed;
+        const h = world.castTerrainRay(entity.x + 0, entity.y + -16, 0, entity.xSpeed < 0 ? Math.PI : 0, Math.abs(entity.xSpeed) + 16, 0x01);
+        const v = world.castTerrainRay(entity.x + 0, entity.y + -16, 0, Math.PI * 0.5 * Math.sign(entity.ySpeed), Math.abs(entity.ySpeed) + 16, 0x1);
+        if (h) {
+          const actualDistance = h[0] - entity.x;
+          xMove = actualDistance + -16 * Math.sign(entity.xSpeed);
+          entity.xSpeed = -entity.xSpeed;
+        }
+        if (v) {
+          const actualDistance = v[1] - (entity.y + -16);
+          yMove = actualDistance + -16 * Math.sign(entity.ySpeed);
+          entity.ySpeed = -entity.ySpeed;
+        }
+        entity.x += xMove;
+        entity.y += yMove;
+      } else {
+        const a = Math.PI * 2 * Math.random();
+        const s = 6;
+        entity.xSpeed = Math.cos(a) * s;
+        entity.ySpeed = Math.sin(a) * s;
+      }
+    }
+  }]);
+}();
+_defineProperty(BallController, "spriteImage", './sphere.png');
+});
+
+;require.register("model/BarrelController.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BarrelController = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
+  function BarrelController() {
+    _classCallCheck(this, BarrelController);
+  }
+  return _createClass(BarrelController, [{
+    key: "create",
+    value: function create(entity, entityData) {
+      entity.xSpeed = 0;
+      entity.ySpeed = 0;
+      entity.height = 48;
+      entity.width = 32;
+      entity.ySpriteOffset = 6;
+      this.grounded = true;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(entity) {
+      const world = entity.session.world;
+      if (!world.getSolid(entity.x, entity.y + 1)) {
+        entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
+        this.grounded = false;
+      } else {
+        entity.ySpeed = Math.min(0, entity.ySpeed);
+        this.grounded = true;
+      }
+      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1)) {
+        entity.ySpeed = 0;
+        entity.y--;
+      }
+      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
+        entity.ySpeed = 0;
+        entity.y++;
+      }
+      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x++;
+      }
+      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x--;
+      }
+      if (entity.xSpeed || entity.ySpeed) {
+        const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
+        const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
+        const hit = world.castRay(entity.x, entity.y, 0, direction, distance, 0x01);
+        let xMove = entity.xSpeed;
+        let yMove = entity.ySpeed;
+        if (hit.terrain) {
+          const actualDistance = Math.hypot(entity.x - hit.terrain[0], entity.y - hit.terrain[1]);
+          xMove = Math.cos(direction) * actualDistance;
+          yMove = Math.sin(direction) * actualDistance;
+        }
+        entity.x += xMove;
+        entity.y += yMove;
+        entity.xSpeed *= 0.95;
+        entity.ySpeed *= 0.95;
+      }
+    }
+  }, {
+    key: "collide",
+    value: function collide(entity, other, point) {
+      // entity.x = point[0] + 0.5 * entity.width;
+      // entity.xSpeed = other.xSpeed;
+    }
+  }]);
+}();
+_defineProperty(BarrelController, "spriteImage", '/barrel.png');
+});
+
+;require.register("model/BoxController.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.BoxController = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let BoxController = exports.BoxController = /*#__PURE__*/function () {
+  function BoxController() {
+    _classCallCheck(this, BoxController);
+  }
+  return _createClass(BoxController, [{
+    key: "create",
+    value: function create(entity, entityData) {
+      if (entityData.gid) {
+        entity.x = entityData.x + entityData.width * 0.5;
+        entity.y = entityData.y + -1;
+      } else {
+        entity.x = entityData.x + entityData.width * 0.5;
+        entity.y = entityData.y + entityData.height + -1;
+      }
+      entity.flags |= 0x1;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(entity) {
+      entity.sprite.width = entity.width;
+      entity.sprite.height = entity.height;
+    }
+  }, {
+    key: "collide",
+    value: function collide() {}
+  }]);
+}();
+_defineProperty(BoxController, "spriteColor", [255, 0, 0, 255]);
+});
+
+;require.register("model/Entity.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Entity = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _Rectangle = require("../math/Rectangle");
+var _Sprite = require("../sprite/Sprite");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Entity = exports.Entity = /*#__PURE__*/function () {
+  function Entity(entityData) {
+    _classCallCheck(this, Entity);
+    this[_Bindable.Bindable.Prevent] = true;
+    const controller = entityData.controller,
+      session = entityData.session,
+      inputManager = entityData.inputManager,
+      sprite = entityData.sprite,
+      _entityData$x = entityData.x,
+      x = _entityData$x === void 0 ? 0 : _entityData$x,
+      _entityData$y = entityData.y,
+      y = _entityData$y === void 0 ? 0 : _entityData$y,
+      _entityData$width = entityData.width,
+      width = _entityData$width === void 0 ? 32 : _entityData$width,
+      _entityData$height = entityData.height,
+      height = _entityData$height === void 0 ? 32 : _entityData$height;
+    this.controller = controller;
+    this.xSpriteOffset = 0;
+    this.ySpriteOffset = sprite ? 0 : 15;
+    this.flags = 0;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    controller && controller.create(this, entityData);
+    this.sprite = sprite || new _Sprite.Sprite({
+      session: session,
+      src: '/thing.png',
+      width: 32,
+      height: 32
+    });
+    this.inputManager = inputManager;
+    this.session = session;
+    this.rect = new _Rectangle.Rectangle(x - width * 0.5, y - height, x + width * 0.5, y);
+  }
+  return _createClass(Entity, [{
+    key: "simulate",
+    value: function simulate() {
+      this.controller && this.controller.simulate(this);
+      this.rect.x1 = this.x - this.width * 0.5;
+      this.rect.x2 = this.x + this.width * 0.5;
+      this.rect.y1 = this.y - this.height;
+      this.rect.y2 = this.y;
+      if (this.sprite) {
+        this.sprite.x = this.x + this.xSpriteOffset;
+        this.sprite.y = this.y + this.ySpriteOffset;
+      }
+      this.fixFPE();
+    }
+  }, {
+    key: "collide",
+    value: function collide(other, point) {
+      this.controller && this.controller.collide(this, other, point);
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      this.controller && controller.destroy(this);
+    }
+  }, {
+    key: "fixFPE",
+    value: function fixFPE() {
+      if (this.x % 1 > 0.99999) this.x = Math.round(this.x);
+      if (this.y % 1 > 0.99999) this.y = Math.round(this.y);
+      if (this.x % 1 < 0.00001) this.x = Math.round(this.x);
+      if (this.y % 1 < 0.00001) this.y = Math.round(this.y);
+    }
+  }]);
+}();
+_defineProperty(Entity, "E_SOLID", 1);
+});
+
+;require.register("model/InputManager.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.InputManager = void 0;
+var _Bindable = require("curvature/base/Bindable");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let InputManager = exports.InputManager = /*#__PURE__*/function () {
+  function InputManager(_ref) {
+    let keyboard = _ref.keyboard,
+      onScreenJoyPad = _ref.onScreenJoyPad;
+    _classCallCheck(this, InputManager);
+    _defineProperty(this, "triggers", _Bindable.Bindable.makeBindable({}));
+    _defineProperty(this, "axis", _Bindable.Bindable.makeBindable({}));
+    keyboard.keys.bindTo((v, k, t, d) => {
+      if (v > 0) {
+        this.keyPress(k, v, t[k]);
+        return;
+      }
+      if (v === -1) {
+        this.keyRelease(k, v, t[k]);
+        return;
+      }
+    });
+    onScreenJoyPad.args.bindTo('x', v => {
+      this.axis[0] = v / 50;
+    });
+    onScreenJoyPad.args.bindTo('y', v => {
+      this.axis[1] = v / 50;
+    });
+  }
+  return _createClass(InputManager, [{
+    key: "keyPress",
+    value: function keyPress(key, value, prev) {
+      if (/^[0-9]$/.test(key)) {
+        this.triggers[key] = true;
+        return;
+      }
+      switch (key) {
+        case 'ArrowRight':
+          this.axis[0] = 1;
+          break;
+        case 'ArrowDown':
+          this.axis[1] = 1;
+          break;
+        case 'ArrowLeft':
+          this.axis[0] = -1;
+          break;
+        case 'ArrowUp':
+          this.axis[1] = -1;
+          break;
+        case ' ':
+          this.triggers[0] = true;
+          break;
+      }
+    }
+  }, {
+    key: "keyRelease",
+    value: function keyRelease(key, value, prev) {
+      if (/^[0-9]$/.test(key)) {
+        this.triggers[key] = false;
+        return;
+      }
+      switch (key) {
+        case 'ArrowRight':
+          if (this.axis[0] > 0) {
+            this.axis[0] = 0;
+          }
+          this.axis[0] = 0;
+        case 'ArrowLeft':
+          if (this.axis[0] < 0) {
+            this.axis[0] = 0;
+          }
+          break;
+        case 'ArrowDown':
+          if (this.axis[1] > 0) {
+            this.axis[1] = 0;
+          }
+        case 'ArrowUp':
+          if (this.axis[1] < 0) {
+            this.axis[1] = 0;
+          }
+          break;
+        case ' ':
+          this.triggers[0] = false;
+          break;
+      }
+    }
+  }]);
+}();
+});
+
+;require.register("model/PlayerController.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PlayerController = void 0;
+var _Ray = require("../math/Ray");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const fireRegion = [1, 0, 0];
+const waterRegion = [0, 1, 1];
+let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
+  function PlayerController() {
+    _classCallCheck(this, PlayerController);
+  }
+  return _createClass(PlayerController, [{
+    key: "create",
+    value: function create(entity, entityData) {
+      this.direction = 'south';
+      this.state = 'standing';
+      this.xSpeed = 0;
+      this.ySpeed = 0;
+      this.grounded = true;
+      this.grounded = 0;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(entity) {
+      if (this.state === 'jumping') {
+        entity.height = 24;
+      } else {
+        entity.height = 34;
+      }
+      const xAxis = entity.inputManager ? Math.min(1, Math.max(entity.inputManager.axes[0].magnitude || 0, -1)) || 0 : 0;
+      const yAxis = entity.inputManager ? Math.min(1, Math.max(entity.inputManager.axes[1].magnitude || 0, -1)) || 0 : 0;
+      const world = entity.session.world;
+      const solidTerrain = world.getSolid(entity.x, entity.y + 1);
+      const solidEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)].filter(entity => entity.flags & 0x1);
+
+      // console.log(world.getEntitiesForPoint(entity.x, entity.y + 1));
+
+      if (!solidTerrain) {
+        this.ySpeed = Math.min(8, this.ySpeed + 0.5);
+        this.grounded = false;
+      } else if (this.ySpeed >= 0) {
+        this.ySpeed = Math.min(0, this.ySpeed);
+        this.grounded = true;
+      }
+      if (solidEntities.length) {
+        const otherTop = solidEntities[0].y - solidEntities[0].height;
+        if (this.ySpeed >= 0 && entity.y < otherTop + 16) {
+          entity.y = otherTop;
+          this.ySpeed = Math.min(0, this.ySpeed);
+          this.grounded = true;
+        }
+      }
+      if (xAxis) {
+        this.xDirection = Math.sign(xAxis);
+        if (!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y)) {
+          this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.4);
+        }
+        if (Math.abs(this.xSpeed) > 8) {
+          this.xSpeed = 8 * Math.sign(this.xSpeed);
+        }
+        if (this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(this.xSpeed)) {
+          this.xSpeed *= 0.75;
+        }
+      } else if (this.grounded) {
+        this.xSpeed *= 0.9;
+      } else {
+        this.xSpeed *= 0.99;
+      }
+      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height)) {
+        this.ySpeed = 0;
+        entity.y--;
+      }
+      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
+        this.ySpeed = 0;
+        entity.y++;
+      }
+      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
+        this.xSpeed = 0;
+        entity.x++;
+      }
+      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
+        this.xSpeed = 0;
+        entity.x--;
+      }
+      if (this.xSpeed || this.ySpeed) {
+        const direction = Math.atan2(this.ySpeed, this.xSpeed);
+        const distance = Math.hypot(this.ySpeed, this.xSpeed);
+        const hit = _Ray.Ray.cast(world, entity.x, entity.y + -entity.height * 0.5, 0, direction, distance, _Ray.Ray.T_LAST_EMPTY);
+        let xMove = this.xSpeed;
+        let yMove = this.ySpeed;
+        if (hit.terrain) {
+          const actualDistance = Math.hypot(entity.x - hit.terrain[0], entity.y - hit.terrain[1]);
+          xMove = Math.cos(direction) * actualDistance;
+          yMove = Math.sin(direction) * actualDistance;
+        }
+        if (hit.entities.size) {
+          hit.entities.delete(entity);
+          hit.entities.forEach((point, other) => {
+            other.collide(entity, point);
+            entity.collide(other, point);
+          });
+        }
+        entity.x += xMove;
+        entity.y += yMove;
+      }
+      if (this.grounded) {
+        this.state = xAxis ? 'walking' : 'standing';
+        if (xAxis < 0) {
+          this.direction = 'west';
+        } else if (xAxis > 0) {
+          this.direction = 'east';
+        }
+      }
+      if (this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1) {
+        this.grounded = false;
+        this.state = 'jumping';
+        this.ySpeed = -10;
+      }
+      if (!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
+        this.ySpeed = Math.max(-4, this.ySpeed);
+      }
+      if (entity.sprite) {
+        if (this.state === 'jumping') {
+          entity.sprite.scaleX = this.xDirection;
+          entity.sprite.changeAnimation(`${this.state}`);
+        } else {
+          entity.sprite.scaleX = 1;
+          entity.sprite.changeAnimation(`${this.state}-${this.direction}`);
+        }
+      }
+
+      // if(Math.trunc(performance.now() / 1000) % 15 === 0)
+      // {
+      // 	entity.sprite.region = null;
+      // }
+
+      // if(Math.trunc(performance.now() / 1000) % 15 === 5)
+      // {
+      // 	entity.sprite.region = waterRegion;
+      // }
+
+      // if(Math.trunc(performance.now() / 1000) % 15 === 10)
+      // {
+      // 	entity.sprite.region = fireRegion;
+      // }
+
+      // if(this.state === 'jumping' && this.direction === 'south')
+      // {
+      // 	this.direction = 'east';
+      // }
+    }
+  }, {
+    key: "collide",
+    value: function collide(entity, other, point) {
+      if (other.flags & 0x1) {
+        const otherTop = other.y - other.height;
+        if (this.ySpeed > 0 && entity.y < otherTop + 16) {
+          this.ySpeed = 0;
+          this.grounded = true;
+          this.y = otherTop;
+        }
+
+        // console.log(other);
+      }
+      // console.log(other, point);
+    }
+  }]);
+}();
+_defineProperty(PlayerController, "spriteSheet", '/player.tsj');
+});
+
+;require.register("model/Spawner.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Spawner = void 0;
+var _SpriteSheet = require("../sprite/SpriteSheet");
+var _Sprite = require("../sprite/Sprite");
+var _Entity2 = require("./Entity");
+var _Properties = require("../world/Properties");
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
+  function Spawner(spawnData) {
+    var _spawnData$properties, _props$get;
+    var _this;
+    _classCallCheck(this, Spawner);
+    _this = _callSuper(this, Spawner, [spawnData]);
+    _this.spawnData = spawnData;
+    _this.spawnType = spawnData.spawnType;
+    _this.spawnClass = spawnData.spawnClass;
+    _this.session = spawnData.session;
+    const props = new _Properties.Properties((_spawnData$properties = spawnData.properties) !== null && _spawnData$properties !== void 0 ? _spawnData$properties : []);
+    _this.count = (_props$get = props.get('count')) !== null && _props$get !== void 0 ? _props$get : 1;
+    _this.i = 0;
+    return _this;
+  }
+  _inherits(Spawner, _Entity);
+  return _createClass(Spawner, [{
+    key: "simulate",
+    value: function simulate() {
+      const spawnClass = this.spawnData.spawnClass;
+      const entityDef = _objectSpread({}, this.spawnData.entityDef);
+      const controller = new spawnClass();
+      if (!entityDef.sprite) {
+        if (spawnClass.spriteSheet) {
+          entityDef.sprite = new _Sprite.Sprite({
+            session: this.spawnData.session,
+            spriteSheet: new _SpriteSheet.SpriteSheet({
+              source: spawnClass.spriteSheet
+            })
+          });
+        } else if (spawnClass.spriteImage) {
+          entityDef.sprite = new _Sprite.Sprite({
+            session: this.spawnData.session,
+            src: spawnClass.spriteImage
+          });
+        } else if (this.spawnData.gid) {
+          entityDef.sprite = new _Sprite.Sprite({
+            session: this.spawnData.session,
+            src: this.spawnData.map.getTileImage(this.spawnData.gid),
+            tiled: true
+          });
+        } else if (spawnClass.spriteColor) {
+          entityDef.sprite = new _Sprite.Sprite({
+            session: this.spawnData.session,
+            color: spawnClass.spriteColor,
+            width: this.width,
+            height: this.height
+          });
+        }
+      }
+      const entity = new _Entity2.Entity(_objectSpread(_objectSpread({}, entityDef), {}, {
+        controller: controller,
+        session: this.session,
+        x: entityDef.x,
+        y: entityDef.y
+      }));
+      this.session.removeEntity(this);
+      this.session.addEntity(entity);
+      _superPropGet(Spawner, "simulate", this, 3)([]);
+    }
+  }]);
+}(_Entity2.Entity);
+});
+
+;require.register("overlay/overlay.frag", function(exports, require, module) {
+module.exports = "precision mediump float;\n\nuniform vec4 u_color;\nvarying vec2 v_texCoord;\n\nvoid main() {\n  // gl_FragColor = texture2D(u_image, v_texCoord);\n  gl_FragColor = vec4(1.0, 1.0, 0.0, 0.25);\n}\n"
+});
+
+;require.register("overlay/overlay.vert", function(exports, require, module) {
+module.exports = "attribute vec2 a_position;\nattribute vec2 a_texCoord;\n\nuniform vec2 u_resolution;\nvarying vec2 v_texCoord;\n\nvoid main()\n{\n  vec2 zeroToOne = a_position / u_resolution;\n  vec2 zeroToTwo = zeroToOne * 2.0;\n  vec2 clipSpace = zeroToTwo - 1.0;\n\n  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);\n  v_texCoord  = a_texCoord;\n}\n"
+});
+
+;require.register("session/Session.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Session = void 0;
+var _QuickTree = require("../math/QuickTree");
+var _SpriteBoard = require("../sprite/SpriteBoard");
+var _SpriteSheet = require("../sprite/SpriteSheet");
+var _Sprite = require("../sprite/Sprite");
+var _Entity = require("../model/Entity");
+var _Camera = require("../sprite/Camera");
+var _World = require("../world/World");
+var _Controller = require("../input/Controller");
+var _EntityPallet = require("../world/EntityPallet");
+var _PlayerController = require("../model/PlayerController");
+var _BallController = require("../model/BallController");
+var _BarrelController = require("../model/BarrelController");
+var _BoxController = require("../model/BoxController");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+_EntityPallet.EntityPallet.register('@basic-platformer', _PlayerController.PlayerController);
+_EntityPallet.EntityPallet.register('@barrel', _BarrelController.BarrelController);
+_EntityPallet.EntityPallet.register('@ball', _BallController.BallController);
+_EntityPallet.EntityPallet.register('@box', _BoxController.BoxController);
+let Session = exports.Session = /*#__PURE__*/function () {
+  function Session(_ref) {
+    let element = _ref.element,
+      world = _ref.world,
+      keyboard = _ref.keyboard,
+      onScreenJoyPad = _ref.onScreenJoyPad;
+    _classCallCheck(this, Session);
+    this.fThen = 0;
+    this.sThen = 0;
+    this.frameLock = 60;
+    this.simulationLock = 60;
+    this.entities = new Set();
+    this.removed = new WeakSet();
+    this.paused = false;
+    this.loaded = false;
+    this.world = new _World.World({
+      source: new URL(world, location).href,
+      session: this
+    });
+    this.spriteBoard = new _SpriteBoard.SpriteBoard({
+      element: element,
+      world: this.world,
+      session: this
+    });
+    this.keyboard = keyboard;
+    this.world.ready.then(() => this.initialize({
+      keyboard: keyboard,
+      onScreenJoyPad: onScreenJoyPad
+    }));
+    this.controller = new _Controller.Controller({
+      deadZone: 0.2
+    });
+    this.controller.zero();
+    this.gamepad = null;
+    window.addEventListener('gamepadconnected', event => {
+      this.gamepad = event.gamepad;
+    });
+    window.addEventListener('gamepaddisconnected', event => {
+      if (!this.gamepad) return;
+      this.gamepad = null;
+    });
+  }
+  return _createClass(Session, [{
+    key: "initialize",
+    value: async function initialize() {
+      this.loaded = true;
+      for (const map of this.world.maps) {
+        if (!map.properties['player-start']) {
+          continue;
+        }
+        const startId = map.properties['player-start'];
+        const startDef = map.entityDefs[startId];
+        const playerClass = await _EntityPallet.EntityPallet.resolve(startDef.type);
+        const player = this.player = new _Entity.Entity({
+          controller: new playerClass(),
+          session: this,
+          x: startDef.x,
+          y: startDef.y,
+          inputManager: this.controller,
+          sprite: new _Sprite.Sprite({
+            session: this,
+            spriteSheet: new _SpriteSheet.SpriteSheet({
+              source: '/player.tsj'
+            })
+          }),
+          camera: _Camera.Camera
+        });
+        this.spriteBoard.following = player;
+        this.addEntity(player);
+      }
+    }
+  }, {
+    key: "addEntity",
+    value: function addEntity(entity) {
+      if (this.entities.has(entity)) {
+        return;
+      }
+      this.entities.add(entity);
+      const maps = this.world.getMapsForPoint(entity.x, entity.y);
+      maps.forEach(map => map.quadTree.add(entity));
+    }
+  }, {
+    key: "removeEntity",
+    value: function removeEntity(entity) {
+      this.entities.delete(entity);
+      this.spriteBoard.sprites.delete(entity.sprite);
+      _QuickTree.QuickTree.deleteFromAllTrees(entity);
+      this.removed.add(entity);
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(now) {
+      if (!this.loaded) {
+        return false;
+      }
+      const delta = now - this.sThen;
+      if (this.simulationLock == 0 || 0.2 + delta < 1000 / this.simulationLock) {
+        return false;
+      }
+      this.sThen = now;
+      this.keyboard.update();
+      this.controller.update({
+        gamepad: this.gamepad
+      });
+      this.controller.readInput({
+        onScreenJoyPad: this.onScreenJoyPad,
+        gamepads: navigator.getGamepads(),
+        keyboard: this.keyboard
+      });
+      if (this.controller.buttons[1020] && this.controller.buttons[1020].time === 1) {
+        this.paused = !this.paused;
+      }
+      if (this.paused || !this.player) {
+        return false;
+      }
+      this.entities.forEach(entity => {
+        if (entity.sprite) entity.sprite.visible = false;
+      });
+      const player = this.player;
+      const nearBy = this.world.getEntitiesForRect(player.x, player.y, _Camera.Camera.width * 1.0 + 64, _Camera.Camera.height * 1.0 + 64);
+      nearBy.delete(player);
+      nearBy.add(player);
+      this.spriteBoard.sprites.clear();
+      nearBy.forEach(entity => {
+        entity.simulate(delta);
+        const maps = this.world.getMapsForPoint(entity.x, entity.y);
+        maps.forEach(map => this.removed.has(entity) || map.quadTree.move(entity));
+        if (entity.sprite) {
+          this.spriteBoard.sprites.add(entity.sprite);
+          entity.sprite.visible = true;
+        }
+      });
+      return true;
+    }
+  }, {
+    key: "draw",
+    value: function draw(now) {
+      if (!this.loaded) {
+        return;
+      }
+      const delta = now - this.fThen;
+      if (this.frameLock == 0 || 0.2 + delta < 1000 / this.frameLock) {
+        return false;
+      }
+      this.spriteBoard.draw(delta);
+      this.fThen = now;
+      return true;
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/Camera.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Camera = void 0;
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Camera = exports.Camera = /*#__PURE__*/_createClass(function Camera() {
+  _classCallCheck(this, Camera);
+});
+_defineProperty(Camera, "x", 0);
+_defineProperty(Camera, "y", 0);
+_defineProperty(Camera, "width", 0);
+_defineProperty(Camera, "height", 0);
+});
+
+;require.register("sprite/MapRenderer.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MapRenderer = void 0;
+var _Bindable = require("curvature/base/Bindable");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
+  function MapRenderer(_ref) {
+    let spriteBoard = _ref.spriteBoard,
+      map = _ref.map;
+    _classCallCheck(this, MapRenderer);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.spriteBoard = spriteBoard;
+    this.loaded = false;
+    this.map = map;
+    this.width = 0;
+    this.height = 0;
+    this.tileWidth = 0;
+    this.tileHeight = 0;
+    this.xOffset = 0;
+    this.yOffset = 0;
+    const gl = this.spriteBoard.gl2d.context;
+    this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
+    this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
+    const r = () => parseInt(Math.random() * 0xFF);
+    const pixel = new Uint8Array([r(), r(), r(), 0xFF]);
+    map.ready.then(() => {
+      this.loaded = true;
+      this.tileWidth = map.tileWidth;
+      this.tileHeight = map.tileHeight;
+      gl.bindTexture(gl.TEXTURE_2D, this.tileTexture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, map.tileSetWidth, map.tileSetHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, map.pixels);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    });
+  }
+  return _createClass(MapRenderer, [{
+    key: "negSafeMod",
+    value: function negSafeMod(a, b) {
+      if (a >= 0) return a % b;
+      return (b + a % b) % b;
+    }
+  }, {
+    key: "draw",
+    value: function draw() {
+      if (!this.loaded) {
+        return;
+      }
+      const gl = this.spriteBoard.gl2d.context;
+      const x = this.spriteBoard.following.x;
+      const y = this.spriteBoard.following.y;
+      const zoom = this.spriteBoard.zoomLevel;
+      const halfTileWidth = this.tileWidth * 0.5;
+      const halfTileHeight = this.tileHeight * 0.5;
+      const tilesWide = Math.floor(this.width / this.tileWidth);
+      const tilesHigh = Math.floor(this.height / this.tileHeight);
+      const xOffset = Math.floor(Math.floor(0.5 * this.width / 64) + 0) * 64;
+      const yOffset = Math.floor(Math.floor(0.5 * this.height / 64) + 0) * 64;
+      const xTile = (x + halfTileWidth) / this.tileWidth + -this.negSafeMod(x + halfTileWidth, 64) / this.tileWidth + -this.map.xWorld / this.tileWidth + -xOffset / this.tileWidth;
+      const yTile = (y + halfTileHeight) / this.tileHeight + -this.negSafeMod(y + halfTileHeight, 64) / this.tileHeight + -this.map.yWorld / this.tileHeight + -yOffset / this.tileHeight;
+      if (xTile + tilesWide < 0 || yTile + tilesHigh < 0) {
+        return;
+      }
+      const xPos = zoom * ((this.width + this.xOffset) * 0.5 + -this.negSafeMod(x + halfTileWidth, 64) + -xOffset);
+      const yPos = zoom * ((this.height + this.yOffset) * 0.5 + -this.negSafeMod(y + halfTileHeight, 64) + -yOffset);
+      this.spriteBoard.drawProgram.uniformF('u_size', this.width, this.height);
+      this.spriteBoard.drawProgram.uniformF('u_tileSize', this.tileWidth, this.tileHeight);
+      this.spriteBoard.drawProgram.uniformF('u_mapTextureSize', this.map.tileSetWidth, this.map.tileSetHeight);
+      this.spriteBoard.drawProgram.uniformI('u_renderTiles', 1);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, this.tileTexture);
+      this.spriteBoard.drawProgram.uniformI('u_tiles', 2);
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
+      this.spriteBoard.drawProgram.uniformI('u_tileMapping', 3);
+      const tilePixelLayers = this.map.getSlice(xTile, yTile, tilesWide, tilesHigh, performance.now() / 1000);
+      for (const tilePixels of tilePixelLayers) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, tilesWide, tilesHigh, 0, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels);
+        this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * zoom, this.width * zoom, this.height * zoom);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+
+      // Cleanup...
+      this.spriteBoard.drawProgram.uniformI('u_renderTiles', 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  }, {
+    key: "resize",
+    value: function resize(x, y) {
+      this.width = x + 0;
+      this.height = y + 0;
+      this.width = Math.ceil(x / 128) * 128 + 128;
+      this.height = Math.ceil(y / 128) * 128 + 128;
+      this.xOffset = x - this.width;
+      this.yOffset = y - this.height;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate() {}
+  }, {
+    key: "setRectangle",
+    value: function setRectangle(x, y, width, height) {
+      const gl = this.spriteBoard.gl2d.context;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]), gl.STATIC_DRAW);
+      const x1 = x;
+      const x2 = x + width;
+      const y1 = y;
+      const y2 = y + height;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x1, y2, x2, y2, x1, y1, x1, y1, x2, y2, x2, y1]), gl.STATIC_DRAW);
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/Parallax.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Parallax = void 0;
+var _Bindable = require("curvature/base/Bindable");
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let ParallaxLayer = /*#__PURE__*/_createClass(function ParallaxLayer() {
+  _classCallCheck(this, ParallaxLayer);
+  _defineProperty(this, "texture", null);
+  _defineProperty(this, "width", 0);
+  _defineProperty(this, "height", 0);
+  _defineProperty(this, "offset", 0);
+  _defineProperty(this, "parallax", 0);
+});
+let Parallax = exports.Parallax = /*#__PURE__*/function () {
+  function Parallax(_ref) {
+    let spriteBoard = _ref.spriteBoard,
+      map = _ref.map;
+    _classCallCheck(this, Parallax);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.spriteBoard = spriteBoard;
+    const gl = this.spriteBoard.gl2d.context;
+    this.map = map;
+    this.texture = null;
+    this.height = 0;
+    this.slices = ['parallax/mountains-0.png', 'parallax/sky-0-recolor.png', 'parallax/sky-1-recolor.png', 'parallax/sky-1b-recolor.png', 'parallax/sky-2-recolor.png'];
+    this.parallaxLayers = [];
+    this.textures = [];
+    this.ready = map.ready.then(() => this.assemble(map)).then(() => {
+      this.loaded = true;
+    });
+    this.loaded = false;
+    this.x = 0;
+    this.y = 0;
+  }
+  return _createClass(Parallax, [{
+    key: "assemble",
+    value: function assemble() {
+      const gl = this.spriteBoard.gl2d.context;
+      const loadSlices = this.map.imageLayers.map((layerData, index) => this.constructor.loadImage(new URL(layerData.image, this.map.src)).then(image => {
+        var _layerData$offsety, _layerData$parallaxx;
+        const texture = this.textures[index] = gl.createTexture();
+        const layer = this.parallaxLayers[index] = new ParallaxLayer();
+        const layerBottom = image.height + layerData.offsety;
+        if (this.height < layerBottom) {
+          this.height = layerBottom;
+        }
+        layer.texture = texture;
+        layer.width = image.width;
+        layer.height = image.height;
+        layer.offset = (_layerData$offsety = layerData.offsety) !== null && _layerData$offsety !== void 0 ? _layerData$offsety : 0;
+        layer.parallax = (_layerData$parallaxx = layerData.parallaxx) !== null && _layerData$parallaxx !== void 0 ? _layerData$parallaxx : 1;
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      }));
+      return Promise.all(loadSlices);
+    }
+  }, {
+    key: "draw",
+    value: function draw() {
+      if (!this.loaded) {
+        return;
+      }
+      const gl = this.spriteBoard.gl2d.context;
+      const zoom = this.spriteBoard.zoomLevel;
+      this.x = this.spriteBoard.following.x + -this.spriteBoard.width / zoom * 0.5;
+      this.y = this.spriteBoard.following.y;
+      this.spriteBoard.drawProgram.uniformI('u_renderParallax', 1);
+      this.spriteBoard.drawProgram.uniformF('u_scroll', this.x, this.y);
+      gl.activeTexture(gl.TEXTURE0);
+      for (const layer of this.parallaxLayers) {
+        gl.bindTexture(gl.TEXTURE_2D, layer.texture);
+        this.spriteBoard.drawProgram.uniformF('u_size', layer.width, layer.width);
+        this.spriteBoard.drawProgram.uniformF('u_parallax', layer.parallax, 0);
+        this.setRectangle(0, this.spriteBoard.height + (-this.height + layer.offset) * zoom, layer.width * zoom, layer.height * zoom, layer.width);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+      this.spriteBoard.drawProgram.uniformI('u_renderParallax', 0);
+
+      // Cleanup...
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  }, {
+    key: "setRectangle",
+    value: function setRectangle(x, y, width, height) {
+      const gl = this.spriteBoard.gl2d.context;
+      const ratio = this.spriteBoard.width / width;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, ratio, 0.0, 0.0, 1.0, 0.0, 1.0, ratio, 0.0, ratio, 1.0]), gl.STATIC_DRAW);
+      const x1 = x - 0;
+      const x2 = x + this.spriteBoard.width;
+      const y1 = y;
+      const y2 = y + height;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x1, y2, x2, y2, x1, y1, x1, y1, x2, y2, x2, y1]), gl.STATIC_DRAW);
+    }
+  }], [{
+    key: "loadImage",
+    value: function loadImage(src) {
+      if (!this.imagePromises) {
+        this.imagePromises = {};
+      }
+      if (this.imagePromises[src]) {
+        return this.imagePromises[src];
+      }
+      this.imagePromises[src] = new Promise((accept, reject) => {
+        const image = new Image();
+        image.src = src;
+        image.addEventListener('load', event => {
+          accept(image);
+        });
+      });
+      return this.imagePromises[src];
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/Sprite.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Sprite = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _SpriteSheet = require("./SpriteSheet");
+var _Matrix = require("../math/Matrix");
+var _Camera = require("./Camera");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Sprite = exports.Sprite = /*#__PURE__*/function () {
+  function Sprite(_ref) {
+    let src = _ref.src,
+      color = _ref.color,
+      pixels = _ref.pixels,
+      session = _ref.session,
+      spriteSheet = _ref.spriteSheet,
+      x = _ref.x,
+      y = _ref.y,
+      z = _ref.z,
+      width = _ref.width,
+      height = _ref.height,
+      originalWidth = _ref.originalWidth,
+      originalHeight = _ref.originalHeight,
+      _ref$tiled = _ref.tiled,
+      tiled = _ref$tiled === void 0 ? false : _ref$tiled;
+    _classCallCheck(this, Sprite);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
+    this.currentAnimation = null;
+    this.width = 32 || width;
+    this.height = 32 || height;
+    this.originalWidth = originalWidth !== null && originalWidth !== void 0 ? originalWidth : this.width;
+    this.originalHeight = originalHeight !== null && originalHeight !== void 0 ? originalHeight : this.height;
+    this.tiled = tiled;
+    this.scale = 1;
+    this.scaleX = 1;
+    this.scaleY = 1;
+    this.theta = 0;
+    this.shearX = 0;
+    this.shearY = 0;
+    this.xCenter = 0.5;
+    this.yCenter = 1.0;
+    this.visible = false;
+    this.moving = false;
+    this.textures = [];
+    this.frames = [];
+    this.currentDelay = 0;
+    this.currentFrame = 0;
+    this.currentFrames = '';
+    this.speed = 0;
+    this.maxSpeed = 4;
+    this.RIGHT = 0;
+    this.DOWN = 1;
+    this.LEFT = 2;
+    this.UP = 3;
+    this.EAST = this.RIGHT;
+    this.SOUTH = this.DOWN;
+    this.WEST = this.LEFT;
+    this.NORTH = this.UP;
+    this.region = [0, 0, 0, 1];
+    this.spriteBoard = session.spriteBoard;
+    const gl = this.spriteBoard.gl2d.context;
+    this.texture = gl.createTexture();
+    const singlePixel = color ? new Uint8Array(color) : new Uint8Array([Math.trunc(Math.random() * 255), Math.trunc(Math.random() * 255), Math.trunc(Math.random() * 255), 255]);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, singlePixel);
+    if (src && !spriteSheet) {
+      spriteSheet = new _SpriteSheet.SpriteSheet({
+        image: src
+      });
+    }
+    this.spriteSheet = spriteSheet;
+    if (spriteSheet) {
+      spriteSheet.ready.then(() => {
+        this.width = spriteSheet.tileWidth;
+        this.height = spriteSheet.tileHeight;
+        this.originalWidth = originalWidth !== null && originalWidth !== void 0 ? originalWidth : this.width;
+        this.originalHeight = originalHeight !== null && originalHeight !== void 0 ? originalHeight : this.height;
+        this.texture = this.createTexture(spriteSheet.getFrame(0));
+        for (let i = 0; i < spriteSheet.tileCount; i++) {
+          this.textures[i] = this.createTexture(spriteSheet.getFrame(i));
+        }
+        this.changeAnimation('default');
+      });
+    }
+  }
+  return _createClass(Sprite, [{
+    key: "draw",
+    value: function draw(delta) {
+      if (this.currentDelay > 0) {
+        this.currentDelay -= delta;
+      } else {
+        this.currentFrame++;
+        if (this.spriteSheet && this.spriteSheet.animations[this.currentAnimation]) {
+          const animation = this.spriteSheet.animations[this.currentAnimation];
+          if (this.currentFrame >= animation.length) {
+            this.currentFrame = this.currentFrame % animation.length;
+          }
+          const textureId = animation[this.currentFrame].tileid;
+          const texture = this.textures[textureId];
+          if (texture) {
+            this.currentDelay = animation[this.currentFrame].duration;
+            this.texture = texture;
+          }
+        }
+      }
+      const gl = this.spriteBoard.gl2d.context;
+      const zoom = this.spriteBoard.zoomLevel;
+      this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.texture);
+      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width / 2, this.y * zoom + -_Camera.Camera.y + this.spriteBoard.height / 2 + -this.height * zoom, this.width * zoom, this.height * zoom);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {
+        3: 1
+      }));
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+      // Cleanup...
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      return;
+    }
+  }, {
+    key: "changeAnimation",
+    value: function changeAnimation(name) {
+      if (!this.spriteSheet || !this.spriteSheet.animations[name]) {
+        // console.warn(`Animation ${name} not found.`);
+        return;
+      }
+      if (this.currentAnimation !== name) {
+        this.currentAnimation = name;
+        this.currentDelay = 0;
+      }
+    }
+  }, {
+    key: "createTexture",
+    value: function createTexture(pixels) {
+      const gl = this.spriteBoard.gl2d.context;
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      if (this.tiled) {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      } else {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      }
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      return texture;
+    }
+  }, {
+    key: "setRectangle",
+    value: function setRectangle(x, y, width, height) {
+      let transform = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
+      const gl = this.spriteBoard.gl2d.context;
+      const zoom = this.spriteBoard.zoomLevel;
+      const xra = this.width / this.originalWidth;
+      const yra = this.height / this.originalHeight;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, xra, 0.0, 0.0, yra, 0.0, yra, xra, 0.0, xra, yra]), gl.STATIC_DRAW);
+      const x1 = x;
+      const y1 = y;
+      const x2 = x + width;
+      const y2 = y + height;
+      const points = new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]);
+      const xOff = x + width * this.xCenter;
+      const yOff = y + height * this.yCenter;
+
+      // this.theta = performance.now() / 1000;
+
+      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.5, yOff + zoom + 16 * zoom), _Matrix.Matrix.shearX(this.shearX), _Matrix.Matrix.shearX(this.shearY), _Matrix.Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY), _Matrix.Matrix.rotate(this.theta), _Matrix.Matrix.translate(-xOff, -yOff)));
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+      gl.bufferData(gl.ARRAY_BUFFER, t, gl.STATIC_DRAW);
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/SpriteBoard.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SpriteBoard = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _MapRenderer = require("./MapRenderer");
+var _Parallax = require("./Parallax");
+var _Gl2d = require("../gl2d/Gl2d");
+var _Camera = require("./Camera");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
+  function SpriteBoard(_ref) {
+    let element = _ref.element,
+      world = _ref.world;
+    _classCallCheck(this, SpriteBoard);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.maps = [];
+    this.world = world;
+    this.sprites = new Set();
+    this.currentMap = null;
+    this.screenScale = 1;
+    this.zoomLevel = 2;
+    this.mouse = {
+      x: null,
+      y: null,
+      clickX: null,
+      clickY: null
+    };
+    this.parallax = null;
+    this.width = element.width;
+    this.height = element.height;
+    _Camera.Camera.width = element.width;
+    _Camera.Camera.height = element.height;
+    this.gl2d = new _Gl2d.Gl2d(element);
+    this.gl2d.enableBlending();
+    const attributes = ['a_position', 'a_texCoord'];
+    const uniforms = ['u_image', 'u_effect', 'u_tiles', 'u_tileMapping', 'u_size', 'u_scroll', 'u_tileSize', 'u_resolution', 'u_mapTextureSize', 'u_region', 'u_parallax', 'u_time', 'u_renderTiles', 'u_renderParallax', 'u_renderMode'];
+    this.renderMode = 0;
+    this.drawProgram = this.gl2d.createProgram({
+      vertexShader: this.gl2d.createShader('sprite/texture.vert'),
+      fragmentShader: this.gl2d.createShader('sprite/texture.frag'),
+      attributes: attributes,
+      uniforms: uniforms
+    });
+    this.drawProgram.use();
+    this.colorLocation = this.drawProgram.uniforms.u_color;
+    this.tilePosLocation = this.drawProgram.uniforms.u_tileNo;
+    this.regionLocation = this.drawProgram.uniforms.u_region;
+    this.drawLayer = this.gl2d.createTexture(1000, 1000);
+    this.effectLayer = this.gl2d.createTexture(1000, 1000);
+    this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
+    this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
+    document.addEventListener('mousemove', event => {
+      this.mouse.x = event.clientX;
+      this.mouse.y = event.clientY;
+    });
+    this.mapRenderers = new Map();
+    this.following = null;
+  }
+  return _createClass(SpriteBoard, [{
+    key: "draw",
+    value: function draw(delta) {
+      if (this.following) {
+        _Camera.Camera.x = this.following.x * this.zoomLevel || 0;
+        _Camera.Camera.y = this.following.y * this.zoomLevel || 0;
+        const maps = [...this.world.getMapsForPoint(this.following.x, this.following.y)];
+        if (maps[0] && this.currentMap !== maps[0]) {
+          const parallax = this.nextParallax = new _Parallax.Parallax({
+            spriteBoard: this,
+            map: maps[0]
+          });
+          this.nextParallax.ready.then(() => {
+            if (this.nextParallax === parallax) {
+              this.parallax = parallax;
+            }
+          });
+          this.currentMap = maps[0];
+        }
+        const visibleMaps = this.world.getMapsForRect(this.following.x, this.following.y, _Camera.Camera.width, _Camera.Camera.height);
+        const mapRenderers = new Set();
+        visibleMaps.forEach(map => {
+          map.visible = true;
+          if (this.mapRenderers.has(map)) {
+            mapRenderers.add(this.mapRenderers.get(map));
+            return;
+          }
+          const renderer = new _MapRenderer.MapRenderer({
+            spriteBoard: this,
+            map: map
+          });
+          mapRenderers.add(renderer);
+          renderer.resize(_Camera.Camera.width, _Camera.Camera.height);
+          this.mapRenderers.set(map, renderer);
+        });
+        new Set(this.mapRenderers.keys()).difference(visibleMaps).forEach(map => {
+          this.mapRenderers.delete(map);
+          map.visible = false;
+        });
+      }
+      const gl = this.gl2d.context;
+      this.drawProgram.uniformF('u_size', _Camera.Camera.width, _Camera.Camera.height);
+      this.drawProgram.uniformF('u_resolution', gl.canvas.width, gl.canvas.height);
+      this.drawProgram.uniformI('u_renderMode', this.renderMode);
+      this.drawProgram.uniformF('u_time', performance.now());
+      this.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.clearColor(0, 0, 0, 1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      if (this.currentMap && this.currentMap.backgroundColor) {
+        const color = this.currentMap.backgroundColor.substr(1);
+        const r = parseInt(color.substr(-6, 2), 16) / 255;
+        const b = parseInt(color.substr(-4, 2), 16) / 255;
+        const g = parseInt(color.substr(-2, 2), 16) / 255;
+        const a = color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+        gl.clearColor(r, g, b, a);
+      } else {
+        gl.clearColor(0, 0, 0, 1);
+      }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.clearColor(0, 0, 0, 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      this.drawProgram.uniformF('u_size', _Camera.Camera.width, _Camera.Camera.height);
+      this.parallax && this.parallax.draw();
+      this.mapRenderers.forEach(mr => mr.draw());
+      let sprites = [...this.sprites];
+      sprites.sort((a, b) => {
+        if (a.y === undefined) {
+          return -1;
+        }
+        if (b.y === undefined) {
+          return 1;
+        }
+        return a.y - b.y;
+      });
+      sprites.forEach(s => s.visible && s.draw(delta));
+
+      // Set the rectangle for both layers
+      this.setRectangle(0, this.gl2d.element.height, this.gl2d.element.width, -this.gl2d.element.height);
+
+      // Switch to the main framebuffer
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+      // Put the drawLayer in tex0
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
+      this.drawProgram.uniformI('u_image', 0);
+
+      // Put the effectLayer in tex1
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.effectLayer);
+      this.drawProgram.uniformI('u_effect', 1);
+
+      // Draw
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // Cleanup...
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE4);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  }, {
+    key: "resize",
+    value: function resize(width, height) {
+      const gl = this.gl2d.context;
+      width = width || this.gl2d.element.width;
+      height = height || this.gl2d.element.height;
+      this.width = width;
+      this.height = height;
+      _Camera.Camera.x *= this.zoomLevel;
+      _Camera.Camera.y *= this.zoomLevel;
+      _Camera.Camera.width = width / this.zoomLevel;
+      _Camera.Camera.height = height / this.zoomLevel;
+      this.mapRenderers.forEach(mr => mr.resize(_Camera.Camera.width, _Camera.Camera.height));
+      gl.bindTexture(gl.TEXTURE_2D, this.drawLayer);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.bindTexture(gl.TEXTURE_2D, this.effectLayer);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  }, {
+    key: "zoom",
+    value: function zoom(delta) {
+      const max = this.screenScale * 32;
+      const min = this.screenScale * 0.2;
+      const step = 0.05 * this.zoomLevel;
+      let zoomLevel = delta * step + this.zoomLevel;
+      if (zoomLevel < min) {
+        zoomLevel = min;
+      } else if (zoomLevel > max) {
+        zoomLevel = max;
+      }
+      if (Math.abs(zoomLevel - 1) < 0.05) {
+        zoomLevel = 1;
+      }
+      if (this.zoomLevel !== zoomLevel) {
+        this.zoomLevel = zoomLevel;
+        this.resize();
+      }
+    }
+  }, {
+    key: "setRectangle",
+    value: function setRectangle(x, y, width, height) {
+      const gl = this.gl2d.context;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_texCoord);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]), gl.STATIC_DRAW);
+      const x1 = x;
+      const x2 = x + width;
+      const y1 = y;
+      const y2 = y + height;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_position);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]), gl.STREAM_DRAW);
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/SpriteSheet.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.SpriteSheet = void 0;
+var _Tileset2 = require("./Tileset");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+let SpriteSheet = exports.SpriteSheet = /*#__PURE__*/function (_Tileset) {
+  function SpriteSheet(tilesetData) {
+    var _this;
+    _classCallCheck(this, SpriteSheet);
+    _this = _callSuper(this, SpriteSheet, [tilesetData]);
+    _this.animations = {
+      default: [{
+        tileid: 0,
+        duration: Infinity
+      }]
+    };
+    _this.canvas = document.createElement('canvas');
+    _this.context = _this.canvas.getContext("2d", {
+      willReadFrequently: true
+    });
+    _this.frames = [];
+    _this.ready = _this.ready.then(() => {
+      _this.processImage();
+      for (const tile of _this.tiles) {
+        if (tile.animation) {
+          _this.animations[tile.type] = tile.animation;
+        } else if (tile.type) {
+          _this.animations[tile.type] = [{
+            duration: Infinity,
+            tileid: tile.id
+          }];
+        }
+      }
+    });
+    return _this;
+  }
+  _inherits(SpriteSheet, _Tileset);
+  return _createClass(SpriteSheet, [{
+    key: "processImage",
+    value: function processImage() {
+      this.canvas.width = this.image.width;
+      this.canvas.height = this.image.height;
+      this.context.drawImage(this.image, 0, 0);
+      for (let i = 0; i < this.tileCount; i++) {
+        this.frames[i] = this.getFrame(i);
+      }
+    }
+  }, {
+    key: "getFrame",
+    value: function getFrame(frameId) {
+      frameId = frameId % this.tileCount;
+      const i = frameId % this.columns;
+      const j = Math.floor(frameId / this.columns);
+      return this.context.getImageData(i * this.tileWidth, j * this.tileHeight, this.tileWidth, this.tileHeight).data;
+    }
+  }]);
+}(_Tileset2.Tileset);
+});
+
+;require.register("sprite/TextureBank.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TextureBank = void 0;
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+let TextureBank = exports.TextureBank = /*#__PURE__*/_createClass(function TextureBank() {
+  _classCallCheck(this, TextureBank);
+});
+});
+
+;require.register("sprite/Tileset.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Tileset = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Tileset = exports.Tileset = /*#__PURE__*/function () {
+  function Tileset(_ref) {
+    let source = _ref.source,
+      map = _ref.map,
+      firstgid = _ref.firstgid,
+      columns = _ref.columns,
+      image = _ref.image,
+      imageheight = _ref.imageheight,
+      imagewidth = _ref.imagewidth,
+      margin = _ref.margin,
+      name = _ref.name,
+      spacing = _ref.spacing,
+      tilecount = _ref.tilecount,
+      tileheight = _ref.tileheight,
+      tilewidth = _ref.tilewidth,
+      tiles = _ref.tiles;
+    _classCallCheck(this, Tileset);
+    this.firstGid = firstgid !== null && firstgid !== void 0 ? firstgid : 0;
+    this.tileCount = tilecount !== null && tilecount !== void 0 ? tilecount : 0;
+    this.tileHeight = tileheight !== null && tileheight !== void 0 ? tileheight : 0;
+    this.tileWidth = tilewidth !== null && tilewidth !== void 0 ? tilewidth : 0;
+    if (source) {
+      this.source = new URL(source, location);
+    }
+    this.map = map;
+    this.ready = this.getReady({
+      source: source,
+      columns: columns,
+      image: image,
+      imageheight: imageheight,
+      imagewidth: imagewidth,
+      margin: margin,
+      name: name,
+      spacing: spacing,
+      tilecount: tilecount,
+      tileheight: tileheight,
+      tilewidth: tilewidth,
+      tiles: tiles
+    });
+  }
+  return _createClass(Tileset, [{
+    key: "getReady",
+    value: async function getReady(_ref2) {
+      let source = _ref2.source,
+        columns = _ref2.columns,
+        image = _ref2.image,
+        imageheight = _ref2.imageheight,
+        imagewidth = _ref2.imagewidth,
+        margin = _ref2.margin,
+        name = _ref2.name,
+        spacing = _ref2.spacing,
+        tilecount = _ref2.tilecount,
+        tileheight = _ref2.tileheight,
+        tilewidth = _ref2.tilewidth,
+        tiles = _ref2.tiles;
+      if (source) {
+        var _await$await$fetch$js = await (await fetch(source)).json();
+        columns = _await$await$fetch$js.columns;
+        image = _await$await$fetch$js.image;
+        imageheight = _await$await$fetch$js.imageheight;
+        imagewidth = _await$await$fetch$js.imagewidth;
+        margin = _await$await$fetch$js.margin;
+        name = _await$await$fetch$js.name;
+        spacing = _await$await$fetch$js.spacing;
+        tilecount = _await$await$fetch$js.tilecount;
+        tileheight = _await$await$fetch$js.tileheight;
+        tilewidth = _await$await$fetch$js.tilewidth;
+        tiles = _await$await$fetch$js.tiles;
+        for (const tile of tiles) {
+          tile.id += this.firstGid;
+        }
+      }
+      this.columns = columns !== null && columns !== void 0 ? columns : 1;
+      this.margin = margin !== null && margin !== void 0 ? margin : 0;
+      this.name = name !== null && name !== void 0 ? name : image;
+      this.spacing = spacing !== null && spacing !== void 0 ? spacing : 0;
+      this.tiles = tiles !== null && tiles !== void 0 ? tiles : [];
+      this.tileCount = tilecount !== null && tilecount !== void 0 ? tilecount : 1;
+      this.image = new Image();
+      if (this.source) {
+        this.image.src = new URL(image, this.source);
+      } else if (this.map) {
+        this.image.src = new URL(image, this.map.src);
+      } else {
+        this.image.src = new URL(image, location);
+      }
+      await new Promise(accept => this.image.onload = () => accept());
+      this.imageWidth = imagewidth !== null && imagewidth !== void 0 ? imagewidth : this.image.width;
+      this.imageHeight = imageheight !== null && imageheight !== void 0 ? imageheight : this.image.height;
+      this.tileWidth = tilewidth !== null && tilewidth !== void 0 ? tilewidth : this.imageWidth;
+      this.tileHeight = tileheight !== null && tileheight !== void 0 ? tileheight : this.imageHeight;
+      this.rows = Math.ceil(imageheight / tileheight) || 1;
+    }
+  }]);
+}();
+});
+
+;require.register("sprite/texture.frag", function(exports, require, module) {
+module.exports = "// texture.frag\n#define M_PI 3.1415926535897932384626433832795\n#define M_TAU M_PI / 2.0\nprecision mediump float;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nuniform sampler2D u_image;\nuniform sampler2D u_effect;\nuniform sampler2D u_tiles;\nuniform sampler2D u_tileMapping;\n\nuniform vec2 u_size;\nuniform vec2 u_tileSize;\nuniform vec2 u_resolution;\nuniform vec2 u_mapTextureSize;\n\nuniform vec4 u_color;\nuniform vec4 u_region;\nuniform vec2 u_parallax;\nuniform vec2 u_scroll;\n\nuniform float u_time;\nuniform int u_renderTiles;\nuniform int u_renderParallax;\nuniform int u_renderMode;\n\nfloat masked = 0.0;\nfloat sorted = 1.0;\nfloat displace = 1.0;\nfloat blur = 1.0;\n\nvec2 rippleX(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(\n    v_texCoord.x + sin(v_texCoord.y * (a * u_size.y) + b) * c / u_size.x,\n    v_texCoord.y\n  );\n\n  if (rippled.x < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.x > u_size.x) {\n    rippled.x = u_size.x - (rippled.x - u_size.x);\n  }\n\n  return rippled;\n}\n\nvec2 rippleY(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(v_texCoord.x, v_texCoord.y + sin(v_texCoord.x * (a * u_size.x) + b) * c / u_size.y);\n\n  if (rippled.y < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.y > u_size.y) {\n    rippled.y = u_size.y - (rippled.y - u_size.y);\n  }\n\n  return rippled;\n}\n\nvec4 motionBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = originalColor;\n\n  const float max = 10.0;\n  float weight = 0.85;\n\n  for (float i = 0.0; i < max; i += 1.0) {\n    if(i > abs(magnitude) || originalColor.a < 1.0) {\n      break;\n    }\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight;\n    weight *= 0.8;\n  }\n\n  return dispColor;\n}\n\nvec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = texture2D(image, textCoord);\n\n  const float max = 10.0;\n  float weight = 0.65;\n\n  for (float i = 0.0; i < max; i += 0.25) {\n    if(i > abs(magnitude)) {\n      break;\n    }\n    vec4 dispColorUp = texture2D(image, textCoord + vec2(\n      cos(angle) * -i * sign(magnitude) / u_size.x,\n      sin(angle) * -i * sign(magnitude) / u_size.y\n    ));\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight * 0.5 + dispColorUp * weight * 0.5;\n    weight *= 0.70;\n  }\n\n  return dispColor;\n}\n\nvoid main() {\n  vec4 originalColor = texture2D(u_image, v_texCoord);\n  vec4 effectColor = texture2D(u_effect,  v_texCoord);\n\n  // This only applies when drawing the parallax background\n  if (u_renderParallax == 1) {\n\n    float texelSize = 1.0 / u_size.x;\n\n    vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)\n      + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);\n      // + vec2(u_time / 10000.0, 0.0);\n      // + vec2(, 0.0);\n      ;\n\n    gl_FragColor = texture2D(u_image,  parallaxCoord);\n\n    return;\n  }\n\n  // This only applies when drawing tiles.\n  if (u_renderTiles == 1) {\n    float xTiles = floor(u_size.x / u_tileSize.x);\n    float yTiles = floor(u_size.y / u_tileSize.y);\n\n    float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;\n    float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;\n\n    float inv_xTiles = 1.0 / xTiles;\n    float inv_yTiles = 1.0 / yTiles;\n\n    float xTile = floor(xT) * inv_xTiles;\n    float yTile = floor(yT) * inv_yTiles;\n\n    float xOff = (xT * inv_xTiles - xTile) * xTiles;\n    float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;\n\n    float xWrap = u_mapTextureSize.x / u_tileSize.x;\n    float yWrap = u_mapTextureSize.y / u_tileSize.y;\n\n    // Mode 1 draws tiles' x/y values as red & green\n    if (u_renderMode == 1) {\n      gl_FragColor = vec4(xTile, yTile, 0, 1.0);\n      return;\n    }\n\n    // Mode 2 is the same as mode 1 but adds combines\n    // internal tile x/y to the blue channel\n    if (u_renderMode == 2) {\n      gl_FragColor = vec4(xTile, yTile, (xOff + yOff) * 0.5, 1.0);\n      return;\n    }\n\n    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));\n\n    float lo = tile.r * 256.0;\n    float hi = tile.g * 256.0 * 256.0;\n\n    float tileNumber = lo + hi;\n\n    if (tileNumber == 0.0) {\n      gl_FragColor.a = 0.0;\n      return;\n    }\n\n    // Mode 3 uses the tile number for the red/green channels\n    if (u_renderMode == 3) {\n      gl_FragColor = tile;\n      gl_FragColor.b = 0.5;\n      gl_FragColor.a = 1.0;\n      return;\n    }\n\n    // Mode 4 normalizes the tile number to all channels\n    if (u_renderMode == 4) {\n      gl_FragColor = vec4(\n        mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , 1.0\n      );\n      return;\n    }\n\n    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));\n    float tileSetY = floor((-1.0 + tileNumber) / xWrap);\n\n    vec4 tileColor = texture2D(u_tiles, vec2(\n      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)\n      , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)\n    ));\n\n    gl_FragColor = tileColor;\n\n    return;\n  }\n\n  // This if/else block only applies\n  // when we're drawing the effectBuffer\n  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) {\n    if (masked < 1.0 || originalColor.a > 0.0) {\n      gl_FragColor = u_region;\n    }\n    return;\n  }\n  else if (u_region.a > 0.0) {\n    if (sorted > 0.0) {\n      gl_FragColor = vec4(0, 0, 0, originalColor.a > 0.0 ? 1.0 : 0.0);\n    }\n    else {\n      gl_FragColor = vec4(0, 0, 0, 0.0);\n    }\n    return;\n  };\n\n  // Mode 5 draws the effect buffer to the screen\n  if (u_renderMode == 5) {\n    gl_FragColor = effectColor;\n    return;\n  }\n\n  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);\n\n  // This if/else block only applies\n  // when we're drawing the drawBuffer\n  if (effectColor == vec4(0, 1, 1, 1)) { // Water region\n    vec2 texCoord = v_texCoord;\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      texCoord = rippleX(v_texCoord, ripple.x, ripple.y, ripple.z);\n      v_blurredColor = texture2D(u_image, texCoord);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = linearBlur(u_image, 0.0, 1.0, texCoord);\n    }\n    gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;\n  }\n  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region\n    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      v_blurredColor = texture2D(u_image, v_displacement);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = motionBlur(u_image, -M_TAU, 1.0, v_displacement);\n    }\n    gl_FragColor = v_blurredColor * 0.75 + effectColor * 0.25;\n  }\n  else { // Null region\n    gl_FragColor = originalColor;\n  }\n}\n"
+});
+
+;require.register("sprite/texture.vert", function(exports, require, module) {
+module.exports = "// texture.vert\nprecision mediump float;\n\nattribute vec2 a_position;\nattribute vec2 a_texCoord;\n\nuniform vec2 u_resolution;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nvoid main()\n{\n  vec2 zeroToOne = a_position / u_resolution;\n  vec2 zeroToTwo = zeroToOne * 2.0;\n  vec2 clipSpace = zeroToTwo - 1.0;\n\n  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);\n  v_texCoord  = a_texCoord;\n  v_position  = a_position;\n}\n"
+});
+
+;require.register("ui/OnScreenJoyPad.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.OnScreenJoyPad = void 0;
+var _View2 = require("curvature/base/View");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == typeof e || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
+  function OnScreenJoyPad(args) {
+    var _this;
+    _classCallCheck(this, OnScreenJoyPad);
+    _this = _callSuper(this, OnScreenJoyPad, [args]);
+    _this.template = require('./onScreenJoyPad.tmp');
+    _this.dragStart = false;
+    _this.args.dragging = false;
+    _this.args.x = 0;
+    _this.args.y = 0;
+    window.addEventListener('mousemove', event => {
+      _this.moveStick(event);
+    });
+    window.addEventListener('mouseup', event => {
+      _this.dropStick(event);
+    });
+    window.addEventListener('touchmove', event => {
+      _this.moveStick(event);
+    });
+    window.addEventListener('touchend', event => {
+      _this.dropStick(event);
+    });
+    return _this;
+  }
+  _inherits(OnScreenJoyPad, _View);
+  return _createClass(OnScreenJoyPad, [{
+    key: "dragStick",
+    value: function dragStick(event) {
+      let pos = event;
+      event.preventDefault();
+      if (event.touches && event.touches[0]) {
+        pos = event.touches[0];
+      }
+      this.args.dragging = true;
+      this.dragStart = {
+        x: pos.clientX,
+        y: pos.clientY
+      };
+    }
+  }, {
+    key: "moveStick",
+    value: function moveStick(event) {
+      if (this.args.dragging) {
+        let pos = event;
+        if (event.touches && event.touches[0]) {
+          pos = event.touches[0];
+        }
+        this.args.xx = pos.clientX - this.dragStart.x;
+        this.args.yy = pos.clientY - this.dragStart.y;
+        const limit = 50;
+        if (this.args.xx < -limit) {
+          this.args.x = -limit;
+        } else if (this.args.xx > limit) {
+          this.args.x = limit;
+        } else {
+          this.args.x = this.args.xx;
+        }
+        if (this.args.yy < -limit) {
+          this.args.y = -limit;
+        } else if (this.args.yy > limit) {
+          this.args.y = limit;
+        } else {
+          this.args.y = this.args.yy;
+        }
+      }
+    }
+  }, {
+    key: "dropStick",
+    value: function dropStick(event) {
+      this.args.dragging = false;
+      this.args.x = 0;
+      this.args.y = 0;
+    }
+  }]);
+}(_View2.View);
+});
+
+;require.register("ui/onScreenJoyPad.tmp.html", function(exports, require, module) {
+module.exports = "<div class = \"controller\">\n\t<div class = \"joystick\" cv-on = \"\n\t\ttouchstart:dragStick(event):p;\n\t\tmousedown:dragStick(event):p;\n\t\">\n\t\t<div class = \"pad\" style = \"position: relative; transform:translate([[x]]px,[[y]]px);\"></div>\n\t</div>\n\n\t<div class = \"button\">A</div>\n\t<div class = \"button\">B</div>\n\t<div class = \"button\">C</div>\n</div>"
+});
+
+;require.register("world/EntityPallet.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.EntityPallet = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const objectPallet = {};
+let EntityPallet = exports.EntityPallet = /*#__PURE__*/function () {
+  function EntityPallet() {
+    _classCallCheck(this, EntityPallet);
+  }
+  return _createClass(EntityPallet, null, [{
+    key: "resolve",
+    value: async function resolve(typeName) {
+      if (typeName[0] === '@') {
+        if (objectPallet[typeName]) {
+          return objectPallet[typeName];
+        }
+      } else if (typeName === 'http://' || typeName === 'https://') {
+        return (await import(typeName)).default;
+      }
+    }
+  }, {
+    key: "register",
+    value: function register(typeName, spawnClass) {
+      if (objectPallet[typeName]) {
+        console.warn(`Overwriting spawnclass!`);
+      }
+      objectPallet[typeName] = spawnClass;
+    }
+  }]);
+}();
+});
+
+;require.register("world/Properties.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Properties = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let Properties = exports.Properties = /*#__PURE__*/function () {
+  function Properties(properties, map) {
+    _classCallCheck(this, Properties);
+    this.properties = {};
+    for (const property of properties) {
+      if (!this.properties[property.name]) {
+        this.properties[property.name] = [];
+      }
+      this.properties[property.name].push(property.value);
+    }
+  }
+  return _createClass(Properties, [{
+    key: "get",
+    value: function get(name) {
+      let index = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      if (!this.properties[name]) {
+        return;
+      }
+      return this.properties[name][index];
+    }
+  }, {
+    key: "getAll",
+    value: function getAll(name) {
+      return [...this.properties[name]];
+    }
+  }]);
+}();
+});
+
+;require.register("world/TileMap.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TileMap = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _EntityPallet = require("./EntityPallet");
+var _Tileset = require("../sprite/Tileset");
+var _QuickTree = require("../math/QuickTree");
+var _Spawner = require("../model/Spawner");
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let TileMap = exports.TileMap = /*#__PURE__*/function () {
+  function TileMap(_ref) {
+    let fileName = _ref.fileName,
+      session = _ref.session,
+      x = _ref.x,
+      y = _ref.y,
+      width = _ref.width,
+      height = _ref.height;
+    _classCallCheck(this, TileMap);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.src = fileName;
+    this.backgroundColor = null;
+    this.tileCount = 0;
+    this.xWorld = x;
+    this.yWorld = y;
+    this.width = width;
+    this.height = height;
+    this.tileWidth = 0;
+    this.tileHeight = 0;
+    this.tileSetWidth = 0;
+    this.tileSetHeight = 0;
+    this.pixels = [];
+    this.image = document.createElement('img');
+    this.session = session;
+    this.properties = {};
+    this.entityDefs = {};
+    this.emptyTiles = new Set();
+    this.tilesIndexes = new Map();
+    this.canvases = new Map();
+    this.contexts = new Map();
+    this.tiles = null;
+    this.tileLayers = [];
+    this.imageLayers = [];
+    this.objectLayers = [];
+    this.ready = this.getReady(fileName);
+    this.animations = new Map();
+    this.visible = false;
+    this.quadTree = new _QuickTree.QuickTree(x, y, x + this.width, y + this.height);
+  }
+  return _createClass(TileMap, [{
+    key: "getReady",
+    value: async function getReady(src) {
+      const mapData = await (await fetch(src)).json();
+      this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
+      this.tileLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class !== 'collision');
+      this.imageLayers = mapData.layers.filter(layer => layer.type === 'imagelayer');
+      this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
+      this.backgroundColor = mapData.backgroundcolor;
+      if (mapData.properties) for (const property of mapData.properties) {
+        this.properties[property.name] = property.value;
+      }
+      if (this.properties.backgroundColor) {
+        this.backgroundColor = this.properties.backgroundColor;
+      }
+      const tilesets = mapData.tilesets.map(tilesetData => {
+        if (tilesetData.source) {
+          tilesetData.source = new URL(tilesetData.source, src).href;
+        } else {
+          tilesetData.map = this;
+        }
+        return new _Tileset.Tileset(tilesetData);
+      });
+      this.width = mapData.width;
+      this.height = mapData.height;
+      this.tileWidth = mapData.tilewidth;
+      this.tileHeight = mapData.tileheight;
+      await Promise.all(tilesets.map(t => t.ready));
+      this.assemble(tilesets);
+      await this.spawn();
+      return this;
+    }
+  }, {
+    key: "assemble",
+    value: function assemble(tilesets) {
+      tilesets.sort((a, b) => a.firstGid - b.firstGid);
+      const tileTotal = this.tileCount = tilesets.reduce((a, b) => a.tileCount + b.tileCount, {
+        tileCount: 0
+      });
+      const size = Math.ceil(Math.sqrt(tileTotal));
+      const destination = document.createElement('canvas');
+      this.tileSetWidth = destination.width = size * this.tileWidth;
+      this.tileSetHeight = destination.height = Math.ceil(tileTotal / size) * this.tileHeight;
+      const ctxDestination = destination.getContext('2d', {
+        willReadFrequently: true
+      });
+      for (const tileset of tilesets) {
+        const image = tileset.image;
+        const source = document.createElement('canvas');
+        source.width = image.width;
+        source.height = image.height;
+        const ctxSource = source.getContext('2d', {
+          willReadFrequently: true
+        });
+        ctxSource.drawImage(image, 0, 0);
+        for (let i = 0; i < tileset.tileCount; i++) {
+          const xSource = i * this.tileWidth % tileset.imageWidth;
+          const ySource = Math.floor(i * this.tileWidth / tileset.imageWidth) * this.tileHeight;
+          const xDestination = i * this.tileWidth % destination.width;
+          const yDestination = Math.floor(i * this.tileWidth / destination.width) * this.tileHeight;
+          const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
+          ctxDestination.putImageData(tile, xDestination, yDestination);
+          const pixels = new Uint32Array(tile.data.buffer);
+          let empty = true;
+          for (const pixel of pixels) {
+            if (pixel > 0) {
+              empty = false;
+            }
+          }
+          if (empty) {
+            this.emptyTiles.add(i);
+          }
+        }
+        for (const tileData of tileset.tiles) {
+          if (tileData.animation) {
+            this.animations.set(tileData.id, tileData.animation);
+          }
+        }
+      }
+      this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
+      this.tiles = ctxDestination;
+      for (const layer of [...this.tileLayers, ...this.collisionLayers]) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', {
+          willReadFrequently: true
+        });
+        this.canvases.set(layer, canvas);
+        this.contexts.set(layer, context);
+        const tileValues = new Uint32Array(layer.data.map(t => 0 + t));
+        const tilePixels = new Uint8ClampedArray(tileValues.buffer);
+        for (const i in tileValues) {
+          const tile = tileValues[i];
+          if (this.animations.has(tile)) {
+            console.log({
+              i: i,
+              tile: tile
+            }, this.animations.get(tile));
+          }
+        }
+        for (let i = 3; i < tilePixels.length; i += 4) {
+          tilePixels[i] = 0xFF;
+        }
+        this.tilesIndexes.set(layer, tileValues);
+        canvas.width = this.width;
+        canvas.height = this.height;
+        context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
+      }
+    }
+  }, {
+    key: "spawn",
+    value: async function spawn() {
+      for (const layer of this.objectLayers) {
+        const entityDefs = layer.objects;
+        for (const entityDef of entityDefs) {
+          this.entityDefs[entityDef.id] = _objectSpread({}, entityDef);
+          entityDef.x += this.xWorld;
+          entityDef.y += this.yWorld;
+          if (!entityDef.type || entityDef.name === 'player-start') {
+            continue;
+          }
+          const spawnClass = await _EntityPallet.EntityPallet.resolve(entityDef.type);
+          if (!spawnClass) {
+            console.warn(`SpawnClass not found: ${entityDef.type}`);
+            continue;
+          }
+          const spawner = new _Spawner.Spawner(_objectSpread(_objectSpread({
+            spawnType: entityDef.type,
+            spawnClass: spawnClass,
+            entityDef: entityDef
+          }, entityDef), {}, {
+            spriteBoard: this.session.spriteBoard,
+            session: this.session,
+            world: this.session.world,
+            map: this
+          }));
+          this.session.addEntity(spawner);
+          this.quadTree.add(spawner);
+        }
+      }
+    }
+  }, {
+    key: "getCollisionTile",
+    value: function getCollisionTile(x, y, z) {
+      if (!this.collisionLayers || !this.collisionLayers[z]) {
+        return false;
+      }
+      return this.getTileFromLayer(this.collisionLayers[z], x, y);
+    }
+  }, {
+    key: "getColor",
+    value: function getColor(x, y) {
+      let z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      return this.getPixel(this.tileLayers[z], x, y, z);
+    }
+  }, {
+    key: "getSolid",
+    value: function getSolid(x, y) {
+      let z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      if (!this.collisionLayers || !this.collisionLayers[z]) {
+        return false;
+      }
+      const pixel = this.getPixel(this.collisionLayers[z], x, y, z);
+      if (pixel === 0) {
+        return true;
+      }
+      return pixel;
+    }
+  }, {
+    key: "getPixel",
+    value: function getPixel(layer, x, y) {
+      const gid = this.getTileFromLayer(layer, x, y);
+      if (gid === false || gid === -1) {
+        return false;
+      }
+      const offsetX = Math.trunc(x % this.tileWidth);
+      const offsetY = Math.trunc(y % this.tileHeight);
+      const tileSetX = gid * this.tileWidth % this.tileSetWidth;
+      const tileSetY = Math.floor(gid * this.tileWidth / this.tileSetWidth);
+      return this.pixels[tileSetX + offsetX + (tileSetY + offsetY) * this.tileSetWidth];
+    }
+  }, {
+    key: "getTileFromLayer",
+    value: function getTileFromLayer(layer, x, y) {
+      const localX = -this.xWorld + x;
+      const localY = -this.yWorld + y;
+      if (localX < 0 || localX >= this.width * this.tileWidth || localY < 0 || localY >= this.height * this.tileWidth) {
+        return false;
+      }
+      const tileX = Math.floor(localX / this.tileWidth);
+      const tileY = Math.floor(localY / this.tileHeight);
+      return -1 + layer.data[tileX + tileY * this.width];
+    }
+  }, {
+    key: "getSlice",
+    value: function getSlice(x, y, w, h) {
+      let t = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+      return this.tileLayers.map(layer => this.contexts.get(layer)).map(context => context.getImageData(x, y, w, h).data);
+      return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
+    }
+  }, {
+    key: "getTileImage",
+    value: function getTileImage(gid) {
+      gid = -1 + gid;
+      const tileSetX = gid * this.tileWidth % this.tileSetWidth;
+      const tileSetY = Math.floor(gid * this.tileWidth / this.tileSetWidth) * this.tileHeight;
+      const imageData = this.tiles.getImageData(tileSetX, tileSetY, this.tileWidth, this.tileHeight);
+      const c = document.createElement('canvas');
+      const cc = c.getContext('2d');
+      c.width = this.tileWidth;
+      c.height = this.tileHeight;
+      cc.putImageData(imageData, 0, 0);
+      return c.toDataURL();
+    }
+  }]);
+}();
+});
+
+;require.register("world/World.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.World = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _Rectangle = require("../math/Rectangle");
+var _TileMap = require("./TileMap");
+var _SMTree = require("../math/SMTree");
+var _Ray = require("../math/Ray");
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let World = exports.World = /*#__PURE__*/function () {
+  function World(_ref) {
+    let source = _ref.source,
+      session = _ref.session;
+    _classCallCheck(this, World);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.ready = this.getReady(source);
+    this.maps = [];
+    this.mTree = new _SMTree.SMTree();
+    this.rectMap = new Map();
+    this.session = session;
+    this.source = source;
+  }
+  return _createClass(World, [{
+    key: "getReady",
+    value: async function getReady(src) {
+      const worldData = await (await fetch(src)).json();
+      return await Promise.all(worldData.maps.map((m, i) => {
+        m.fileName = new URL(m.fileName, src).href;
+        const map = new _TileMap.TileMap(_objectSpread(_objectSpread({}, m), {}, {
+          session: this.session
+        }));
+        map.xWorld = m.x;
+        map.yWorld = m.y;
+        this.maps[i] = map;
+        const rect = new _Rectangle.Rectangle(m.x, m.y, m.x + m.width, m.y + m.height);
+        this.rectMap.set(rect, map);
+        this.mTree.add(rect);
+        return map.ready;
+      }));
+    }
+  }, {
+    key: "getMapsForPoint",
+    value: function getMapsForPoint(x, y) {
+      const rects = this.mTree.query(x, y, x, y);
+      const maps = new Set();
+      for (const rect of rects) {
+        const map = this.rectMap.get(rect);
+        maps.add(map);
+      }
+      return maps;
+    }
+  }, {
+    key: "getMapsForRect",
+    value: function getMapsForRect(x, y, w, h) {
+      const result = new Set();
+      const rects = this.mTree.query(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
+      for (const rect of rects) {
+        result.add(this.rectMap.get(rect));
+      }
+      return result;
+    }
+  }, {
+    key: "getSolid",
+    value: function getSolid(x, y, z) {
+      const maps = this.getMapsForPoint(x, y);
+      for (const map of maps) {
+        const solid = map.getSolid(x, y, z);
+        if (solid) {
+          return solid;
+        }
+      }
+      return null;
+    }
+  }, {
+    key: "getCollisionTile",
+    value: function getCollisionTile(x, y, z) {
+      const maps = this.getMapsForPoint(x, y);
+      for (const map of maps) {
+        const tile = map.getCollisionTile(x, y, z);
+        if (tile > 0) {
+          return tile;
+        }
+      }
+      return null;
+    }
+  }, {
+    key: "getEntitiesForPoint",
+    value: function getEntitiesForPoint(x, y) {
+      const tilemaps = this.getMapsForPoint(x, y);
+      let result = new Set();
+      for (const tilemap of tilemaps) {
+        if (!tilemap.visible) {
+          continue;
+        }
+        const w = 500;
+        const h = 500;
+        const entities = tilemap.quadTree.select(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
+        for (const entity of entities) {
+          if (entity.rect.contains(x, y)) {
+            result.add(entity);
+          }
+        }
+      }
+      return result;
+    }
+  }, {
+    key: "getEntitiesForRect",
+    value: function getEntitiesForRect(x, y, w, h) {
+      const tilemaps = this.getMapsForRect(x, y, w, h);
+      let result = new Set();
+      for (const tilemap of tilemaps) {
+        if (!tilemap.visible) {
+          continue;
+        }
+        result = result.union(tilemap.quadTree.select(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5));
+      }
+      return result;
+    }
+  }, {
+    key: "castRay",
+    value: function castRay(startX, startY, layerId, angle) {
+      let maxDistance = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+      let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : _Ray.Ray.DEFAULT_FLAGS;
+      return _Ray.Ray.cast(this, startX, startY, layerId, angle, maxDistance, rayFlags);
+    }
+  }, {
+    key: "castTerrainRay",
+    value: function castTerrainRay(startX, startY, layerId, angle) {
+      let maxDistance = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+      let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : _Ray.Ray.DEFAULT_FLAGS;
+      return _Ray.Ray.castTerrain(this, startX, startY, layerId, angle, maxDistance, rayFlags);
+    }
+  }, {
+    key: "castEntityRay",
+    value: function castEntityRay(startX, startY, endX, endY) {
+      let rayFlags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _Ray.Ray.DEFAULT_FLAGS;
+      return _Ray.Ray.castEntity(this, startX, startY, endX, endY, rayFlags);
+    }
+  }]);
+}();
+});
+
+;require.alias("import-mapper/ImportMapper.js", "import-mapper");require.register("___globals___", function(exports, require, module) {
+  
+});})();require('___globals___');
+
+"use strict";
+
+/* jshint ignore:start */
+(function () {
+  var WebSocket = window.WebSocket || window.MozWebSocket;
+  var br = window.brunch = window.brunch || {};
+  var ar = br['auto-reload'] = br['auto-reload'] || {};
+  if (!WebSocket || ar.disabled) return;
+  if (window._ar) return;
+  window._ar = true;
+  var cacheBuster = function cacheBuster(url) {
+    var date = Math.round(Date.now() / 1000).toString();
+    url = url.replace(/(\&|\\?)cacheBuster=\d*/, '');
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cacheBuster=' + date;
+  };
+  var browser = navigator.userAgent.toLowerCase();
+  var forceRepaint = ar.forceRepaint || browser.indexOf('chrome') > -1;
+  var reloaders = {
+    page: function page() {
+      window.location.reload(true);
+    },
+    stylesheet: function stylesheet() {
+      [].slice.call(document.querySelectorAll('link[rel=stylesheet]')).filter(function (link) {
+        var val = link.getAttribute('data-autoreload');
+        return link.href && val != 'false';
+      }).forEach(function (link) {
+        link.href = cacheBuster(link.href);
+      });
+
+      // Hack to force page repaint after 25ms.
+      if (forceRepaint) setTimeout(function () {
+        document.body.offsetHeight;
+      }, 25);
+    },
+    javascript: function javascript() {
+      var scripts = [].slice.call(document.querySelectorAll('script'));
+      var textScripts = scripts.map(function (script) {
+        return script.text;
+      }).filter(function (text) {
+        return text.length > 0;
+      });
+      var srcScripts = scripts.filter(function (script) {
+        return script.src;
+      });
+      var loaded = 0;
+      var all = srcScripts.length;
+      var onLoad = function onLoad() {
+        loaded = loaded + 1;
+        if (loaded === all) {
+          textScripts.forEach(function (script) {
+            eval(script);
+          });
+        }
+      };
+      srcScripts.forEach(function (script) {
+        var src = script.src;
+        script.remove();
+        var newScript = document.createElement('script');
+        newScript.src = cacheBuster(src);
+        newScript.async = true;
+        newScript.onload = onLoad;
+        document.head.appendChild(newScript);
+      });
+    }
+  };
+  var port = ar.port || 9485;
+  var host = br.server || window.location.hostname || 'localhost';
+  var _connect = function connect() {
+    var connection = new WebSocket('ws://' + host + ':' + port);
+    connection.onmessage = function (event) {
+      if (ar.disabled) return;
+      var message = event.data;
+      var reloader = reloaders[message] || reloaders.page;
+      reloader();
+    };
+    connection.onerror = function () {
+      if (connection.readyState) connection.close();
+    };
+    connection.onclose = function () {
+      window.setTimeout(_connect, 1000);
+    };
+  };
+  _connect();
+})();
+/* jshint ignore:end */
+;
+//# sourceMappingURL=app.js.map

@@ -63,8 +63,8 @@ export class MapRenderer
 
 		const gl = this.spriteBoard.gl2d.context;
 
-		const x = this.spriteBoard.following.sprite.x;
-		const y = this.spriteBoard.following.sprite.y;
+		const x = this.spriteBoard.following.x;
+		const y = this.spriteBoard.following.y;
 
 		const zoom = this.spriteBoard.zoomLevel;
 

@@ -2,7 +2,7 @@ export class BallController
 {
 	static spriteImage = './sphere.png';
 
-	onCreate(entity, entityData)
+	create(entity, entityData)
 	{
 		entity.xSpeed = 0;
 		entity.ySpeed = 0;
@@ -21,8 +21,7 @@ export class BallController
 			let yMove = entity.ySpeed;
 
 			const h = world.castTerrainRay(
-				world
-				, entity.x + 0
+				entity.x + 0
 				, entity.y + -16
 				, 0
 				, entity.xSpeed < 0 ? Math.PI : 0
@@ -31,8 +30,7 @@ export class BallController
 			);
 
 			const v = world.castTerrainRay(
-				world
-				, entity.x + 0
+				entity.x + 0
 				, entity.y + -16
 				, 0
 				, Math.PI * 0.5 * Math.sign(entity.ySpeed)
