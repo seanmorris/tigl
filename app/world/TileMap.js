@@ -42,8 +42,17 @@ class Animation
 
 export class TileMap
 {
-	constructor({fileName, session, x, y, width, height})
+	constructor(mapData)
 	{
+		const {
+			fileName
+			, session
+			, x
+			, y
+			, width
+			, height
+		} = mapData;
+
 		this[Bindable.Prevent] = true;
 		this.src = fileName;
 		this.backgroundColor = null;
@@ -51,6 +60,8 @@ export class TileMap
 
 		this.x = x;
 		this.y = y;
+
+		this.loaded = false;
 
 		this.worldWidth = width;
 		this.worldHeight = height;
@@ -68,6 +79,8 @@ export class TileMap
 		this.tileSetWidth  = 0;
 		this.tileSetHeight = 0;
 
+		this.props = new Properties(mapData.properties ?? [], this);
+
 		this.pixels = [];
 		this.image = document.createElement('img');
 		this.session = session;
@@ -79,11 +92,12 @@ export class TileMap
 		this.contexts = new Map;
 		this.tiles = null;
 
+		this.xOrigin = x;
+		this.yOrigin = y;
+
 		this.tileLayers   = [];
 		this.imageLayers  = [];
 		this.objectLayers = [];
-
-		this.ready = this.getReady(fileName);
 
 		this.visible = false;
 
@@ -94,11 +108,20 @@ export class TileMap
 		this.animationTrees = new Map;
 		this.entityMap = new Map;
 
-		this.xOrigin = x;
-		this.yOrigin = y;
-
 		this.animatedTiles = new Map;
 		this.animations = new Map;
+
+		// this.ready = this.getReady(fileName);
+	}
+
+	initialize()
+	{
+		if(this.ready)
+		{
+			return this.ready;
+		}
+
+		return this.ready = this.getReady(this.src);
 	}
 
 	selectEntities(wx1, wy1, wx2, wy2)
@@ -130,9 +153,9 @@ export class TileMap
 			cache.set(src, fetch(src));
 		}
 
-		const mapData= await (await cache.get(src)).clone().json();
+		const mapData = await (await cache.get(src)).clone().json();
 
-		this.props = new Properties(mapData.properties ?? [], this);
+		this.props.add(...mapData.properties ?? []);
 
 		mapData.layers.forEach(layer => {
 			layer.props = new Properties(layer.properties ?? [], this);
@@ -177,6 +200,8 @@ export class TileMap
 
 		this.assemble(tilesets);
 		await this.spawn();
+
+		this.loaded = true;
 
 		return this;
 	}
@@ -250,8 +275,6 @@ export class TileMap
 		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
 		this.tiles = ctxDestination;
 
-		const tilesWide = this.width;
-
 		for(const layer of [...this.tileLayers, ...this.collisionLayers])
 		{
 			const canvas = document.createElement('canvas');
@@ -314,8 +337,8 @@ export class TileMap
 			{
 				this.entityDefs[ entityDef.id ] = {...entityDef};
 
-				entityDef.x += this.x + (this.x - this.xOrigin);
-				entityDef.y += this.y + (this.y - this.yOrigin);
+				entityDef.x += this.xOrigin;
+				entityDef.y += this.yOrigin;
 
 				if(!entityDef.type || entityDef.name === '#player-start')
 				{
@@ -330,6 +353,7 @@ export class TileMap
 						, ...entityDef
 					});
 
+					this.session.world.motionGraph.add(region, this);
 					this.session.spriteBoard.regions.add(region);
 					this.regionTree.add(region.rect);
 					continue;
@@ -352,6 +376,8 @@ export class TileMap
 					, session: this.session
 					, world: this.session.world
 					, map: this
+					, x: entityDef.x + (this.x - this.xOrigin)
+					, y: entityDef.y + (this.y - this.yOrigin)
 				});
 
 				this.session.world.motionGraph.add(spawner, this);
@@ -364,6 +390,11 @@ export class TileMap
 
 	simulate(delta)
 	{
+		if(!this.loaded)
+		{
+			return;
+		}
+
 		const startX = this.x;
 		const startY = this.y;
 
@@ -391,6 +422,11 @@ export class TileMap
 
 	getCollisionTile(x, y, z)
 	{
+		if(!this.loaded)
+		{
+			return true;
+		}
+
 		if(!this.collisionLayers || !this.collisionLayers[z])
 		{
 			return false;
@@ -406,6 +442,11 @@ export class TileMap
 
 	getSolid(x, y, z = 0)
 	{
+		if(!this.loaded)
+		{
+			return true;
+		}
+
 		if(!this.collisionLayers || !this.collisionLayers[z])
 		{
 			return false;
@@ -423,6 +464,11 @@ export class TileMap
 
 	getPixel(layer, x, y)
 	{
+		if(!this.loaded)
+		{
+			return false;
+		}
+
 		const gid = this.getTileFromLayer(layer, x, y);
 
 		if(gid === false || gid === -1)
@@ -441,6 +487,11 @@ export class TileMap
 
 	getTileFromLayer(layer, x, y)
 	{
+		if(!this.loaded)
+		{
+			return false;
+		}
+
 		const localX = -this.x + x;
 		const localY = -this.y + y;
 
@@ -458,6 +509,11 @@ export class TileMap
 
 	getSlice(p, x, y, w, h, delta = 0)
 	{
+		if(!this.loaded)
+		{
+			return [];
+		}
+
 		return (this.tileLayers
 			.filter(layer => p === (layer.props.get('priority') ?? 'background'))
 			.map(layer => {
@@ -467,7 +523,7 @@ export class TileMap
 				if(tree)
 				{
 					const values = new Uint32Array(pixels.buffer);
-					const animations = tree.select(x, y, w, h);
+					const animations = tree.select(x, y, x + w, y + h);
 					for(const animation of animations)
 					{
 						const xLocal = animation.x - x;
@@ -507,6 +563,12 @@ export class TileMap
 	getRegionsForPoint(x, y)
 	{
 		const results = new Set;
+
+		if(!this.loaded)
+		{
+			return results;
+		}
+
 		const rects = this.regionTree.query(x, y, x, y);
 		rects.forEach(r => {
 			if(!r.contains(x, y))
@@ -522,8 +584,14 @@ export class TileMap
 
 	getRegionsForRect(x1, y1, x2, y2)
 	{
-		const searchRect = new Rectangle(x1, y1, x2, y2)
 		const results = new Set;
+
+		if(!this.loaded)
+		{
+			return results;
+		}
+
+		const searchRect = new Rectangle(x1, y1, x2, y2)
 		const rects = this.regionTree.query(x1, y1, x2, y2);
 		rects.forEach(r => {
 			if(!searchRect.isOverlapping(r))

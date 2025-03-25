@@ -189,7 +189,8 @@ export class View extends BaseView
 		this.session = new Session({
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
-			, worldSrc: '/tile-world.world'
+			// , worldSrc: '/tile-world.world'
+			, worldSrc: '/compiled.world'
 			, element: this.tags.canvas.element
 		});
 

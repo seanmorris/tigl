@@ -24,6 +24,8 @@ export class MapRenderer
 		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
 		this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
 
+		map.initialize();
+
 		map.ready.then(() => {
 			this.loaded = true;
 			this.tileWidth  = map.tileWidth;

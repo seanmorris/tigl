@@ -19,6 +19,7 @@ export class World
 		this.mapRects = new Map;
 		this.mapTree = new SMTree;
 		this.session = session;
+		this.async = false;
 		this.age = 0;
 	}
 
@@ -47,7 +48,12 @@ export class World
 			this.rectMap.set(map.rect, map);
 			this.mapTree.add(map.rect);
 
-			return map.ready;
+			if(!worldData.async || map.props.has('player-start'))
+			{
+				return map.initialize();
+			}
+
+			return Promise.resolve();
 		}));
 	}
 
@@ -221,13 +227,15 @@ export class World
 		);
 	}
 
-	castEntityRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS)
+	castEntityRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
 	{
 		return Ray.castEntity(
 			this
 			, startX
 			, startY
-			, endX
+			, layerId
+			, angle
+			, maxDistance
 			, endY
 			, rayFlags
 		);

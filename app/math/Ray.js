@@ -11,17 +11,20 @@ export class Ray
 
 	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
 	{
-		const endX = startX + Math.cos(angle) * maxDistance;
-		const endY = startY + Math.sin(angle) * maxDistance;
-
 		const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
-		const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags);
+		const entities = this.castEntity(world, startX, startY, layerId, angle, maxDistance, rayFlags);
 
 		return {terrain, entities};
 	}
 
-	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS)
+	static castEntity(world, startX, startY, layerId, angle, maxDistance, rayFlags = this.DEFAULT_FLAGS)
 	{
+		const cos = Math.cos(angle);
+		const sin = Math.sin(angle);
+
+		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * maxDistance;
+		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * maxDistance;
+
 		const centerX = (startX + endX) * 0.5;
 		const centerY = (startY + endY) * 0.5;
 
@@ -220,6 +223,11 @@ export class Ray
 
 		if(rayFlags & this.T_LAST_EMPTY)
 		{
+			if(!nearest)
+			{
+				return;
+			}
+
 			return [
 				nearest[0] + -cos * Math.sign(rayX)
 				, nearest[1] + -sin * Math.sign(rayY)

@@ -53,18 +53,21 @@ export class BoxController
 				? entity.lastMap.y - entity.lastMap.yOrigin
 				: 0;
 
-			const yNew = this.yOriginal + current * range + mapOffset;
-
+			const yNew = this.yOriginal + mapOffset + current * range;
 
 			if(yNew < entity.y)
 			{
 				const above = entity.session.world.getEntitiesForRect(
 					entity.x
-					, entity.y + -entity.height * 0.5 + -(entity.y - yNew) * 0.5
+					, yNew + -entity.height * 0.5 + -(entity.y - yNew) * 0.5
 					, entity.width
-					, entity.y + -yNew + entity.height
+					, yNew + -yNew + entity.height
 				);
-				above.forEach(other => other.y = entity.y - entity.height)
+
+				above.forEach(other => {
+					if(other.ySpeed < 0) return;
+					other.y = entity.y - entity.height
+				});
 			}
 
 			entity.y = yNew;

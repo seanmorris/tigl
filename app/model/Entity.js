@@ -24,7 +24,7 @@ export class Entity
 
 		this.controller = controller;
 
-		this.props = new Properties(entityData.properties ?? []);
+		this.props = new Properties(entityData.properties ?? [], this);
 
 		this.xSpriteOffset = 0;
 		this.ySpriteOffset = sprite ? 0 : 15;
@@ -93,7 +93,7 @@ export class Entity
 
 	destroy()
 	{
-		this.controller && controller.destroy(this);
+		this.controller && this.controller.destroy(this);
 	}
 
 	fixFPE()

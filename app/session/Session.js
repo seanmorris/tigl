@@ -46,8 +46,8 @@ export class Session
 		this.removed = new WeakSet;
 
 		this.paused = false;
-
 		this.loaded = false;
+		this.overscan = 640;
 
 		this.world = new World({src: worldSrc, session: this});
 		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
@@ -76,6 +76,11 @@ export class Session
 
 		for(const map of this.world.maps)
 		{
+			if(!map.loaded)
+			{
+				continue;
+			}
+
 			if(!map.props.has('player-start'))
 			{
 				continue;
@@ -122,6 +127,7 @@ export class Session
 
 	removeEntity(entity)
 	{
+		entity.destroy();
 		this.entities.delete(entity);
 		this.spriteBoard.sprites.delete(entity.sprite);
 		QuickTree.deleteFromAllTrees(entity);
@@ -197,8 +203,8 @@ export class Session
 			, player.y
 			// , (Camera.width * 1.0) + 64
 			// , (Camera.height * 1.0) + 64
-			, (Camera.width * 1.5)
-			, (Camera.height * 1.5)
+			, (Camera.width * 1 + this.overscan)
+			, (Camera.height * 1 + this.overscan)
 		);
 
 		entities.delete(player);

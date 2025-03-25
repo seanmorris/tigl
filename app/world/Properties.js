@@ -3,7 +3,27 @@ export class Properties
 	constructor(properties, owner)
 	{
 		this.properties = {};
+		this.owner = owner;
+		this.add(...properties);
+	}
 
+	get(name, index = 0)
+	{
+		if(!this.properties[name])
+		{
+			return;
+		}
+
+		return this.properties[name][index];
+	}
+
+	has(name)
+	{
+		return !!this.properties[name];
+	}
+
+	add(...properties)
+	{
 		for(const property of properties)
 		{
 			if(!this.properties[ property.name ])
@@ -24,30 +44,14 @@ export class Properties
 
 				case 'file':
 						this.properties[ property.name ].push([
-							new URL(property.value, owner.src)
+							new URL(property.value, this.owner.src)
 						]);
 						break;
 
 				default:
 					this.properties[ property.name ].push(property.value);
 			}
-
 		}
-	}
-
-	get(name, index = 0)
-	{
-		if(!this.properties[name])
-		{
-			return;
-		}
-
-		return this.properties[name][index];
-	}
-
-	has(name)
-	{
-		return !!this.properties[name];
 	}
 
 	getAll(name)

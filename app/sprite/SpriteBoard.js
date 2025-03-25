@@ -184,18 +184,15 @@ export class SpriteBoard
 
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 
-		this.parallax && this.parallax.draw();
-		this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
-
 		let sprites = [...this.sprites];
 
 		sprites.sort((a,b) => {
-			if(a.y === undefined)
-			{
-				return -1;
-			}
+		if(a.y === undefined)
+		{
+			return -1;
+		}
 
-			if(b.y === undefined)
+		if(b.y === undefined)
 			{
 				return 1;
 			}
@@ -203,14 +200,12 @@ export class SpriteBoard
 			return a.y - b.y;
 		});
 
+		this.parallax && this.parallax.draw();
+		this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
 		sprites.forEach(s => s.visible && s.draw(delta));
-
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
-
 		this.regions.forEach(r => r.draw());
-
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'foreground'));
-
 
 		// Set the rectangle for both layers
 		this.setRectangle(

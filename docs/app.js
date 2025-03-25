@@ -5397,8 +5397,10 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
     value: function onRendered() {
       this.session = new _Session.Session({
         onScreenJoyPad: this.args.joypad,
-        keyboard: this.keyboard,
-        worldSrc: '/tile-world.world',
+        keyboard: this.keyboard
+        // , worldSrc: '/tile-world.world'
+        ,
+        worldSrc: '/compiled.world',
         element: this.tags.canvas.element
       });
       this.args.frameLock = this.session.frameLock;
@@ -6364,6 +6366,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.MotionGraph = void 0;
+var _Entity = require("../model/Entity");
+var _Region = require("../sprite/Region");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -6423,7 +6427,11 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
         child.x += x;
         child.y += y;
         const maps = entity.session.world.getMapsForPoint(child.x, child.y);
-        maps.forEach(map => map.moveEntity(child));
+        if (child instanceof _Entity.Entity) {
+          maps.forEach(map => map.moveEntity(child));
+        } else if (child instanceof _Region.Region) {
+          maps.forEach(map => map.regionTree.move(child.rect));
+        }
         this.moveChildren(child, x, y);
       }
       return children;
@@ -6760,10 +6768,8 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
     value: function cast(world, startX, startY, layerId, angle) {
       let maxDistance = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 320;
       let rayFlags = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : this.DEFAULT_FLAGS;
-      const endX = startX + Math.cos(angle) * maxDistance;
-      const endY = startY + Math.sin(angle) * maxDistance;
       const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
-      const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags);
+      const entities = this.castEntity(world, startX, startY, layerId, angle, maxDistance, rayFlags);
       return {
         terrain: terrain,
         entities: entities
@@ -6771,8 +6777,12 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
     }
   }, {
     key: "castEntity",
-    value: function castEntity(world, startX, startY, endX, endY) {
-      let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
+    value: function castEntity(world, startX, startY, layerId, angle, maxDistance) {
+      let rayFlags = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : this.DEFAULT_FLAGS;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * maxDistance;
+      const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * maxDistance;
       const centerX = (startX + endX) * 0.5;
       const centerY = (startY + endY) * 0.5;
       const sizeX = Math.max(320, Math.abs(startX - endX));
@@ -6902,6 +6912,9 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
         return;
       }
       if (rayFlags & this.T_LAST_EMPTY) {
+        if (!nearest) {
+          return;
+        }
         return [nearest[0] + -cos * Math.sign(rayX), nearest[1] + -sin * Math.sign(rayY)];
       }
       return nearest;
@@ -7381,6 +7394,7 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
       entity.width = 32;
       entity.ySpriteOffset = 6;
       this.grounded = true;
+      this.shot = false;
     }
   }, {
     key: "simulate",
@@ -7393,26 +7407,10 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         entity.ySpeed = Math.min(0, entity.ySpeed);
         this.grounded = true;
       }
-      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1)) {
-        entity.ySpeed = 0;
-        entity.y--;
-      }
-      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
-        entity.ySpeed = 0;
-        entity.y++;
-      }
-      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
-        entity.xSpeed = 0;
-        entity.x++;
-      }
-      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
-        entity.xSpeed = 0;
-        entity.x--;
-      }
       if (entity.xSpeed || entity.ySpeed) {
         const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
         const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
-        const hit = world.castRay(entity.x, entity.y, 0, direction, distance, 0x01);
+        const hit = world.castRay(entity.x, entity.y + -entity.height * 0.5, 0, direction, distance, 0x01);
         let xMove = entity.xSpeed;
         let yMove = entity.ySpeed;
         if (hit.terrain) {
@@ -7422,16 +7420,56 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         }
         entity.x += xMove;
         entity.y += yMove;
-        entity.xSpeed *= 0.95;
-        entity.ySpeed *= 0.95;
+        if (!this.shot) {
+          entity.xSpeed *= 0.9;
+        }
+      } else {
+        entity.shot = false;
+      }
+      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1)) {
+        entity.ySpeed = 0;
+        entity.y--;
+      }
+      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
+        entity.ySpeed = 0;
+        entity.y++;
+      }
+      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
+        this.stop(entity, entity.xSpeed);
+        entity.xSpeed = 0;
+        entity.x++;
+      }
+      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
+        this.stop(entity, entity.xSpeed);
+        entity.xSpeed = 0;
+        entity.x--;
+      }
+    }
+  }, {
+    key: "stop",
+    value: function stop(entity) {
+      entity.xSpeed && console.log(entity.xSpeed);
+      if (entity.xSpeed > 10) {
+        entity.session.removeEntity(entity);
       }
     }
   }, {
     key: "collide",
     value: function collide(entity, other, point) {
-      // entity.x = point[0] + 0.5 * entity.width;
-      // entity.xSpeed = other.xSpeed;
+      if (Math.sign(entity.x - other.x) === Math.sign(other.xSpeed)) {
+        entity.xSpeed = other.xSpeed;
+        const min = 0.5 * (other.width + entity.width);
+        if (Math.abs(other.x + other.xSpeed + -entity.x) < min) {
+          entity.xSpeed += -Math.sign(other.x + other.xSpeed + -entity.x);
+        }
+        if (other.controller) {
+          other.controller.pushing = entity;
+        }
+      }
     }
+  }, {
+    key: "destroy",
+    value: function destroy() {}
   }]);
 }();
 _defineProperty(BarrelController, "spriteImage", '/barrel.png');
@@ -7490,10 +7528,13 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
         const age = entity.session.world.age;
         const current = Math.pow(Math.cos(Math.pow(Math.sin(age / delay), 5)), 16);
         const mapOffset = entity.lastMap ? entity.lastMap.y - entity.lastMap.yOrigin : 0;
-        const yNew = this.yOriginal + current * range + mapOffset;
+        const yNew = this.yOriginal + mapOffset + current * range;
         if (yNew < entity.y) {
-          const above = entity.session.world.getEntitiesForRect(entity.x, entity.y + -entity.height * 0.5 + -(entity.y - yNew) * 0.5, entity.width, entity.y + -yNew + entity.height);
-          above.forEach(other => other.y = entity.y - entity.height);
+          const above = entity.session.world.getEntitiesForRect(entity.x, yNew + -entity.height * 0.5 + -(entity.y - yNew) * 0.5, entity.width, yNew + -yNew + entity.height);
+          above.forEach(other => {
+            if (other.ySpeed < 0) return;
+            other.y = entity.y - entity.height;
+          });
         }
         entity.y = yNew;
       }
@@ -7541,7 +7582,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       _entityData$height = entityData.height,
       height = _entityData$height === void 0 ? 32 : _entityData$height;
     this.controller = controller;
-    this.props = new _Properties.Properties((_entityData$propertie = entityData.properties) !== null && _entityData$propertie !== void 0 ? _entityData$propertie : []);
+    this.props = new _Properties.Properties((_entityData$propertie = entityData.properties) !== null && _entityData$propertie !== void 0 ? _entityData$propertie : [], this);
     this.xSpriteOffset = 0;
     this.ySpriteOffset = sprite ? 0 : 15;
     this.flags = 0;
@@ -7587,7 +7628,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
   }, {
     key: "destroy",
     value: function destroy() {
-      this.controller && controller.destroy(this);
+      this.controller && this.controller.destroy(this);
     }
   }, {
     key: "fixFPE",
@@ -7763,12 +7804,15 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
     value: function create(entity, entityData) {
       this.direction = 'south';
       this.state = 'standing';
-      this.xSpeed = 0;
-      this.ySpeed = 0;
+      entity.xSpeed = 0;
+      entity.ySpeed = 0;
+      entity.height = 34;
+      entity.width = 24;
       this.grounded = true;
       this.grounded = 0;
       this.gravity = 0.5;
       this.lastMap = null;
+      this.pushing = null;
     }
   }, {
     key: "simulate",
@@ -7792,10 +7836,10 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
         gravity *= (_region$gravity = region.gravity) !== null && _region$gravity !== void 0 ? _region$gravity : 1;
       });
       if (!solidTerrain) {
-        this.ySpeed = Math.min(8, this.ySpeed + gravity);
+        entity.ySpeed = Math.min(8, entity.ySpeed + gravity);
         this.grounded = false;
-      } else if (this.ySpeed >= 0) {
-        this.ySpeed = Math.min(0, this.ySpeed);
+      } else if (entity.ySpeed >= 0) {
+        entity.ySpeed = Math.min(0, entity.ySpeed);
         this.grounded = true;
       }
       if (solidTerrain) {
@@ -7803,9 +7847,9 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
         this.lastMap = firstMap;
       } else if (solidEntities.length) {
         const otherTop = solidEntities[0].y - solidEntities[0].height;
-        if (this.ySpeed >= 0 && entity.y < otherTop + 16) {
+        if (entity.ySpeed >= 0 && entity.y < otherTop + 16) {
           entity.y = otherTop;
-          this.ySpeed = Math.min(0, this.ySpeed);
+          entity.ySpeed = Math.min(0, entity.ySpeed);
           this.grounded = true;
           world.motionGraph.add(entity, solidEntities[0]);
         }
@@ -7817,61 +7861,70 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       if (xAxis) {
         this.xDirection = Math.sign(xAxis);
         if (!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y)) {
-          this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
+          entity.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
         }
-        if (Math.abs(this.xSpeed) > 8) {
-          this.xSpeed = 8 * Math.sign(this.xSpeed);
+        if (Math.abs(entity.xSpeed) > 8) {
+          entity.xSpeed = 8 * Math.sign(entity.xSpeed);
         }
-        if (this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(this.xSpeed)) {
-          this.xSpeed *= 0.75;
+        if (this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(entity.xSpeed)) {
+          entity.xSpeed *= 0.75;
         }
       } else if (this.grounded) {
-        this.xSpeed *= 0.9;
+        entity.xSpeed *= 0.9;
       } else {
-        this.xSpeed *= 0.99;
+        entity.xSpeed *= 0.99;
       }
-      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height)) {
-        this.ySpeed = 0;
-        entity.y--;
+      if (this.pushing) {
+        if (entity.xSpeed && Math.sign(entity.xSpeed) !== Math.sign(this.pushing.x - entity.x)) {
+          this.pushing = null;
+        }
+        if (!this.grounded) {
+          this.pushing = null;
+        }
       }
-      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
-        this.ySpeed = 0;
-        entity.y++;
+      const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
+      const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
+      const entities = _Ray.Ray.castEntity(world, entity.x, entity.y + -entity.height * 0.5, 0, this.xDirection < 0 ? Math.PI : 0, distance + entity.width * 0.5, _Ray.Ray.T_LAST_EMPTY);
+      if (entities) {
+        entities.delete(entity);
+        entities.forEach((point, other) => {
+          other.collide(entity, point);
+          entity.collide(other, point);
+        });
       }
-      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
-        this.xSpeed = 0;
-        entity.x++;
-      }
-      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
-        this.xSpeed = 0;
-        entity.x--;
-      }
-      if (this.xSpeed || this.ySpeed) {
-        const direction = Math.atan2(this.ySpeed, this.xSpeed);
-        const distance = Math.hypot(this.ySpeed, this.xSpeed);
+      if (entity.xSpeed || entity.ySpeed) {
         regions.forEach(region => {
-          this.xSpeed *= region.drag;
-          if (this.ySpeed > 0) {
-            this.ySpeed *= region.drag;
+          entity.xSpeed *= region.drag;
+          if (entity.ySpeed > 0) {
+            entity.ySpeed *= region.drag;
           }
         });
-        const hit = _Ray.Ray.cast(world, entity.x, entity.y + -entity.height * 0.5, 0, direction, distance, _Ray.Ray.T_LAST_EMPTY);
-        let xMove = this.xSpeed;
-        let yMove = this.ySpeed;
-        if (hit.terrain) {
-          const actualDistance = Math.hypot(entity.x - hit.terrain[0], entity.y - hit.terrain[1]);
+        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, 0, direction, distance, _Ray.Ray.T_LAST_EMPTY);
+        let xMove = entity.xSpeed;
+        let yMove = entity.ySpeed;
+        if (terrain) {
+          const actualDistance = Math.hypot(entity.x - terrain[0], entity.y - terrain[1]);
           xMove = Math.cos(direction) * actualDistance;
           yMove = Math.sin(direction) * actualDistance;
         }
-        if (hit.entities.size) {
-          hit.entities.delete(entity);
-          hit.entities.forEach((point, other) => {
-            other.collide(entity, point);
-            entity.collide(other, point);
-          });
-        }
         entity.x += xMove;
         entity.y += yMove;
+      }
+      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height)) {
+        entity.ySpeed = 0;
+        entity.y--;
+      }
+      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
+        entity.ySpeed = 0;
+        entity.y++;
+      }
+      while (world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x++;
+      }
+      while (world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x--;
       }
       if (this.grounded) {
         this.state = xAxis ? 'walking' : 'standing';
@@ -7881,13 +7934,20 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           this.direction = 'east';
         }
       }
-      if (this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1) {
-        this.grounded = false;
-        this.state = 'jumping';
-        this.ySpeed = -10;
-      }
-      if (!this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
-        this.ySpeed = Math.max(-4, this.ySpeed);
+      if (entity.inputManager) {
+        if (this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1) {
+          this.grounded = false;
+          this.state = 'jumping';
+          entity.ySpeed = -10;
+        }
+        if (!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
+          entity.ySpeed = Math.max(-4, entity.ySpeed);
+        }
+        if (this.pushing && entity.inputManager.buttons[1] && entity.inputManager.buttons[1].time === 1) {
+          this.pushing.controller.shot = true;
+          this.pushing.xSpeed *= 4;
+          this.pushing = null;
+        }
       }
       if (entity.sprite) {
         if (this.state === 'jumping') {
@@ -7908,8 +7968,8 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
     value: function collide(entity, other, point) {
       if (other.flags & 0x1) {
         const otherTop = other.y - other.height;
-        if (this.ySpeed > 0 && entity.y < otherTop + 16) {
-          this.ySpeed = 0;
+        if (entity.ySpeed > 0 && entity.y < otherTop + 16) {
+          entity.ySpeed = 0;
           this.grounded = true;
           this.y = otherTop;
         }
@@ -7959,7 +8019,7 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
     _this.spawnType = spawnData.spawnType;
     _this.spawnClass = spawnData.spawnClass;
     _this.session = spawnData.session;
-    _this.props = new _Properties.Properties((_spawnData$properties = spawnData.properties) !== null && _spawnData$properties !== void 0 ? _spawnData$properties : []);
+    _this.props = new _Properties.Properties((_spawnData$properties = spawnData.properties) !== null && _spawnData$properties !== void 0 ? _spawnData$properties : [], _this);
     return _this;
   }
   _inherits(Spawner, _Entity);
@@ -8008,8 +8068,9 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
       const entity = new _Entity2.Entity(_objectSpread(_objectSpread({}, entityDef), {}, {
         controller: controller,
         session: this.session,
-        x: entityDef.x + (map.x - map.xOrigin),
-        y: entityDef.y + (map.y - map.yOrigin)
+        x: this.x,
+        y: this.y,
+        map: map
       }));
       this.session.world.motionGraph.add(entity, map);
       entity.lastMap = map;
@@ -8081,6 +8142,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
     this.removed = new WeakSet();
     this.paused = false;
     this.loaded = false;
+    this.overscan = 640;
     this.world = new _World.World({
       src: worldSrc,
       session: this
@@ -8114,6 +8176,9 @@ let Session = exports.Session = /*#__PURE__*/function () {
       this.loaded = true;
       for (const map of this.world.maps) {
         var _warpStart$, _warpStart$2;
+        if (!map.loaded) {
+          continue;
+        }
         if (!map.props.has('player-start')) {
           continue;
         }
@@ -8153,6 +8218,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
   }, {
     key: "removeEntity",
     value: function removeEntity(entity) {
+      entity.destroy();
       this.entities.delete(entity);
       this.spriteBoard.sprites.delete(entity.sprite);
       _QuickTree.QuickTree.deleteFromAllTrees(entity);
@@ -8201,7 +8267,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
       const entities = this.world.getEntitiesForRect(player.x, player.y
       // , (Camera.width * 1.0) + 64
       // , (Camera.height * 1.0) + 64
-      , _Camera.Camera.width * 1.5, _Camera.Camera.height * 1.5);
+      , _Camera.Camera.width * 1 + this.overscan, _Camera.Camera.height * 1 + this.overscan);
       entities.delete(player);
       entities.add(player);
       entities.forEach(entity => {
@@ -8287,6 +8353,7 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
     const gl = this.spriteBoard.gl2d.context;
     this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
     this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
+    map.initialize();
     map.ready.then(() => {
       this.loaded = true;
       this.tileWidth = map.tileWidth;
@@ -8954,8 +9021,6 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.clear(gl.COLOR_BUFFER_BIT);
       this.drawProgram.uniformF('u_size', _Camera.Camera.width, _Camera.Camera.height);
-      this.parallax && this.parallax.draw();
-      this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
       let sprites = [...this.sprites];
       sprites.sort((a, b) => {
         if (a.y === undefined) {
@@ -8966,6 +9031,8 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
         }
         return a.y - b.y;
       });
+      this.parallax && this.parallax.draw();
+      this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
       sprites.forEach(s => s.visible && s.draw(delta));
       this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
       this.regions.forEach(r => r.draw());
@@ -9438,21 +9505,8 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
   function Properties(properties, owner) {
     _classCallCheck(this, Properties);
     this.properties = {};
-    for (const property of properties) {
-      if (!this.properties[property.name]) {
-        this.properties[property.name] = [];
-      }
-      switch (property.type) {
-        case 'color':
-          this.properties[property.name].push(new Uint8ClampedArray([parseInt(property.value.substr(3, 2), 16), parseInt(property.value.substr(5, 2), 16), parseInt(property.value.substr(7, 2), 16), parseInt(property.value.substr(1, 2), 16)]));
-          break;
-        case 'file':
-          this.properties[property.name].push([new URL(property.value, owner.src)]);
-          break;
-        default:
-          this.properties[property.name].push(property.value);
-      }
-    }
+    this.owner = owner;
+    this.add(...properties);
   }
   return _createClass(Properties, [{
     key: "get",
@@ -9467,6 +9521,28 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
     key: "has",
     value: function has(name) {
       return !!this.properties[name];
+    }
+  }, {
+    key: "add",
+    value: function add() {
+      for (var _len = arguments.length, properties = new Array(_len), _key = 0; _key < _len; _key++) {
+        properties[_key] = arguments[_key];
+      }
+      for (const property of properties) {
+        if (!this.properties[property.name]) {
+          this.properties[property.name] = [];
+        }
+        switch (property.type) {
+          case 'color':
+            this.properties[property.name].push(new Uint8ClampedArray([parseInt(property.value.substr(3, 2), 16), parseInt(property.value.substr(5, 2), 16), parseInt(property.value.substr(7, 2), 16), parseInt(property.value.substr(1, 2), 16)]));
+            break;
+          case 'file':
+            this.properties[property.name].push([new URL(property.value, this.owner.src)]);
+            break;
+          default:
+            this.properties[property.name].push(property.value);
+        }
+      }
     }
   }, {
     key: "getAll",
@@ -9529,20 +9605,22 @@ let Animation = /*#__PURE__*/function () {
   }]);
 }();
 let TileMap = exports.TileMap = /*#__PURE__*/function () {
-  function TileMap(_ref2) {
-    let fileName = _ref2.fileName,
-      session = _ref2.session,
-      x = _ref2.x,
-      y = _ref2.y,
-      width = _ref2.width,
-      height = _ref2.height;
+  function TileMap(mapData) {
+    var _mapData$properties;
     _classCallCheck(this, TileMap);
+    const fileName = mapData.fileName,
+      session = mapData.session,
+      x = mapData.x,
+      y = mapData.y,
+      width = mapData.width,
+      height = mapData.height;
     this[_Bindable.Bindable.Prevent] = true;
     this.src = fileName;
     this.backgroundColor = null;
     this.tileCount = 0;
     this.x = x;
     this.y = y;
+    this.loaded = false;
     this.worldWidth = width;
     this.worldHeight = height;
     this.rect = new _Rectangle.Rectangle(this.x, this.y, this.x + this.worldWidth, this.y + this.worldHeight);
@@ -9550,6 +9628,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     this.tileHeight = 0;
     this.tileSetWidth = 0;
     this.tileSetHeight = 0;
+    this.props = new _Properties.Properties((_mapData$properties = mapData.properties) !== null && _mapData$properties !== void 0 ? _mapData$properties : [], this);
     this.pixels = [];
     this.image = document.createElement('img');
     this.session = session;
@@ -9559,22 +9638,31 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     this.canvases = new Map();
     this.contexts = new Map();
     this.tiles = null;
+    this.xOrigin = x;
+    this.yOrigin = y;
     this.tileLayers = [];
     this.imageLayers = [];
     this.objectLayers = [];
-    this.ready = this.getReady(fileName);
     this.visible = false;
     this.age = 0;
     this.quadTree = new _QuickTree.QuickTree(0, 0, this.worldWidth, this.worldHeight);
     this.regionTree = new _SMTree.SMTree();
     this.animationTrees = new Map();
     this.entityMap = new Map();
-    this.xOrigin = x;
-    this.yOrigin = y;
     this.animatedTiles = new Map();
     this.animations = new Map();
+
+    // this.ready = this.getReady(fileName);
   }
   return _createClass(TileMap, [{
+    key: "initialize",
+    value: function initialize() {
+      if (this.ready) {
+        return this.ready;
+      }
+      return this.ready = this.getReady(this.src);
+    }
+  }, {
     key: "selectEntities",
     value: function selectEntities(wx1, wy1, wx2, wy2) {
       return this.quadTree.select(wx1 - this.x, wy1 - this.y, wx2 - this.x, wy2 - this.y, -this.x, -this.y);
@@ -9592,12 +9680,12 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getReady",
     value: async function getReady(src) {
-      var _mapData$properties;
+      var _mapData$properties2;
       if (!cache.has(src)) {
         cache.set(src, fetch(src));
       }
       const mapData = await (await cache.get(src)).clone().json();
-      this.props = new _Properties.Properties((_mapData$properties = mapData.properties) !== null && _mapData$properties !== void 0 ? _mapData$properties : [], this);
+      this.props.add(...((_mapData$properties2 = mapData.properties) !== null && _mapData$properties2 !== void 0 ? _mapData$properties2 : []));
       mapData.layers.forEach(layer => {
         var _layer$properties;
         layer.props = new _Properties.Properties((_layer$properties = layer.properties) !== null && _layer$properties !== void 0 ? _layer$properties : [], this);
@@ -9629,6 +9717,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       await Promise.all(tilesets.map(t => t.ready));
       this.assemble(tilesets);
       await this.spawn();
+      this.loaded = true;
       return this;
     }
   }, {
@@ -9678,7 +9767,6 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       }
       this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
       this.tiles = ctxDestination;
-      const tilesWide = this.width;
       for (const layer of [...this.tileLayers, ...this.collisionLayers]) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d', {
@@ -9722,8 +9810,8 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         const entityDefs = layer.objects;
         for (const entityDef of entityDefs) {
           this.entityDefs[entityDef.id] = _objectSpread({}, entityDef);
-          entityDef.x += this.x + (this.x - this.xOrigin);
-          entityDef.y += this.y + (this.y - this.yOrigin);
+          entityDef.x += this.xOrigin;
+          entityDef.y += this.yOrigin;
           if (!entityDef.type || entityDef.name === '#player-start') {
             continue;
           }
@@ -9732,6 +9820,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
               spriteBoard: this.session.spriteBoard,
               session: this.session
             }, entityDef));
+            this.session.world.motionGraph.add(region, this);
             this.session.spriteBoard.regions.add(region);
             this.regionTree.add(region.rect);
             continue;
@@ -9749,7 +9838,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
             spriteBoard: this.session.spriteBoard,
             session: this.session,
             world: this.session.world,
-            map: this
+            map: this,
+            x: entityDef.x + (this.x - this.xOrigin),
+            y: entityDef.y + (this.y - this.yOrigin)
           }));
           this.session.world.motionGraph.add(spawner, this);
           spawner.lastMap = this;
@@ -9761,6 +9852,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "simulate",
     value: function simulate(delta) {
+      if (!this.loaded) {
+        return;
+      }
       const startX = this.x;
       const startY = this.y;
       this.age += delta;
@@ -9777,6 +9871,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getCollisionTile",
     value: function getCollisionTile(x, y, z) {
+      if (!this.loaded) {
+        return true;
+      }
       if (!this.collisionLayers || !this.collisionLayers[z]) {
         return false;
       }
@@ -9792,6 +9889,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     key: "getSolid",
     value: function getSolid(x, y) {
       let z = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      if (!this.loaded) {
+        return true;
+      }
       if (!this.collisionLayers || !this.collisionLayers[z]) {
         return false;
       }
@@ -9804,6 +9904,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getPixel",
     value: function getPixel(layer, x, y) {
+      if (!this.loaded) {
+        return false;
+      }
       const gid = this.getTileFromLayer(layer, x, y);
       if (gid === false || gid === -1) {
         return false;
@@ -9817,6 +9920,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getTileFromLayer",
     value: function getTileFromLayer(layer, x, y) {
+      if (!this.loaded) {
+        return false;
+      }
       const localX = -this.x + x;
       const localY = -this.y + y;
       if (localX < 0 || localX >= this.width * this.tileWidth || localY < 0 || localY >= this.height * this.tileWidth) {
@@ -9830,6 +9936,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     key: "getSlice",
     value: function getSlice(p, x, y, w, h) {
       let delta = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
+      if (!this.loaded) {
+        return [];
+      }
       return this.tileLayers.filter(layer => {
         var _layer$props$get;
         return p === ((_layer$props$get = layer.props.get('priority')) !== null && _layer$props$get !== void 0 ? _layer$props$get : 'background');
@@ -9839,7 +9948,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         const tree = this.animationTrees.get(layer);
         if (tree) {
           const values = new Uint32Array(pixels.buffer);
-          const animations = tree.select(x, y, w, h);
+          const animations = tree.select(x, y, x + w, y + h);
           for (const animation of animations) {
             const xLocal = animation.x - x;
             const yLocal = animation.y - y;
@@ -9870,6 +9979,9 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     key: "getRegionsForPoint",
     value: function getRegionsForPoint(x, y) {
       const results = new Set();
+      if (!this.loaded) {
+        return results;
+      }
       const rects = this.regionTree.query(x, y, x, y);
       rects.forEach(r => {
         if (!r.contains(x, y)) {
@@ -9882,8 +9994,11 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getRegionsForRect",
     value: function getRegionsForRect(x1, y1, x2, y2) {
-      const searchRect = new _Rectangle.Rectangle(x1, y1, x2, y2);
       const results = new Set();
+      if (!this.loaded) {
+        return results;
+      }
+      const searchRect = new _Rectangle.Rectangle(x1, y1, x2, y2);
       const rects = this.regionTree.query(x1, y1, x2, y2);
       rects.forEach(r => {
         if (!searchRect.isOverlapping(r)) {
@@ -9932,6 +10047,7 @@ let World = exports.World = /*#__PURE__*/function () {
     this.mapRects = new Map();
     this.mapTree = new _SMTree.SMTree();
     this.session = session;
+    this.async = false;
     this.age = 0;
   }
   return _createClass(World, [{
@@ -9955,7 +10071,10 @@ let World = exports.World = /*#__PURE__*/function () {
         this.mapRects.set(map, map.rect);
         this.rectMap.set(map.rect, map);
         this.mapTree.add(map.rect);
-        return map.ready;
+        if (!worldData.async || map.props.has('player-start')) {
+          return map.initialize();
+        }
+        return Promise.resolve();
       }));
     }
   }, {
@@ -10065,9 +10184,10 @@ let World = exports.World = /*#__PURE__*/function () {
     }
   }, {
     key: "castEntityRay",
-    value: function castEntityRay(startX, startY, endX, endY) {
-      let rayFlags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _Ray.Ray.DEFAULT_FLAGS;
-      return _Ray.Ray.castEntity(this, startX, startY, endX, endY, rayFlags);
+    value: function castEntityRay(startX, startY, layerId, angle) {
+      let maxDistance = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+      let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : _Ray.Ray.DEFAULT_FLAGS;
+      return _Ray.Ray.castEntity(this, startX, startY, layerId, angle, maxDistance, endY, rayFlags);
     }
   }]);
 }();

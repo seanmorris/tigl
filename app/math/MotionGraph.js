@@ -1,3 +1,6 @@
+import { Entity } from "../model/Entity";
+import { Region } from "../sprite/Region";
+
 export class MotionGraph
 {
 	static globalMap = new WeakMap;
@@ -81,9 +84,17 @@ export class MotionGraph
 
 			child.x += x;
 			child.y += y;
-
 			const maps = entity.session.world.getMapsForPoint(child.x, child.y);
-			maps.forEach(map => map.moveEntity(child));
+
+			if(child instanceof Entity)
+			{
+				maps.forEach(map => map.moveEntity(child));
+			}
+			else if(child instanceof Region)
+			{
+				maps.forEach(map => map.regionTree.move(child.rect));
+			}
+
 			this.moveChildren(child, x, y);
 		}
 

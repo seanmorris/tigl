@@ -12,8 +12,11 @@ export class PlayerController
 		this.direction = 'south';
 		this.state = 'standing';
 
-		this.xSpeed = 0;
-		this.ySpeed = 0;
+		entity.xSpeed = 0;
+		entity.ySpeed = 0;
+
+		entity.height = 34;
+		entity.width = 24;
 
 		this.grounded = true;
 		this.grounded = 0;
@@ -21,6 +24,7 @@ export class PlayerController
 		this.gravity = 0.5;
 
 		this.lastMap = null;
+		this.pushing = null;
 	}
 
 	simulate(entity)
@@ -53,12 +57,12 @@ export class PlayerController
 
 		if(!solidTerrain)
 		{
-			this.ySpeed = Math.min(8, this.ySpeed + gravity);
+			entity.ySpeed = Math.min(8, entity.ySpeed + gravity);
 			this.grounded = false;
 		}
-		else if(this.ySpeed >= 0)
+		else if(entity.ySpeed >= 0)
 		{
-			this.ySpeed = Math.min(0, this.ySpeed);
+			entity.ySpeed = Math.min(0, entity.ySpeed);
 			this.grounded = true;
 		}
 
@@ -71,10 +75,10 @@ export class PlayerController
 		{
 			const otherTop = solidEntities[0].y - solidEntities[0].height;
 
-			if(this.ySpeed >= 0 && entity.y < otherTop + 16)
+			if(entity.ySpeed >= 0 && entity.y < otherTop + 16)
 			{
 				entity.y = otherTop;
-				this.ySpeed = Math.min(0, this.ySpeed);
+				entity.ySpeed = Math.min(0, entity.ySpeed);
 				this.grounded = true;
 
 				world.motionGraph.add(entity, solidEntities[0]);
@@ -95,100 +99,124 @@ export class PlayerController
 
 			if(!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y))
 			{
-				this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
+				entity.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
 			}
 
-			if(Math.abs(this.xSpeed) > 8)
+			if(Math.abs(entity.xSpeed) > 8)
 			{
-				this.xSpeed = 8 * Math.sign(this.xSpeed);
+				entity.xSpeed = 8 * Math.sign(entity.xSpeed);
 			}
 
-			if(this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(this.xSpeed))
+			if(this.grounded && xAxis && Math.sign(xAxis) !== Math.sign(entity.xSpeed))
 			{
-				this.xSpeed *= 0.75;
+				entity.xSpeed *= 0.75;
 			}
 		}
 		else if(this.grounded)
 		{
-			this.xSpeed *= 0.9;
+			entity.xSpeed *= 0.9;
 		}
 		else
 		{
-			this.xSpeed *= 0.99;
+			entity.xSpeed *= 0.99;
 		}
 
-		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
+		if(this.pushing)
 		{
-			this.ySpeed = 0;
-			entity.y--;
+			if(entity.xSpeed && Math.sign(entity.xSpeed) !== Math.sign(this.pushing.x - entity.x))
+			{
+				this.pushing = null;
+			}
+
+			if(!this.grounded)
+			{
+				this.pushing = null;
+			}
+
 		}
 
-		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
+		const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
+		const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
+
+		const entities = Ray.castEntity(
+			world
+			, entity.x
+			, entity.y + -entity.height * 0.5
+			, 0
+			, this.xDirection < 0 ? Math.PI : 0
+			, distance + entity.width * 0.5
+			, Ray.T_LAST_EMPTY
+		);
+
+		if(entities)
 		{
-			this.ySpeed = 0;
-			entity.y++;
+			entities.delete(entity);
+			entities.forEach((point, other) => {
+				other.collide(entity, point);
+				entity.collide(other, point);
+			});
 		}
 
-		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
+		if(entity.xSpeed || entity.ySpeed)
 		{
-			this.xSpeed = 0;
-			entity.x++;
-		}
-
-		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
-		{
-			this.xSpeed = 0;
-			entity.x--;
-		}
-
-		if(this.xSpeed || this.ySpeed)
-		{
-			const direction = Math.atan2(this.ySpeed, this.xSpeed);
-			const distance = Math.hypot(this.ySpeed, this.xSpeed);
-
 			regions.forEach(region => {
-				this.xSpeed *= region.drag;
-				if(this.ySpeed > 0)
+				entity.xSpeed *= region.drag;
+				if(entity.ySpeed > 0)
 				{
-					this.ySpeed *= region.drag;
+					entity.ySpeed *= region.drag;
 				}
 			});
 
-			const hit = Ray.cast(
+			const terrain = Ray.castTerrain(
 				world
 				, entity.x
-				, entity.y + -entity.height * 0.5
+				, entity.y
 				, 0
 				, direction
 				, distance
 				, Ray.T_LAST_EMPTY
 			);
 
-			let xMove = this.xSpeed;
-			let yMove = this.ySpeed;
+			let xMove = entity.xSpeed;
+			let yMove = entity.ySpeed;
 
-			if(hit.terrain)
+			if(terrain)
 			{
 				const actualDistance = Math.hypot(
-					entity.x - hit.terrain[0]
-					, entity.y - hit.terrain[1]
+					entity.x - terrain[0]
+					, entity.y - terrain[1]
 				);
 
 				xMove = Math.cos(direction) * actualDistance;
 				yMove = Math.sin(direction) * actualDistance;
 			}
 
-			if(hit.entities.size)
-			{
-				hit.entities.delete(entity);
-				hit.entities.forEach((point, other) => {
-					other.collide(entity, point);
-					entity.collide(other, point);
-				});
-			}
-
 			entity.x += xMove;
 			entity.y += yMove;
+		}
+
+		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
+		{
+			entity.ySpeed = 0;
+			entity.y--;
+		}
+
+		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
+		{
+			entity.ySpeed = 0;
+			entity.y++;
+		}
+
+		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
+		{
+			entity.xSpeed = 0;
+			entity.x++;
+		}
+
+		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
+		{
+			entity.xSpeed = 0;
+			entity.x--;
 		}
 
 		if(this.grounded)
@@ -205,16 +233,26 @@ export class PlayerController
 			}
 		}
 
-		if(this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
+		if(entity.inputManager)
 		{
-			this.grounded = false;
-			this.state = 'jumping';
-			this.ySpeed = -10;
-		}
+			if(this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
+			{
+				this.grounded = false;
+				this.state = 'jumping';
+				entity.ySpeed = -10;
+			}
 
-		if(!this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
-		{
-			this.ySpeed = Math.max(-4, this.ySpeed);
+			if(!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
+			{
+				entity.ySpeed = Math.max(-4, entity.ySpeed);
+			}
+
+			if(this.pushing && entity.inputManager.buttons[1] && entity.inputManager.buttons[1].time === 1)
+			{
+				this.pushing.controller.shot = true;
+				this.pushing.xSpeed *= 4;
+				this.pushing = null;
+			}
 		}
 
 		if(entity.sprite)
@@ -244,9 +282,9 @@ export class PlayerController
 		{
 			const otherTop = other.y - other.height;
 
-			if(this.ySpeed > 0 && entity.y < otherTop + 16)
+			if(entity.ySpeed > 0 && entity.y < otherTop + 16)
 			{
-				this.ySpeed = 0;
+				entity.ySpeed = 0;
 				this.grounded = true;
 				this.y = otherTop;
 			}

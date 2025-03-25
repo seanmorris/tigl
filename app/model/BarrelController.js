@@ -13,7 +13,7 @@ export class BarrelController
 		entity.ySpriteOffset = 6;
 
 		this.grounded = true;
-
+		this.shot = false;
 	}
 
 	simulate(entity)
@@ -31,37 +31,13 @@ export class BarrelController
 			this.grounded = true;
 		}
 
-		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1))
-		{
-			entity.ySpeed = 0;
-			entity.y--;
-		}
-
-		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
-		{
-			entity.ySpeed = 0;
-			entity.y++;
-		}
-
-		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
-		{
-			entity.xSpeed = 0;
-			entity.x++;
-		}
-
-		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
-		{
-			entity.xSpeed = 0;
-			entity.x--;
-		}
-
 		if(entity.xSpeed || entity.ySpeed)
 		{
 			const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
 			const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
 			const hit = world.castRay(
 				entity.x
-				, entity.y
+				, entity.y + -entity.height * 0.5
 				, 0
 				, direction
 				, distance
@@ -85,14 +61,75 @@ export class BarrelController
 			entity.x += xMove;
 			entity.y += yMove;
 
-			entity.xSpeed *= 0.95;
-			entity.ySpeed *= 0.95;
+			if(!this.shot)
+			{
+				entity.xSpeed *= 0.9;
+			}
+		}
+		else
+		{
+			entity.shot = false;
+		}
+
+		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1))
+		{
+			entity.ySpeed = 0;
+			entity.y--;
+		}
+
+		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
+		{
+			entity.ySpeed = 0;
+			entity.y++;
+		}
+
+		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
+		{
+			this.stop(entity, entity.xSpeed);
+			entity.xSpeed = 0;
+			entity.x++;
+		}
+
+		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
+		{
+			this.stop(entity, entity.xSpeed);
+			entity.xSpeed = 0;
+			entity.x--;
+		}
+	}
+
+	stop(entity)
+	{
+		entity.xSpeed && console.log(entity.xSpeed);
+
+		if(entity.xSpeed > 10)
+		{
+			entity.session.removeEntity(entity);
 		}
 	}
 
 	collide(entity, other, point)
 	{
-		// entity.x = point[0] + 0.5 * entity.width;
-		// entity.xSpeed = other.xSpeed;
+		if(Math.sign(entity.x - other.x) === Math.sign(other.xSpeed))
+		{
+			entity.xSpeed = other.xSpeed;
+
+			const min = 0.5 * (other.width + entity.width);
+
+			if(Math.abs(other.x + other.xSpeed + -entity.x) < min)
+			{
+				entity.xSpeed += -Math.sign(other.x + other.xSpeed + -entity.x);
+			}
+
+			if(other.controller)
+			{
+				other.controller.pushing = entity;
+			}
+		}
+	}
+
+	destroy()
+	{
+
 	}
 }

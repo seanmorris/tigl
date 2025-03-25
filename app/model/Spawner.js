@@ -10,11 +10,10 @@ export class Spawner extends Entity
 		super(spawnData);
 
 		this.spawnData = spawnData;
-
 		this.spawnType = spawnData.spawnType;
 		this.spawnClass = spawnData.spawnClass;
 		this.session = spawnData.session;
-		this.props = new Properties(spawnData.properties ?? []);
+		this.props = new Properties(spawnData.properties ?? [], this);
 	}
 
 	simulate()
@@ -76,8 +75,9 @@ export class Spawner extends Entity
 			...entityDef
 			, controller
 			, session: this.session
-			, x: entityDef.x + (map.x - map.xOrigin)
-			, y: entityDef.y + (map.y - map.yOrigin)
+			, x: this.x
+			, y: this.y
+			, map
 		});
 
 		this.session.world.motionGraph.add(entity, map);
