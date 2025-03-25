@@ -1,6 +1,7 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Rectangle } from "../math/Rectangle";
 import { Sprite } from '../sprite/Sprite';
+import { Properties } from "../world/Properties";
 
 export class Entity
 {
@@ -22,6 +23,8 @@ export class Entity
 		} = entityData;
 
 		this.controller = controller;
+
+		this.props = new Properties(entityData.properties ?? []);
 
 		this.xSpriteOffset = 0;
 		this.ySpriteOffset = sprite ? 0 : 15;
@@ -50,11 +53,23 @@ export class Entity
 			x - width * 0.5, y - height,
 			x + width * 0.5, y
 		);
+
+		this.xOrigin = x;
+		this.yOrigin = x;
 	}
 
 	simulate()
 	{
+		const startX = this.x;
+		const startY = this.y;
+
 		this.controller && this.controller.simulate(this);
+
+		this.session.world.motionGraph.moveChildren(
+			this
+			, this.x - startX
+			, this.y - startY
+		);
 
 		this.rect.x1 = this.x - this.width * 0.5;
 		this.rect.x2 = this.x + this.width * 0.5;

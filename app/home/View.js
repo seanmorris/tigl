@@ -112,6 +112,76 @@ export class View extends BaseView
 			}
 		});
 
+		this.keyboard.keys.bindTo('0', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 0;
+			}
+		});
+
+		this.keyboard.keys.bindTo('1', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 1;
+			}
+		});
+
+		this.keyboard.keys.bindTo('2', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 2;
+			}
+		});
+
+		this.keyboard.keys.bindTo('3', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 3;
+			}
+		});
+
+		this.keyboard.keys.bindTo('4', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 4;
+			}
+		});
+
+		this.keyboard.keys.bindTo('5', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 5;
+			}
+		});
+
+		this.keyboard.keys.bindTo('6', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 6;
+			}
+		});
+
+		this.keyboard.keys.bindTo('7', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 7;
+			}
+		});
+
+		this.keyboard.keys.bindTo('8', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 8;
+			}
+		});
+
+		this.keyboard.keys.bindTo('9', (v,k,t,d)=>{
+			if(v > 0)
+			{
+				this.session.spriteBoard.renderMode = 9;
+			}
+		});
+
 	}
 
 	onRendered()
@@ -119,8 +189,8 @@ export class View extends BaseView
 		this.session = new Session({
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
+			, worldSrc: '/tile-world.world'
 			, element: this.tags.canvas.element
-			, world: '/tile-world.world'
 		});
 
 		this.args.frameLock = this.session.frameLock;
@@ -173,7 +243,7 @@ export class View extends BaseView
 			}
 		};
 
-		this.session.spriteBoard.zoomLevel = document.body.clientWidth / 1280 * 2;
+		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 1.5;
 		this.resize();
 
 		setInterval(() => simulate(performance.now()), 0);
@@ -184,7 +254,7 @@ export class View extends BaseView
 	{
 		const oldScale = this.session.spriteBoard.screenScale;
 
-		this.session.spriteBoard.screenScale = document.body.clientWidth / 1280;
+		this.session.spriteBoard.screenScale = document.body.clientHeight / 1280;
 		this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.screenScale / oldScale;
 
 		this.args.width  = this.tags.canvas.element.width   = x || document.body.clientWidth;
@@ -203,11 +273,7 @@ export class View extends BaseView
 
 	scroll(event)
 	{
-		let delta = event.deltaY > 0 ? -1 : (
-			event.deltaY < 0 ? 1 : 0
-		);
-
-		this.zoom(delta);
+		this.zoom(-Math.sign(event.deltaY));
 	}
 
 	zoom(delta)
@@ -218,6 +284,5 @@ export class View extends BaseView
 		}
 
 		this.session.spriteBoard.zoom(delta);
-		// this.resize();
 	}
 }

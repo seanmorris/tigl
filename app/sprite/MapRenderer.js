@@ -24,9 +24,6 @@ export class MapRenderer
 		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
 		this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
 
-		const r = () => parseInt(Math.random() * 0xFF);
-		const pixel = new Uint8Array([r(), r(), r(), 0xFF]);
-
 		map.ready.then(() => {
 			this.loaded = true;
 			this.tileWidth  = map.tileWidth;
@@ -44,7 +41,6 @@ export class MapRenderer
 				, map.pixels
 			);
 			gl.bindTexture(gl.TEXTURE_2D, null);
-
 		});
 	}
 
@@ -54,7 +50,7 @@ export class MapRenderer
 		return (b + a % b) % b;
 	}
 
-	draw()
+	draw(delta, priority)
 	{
 		if(!this.loaded)
 		{
@@ -63,8 +59,8 @@ export class MapRenderer
 
 		const gl = this.spriteBoard.gl2d.context;
 
-		const x = this.spriteBoard.following.x;
-		const y = this.spriteBoard.following.y;
+		const x = -this.map.x + this.spriteBoard.following.x;
+		const y = -this.map.y + this.spriteBoard.following.y;
 
 		const zoom = this.spriteBoard.zoomLevel;
 
@@ -79,12 +75,10 @@ export class MapRenderer
 
 		const xTile = (x+halfTileWidth)/this.tileWidth
 			+ -this.negSafeMod( x + halfTileWidth, 64 ) / this.tileWidth
-			+ -this.map.xWorld / this.tileWidth
 			+ -xOffset / this.tileWidth;
 
 		const yTile = (y+halfTileHeight)/this.tileHeight
 			+ -this.negSafeMod( y + halfTileHeight, 64 ) / this.tileHeight
-			+ -this.map.yWorld / this.tileHeight
 			+ -yOffset / this.tileHeight;
 
 		if(xTile + tilesWide < 0 || yTile + tilesHigh < 0)
@@ -117,7 +111,14 @@ export class MapRenderer
 		gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
 		this.spriteBoard.drawProgram.uniformI('u_tileMapping', 3);
 
-		const tilePixelLayers = this.map.getSlice(xTile, yTile, tilesWide, tilesHigh, performance.now()/1000);
+		const tilePixelLayers = this.map.getSlice(
+			priority
+			, xTile
+			, yTile
+			, tilesWide
+			, tilesHigh
+			, delta
+		);
 
 		for(const tilePixels of tilePixelLayers)
 		{
@@ -140,6 +141,15 @@ export class MapRenderer
 				, this.height * zoom
 			);
 
+			if(priority === 'foreground')
+			{
+				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+			}
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+			gl.drawArrays(gl.TRIANGLES, 0, 6);
+			this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
 			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
 		}
@@ -154,7 +164,6 @@ export class MapRenderer
 
 		gl.activeTexture(gl.TEXTURE3);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, null);

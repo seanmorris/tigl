@@ -5,6 +5,7 @@ import { Parallax } from './Parallax';
 
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
+import { Region } from './Region';
 
 export class SpriteBoard
 {
@@ -14,9 +15,10 @@ export class SpriteBoard
 
 		this.maps = [];
 
+		this.currentMap = null;
 		this.world = world;
 		this.sprites = new Set;
-		this.currentMap = null;
+		this.regions = new Set;
 
 		this.screenScale = 1;
 		this.zoomLevel = 2;
@@ -72,10 +74,6 @@ export class SpriteBoard
 		});
 
 		this.drawProgram.use();
-
-		this.colorLocation   = this.drawProgram.uniforms.u_color;
-		this.tilePosLocation = this.drawProgram.uniforms.u_tileNo;
-		this.regionLocation  = this.drawProgram.uniforms.u_region;
 
 		this.drawLayer = this.gl2d.createTexture(1000, 1000);
 		this.effectLayer = this.gl2d.createTexture(1000, 1000);
@@ -138,11 +136,11 @@ export class SpriteBoard
 			});
 
 			new Set(this.mapRenderers.keys())
-				.difference(visibleMaps)
-				.forEach(map => {
-					this.mapRenderers.delete(map);
-					map.visible = false;
-				});
+			.difference(visibleMaps)
+			.forEach(map => {
+				this.mapRenderers.delete(map);
+				map.visible = false;
+			});
 		}
 
 		const gl = this.gl2d.context;
@@ -162,12 +160,13 @@ export class SpriteBoard
 
 		if(this.currentMap && this.currentMap.backgroundColor)
 		{
-			const color = this.currentMap.backgroundColor.substr(1);
+			// const color = this.currentMap.backgroundColor.substr(1);
+			const color = this.currentMap.backgroundColor;
 
-			const r = parseInt(color.substr(-6, 2), 16) / 255;
-			const b = parseInt(color.substr(-4, 2), 16) / 255;
-			const g = parseInt(color.substr(-2, 2), 16) / 255;
-			const a = color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+			const r = color[0] / 255; //parseInt(color.substr(-6, 2), 16) / 255;
+			const b = color[1] / 255; //parseInt(color.substr(-4, 2), 16) / 255;
+			const g = color[2] / 255; //parseInt(color.substr(-2, 2), 16) / 255;
+			const a = color[3] / 255; //color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
 
 			gl.clearColor(r, g, b, a);
 		}
@@ -186,7 +185,7 @@ export class SpriteBoard
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 
 		this.parallax && this.parallax.draw();
-		this.mapRenderers.forEach(mr => mr.draw());
+		this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
 
 		let sprites = [...this.sprites];
 
@@ -203,7 +202,15 @@ export class SpriteBoard
 
 			return a.y - b.y;
 		});
+
 		sprites.forEach(s => s.visible && s.draw(delta));
+
+		this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
+
+		this.regions.forEach(r => r.draw());
+
+		this.mapRenderers.forEach(mr => mr.draw(delta, 'foreground'));
+
 
 		// Set the rectangle for both layers
 		this.setRectangle(

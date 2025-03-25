@@ -25,12 +25,12 @@ export class Rectangle
 
 	isOverlapping(other)
 	{
-		if(this.x1 >= other.x2 || this.x2 <= other.x1)
+		if(this.x1 >= other.x2 || other.x1 >= this.x2)
 		{
 			return false;
 		}
 
-		if(this.y1 >= other.y2 || this.y2 <= other.y1)
+		if(this.y1 >= other.y2 || other.y1 >= this.y2)
 		{
 			return false;
 		}
@@ -85,6 +85,16 @@ export class Rectangle
 	isOutside(other)
 	{
 		return other.isInside(this);
+	}
+
+	static clone(rectangle)
+	{
+		return new Rectangle(
+			rectangle.x1,
+			rectangle.y1,
+			rectangle.x2,
+			rectangle.y2,
+		);
 	}
 
 	toLines()

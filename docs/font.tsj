@@ -1,0 +1,14 @@
+{ "columns":26,
+ "image":"font.png",
+ "imageheight":48,
+ "imagewidth":260,
+ "margin":0,
+ "name":"font",
+ "spacing":0,
+ "tilecount":78,
+ "tiledversion":"1.10.1",
+ "tileheight":16,
+ "tilewidth":10,
+ "type":"tileset",
+ "version":"1.10"
+}

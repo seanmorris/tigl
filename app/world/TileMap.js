@@ -1,8 +1,44 @@
 import { Bindable } from 'curvature/base/Bindable';
-import { EntityPallet } from './EntityPallet';
 import { Tileset } from '../sprite/Tileset';
 import { QuickTree } from '../math/QuickTree';
 import { Spawner } from '../model/Spawner';
+import { SMTree } from '../math/SMTree';
+import { Region } from '../sprite/Region';
+import { Rectangle } from '../math/Rectangle';
+import { Properties } from './Properties';
+
+const cache = new Map;
+
+class Animation
+{
+	constructor({frames, x, y})
+	{
+		this.x = x;
+		this.y = y;
+
+		this.acc = 0;
+		this.current = 0;
+		this.frames = frames;
+	}
+
+	animate(delta)
+	{
+		this.acc += delta;
+
+		while(this.acc > this.frames[this.current].duration)
+		{
+			this.acc -= this.frames[this.current].duration;
+			this.current++;
+
+			if(this.current > -1 + this.frames.length)
+			{
+				this.current = 0;
+			}
+		}
+
+		return 1 + this.frames[this.current].tileid;
+	}
+}
 
 export class TileMap
 {
@@ -13,11 +49,18 @@ export class TileMap
 		this.backgroundColor = null;
 		this.tileCount = 0;
 
-		this.xWorld = x;
-		this.yWorld = y;
+		this.x = x;
+		this.y = y;
 
-		this.width  = width;
-		this.height = height;
+		this.worldWidth = width;
+		this.worldHeight = height;
+
+		this.rect = new Rectangle(
+			this.x
+			, this.y
+			, this.x + this.worldWidth
+			, this.y + this.worldHeight
+		);
 
 		this.tileWidth  = 0;
 		this.tileHeight = 0;
@@ -28,8 +71,6 @@ export class TileMap
 		this.pixels = [];
 		this.image = document.createElement('img');
 		this.session = session;
-
-		this.properties = {};
 		this.entityDefs = {};
 
 		this.emptyTiles = new Set;
@@ -44,32 +85,74 @@ export class TileMap
 
 		this.ready = this.getReady(fileName);
 
-		this.animations = new Map;
 		this.visible = false;
 
-		this.quadTree = new QuickTree(x, y, x + this.width, y + this.height);
+		this.age = 0;
+
+		this.quadTree = new QuickTree(0, 0, this.worldWidth, this.worldHeight);
+		this.regionTree = new SMTree;
+		this.animationTrees = new Map;
+		this.entityMap = new Map;
+
+		this.xOrigin = x;
+		this.yOrigin = y;
+
+		this.animatedTiles = new Map;
+		this.animations = new Map;
+	}
+
+	selectEntities(wx1, wy1, wx2, wy2)
+	{
+		return this.quadTree.select(
+			wx1 - this.x
+			, wy1 - this.y
+			, wx2 - this.x
+			, wy2 - this.y
+			, -this.x
+			, -this.y
+		);
+	}
+
+	addEntity(entity)
+	{
+		return this.quadTree.add(entity, -this.x, -this.y);
+	}
+
+	moveEntity(entity)
+	{
+		return this.quadTree.move(entity, -this.x, -this.y);
 	}
 
 	async getReady(src)
 	{
-		const mapData = await (await fetch(src)).json();
+		if(!cache.has(src))
+		{
+			cache.set(src, fetch(src));
+		}
+
+		const mapData= await (await cache.get(src)).clone().json();
+
+		this.props = new Properties(mapData.properties ?? [], this);
+
+		mapData.layers.forEach(layer => {
+			layer.props = new Properties(layer.properties ?? [], this);
+		})
 
 		this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
 		this.tileLayers   = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class !== 'collision');
 		this.imageLayers  = mapData.layers.filter(layer => layer.type === 'imagelayer');
 		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
-
 		this.backgroundColor = mapData.backgroundcolor;
 
-		if(mapData.properties)
-		for(const property of mapData.properties)
+		if(mapData.class)
 		{
-			this.properties[ property.name ] = property.value;
+			this.controller = new (await this.session.mapPallet.resolve(mapData.class));
+			this.controller.create(this);
 		}
 
-		if(this.properties.backgroundColor)
+		if(this.props.has('backgroundColor'))
 		{
-			this.backgroundColor = this.properties.backgroundColor;
+			this.backgroundColor = this.props.get('backgroundColor');
 		}
 
 		const tilesets = mapData.tilesets.map(tilesetData => {
@@ -102,7 +185,9 @@ export class TileMap
 	{
 		tilesets.sort((a, b) => a.firstGid - b.firstGid);
 
-		const tileTotal = this.tileCount = tilesets.reduce((a, b) => a.tileCount + b.tileCount, {tileCount: 0});
+		const tileTotal = this.tileCount = tilesets.reduce(
+			(a, b) => a + b.tileCount, 0
+		);
 
 		const size = Math.ceil(Math.sqrt(tileTotal));
 
@@ -157,13 +242,15 @@ export class TileMap
 			{
 				if(tileData.animation)
 				{
-					this.animations.set(tileData.id, tileData.animation);
+					this.animatedTiles.set(tileData.id, tileData.animation);
 				}
 			}
 		}
 
 		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
 		this.tiles = ctxDestination;
+
+		const tilesWide = this.width;
 
 		for(const layer of [...this.tileLayers, ...this.collisionLayers])
 		{
@@ -180,9 +267,27 @@ export class TileMap
 			{
 				const tile = tileValues[i];
 
-				if(this.animations.has(tile))
+				if(this.animatedTiles.has(tile))
 				{
-					console.log({i, tile}, this.animations.get(tile));
+					if(!this.animationTrees.has(layer))
+					{
+						this.animationTrees.set(layer, new QuickTree(
+							0, 0
+							, this.width
+							, this.height
+							, 0.1
+						));
+					}
+
+					const tree = this.animationTrees.get(layer);
+					const frames = this.animatedTiles.get(tile);
+
+					const x = i % this.width;
+					const y = Math.floor(i / this.width);
+
+					const animation = new Animation({frames, x, y});
+
+					tree.add(animation);
 				}
 			}
 
@@ -209,15 +314,28 @@ export class TileMap
 			{
 				this.entityDefs[ entityDef.id ] = {...entityDef};
 
-				entityDef.x += this.xWorld;
-				entityDef.y += this.yWorld;
+				entityDef.x += this.x + (this.x - this.xOrigin);
+				entityDef.y += this.y + (this.y - this.yOrigin);
 
-				if(!entityDef.type || entityDef.name === 'player-start')
+				if(!entityDef.type || entityDef.name === '#player-start')
 				{
 					continue;
 				}
 
-				const spawnClass = await EntityPallet.resolve(entityDef.type);
+				if(entityDef.name === '#region')
+				{
+					const region = new Region({
+						spriteBoard: this.session.spriteBoard
+						, session: this.session
+						, ...entityDef
+					});
+
+					this.session.spriteBoard.regions.add(region);
+					this.regionTree.add(region.rect);
+					continue;
+				}
+
+				const spawnClass = await this.session.entityPallet.resolve(entityDef.type);
 
 				if(!spawnClass)
 				{
@@ -236,9 +354,38 @@ export class TileMap
 					, map: this
 				});
 
+				this.session.world.motionGraph.add(spawner, this);
+				spawner.lastMap = this;
 				this.session.addEntity(spawner);
-				this.quadTree.add(spawner)
+				this.addEntity(spawner)
 			}
+		}
+	}
+
+	simulate(delta)
+	{
+		const startX = this.x;
+		const startY = this.y;
+
+		this.age += delta;
+		this.controller && this.controller.simulate(this, delta);
+
+		this.session.world.motionGraph.moveChildren(
+			this
+			, this.x - startX
+			, this.y - startY
+		);
+
+		this.rect.x1 = this.x;
+		this.rect.y1 = this.y;
+		this.rect.x2 = this.x + this.width * this.tileWidth;
+		this.rect.y2 = this.x + this.height * this.tileHeight;
+
+		if(startX !== this.x || startY !== this.y)
+		{
+			this.session.world.mapTree.move(
+				this.session.world.mapRects.get(this)
+			);
 		}
 	}
 
@@ -294,8 +441,8 @@ export class TileMap
 
 	getTileFromLayer(layer, x, y)
 	{
-		const localX = -this.xWorld + x;
-		const localY = -this.yWorld + y;
+		const localX = -this.x + x;
+		const localY = -this.y + y;
 
 		if(localX < 0 || localX >= this.width * this.tileWidth
 			|| localY < 0 || localY >= this.height * this.tileWidth
@@ -309,13 +456,33 @@ export class TileMap
 		return -1 + layer.data[tileX + tileY * this.width];
 	}
 
-	getSlice(x, y, w, h, t = 0)
+	getSlice(p, x, y, w, h, delta = 0)
 	{
 		return (this.tileLayers
-			.map(layer => this.contexts.get(layer))
-			.map(context => context.getImageData(x, y, w, h).data));
+			.filter(layer => p === (layer.props.get('priority') ?? 'background'))
+			.map(layer => {
+				const context = this.contexts.get(layer);
+				const pixels = context.getImageData(x, y, w, h).data;
+				const tree = this.animationTrees.get(layer);
+				if(tree)
+				{
+					const values = new Uint32Array(pixels.buffer);
+					const animations = tree.select(x, y, w, h);
+					for(const animation of animations)
+					{
+						const xLocal = animation.x - x;
+						const yLocal = animation.y - y;
 
-		return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
+						if(xLocal < w)
+						{
+							const iLocal = xLocal + yLocal * w;
+							values[iLocal] = animation.animate(delta);
+						}
+					}
+				}
+				return pixels;
+			}
+		));
 	}
 
 	getTileImage(gid)
@@ -335,5 +502,38 @@ export class TileMap
 		cc.putImageData(imageData, 0, 0);
 
 		return c.toDataURL();
+	}
+
+	getRegionsForPoint(x, y)
+	{
+		const results = new Set;
+		const rects = this.regionTree.query(x, y, x, y);
+		rects.forEach(r => {
+			if(!r.contains(x, y))
+			{
+				return;
+			}
+
+			results.add(Region.fromRect(r));
+		});
+
+		return results;
+	}
+
+	getRegionsForRect(x1, y1, x2, y2)
+	{
+		const searchRect = new Rectangle(x1, y1, x2, y2)
+		const results = new Set;
+		const rects = this.regionTree.query(x1, y1, x2, y2);
+		rects.forEach(r => {
+			if(!searchRect.isOverlapping(r))
+			{
+				return;
+			}
+
+			results.add(Region.fromRect(r));
+		});
+
+		return results;
 	}
 }

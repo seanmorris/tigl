@@ -1,7 +1,9 @@
+const cache = new Map;
+
 export class Tileset
 {
 	constructor({
-		source, map, firstgid, columns, image, imageheight, imagewidth
+		source, src, map, firstgid, columns, image, imageheight, imagewidth
 		, margin , name, spacing, tilecount, tileheight, tilewidth, tiles
 	}){
 		this.firstGid = firstgid ?? 0;
@@ -9,28 +11,38 @@ export class Tileset
 		this.tileHeight = tileheight ?? 0;
 		this.tileWidth  = tilewidth ?? 0;
 
-		if(source)
+		src = src ?? source;
+
+		if(src)
 		{
-			this.source = new URL(source, location);
+			this.src = new URL(src, location);
 		}
 
 		this.map = map;
 
+		this.animations = {};
+
 		this.ready = this.getReady({
-			source, columns, image, imageheight, imagewidth, margin
+			src, columns, image, imageheight, imagewidth, margin
 			, name, spacing, tilecount, tileheight, tilewidth, tiles
 		});
 	}
 
 	async getReady({
-		source, columns, image, imageheight, imagewidth, margin, name
+		src, columns, image, imageheight, imagewidth, margin, name
 		, spacing, tilecount, tileheight, tilewidth, tiles
 	}){
-		if(source)
+		if(src)
 		{
+			if(!cache.has(src))
+			{
+				console.log(src);
+				cache.set(src, fetch(src));
+			}
+
 			({columns, image, imageheight, imagewidth, margin, name,
 				spacing, tilecount, tileheight, tilewidth, tiles
-			} = await (await fetch(source)).json());
+			} = await (await cache.get(src)).clone().json());
 
 			for(const tile of tiles)
 			{
@@ -38,31 +50,39 @@ export class Tileset
 			}
 		}
 
-
 		this.columns = columns ?? 1;
 		this.margin  = margin ?? 0;
 		this.name    = name ?? image;
 		this.spacing = spacing ?? 0;
 		this.tiles   = tiles ?? [];
 
-		this.tileCount  = tilecount ?? 1;
+		this.tileCount = tilecount ?? 1;
 
-		this.image = new Image;
+		let imgSrc = null;
 
-		if(this.source)
+		if(this.src)
 		{
-			this.image.src = new URL(image, this.source);
+			imgSrc = new URL(image, this.src);
 		}
 		else if(this.map)
 		{
-			this.image.src = new URL(image, this.map.src);
+			imgSrc = new URL(image, this.map.src);
 		}
 		else
 		{
-			this.image.src = new URL(image, location);
+			imgSrc = new URL(image, location);
 		}
 
-		await new Promise(accept => this.image.onload = () => accept());
+		if(!cache.has(imgSrc.href))
+		{
+			const image = new Image;
+			image.src = imgSrc;
+			cache.set(imgSrc.href, new Promise(
+				accept => image.onload = () => accept(image)
+			));
+		}
+
+		this.image = await cache.get(imgSrc.href);
 
 		this.imageWidth  = imagewidth ?? this.image.width;
 		this.imageHeight = imageheight ?? this.image.height;
@@ -71,5 +91,13 @@ export class Tileset
 		this.tileHeight = tileheight ?? this.imageHeight;
 
 		this.rows = Math.ceil(imageheight / tileheight) || 1;
+
+		for(const tile of this.tiles)
+		{
+			if(tile.animation)
+			{
+				this.animations[tile.id] = tile.animation;
+			}
+		}
 	}
 }

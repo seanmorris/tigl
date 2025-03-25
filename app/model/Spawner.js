@@ -14,11 +14,7 @@ export class Spawner extends Entity
 		this.spawnType = spawnData.spawnType;
 		this.spawnClass = spawnData.spawnClass;
 		this.session = spawnData.session;
-
-		const props = new Properties(spawnData.properties ?? []);
-		this.count = props.get('count') ?? 1;
-
-		this.i = 0;
+		this.props = new Properties(spawnData.properties ?? []);
 	}
 
 	simulate()
@@ -35,7 +31,7 @@ export class Spawner extends Entity
 				entityDef.sprite = new Sprite({
 					session: this.spawnData.session
 					, spriteSheet: new SpriteSheet({
-						source: spawnClass.spriteSheet
+						src: spawnClass.spriteSheet
 					})
 				});
 			}
@@ -54,6 +50,15 @@ export class Spawner extends Entity
 					, tiled: true
 				});
 			}
+			else if(this.props.has('color'))
+			{
+				entityDef.sprite = new Sprite({
+					session: this.spawnData.session
+					, color: this.props.get('color')
+					, width: this.width
+					, height: this.height
+				});
+			}
 			else if(spawnClass.spriteColor)
 			{
 				entityDef.sprite = new Sprite({
@@ -65,14 +70,18 @@ export class Spawner extends Entity
 			}
 		}
 
+		const map = this.spawnData.map;
+
 		const entity = new Entity({
 			...entityDef
 			, controller
 			, session: this.session
-			, x: entityDef.x
-			, y: entityDef.y
+			, x: entityDef.x + (map.x - map.xOrigin)
+			, y: entityDef.y + (map.y - map.yOrigin)
 		});
 
+		this.session.world.motionGraph.add(entity, map);
+		entity.lastMap = map;
 		this.session.removeEntity(this);
 		this.session.addEntity(entity);
 		super.simulate();

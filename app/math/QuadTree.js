@@ -21,11 +21,14 @@ export class QuadTree extends Rectangle
 
 	}
 
-	add(entity)
+	add(entity, xOffset = 0, yOffset = 0)
 	{
-		if(!this.contains(entity.x, entity.y))
+		if(!this.contains(entity.x + xOffset, entity.y + yOffset))
 		{
-			// console.warn('No QuadTree cell found!');
+			if(!this.parent)
+			{
+				console.warn('No QuadTree cell found!');
+			}
 			return false;
 		}
 
@@ -34,10 +37,10 @@ export class QuadTree extends Rectangle
 
 		if(this.split)
 		{
-			return this.ulCell.add(entity)
-				|| this.urCell.add(entity)
-				|| this.blCell.add(entity)
-				|| this.brCell.add(entity);
+			return this.ulCell.add(entity, xOffset, yOffset)
+				|| this.urCell.add(entity, xOffset, yOffset)
+				|| this.blCell.add(entity, xOffset, yOffset)
+				|| this.brCell.add(entity, xOffset, yOffset);
 		}
 		else if(this.items.size && xSize > this.minSize && ySize > this.minSize)
 		{
@@ -96,10 +99,10 @@ export class QuadTree extends Rectangle
 
 				while(parent)
 				{
-					added = parent.ulCell.add(item)
-						|| parent.urCell.add(item)
-						|| parent.blCell.add(item)
-						|| parent.brCell.add(item);
+					added = parent.ulCell.add(item, xOffset, yOffset)
+						||  parent.urCell.add(item, xOffset, yOffset)
+						||  parent.blCell.add(item, xOffset, yOffset)
+						||  parent.brCell.add(item, xOffset, yOffset);
 					if(added) break;
 					parent = parent.parent;
 				}
@@ -112,10 +115,10 @@ export class QuadTree extends Rectangle
 				this.items.delete(item);
 			}
 
-			return this.ulCell.add(entity)
-				|| this.urCell.add(entity)
-				|| this.blCell.add(entity)
-				|| this.brCell.add(entity);
+			return this.ulCell.add(entity, xOffset, yOffset)
+				|| this.urCell.add(entity, xOffset, yOffset)
+				|| this.blCell.add(entity, xOffset, yOffset)
+				|| this.brCell.add(entity, xOffset, yOffset);
 
 		}
 		else
@@ -136,18 +139,18 @@ export class QuadTree extends Rectangle
 		}
 	}
 
-	move(entity)
+	move(entity, xOffset = 0, yOffset = 0)
 	{
 		if(!this.backMap.has(entity))
 		{
 			// console.warn('Entity not in QuadTree.');
-			return this.add(entity);
+			return this.add(entity, xOffset, yOffset);
 		}
 
 		const startCell = this.backMap.get(entity);
 
 		let cell = startCell;
-		while(cell && !cell.contains(entity.x, entity.y))
+		while(cell && !cell.contains(entity.x + xOffset, entity.y + yOffset))
 		{
 			cell = cell.parent;
 		}
@@ -162,7 +165,7 @@ export class QuadTree extends Rectangle
 		if(cell !== startCell)
 		{
 			startCell.delete(entity);
-			cell.add(entity);
+			cell.add(entity, xOffset, yOffset);
 		}
 
 		return true;

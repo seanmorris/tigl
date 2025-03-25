@@ -8,22 +8,33 @@ import { Camera } from '../sprite/Camera';
 import { World } from "../world/World";
 
 import { Controller } from '../input/Controller';
-import { EntityPallet } from "../world/EntityPallet";
+import { Pallet } from "../world/Pallet";
 
 import { PlayerController } from '../model/PlayerController';
 import { BallController } from "../model/BallController";
 import { BarrelController } from "../model/BarrelController";
 import { BoxController } from "../model/BoxController";
+import { MapMover } from "../model/MapMover";
+import { MotionGraph } from "../math/MotionGraph";
 
-EntityPallet.register('@basic-platformer', PlayerController);
-EntityPallet.register('@barrel', BarrelController);
-EntityPallet.register('@ball', BallController);
-EntityPallet.register('@box', BoxController);
+const input = new URLSearchParams(location.search);
+const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : [];
+
+console.log(location.search, input, warpStart);
 
 export class Session
 {
-	constructor({element, world, keyboard, onScreenJoyPad})
+	constructor({element, worldSrc, keyboard, onScreenJoyPad})
 	{
+		this.entityPallet = new Pallet;
+		this.mapPallet = new Pallet;
+
+		this.entityPallet.register('@basic-platformer', PlayerController);
+		this.entityPallet.register('@barrel', BarrelController);
+		this.entityPallet.register('@ball', BallController);
+		this.entityPallet.register('@box', BoxController);
+
+		this.mapPallet.register('@moving-map', MapMover);
 
 		this.fThen = 0;
 		this.sThen = 0;
@@ -38,7 +49,7 @@ export class Session
 
 		this.loaded = false;
 
-		this.world = new World({source: new URL(world, location).href, session: this});
+		this.world = new World({src: worldSrc, session: this});
 		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
 
 		this.keyboard = keyboard;
@@ -65,24 +76,29 @@ export class Session
 
 		for(const map of this.world.maps)
 		{
-			if(!map.properties['player-start'])
+			if(!map.props.has('player-start'))
 			{
 				continue;
 			}
 
-			const startId = map.properties['player-start'];
+			const startId = map.props.get('player-start');
 			const startDef = map.entityDefs[startId];
-			const playerClass = await EntityPallet.resolve(startDef.type);
+			const playerClass = await this.entityPallet.resolve(startDef.type);
+
+			const startX = warpStart[0] ?? startDef.x;
+			const startY = warpStart[1] ?? startDef.y;
 
 			const player = this.player = new Entity({
 				controller: new playerClass,
 				session: this,
-				x: startDef.x,
-				y: startDef.y,
+				x: startX,
+				y: startY,
 				inputManager: this.controller,
 				sprite: new Sprite({
 					session: this,
-					spriteSheet: new SpriteSheet({source: '/player.tsj'}),
+					spriteSheet: new SpriteSheet({
+						src: '/player.tsj'
+					}),
 				}),
 				camera: Camera,
 			});
@@ -101,14 +117,15 @@ export class Session
 
 		this.entities.add(entity);
 		const maps = this.world.getMapsForPoint(entity.x, entity.y);
-		maps.forEach(map => map.quadTree.add(entity));
+		maps.forEach(map => map.addEntity(entity));
 	}
 
 	removeEntity(entity)
 	{
 		this.entities.delete(entity);
 		this.spriteBoard.sprites.delete(entity.sprite);
-		QuickTree.deleteFromAllTrees(entity)
+		QuickTree.deleteFromAllTrees(entity);
+		MotionGraph.deleteFromAllGraphs(entity);
 		this.removed.add(entity);
 	}
 
@@ -150,29 +167,57 @@ export class Session
 		this.entities.forEach(entity => { if(entity.sprite) entity.sprite.visible = false; });
 
 		const player = this.player;
-		const nearBy = this.world.getEntitiesForRect(
-			player.x
-			, player.y
-			, (Camera.width * 1.0) + 64
-			, (Camera.height * 1.0) + 64
-		);
-
-		nearBy.delete(player);
-		nearBy.add(player);
 
 		this.spriteBoard.sprites.clear();
+		this.spriteBoard.regions.clear();
 
-		nearBy.forEach(entity => {
+		this.world.simulate(delta);
+
+		const visibleMaps = this.world.getMapsForRect(
+			player.x
+			, player.y
+			, Camera.width
+			, Camera.height
+		);
+
+		visibleMaps.forEach(map => {
+			map.simulate(delta);
+			const mapRegions = map.getRegionsForRect(
+				player.x + -(Camera.width * 1.0) + 64
+				, player.y + -(Camera.height * 1.0) + 64
+				, player.x + (Camera.width * 1.0) + 64
+				, player.y + (Camera.height * 1.0) + 64
+			);
+
+			mapRegions.forEach(r => this.spriteBoard.regions.add(r));
+		});
+
+		const entities = this.world.getEntitiesForRect(
+			player.x
+			, player.y
+			// , (Camera.width * 1.0) + 64
+			// , (Camera.height * 1.0) + 64
+			, (Camera.width * 1.5)
+			, (Camera.height * 1.5)
+		);
+
+		entities.delete(player);
+		entities.add(player);
+
+		entities.forEach(entity => {
+
 			entity.simulate(delta);
+			if(this.removed.has(entity)) return;
+
 			const maps = this.world.getMapsForPoint(entity.x, entity.y);
-			maps.forEach(map => this.removed.has(entity) || map.quadTree.move(entity));
+			maps.forEach(map => map.moveEntity(entity));
+
 			if(entity.sprite)
 			{
 				this.spriteBoard.sprites.add(entity.sprite);
 				entity.sprite.visible = true;
 			}
 		});
-
 
 		return true;
 	}

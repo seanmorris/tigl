@@ -6,21 +6,21 @@
  "name":"tiles",
  "spacing":0,
  "tilecount":161,
- "tiledversion":"1.10.1",
+ "tiledversion":"1.11.2",
  "tileheight":32,
  "tiles":[
         {
          "animation":[
                 {
-                 "duration":150,
+                 "duration":50,
                  "tileid":13
                 }, 
                 {
-                 "duration":150,
+                 "duration":50,
                  "tileid":14
                 }, 
                 {
-                 "duration":150,
+                 "duration":50,
                  "tileid":15
                 }],
          "id":13

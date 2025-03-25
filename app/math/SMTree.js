@@ -64,8 +64,6 @@ class Segment
 
 	add(rectangle)
 	{
-		Object.freeze(rectangle);
-
 		if(this.subTree)
 		{
 			this.subTree.add(rectangle);
@@ -106,8 +104,9 @@ export class SMTree
 	{
 		this.depth = args[depthSymbol];
 		this.dimension = args.dimension;
-
 		this.segments = [new Segment(-Infinity, Infinity, null, this.dimension, this.depth)];
+		this.rectangles = new WeakSet;
+		this.snapshots = new WeakMap;
 	}
 
 	add(rectangle)
@@ -116,6 +115,15 @@ export class SMTree
 		{
 			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
 		}
+
+		this.rectangles.add(rectangle);
+
+		this.snapshots.set(rectangle, {
+			x1: rectangle.x1,
+			y1: rectangle.y1,
+			x2: rectangle.x2,
+			y2: rectangle.y2,
+		});
 
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
 		const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
@@ -145,41 +153,57 @@ export class SMTree
 			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
 		}
 
-		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
-		const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
+		if(!this.rectangles.has(rectangle))
+		{
+			console.warn('Rectangle not in tree!');
+			return;
+		}
+
+		const snapshot = this.snapshots.get(rectangle);
+
+		this.rectangles.delete(rectangle);
+		this.snapshots.delete(rectangle);
+
+		const rectMin = this.depth === 0 ? snapshot.x1 : snapshot.y1;
+		const rectMax = this.depth === 0 ? snapshot.x2 : snapshot.y2;
 
 		const startIndex = this.findSegment(rectMin);
-		const endIndex = this.findSegment(rectMax);
-
-		const empty = [];
+		let endIndex = this.findSegment(rectMax);
 
 		for(let i = startIndex; i <= endIndex; i++)
 		{
-			if(i > 0 && this.segments[i].delete(rectangle))
-			{
-				empty.push(i);
-			}
-		}
+			const rects = this.segments[i].rectangles;
+			const last = this.segments[i - 1].rectangles;
 
-		for(let i = -1 + empty.length; i >= 0; i--)
-		{
-			const e = empty[i];
+			rects.delete(rectangle);
 
-			if(!this.segments[-1 + e])
+			if(rects.size !== last.size)
 			{
-				throw new Error('Cannot delete segment without predecessor.')
+				continue;
 			}
 
-			this.segments[-1 + e].end = this.segments[e].end;
-			this.segments[1 + e].prev = this.segments[-1 + e];
-			this.segments.splice(e, 1);
-		}
+			if(rects.symmetricDifference(last).size > 0)
+			{
+				continue;
+			}
 
-		if(this.segments.length === 2 && this.segments[0].size == 0 && this.segments[1].size === 0)
-		{
-			this.segments[0].end = this.segments[1].end;
-			this.segments.length = 1;
+			this.segments[i - 1].end = this.segments[i].end;
+
+			if(this.segments[i + 1])
+			{
+				this.segments[i + 1].prev = this.segments[i - 1];
+			}
+
+			this.segments.splice(i, 1);
+			endIndex--;
+			i--;
 		}
+	}
+
+	move(rectangle)
+	{
+		this.delete(rectangle);
+		this.add(rectangle);
 	}
 
 	query(x1, y1, x2, y2)
@@ -237,7 +261,7 @@ export class SMTree
 			const current = Math.floor((lo + hi) * 0.5);
 			const segment = this.segments[current];
 
-			if(segment.start < at && segment.end >= at)
+			if(segment.start <= at && segment.end > at)
 			{
 				return current;
 			}

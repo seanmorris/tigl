@@ -17,6 +17,10 @@ export class PlayerController
 
 		this.grounded = true;
 		this.grounded = 0;
+
+		this.gravity = 0.5;
+
+		this.lastMap = null;
 	}
 
 	simulate(entity)
@@ -37,12 +41,19 @@ export class PlayerController
 
 		const solidTerrain = world.getSolid(entity.x, entity.y + 1);
 		const solidEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)].filter(entity => entity.flags & 0x1);
+		const regions = world.getRegionsForPoint(entity.x, entity.y);
+		const maps = world.getMapsForPoint(entity.x, entity.y);
+		const firstMap = [...maps][0];
 
-		// console.log(world.getEntitiesForPoint(entity.x, entity.y + 1));
+		let gravity = this.gravity;
+
+		regions.forEach(region => {
+			gravity *= region.gravity ?? 1;
+		})
 
 		if(!solidTerrain)
 		{
-			this.ySpeed = Math.min(8, this.ySpeed + 0.5);
+			this.ySpeed = Math.min(8, this.ySpeed + gravity);
 			this.grounded = false;
 		}
 		else if(this.ySpeed >= 0)
@@ -51,15 +62,31 @@ export class PlayerController
 			this.grounded = true;
 		}
 
-		if(solidEntities.length)
+		if(solidTerrain)
+		{
+			world.motionGraph.add(entity, firstMap);
+			this.lastMap = firstMap;
+		}
+		else if(solidEntities.length)
 		{
 			const otherTop = solidEntities[0].y - solidEntities[0].height;
+
 			if(this.ySpeed >= 0 && entity.y < otherTop + 16)
 			{
 				entity.y = otherTop;
 				this.ySpeed = Math.min(0, this.ySpeed);
 				this.grounded = true;
+
+				world.motionGraph.add(entity, solidEntities[0]);
 			}
+		}
+		else if(maps.has(this.lastMap))
+		{
+			world.motionGraph.add(entity, this.lastMap);
+		}
+		else if(!maps.has(this.lastMap))
+		{
+			world.motionGraph.delete(entity);
 		}
 
 		if(xAxis)
@@ -68,7 +95,7 @@ export class PlayerController
 
 			if(!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y))
 			{
-				this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.4);
+				this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
 			}
 
 			if(Math.abs(this.xSpeed) > 8)
@@ -118,6 +145,14 @@ export class PlayerController
 		{
 			const direction = Math.atan2(this.ySpeed, this.xSpeed);
 			const distance = Math.hypot(this.ySpeed, this.xSpeed);
+
+			regions.forEach(region => {
+				this.xSpeed *= region.drag;
+				if(this.ySpeed > 0)
+				{
+					this.ySpeed *= region.drag;
+				}
+			});
 
 			const hit = Ray.cast(
 				world
@@ -170,14 +205,14 @@ export class PlayerController
 			}
 		}
 
-		if(this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
+		if(this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
 		{
 			this.grounded = false;
 			this.state = 'jumping';
 			this.ySpeed = -10;
 		}
 
-		if(!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
+		if(!this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
 		{
 			this.ySpeed = Math.max(-4, this.ySpeed);
 		}
@@ -196,25 +231,11 @@ export class PlayerController
 			}
 		}
 
-		// if(Math.trunc(performance.now() / 1000) % 15 === 0)
-		// {
-		// 	entity.sprite.region = null;
-		// }
-
-		// if(Math.trunc(performance.now() / 1000) % 15 === 5)
-		// {
-		// 	entity.sprite.region = waterRegion;
-		// }
-
-		// if(Math.trunc(performance.now() / 1000) % 15 === 10)
-		// {
-		// 	entity.sprite.region = fireRegion;
-		// }
-
-		// if(this.state === 'jumping' && this.direction === 'south')
-		// {
-		// 	this.direction = 'east';
-		// }
+		if(this.state === 'jumping' && this.direction === 'south')
+		{
+			this.xDirection = 1;
+			this.direction = 'east';
+		}
 	}
 
 	collide(entity, other, point)
@@ -229,9 +250,6 @@ export class PlayerController
 				this.grounded = true;
 				this.y = otherTop;
 			}
-
-			// console.log(other);
 		}
-		// console.log(other, point);
 	}
 }

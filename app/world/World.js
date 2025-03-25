@@ -1,44 +1,51 @@
 import { Bindable } from 'curvature/base/Bindable';
-import { Rectangle } from '../math/Rectangle';
+import { MotionGraph } from '../math/MotionGraph';
 import { TileMap } from './TileMap';
 import { SMTree } from '../math/SMTree';
 import { Ray } from "../math/Ray";
 
+const cache = new Map;
+
 export class World
 {
-	constructor({source, session})
+	constructor({src, session})
 	{
 		this[Bindable.Prevent] = true;
-		this.ready = this.getReady(source);
+		this.src = new URL(src, location);
+		this.ready = this.getReady(this.src);
 		this.maps = [];
-		this.mTree = new SMTree;
+		this.motionGraph = new MotionGraph;
 		this.rectMap = new Map;
+		this.mapRects = new Map;
+		this.mapTree = new SMTree;
 		this.session = session;
-		this.source = source;
+		this.age = 0;
+	}
+
+	simulate(delta)
+	{
+		this.age += delta;
 	}
 
 	async getReady(src)
 	{
-		const worldData = await (await fetch(src)).json();
+		if(!cache.has(src))
+		{
+			cache.set(src, fetch(src));
+		}
+
+		const worldData = await (await cache.get(src)).clone().json();
+
 		return await Promise.all(worldData.maps.map((m, i) => {
 
 			m.fileName = new URL(m.fileName, src).href;
 
 			const map = new TileMap({...m, session: this.session});
 
-			map.xWorld = m.x;
-			map.yWorld = m.y;
 			this.maps[i] = map;
-
-			const rect = new Rectangle(
-				m.x
-				, m.y
-				, m.x + m.width
-				, m.y + m.height
-			);
-
-			this.rectMap.set(rect, map);
-			this.mTree.add(rect);
+			this.mapRects.set(map, map.rect);
+			this.rectMap.set(map.rect, map);
+			this.mapTree.add(map.rect);
 
 			return map.ready;
 		}));
@@ -46,7 +53,7 @@ export class World
 
 	getMapsForPoint(x, y)
 	{
-		const rects = this.mTree.query(x, y, x, y);
+		const rects = this.mapTree.query(x, y, x, y);
 		const maps = new Set;
 
 		for(const rect of rects)
@@ -61,7 +68,7 @@ export class World
 	getMapsForRect(x, y, w, h)
 	{
 		const result = new Set;
-		const rects = this.mTree.query(
+		const rects = this.mapTree.query(
 			  x + -w * 0.5
 			, y + -h * 0.5
 			, x + w * 0.5
@@ -125,7 +132,7 @@ export class World
 			const w = 500;
 			const h = 500;
 
-			const entities = tilemap.quadTree.select(
+			const entities = tilemap.selectEntities(
 				x + -w * 0.5
 				, y + -h * 0.5
 				, x + w * 0.5
@@ -157,13 +164,32 @@ export class World
 			}
 
 			result = result.union(
-				tilemap.quadTree.select(
+				tilemap.selectEntities(
 					  x + -w * 0.5
 					, y + -h * 0.5
 					, x + w * 0.5
 					, y + h * 0.5
 				)
 			);
+		}
+
+		return result;
+	}
+
+	getRegionsForPoint(x, y)
+	{
+		const tilemaps = this.getMapsForPoint(x, y);
+
+		let result = new Set;
+
+		for(const tilemap of tilemaps)
+		{
+			if(!tilemap.visible)
+			{
+				continue;
+			}
+
+			result = result.union(tilemap.getRegionsForPoint(x, y));
 		}
 
 		return result;

@@ -5339,6 +5339,56 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
         _this.zoom(-1);
       }
     });
+    _this.keyboard.keys.bindTo('0', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 0;
+      }
+    });
+    _this.keyboard.keys.bindTo('1', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 1;
+      }
+    });
+    _this.keyboard.keys.bindTo('2', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 2;
+      }
+    });
+    _this.keyboard.keys.bindTo('3', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 3;
+      }
+    });
+    _this.keyboard.keys.bindTo('4', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 4;
+      }
+    });
+    _this.keyboard.keys.bindTo('5', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 5;
+      }
+    });
+    _this.keyboard.keys.bindTo('6', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 6;
+      }
+    });
+    _this.keyboard.keys.bindTo('7', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 7;
+      }
+    });
+    _this.keyboard.keys.bindTo('8', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 8;
+      }
+    });
+    _this.keyboard.keys.bindTo('9', (v, k, t, d) => {
+      if (v > 0) {
+        _this.session.spriteBoard.renderMode = 9;
+      }
+    });
     return _this;
   }
   _inherits(View, _BaseView);
@@ -5348,8 +5398,8 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
       this.session = new _Session.Session({
         onScreenJoyPad: this.args.joypad,
         keyboard: this.keyboard,
-        element: this.tags.canvas.element,
-        world: '/tile-world.world'
+        worldSrc: '/tile-world.world',
+        element: this.tags.canvas.element
       });
       this.args.frameLock = this.session.frameLock;
       this.args.simulationLock = this.session.simulationLock;
@@ -5384,7 +5434,7 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
           this.args.posY = Number(this.session.spriteBoard.following.y).toFixed(3);
         }
       };
-      this.session.spriteBoard.zoomLevel = document.body.clientWidth / 1280 * 2;
+      this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 1.5;
       this.resize();
       setInterval(() => simulate(performance.now()), 0);
       draw(performance.now());
@@ -5393,7 +5443,7 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
     key: "resize",
     value: function resize(x, y) {
       const oldScale = this.session.spriteBoard.screenScale;
-      this.session.spriteBoard.screenScale = document.body.clientWidth / 1280;
+      this.session.spriteBoard.screenScale = document.body.clientHeight / 1280;
       this.session.spriteBoard.zoomLevel *= this.session.spriteBoard.screenScale / oldScale;
       this.args.width = this.tags.canvas.element.width = x || document.body.clientWidth;
       this.args.height = this.tags.canvas.element.height = y || document.body.clientHeight;
@@ -5404,8 +5454,7 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
   }, {
     key: "scroll",
     value: function scroll(event) {
-      let delta = event.deltaY > 0 ? -1 : event.deltaY < 0 ? 1 : 0;
-      this.zoom(delta);
+      this.zoom(-Math.sign(event.deltaY));
     }
   }, {
     key: "zoom",
@@ -5414,7 +5463,6 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
         return;
       }
       this.session.spriteBoard.zoom(delta);
-      // this.resize();
     }
   }]);
 }(_View.View);
@@ -6325,23 +6373,75 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
   function MotionGraph() {
     _classCallCheck(this, MotionGraph);
+    _defineProperty(this, "backmap", new WeakMap());
     _defineProperty(this, "entities", new Map());
   }
   return _createClass(MotionGraph, [{
     key: "add",
-    value: function add(entity) {
-      if (this.entities.has(entity)) {
-        return;
+    value: function add(entity, parent) {
+      if (this.backmap.has(entity)) {
+        this.entities.get(this.backmap.get(entity)).delete(entity);
       }
-      this.entities.set(entity, new MotionGraph());
+      if (!this.entities.has(parent)) {
+        this.entities.set(parent, new Set());
+      }
+      this.entities.get(parent).add(entity);
+      this.backmap.set(entity, parent);
+      if (!this.constructor.globalMap.has(entity)) {
+        this.constructor.globalMap.set(entity, new Set());
+      }
+      this.constructor.globalMap.get(entity).add(this);
+    }
+  }, {
+    key: "getParent",
+    value: function getParent(entity) {
+      return this.backmap.get(entity);
     }
   }, {
     key: "delete",
     value: function _delete(entity) {
-      this.entities.delete(entity);
+      if (!this.backmap.has(entity)) {
+        return;
+      }
+      this.entities.get(this.backmap.get(entity)).delete(entity);
+      this.backmap.delete(entity);
+    }
+  }, {
+    key: "moveChildren",
+    value: function moveChildren(entity, x, y) {
+      if (!this.entities.has(entity)) {
+        return new Set();
+      }
+      if (x === 0 && y === 0) {
+        return new Set();
+      }
+      let children = this.entities.get(entity);
+      for (const child of children) {
+        if (entity.session.removed.has(child)) {
+          continue;
+        }
+        child.x += x;
+        child.y += y;
+        const maps = entity.session.world.getMapsForPoint(child.x, child.y);
+        maps.forEach(map => map.moveEntity(child));
+        this.moveChildren(child, x, y);
+      }
+      return children;
+    }
+  }], [{
+    key: "deleteFromAllGraphs",
+    value: function deleteFromAllGraphs(entity) {
+      if (!this.globalMap.has(entity)) {
+        return;
+      }
+      const graphs = this.globalMap.get(entity);
+      for (const graph of graphs) {
+        graph.delete(entity);
+      }
     }
   }]);
 }();
+_defineProperty(MotionGraph, "globalMap", new WeakMap());
 });
 
 ;require.register("math/QuadTree.js", function(exports, require, module) {
@@ -6389,14 +6489,18 @@ let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
   return _createClass(QuadTree, [{
     key: "add",
     value: function add(entity) {
-      if (!this.contains(entity.x, entity.y)) {
-        // console.warn('No QuadTree cell found!');
+      let xOffset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      let yOffset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      if (!this.contains(entity.x + xOffset, entity.y + yOffset)) {
+        if (!this.parent) {
+          console.warn('No QuadTree cell found!');
+        }
         return false;
       }
       const xSize = this.x2 - this.x1;
       const ySize = this.y2 - this.y1;
       if (this.split) {
-        return this.ulCell.add(entity) || this.urCell.add(entity) || this.blCell.add(entity) || this.brCell.add(entity);
+        return this.ulCell.add(entity, xOffset, yOffset) || this.urCell.add(entity, xOffset, yOffset) || this.blCell.add(entity, xOffset, yOffset) || this.brCell.add(entity, xOffset, yOffset);
       } else if (this.items.size && xSize > this.minSize && ySize > this.minSize) {
         this.split = true;
         const xSizeHalf = 0.5 * xSize;
@@ -6414,7 +6518,7 @@ let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
           let parent = this;
           let added = false;
           while (parent) {
-            added = parent.ulCell.add(item) || parent.urCell.add(item) || parent.blCell.add(item) || parent.brCell.add(item);
+            added = parent.ulCell.add(item, xOffset, yOffset) || parent.urCell.add(item, xOffset, yOffset) || parent.blCell.add(item, xOffset, yOffset) || parent.brCell.add(item, xOffset, yOffset);
             if (added) break;
             parent = parent.parent;
           }
@@ -6423,7 +6527,7 @@ let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
           }
           this.items.delete(item);
         }
-        return this.ulCell.add(entity) || this.urCell.add(entity) || this.blCell.add(entity) || this.brCell.add(entity);
+        return this.ulCell.add(entity, xOffset, yOffset) || this.urCell.add(entity, xOffset, yOffset) || this.blCell.add(entity, xOffset, yOffset) || this.brCell.add(entity, xOffset, yOffset);
       } else {
         if (!this.items.has(entity)) {
           let parent = this;
@@ -6440,13 +6544,15 @@ let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
   }, {
     key: "move",
     value: function move(entity) {
+      let xOffset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      let yOffset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
       if (!this.backMap.has(entity)) {
         // console.warn('Entity not in QuadTree.');
-        return this.add(entity);
+        return this.add(entity, xOffset, yOffset);
       }
       const startCell = this.backMap.get(entity);
       let cell = startCell;
-      while (cell && !cell.contains(entity.x, entity.y)) {
+      while (cell && !cell.contains(entity.x + xOffset, entity.y + yOffset)) {
         cell = cell.parent;
       }
       if (!cell) {
@@ -6456,7 +6562,7 @@ let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
       }
       if (cell !== startCell) {
         startCell.delete(entity);
-        cell.add(entity);
+        cell.add(entity, xOffset, yOffset);
       }
       return true;
     }
@@ -6582,7 +6688,9 @@ let QuickTree = exports.QuickTree = /*#__PURE__*/function (_QuadTree) {
   return _createClass(QuickTree, [{
     key: "add",
     value: function add(entity) {
-      if (!_superPropGet(QuickTree, "add", this, 3)([entity])) {
+      let xOffset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      let yOffset = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      if (!_superPropGet(QuickTree, "add", this, 3)([entity, xOffset, yOffset])) {
         if (!this.parent) {
           console.warn('Failed to add object to QuickTree.');
         }
@@ -6606,10 +6714,12 @@ let QuickTree = exports.QuickTree = /*#__PURE__*/function (_QuadTree) {
   }, {
     key: "select",
     value: function select(x1, y1, x2, y2) {
+      let xO = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+      let yO = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
       const selectRect = new _Rectangle.Rectangle(x1, y1, x2, y2);
       const result = _superPropGet(QuickTree, "select", this, 3)([x1, y1, x2, y2]);
       for (const entity of result) {
-        if (!selectRect.contains(entity.x, entity.y)) {
+        if (!selectRect.contains(entity.x + xO, entity.y + yO)) {
           result.delete(entity);
         }
       }
@@ -6838,10 +6948,10 @@ let Rectangle = exports.Rectangle = /*#__PURE__*/function () {
   }, {
     key: "isOverlapping",
     value: function isOverlapping(other) {
-      if (this.x1 >= other.x2 || this.x2 <= other.x1) {
+      if (this.x1 >= other.x2 || other.x1 >= this.x2) {
         return false;
       }
-      if (this.y1 >= other.y2 || this.y2 <= other.y1) {
+      if (this.y1 >= other.y2 || other.y1 >= this.y2) {
         return false;
       }
       return true;
@@ -6906,6 +7016,11 @@ let Rectangle = exports.Rectangle = /*#__PURE__*/function () {
         return [this.x1, this.y1, 0, 1, this.x2, this.y1, 0, 1, this.x1, this.y2, 0, 1, this.x1, this.y2, 0, 1, this.x2, this.y1, 0, 1, this.x2, this.y2, 0, 1];
       }
       return [this.x1, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x1, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x1, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y1, ...(dim > 2 ? Array(-2 + dim).fill(0) : []), this.x2, this.y2, ...(dim > 2 ? Array(-2 + dim).fill(0) : [])];
+    }
+  }], [{
+    key: "clone",
+    value: function clone(rectangle) {
+      return new Rectangle(rectangle.x1, rectangle.y1, rectangle.x2, rectangle.y2);
     }
   }]);
 }();
@@ -6974,7 +7089,6 @@ let Segment = /*#__PURE__*/function () {
   }, {
     key: "add",
     value: function add(rectangle) {
-      Object.freeze(rectangle);
       if (this.subTree) {
         this.subTree.add(rectangle);
       }
@@ -7006,6 +7120,8 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
     this.depth = args[depthSymbol];
     this.dimension = args.dimension;
     this.segments = [new Segment(-Infinity, Infinity, null, this.dimension, this.depth)];
+    this.rectangles = new WeakSet();
+    this.snapshots = new WeakMap();
   }
   return _createClass(SMTree, [{
     key: "add",
@@ -7013,6 +7129,13 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       if (!isRectangle(rectangle)) {
         throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
       }
+      this.rectangles.add(rectangle);
+      this.snapshots.set(rectangle, {
+        x1: rectangle.x1,
+        y1: rectangle.y1,
+        x2: rectangle.x2,
+        y2: rectangle.y2
+      });
       const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
       const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
       const startIndex = this.findSegment(rectMin);
@@ -7033,29 +7156,41 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       if (!isRectangle(rectangle)) {
         throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
       }
-      const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
-      const rectMax = this.depth === 0 ? rectangle.x2 : rectangle.y2;
+      if (!this.rectangles.has(rectangle)) {
+        console.warn('Rectangle not in tree!');
+        return;
+      }
+      const snapshot = this.snapshots.get(rectangle);
+      this.rectangles.delete(rectangle);
+      this.snapshots.delete(rectangle);
+      const rectMin = this.depth === 0 ? snapshot.x1 : snapshot.y1;
+      const rectMax = this.depth === 0 ? snapshot.x2 : snapshot.y2;
       const startIndex = this.findSegment(rectMin);
-      const endIndex = this.findSegment(rectMax);
-      const empty = [];
+      let endIndex = this.findSegment(rectMax);
       for (let i = startIndex; i <= endIndex; i++) {
-        if (i > 0 && this.segments[i].delete(rectangle)) {
-          empty.push(i);
+        const rects = this.segments[i].rectangles;
+        const last = this.segments[i - 1].rectangles;
+        rects.delete(rectangle);
+        if (rects.size !== last.size) {
+          continue;
         }
-      }
-      for (let i = -1 + empty.length; i >= 0; i--) {
-        const e = empty[i];
-        if (!this.segments[-1 + e]) {
-          throw new Error('Cannot delete segment without predecessor.');
+        if (rects.symmetricDifference(last).size > 0) {
+          continue;
         }
-        this.segments[-1 + e].end = this.segments[e].end;
-        this.segments[1 + e].prev = this.segments[-1 + e];
-        this.segments.splice(e, 1);
+        this.segments[i - 1].end = this.segments[i].end;
+        if (this.segments[i + 1]) {
+          this.segments[i + 1].prev = this.segments[i - 1];
+        }
+        this.segments.splice(i, 1);
+        endIndex--;
+        i--;
       }
-      if (this.segments.length === 2 && this.segments[0].size == 0 && this.segments[1].size === 0) {
-        this.segments[0].end = this.segments[1].end;
-        this.segments.length = 1;
-      }
+    }
+  }, {
+    key: "move",
+    value: function move(rectangle) {
+      this.delete(rectangle);
+      this.add(rectangle);
     }
   }, {
     key: "query",
@@ -7096,7 +7231,7 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       do {
         const current = Math.floor((lo + hi) * 0.5);
         const segment = this.segments[current];
-        if (segment.start < at && segment.end >= at) {
+        if (segment.start <= at && segment.end > at) {
           return current;
         }
         if (segment.start < at) {
@@ -7318,6 +7453,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 let BoxController = exports.BoxController = /*#__PURE__*/function () {
   function BoxController() {
     _classCallCheck(this, BoxController);
+    _defineProperty(this, "frames", 0);
   }
   return _createClass(BoxController, [{
     key: "create",
@@ -7329,6 +7465,8 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
         entity.x = entityData.x + entityData.width * 0.5;
         entity.y = entityData.y + entityData.height + -1;
       }
+      this.xOriginal = entity.x;
+      this.yOriginal = entity.y;
       entity.flags |= 0x1;
     }
   }, {
@@ -7336,13 +7474,36 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
     value: function simulate(entity) {
       entity.sprite.width = entity.width;
       entity.sprite.height = entity.height;
+      if (entity.props.has('xOscillate')) {
+        var _entity$props$get;
+        const range = entity.props.get('xOscillate');
+        const delay = (_entity$props$get = entity.props.get('delay')) !== null && _entity$props$get !== void 0 ? _entity$props$get : 1500;
+        const age = entity.session.world.age;
+        const current = Math.pow(Math.cos(Math.pow(Math.sin(age / delay), 5)), 16);
+        const mapOffset = entity.lastMap ? entity.lastMap.x - entity.lastMap.xOrigin : 0;
+        entity.x = mapOffset + this.xOriginal + current * range;
+      }
+      if (entity.props.has('yOscillate')) {
+        var _entity$props$get2;
+        const range = entity.props.get('yOscillate');
+        const delay = (_entity$props$get2 = entity.props.get('delay')) !== null && _entity$props$get2 !== void 0 ? _entity$props$get2 : 1500;
+        const age = entity.session.world.age;
+        const current = Math.pow(Math.cos(Math.pow(Math.sin(age / delay), 5)), 16);
+        const mapOffset = entity.lastMap ? entity.lastMap.y - entity.lastMap.yOrigin : 0;
+        const yNew = this.yOriginal + current * range + mapOffset;
+        if (yNew < entity.y) {
+          const above = entity.session.world.getEntitiesForRect(entity.x, entity.y + -entity.height * 0.5 + -(entity.y - yNew) * 0.5, entity.width, entity.y + -yNew + entity.height);
+          above.forEach(other => other.y = entity.y - entity.height);
+        }
+        entity.y = yNew;
+      }
     }
   }, {
     key: "collide",
     value: function collide() {}
   }]);
 }();
-_defineProperty(BoxController, "spriteColor", [255, 0, 0, 255]);
+_defineProperty(BoxController, "spriteColor", [0, 0, 0, 255]);
 });
 
 ;require.register("model/Entity.js", function(exports, require, module) {
@@ -7355,6 +7516,7 @@ exports.Entity = void 0;
 var _Bindable = require("curvature/base/Bindable");
 var _Rectangle = require("../math/Rectangle");
 var _Sprite = require("../sprite/Sprite");
+var _Properties = require("../world/Properties");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -7363,6 +7525,7 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 let Entity = exports.Entity = /*#__PURE__*/function () {
   function Entity(entityData) {
+    var _entityData$propertie;
     _classCallCheck(this, Entity);
     this[_Bindable.Bindable.Prevent] = true;
     const controller = entityData.controller,
@@ -7378,6 +7541,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       _entityData$height = entityData.height,
       height = _entityData$height === void 0 ? 32 : _entityData$height;
     this.controller = controller;
+    this.props = new _Properties.Properties((_entityData$propertie = entityData.properties) !== null && _entityData$propertie !== void 0 ? _entityData$propertie : []);
     this.xSpriteOffset = 0;
     this.ySpriteOffset = sprite ? 0 : 15;
     this.flags = 0;
@@ -7395,11 +7559,16 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
     this.inputManager = inputManager;
     this.session = session;
     this.rect = new _Rectangle.Rectangle(x - width * 0.5, y - height, x + width * 0.5, y);
+    this.xOrigin = x;
+    this.yOrigin = x;
   }
   return _createClass(Entity, [{
     key: "simulate",
     value: function simulate() {
+      const startX = this.x;
+      const startY = this.y;
       this.controller && this.controller.simulate(this);
+      this.session.world.motionGraph.moveChildren(this, this.x - startX, this.y - startY);
       this.rect.x1 = this.x - this.width * 0.5;
       this.rect.x2 = this.x + this.width * 0.5;
       this.rect.y1 = this.y - this.height;
@@ -7532,6 +7701,43 @@ let InputManager = exports.InputManager = /*#__PURE__*/function () {
 }();
 });
 
+;require.register("model/MapMover.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MapMover = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+let MapMover = exports.MapMover = /*#__PURE__*/function () {
+  function MapMover() {
+    _classCallCheck(this, MapMover);
+  }
+  return _createClass(MapMover, [{
+    key: "create",
+    value: function create(map) {
+      this.yOriginal = map.y;
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(map, delta) {
+      if (map.props.get('yOscillate')) {
+        var _map$props$get;
+        const range = map.props.get('yOscillate');
+        const delay = (_map$props$get = map.props.get('delay')) !== null && _map$props$get !== void 0 ? _map$props$get : 1500;
+        const age = map.session.world.age;
+        const current = Math.pow(Math.cos(Math.pow(Math.sin(age / delay), 5)), 16);
+        map.y = this.yOriginal + current * range;
+      }
+    }
+  }]);
+}();
+});
+
 ;require.register("model/PlayerController.js", function(exports, require, module) {
 "use strict";
 
@@ -7561,6 +7767,8 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       this.ySpeed = 0;
       this.grounded = true;
       this.grounded = 0;
+      this.gravity = 0.5;
+      this.lastMap = null;
     }
   }, {
     key: "simulate",
@@ -7575,28 +7783,41 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       const world = entity.session.world;
       const solidTerrain = world.getSolid(entity.x, entity.y + 1);
       const solidEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)].filter(entity => entity.flags & 0x1);
-
-      // console.log(world.getEntitiesForPoint(entity.x, entity.y + 1));
-
+      const regions = world.getRegionsForPoint(entity.x, entity.y);
+      const maps = world.getMapsForPoint(entity.x, entity.y);
+      const firstMap = [...maps][0];
+      let gravity = this.gravity;
+      regions.forEach(region => {
+        var _region$gravity;
+        gravity *= (_region$gravity = region.gravity) !== null && _region$gravity !== void 0 ? _region$gravity : 1;
+      });
       if (!solidTerrain) {
-        this.ySpeed = Math.min(8, this.ySpeed + 0.5);
+        this.ySpeed = Math.min(8, this.ySpeed + gravity);
         this.grounded = false;
       } else if (this.ySpeed >= 0) {
         this.ySpeed = Math.min(0, this.ySpeed);
         this.grounded = true;
       }
-      if (solidEntities.length) {
+      if (solidTerrain) {
+        world.motionGraph.add(entity, firstMap);
+        this.lastMap = firstMap;
+      } else if (solidEntities.length) {
         const otherTop = solidEntities[0].y - solidEntities[0].height;
         if (this.ySpeed >= 0 && entity.y < otherTop + 16) {
           entity.y = otherTop;
           this.ySpeed = Math.min(0, this.ySpeed);
           this.grounded = true;
+          world.motionGraph.add(entity, solidEntities[0]);
         }
+      } else if (maps.has(this.lastMap)) {
+        world.motionGraph.add(entity, this.lastMap);
+      } else if (!maps.has(this.lastMap)) {
+        world.motionGraph.delete(entity);
       }
       if (xAxis) {
         this.xDirection = Math.sign(xAxis);
         if (!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y)) {
-          this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.4);
+          this.xSpeed += xAxis * (this.grounded ? 0.2 : 0.3);
         }
         if (Math.abs(this.xSpeed) > 8) {
           this.xSpeed = 8 * Math.sign(this.xSpeed);
@@ -7628,6 +7849,12 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       if (this.xSpeed || this.ySpeed) {
         const direction = Math.atan2(this.ySpeed, this.xSpeed);
         const distance = Math.hypot(this.ySpeed, this.xSpeed);
+        regions.forEach(region => {
+          this.xSpeed *= region.drag;
+          if (this.ySpeed > 0) {
+            this.ySpeed *= region.drag;
+          }
+        });
         const hit = _Ray.Ray.cast(world, entity.x, entity.y + -entity.height * 0.5, 0, direction, distance, _Ray.Ray.T_LAST_EMPTY);
         let xMove = this.xSpeed;
         let yMove = this.ySpeed;
@@ -7654,12 +7881,12 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           this.direction = 'east';
         }
       }
-      if (this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1) {
+      if (this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1) {
         this.grounded = false;
         this.state = 'jumping';
         this.ySpeed = -10;
       }
-      if (!this.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
+      if (!this.grounded && entity.inputManager && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
         this.ySpeed = Math.max(-4, this.ySpeed);
       }
       if (entity.sprite) {
@@ -7671,26 +7898,10 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           entity.sprite.changeAnimation(`${this.state}-${this.direction}`);
         }
       }
-
-      // if(Math.trunc(performance.now() / 1000) % 15 === 0)
-      // {
-      // 	entity.sprite.region = null;
-      // }
-
-      // if(Math.trunc(performance.now() / 1000) % 15 === 5)
-      // {
-      // 	entity.sprite.region = waterRegion;
-      // }
-
-      // if(Math.trunc(performance.now() / 1000) % 15 === 10)
-      // {
-      // 	entity.sprite.region = fireRegion;
-      // }
-
-      // if(this.state === 'jumping' && this.direction === 'south')
-      // {
-      // 	this.direction = 'east';
-      // }
+      if (this.state === 'jumping' && this.direction === 'south') {
+        this.xDirection = 1;
+        this.direction = 'east';
+      }
     }
   }, {
     key: "collide",
@@ -7702,10 +7913,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           this.grounded = true;
           this.y = otherTop;
         }
-
-        // console.log(other);
       }
-      // console.log(other, point);
     }
   }]);
 }();
@@ -7743,7 +7951,7 @@ function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new T
 function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
 let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
   function Spawner(spawnData) {
-    var _spawnData$properties, _props$get;
+    var _spawnData$properties;
     var _this;
     _classCallCheck(this, Spawner);
     _this = _callSuper(this, Spawner, [spawnData]);
@@ -7751,9 +7959,7 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
     _this.spawnType = spawnData.spawnType;
     _this.spawnClass = spawnData.spawnClass;
     _this.session = spawnData.session;
-    const props = new _Properties.Properties((_spawnData$properties = spawnData.properties) !== null && _spawnData$properties !== void 0 ? _spawnData$properties : []);
-    _this.count = (_props$get = props.get('count')) !== null && _props$get !== void 0 ? _props$get : 1;
-    _this.i = 0;
+    _this.props = new _Properties.Properties((_spawnData$properties = spawnData.properties) !== null && _spawnData$properties !== void 0 ? _spawnData$properties : []);
     return _this;
   }
   _inherits(Spawner, _Entity);
@@ -7768,7 +7974,7 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
           entityDef.sprite = new _Sprite.Sprite({
             session: this.spawnData.session,
             spriteSheet: new _SpriteSheet.SpriteSheet({
-              source: spawnClass.spriteSheet
+              src: spawnClass.spriteSheet
             })
           });
         } else if (spawnClass.spriteImage) {
@@ -7782,6 +7988,13 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
             src: this.spawnData.map.getTileImage(this.spawnData.gid),
             tiled: true
           });
+        } else if (this.props.has('color')) {
+          entityDef.sprite = new _Sprite.Sprite({
+            session: this.spawnData.session,
+            color: this.props.get('color'),
+            width: this.width,
+            height: this.height
+          });
         } else if (spawnClass.spriteColor) {
           entityDef.sprite = new _Sprite.Sprite({
             session: this.spawnData.session,
@@ -7791,12 +8004,15 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
           });
         }
       }
+      const map = this.spawnData.map;
       const entity = new _Entity2.Entity(_objectSpread(_objectSpread({}, entityDef), {}, {
         controller: controller,
         session: this.session,
-        x: entityDef.x,
-        y: entityDef.y
+        x: entityDef.x + (map.x - map.xOrigin),
+        y: entityDef.y + (map.y - map.yOrigin)
       }));
+      this.session.world.motionGraph.add(entity, map);
+      entity.lastMap = map;
       this.session.removeEntity(this);
       this.session.addEntity(entity);
       _superPropGet(Spawner, "simulate", this, 3)([]);
@@ -7828,27 +8044,35 @@ var _Entity = require("../model/Entity");
 var _Camera = require("../sprite/Camera");
 var _World = require("../world/World");
 var _Controller = require("../input/Controller");
-var _EntityPallet = require("../world/EntityPallet");
+var _Pallet = require("../world/Pallet");
 var _PlayerController = require("../model/PlayerController");
 var _BallController = require("../model/BallController");
 var _BarrelController = require("../model/BarrelController");
 var _BoxController = require("../model/BoxController");
+var _MapMover = require("../model/MapMover");
+var _MotionGraph = require("../math/MotionGraph");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-_EntityPallet.EntityPallet.register('@basic-platformer', _PlayerController.PlayerController);
-_EntityPallet.EntityPallet.register('@barrel', _BarrelController.BarrelController);
-_EntityPallet.EntityPallet.register('@ball', _BallController.BallController);
-_EntityPallet.EntityPallet.register('@box', _BoxController.BoxController);
+const input = new URLSearchParams(location.search);
+const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : [];
+console.log(location.search, input, warpStart);
 let Session = exports.Session = /*#__PURE__*/function () {
   function Session(_ref) {
     let element = _ref.element,
-      world = _ref.world,
+      worldSrc = _ref.worldSrc,
       keyboard = _ref.keyboard,
       onScreenJoyPad = _ref.onScreenJoyPad;
     _classCallCheck(this, Session);
+    this.entityPallet = new _Pallet.Pallet();
+    this.mapPallet = new _Pallet.Pallet();
+    this.entityPallet.register('@basic-platformer', _PlayerController.PlayerController);
+    this.entityPallet.register('@barrel', _BarrelController.BarrelController);
+    this.entityPallet.register('@ball', _BallController.BallController);
+    this.entityPallet.register('@box', _BoxController.BoxController);
+    this.mapPallet.register('@moving-map', _MapMover.MapMover);
     this.fThen = 0;
     this.sThen = 0;
     this.frameLock = 60;
@@ -7858,7 +8082,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
     this.paused = false;
     this.loaded = false;
     this.world = new _World.World({
-      source: new URL(world, location).href,
+      src: worldSrc,
       session: this
     });
     this.spriteBoard = new _SpriteBoard.SpriteBoard({
@@ -7889,22 +8113,25 @@ let Session = exports.Session = /*#__PURE__*/function () {
     value: async function initialize() {
       this.loaded = true;
       for (const map of this.world.maps) {
-        if (!map.properties['player-start']) {
+        var _warpStart$, _warpStart$2;
+        if (!map.props.has('player-start')) {
           continue;
         }
-        const startId = map.properties['player-start'];
+        const startId = map.props.get('player-start');
         const startDef = map.entityDefs[startId];
-        const playerClass = await _EntityPallet.EntityPallet.resolve(startDef.type);
+        const playerClass = await this.entityPallet.resolve(startDef.type);
+        const startX = (_warpStart$ = warpStart[0]) !== null && _warpStart$ !== void 0 ? _warpStart$ : startDef.x;
+        const startY = (_warpStart$2 = warpStart[1]) !== null && _warpStart$2 !== void 0 ? _warpStart$2 : startDef.y;
         const player = this.player = new _Entity.Entity({
           controller: new playerClass(),
           session: this,
-          x: startDef.x,
-          y: startDef.y,
+          x: startX,
+          y: startY,
           inputManager: this.controller,
           sprite: new _Sprite.Sprite({
             session: this,
             spriteSheet: new _SpriteSheet.SpriteSheet({
-              source: '/player.tsj'
+              src: '/player.tsj'
             })
           }),
           camera: _Camera.Camera
@@ -7921,7 +8148,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
       }
       this.entities.add(entity);
       const maps = this.world.getMapsForPoint(entity.x, entity.y);
-      maps.forEach(map => map.quadTree.add(entity));
+      maps.forEach(map => map.addEntity(entity));
     }
   }, {
     key: "removeEntity",
@@ -7929,6 +8156,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
       this.entities.delete(entity);
       this.spriteBoard.sprites.delete(entity.sprite);
       _QuickTree.QuickTree.deleteFromAllTrees(entity);
+      _MotionGraph.MotionGraph.deleteFromAllGraphs(entity);
       this.removed.add(entity);
     }
   }, {
@@ -7961,14 +8189,26 @@ let Session = exports.Session = /*#__PURE__*/function () {
         if (entity.sprite) entity.sprite.visible = false;
       });
       const player = this.player;
-      const nearBy = this.world.getEntitiesForRect(player.x, player.y, _Camera.Camera.width * 1.0 + 64, _Camera.Camera.height * 1.0 + 64);
-      nearBy.delete(player);
-      nearBy.add(player);
       this.spriteBoard.sprites.clear();
-      nearBy.forEach(entity => {
+      this.spriteBoard.regions.clear();
+      this.world.simulate(delta);
+      const visibleMaps = this.world.getMapsForRect(player.x, player.y, _Camera.Camera.width, _Camera.Camera.height);
+      visibleMaps.forEach(map => {
+        map.simulate(delta);
+        const mapRegions = map.getRegionsForRect(player.x + -(_Camera.Camera.width * 1.0) + 64, player.y + -(_Camera.Camera.height * 1.0) + 64, player.x + _Camera.Camera.width * 1.0 + 64, player.y + _Camera.Camera.height * 1.0 + 64);
+        mapRegions.forEach(r => this.spriteBoard.regions.add(r));
+      });
+      const entities = this.world.getEntitiesForRect(player.x, player.y
+      // , (Camera.width * 1.0) + 64
+      // , (Camera.height * 1.0) + 64
+      , _Camera.Camera.width * 1.5, _Camera.Camera.height * 1.5);
+      entities.delete(player);
+      entities.add(player);
+      entities.forEach(entity => {
         entity.simulate(delta);
+        if (this.removed.has(entity)) return;
         const maps = this.world.getMapsForPoint(entity.x, entity.y);
-        maps.forEach(map => this.removed.has(entity) || map.quadTree.move(entity));
+        maps.forEach(map => map.moveEntity(entity));
         if (entity.sprite) {
           this.spriteBoard.sprites.add(entity.sprite);
           entity.sprite.visible = true;
@@ -8047,8 +8287,6 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
     const gl = this.spriteBoard.gl2d.context;
     this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
     this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
-    const r = () => parseInt(Math.random() * 0xFF);
-    const pixel = new Uint8Array([r(), r(), r(), 0xFF]);
     map.ready.then(() => {
       this.loaded = true;
       this.tileWidth = map.tileWidth;
@@ -8066,13 +8304,13 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
     }
   }, {
     key: "draw",
-    value: function draw() {
+    value: function draw(delta, priority) {
       if (!this.loaded) {
         return;
       }
       const gl = this.spriteBoard.gl2d.context;
-      const x = this.spriteBoard.following.x;
-      const y = this.spriteBoard.following.y;
+      const x = -this.map.x + this.spriteBoard.following.x;
+      const y = -this.map.y + this.spriteBoard.following.y;
       const zoom = this.spriteBoard.zoomLevel;
       const halfTileWidth = this.tileWidth * 0.5;
       const halfTileHeight = this.tileHeight * 0.5;
@@ -8080,8 +8318,8 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
       const tilesHigh = Math.floor(this.height / this.tileHeight);
       const xOffset = Math.floor(Math.floor(0.5 * this.width / 64) + 0) * 64;
       const yOffset = Math.floor(Math.floor(0.5 * this.height / 64) + 0) * 64;
-      const xTile = (x + halfTileWidth) / this.tileWidth + -this.negSafeMod(x + halfTileWidth, 64) / this.tileWidth + -this.map.xWorld / this.tileWidth + -xOffset / this.tileWidth;
-      const yTile = (y + halfTileHeight) / this.tileHeight + -this.negSafeMod(y + halfTileHeight, 64) / this.tileHeight + -this.map.yWorld / this.tileHeight + -yOffset / this.tileHeight;
+      const xTile = (x + halfTileWidth) / this.tileWidth + -this.negSafeMod(x + halfTileWidth, 64) / this.tileWidth + -xOffset / this.tileWidth;
+      const yTile = (y + halfTileHeight) / this.tileHeight + -this.negSafeMod(y + halfTileHeight, 64) / this.tileHeight + -yOffset / this.tileHeight;
       if (xTile + tilesWide < 0 || yTile + tilesHigh < 0) {
         return;
       }
@@ -8097,10 +8335,16 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
       gl.activeTexture(gl.TEXTURE3);
       gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
       this.spriteBoard.drawProgram.uniformI('u_tileMapping', 3);
-      const tilePixelLayers = this.map.getSlice(xTile, yTile, tilesWide, tilesHigh, performance.now() / 1000);
+      const tilePixelLayers = this.map.getSlice(priority, xTile, yTile, tilesWide, tilesHigh, delta);
       for (const tilePixels of tilePixelLayers) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, tilesWide, tilesHigh, 0, gl.RGBA, gl.UNSIGNED_BYTE, tilePixels);
         this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * zoom, this.width * zoom, this.height * zoom);
+        if (priority === 'foreground') {
+          this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
       }
@@ -8277,6 +8521,115 @@ let Parallax = exports.Parallax = /*#__PURE__*/function () {
 }();
 });
 
+;require.register("sprite/Region.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Region = void 0;
+var _Bindable = require("curvature/base/Bindable");
+var _SpriteSheet = require("./SpriteSheet");
+var _Matrix = require("../math/Matrix");
+var _Camera = require("./Camera");
+var _Rectangle = require("../math/Rectangle");
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const rectMap = new WeakMap();
+let Region = exports.Region = /*#__PURE__*/function () {
+  function Region(_ref) {
+    let x = _ref.x,
+      y = _ref.y,
+      z = _ref.z,
+      width = _ref.width,
+      height = _ref.height,
+      spriteBoard = _ref.spriteBoard;
+    _classCallCheck(this, Region);
+    this[_Bindable.Bindable.Prevent] = true;
+    this.x = x || 0;
+    this.y = y || 0;
+    this.z = z || 0;
+    this.width = width || 32;
+    this.height = height || 32;
+    this.visible = false;
+    this.gravity = 0.5;
+    this.drag = 0.95;
+    this.rect = new _Rectangle.Rectangle(this.x, this.y, this.x + this.width, this.y + this.height);
+    rectMap.set(this.rect, this);
+    this.spriteBoard = spriteBoard;
+
+    // this.region = [0, 0, 0, 1];
+    this.region = [0, 1, 1, 1];
+    const gl = this.spriteBoard.gl2d.context;
+    this.texture = gl.createTexture();
+    const singlePixel = new Uint8ClampedArray([this.region[0] * 255, this.region[1] * 255, this.region[2] * 255, this.region[3] * 255]);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, singlePixel);
+  }
+  return _createClass(Region, [{
+    key: "draw",
+    value: function draw(delta) {
+      const gl = this.spriteBoard.gl2d.context;
+      const zoom = this.spriteBoard.zoomLevel;
+      this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.texture);
+      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width / 2, this.y * zoom + -_Camera.Camera.y + this.spriteBoard.height / 2, this.width * zoom, this.height * zoom);
+
+      // gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+      // gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {
+        3: 1
+      }));
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+      // Cleanup...
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+  }, {
+    key: "setRectangle",
+    value: function setRectangle(x, y, width, height) {
+      const gl = this.spriteBoard.gl2d.context;
+      const zoom = this.spriteBoard.zoomLevel;
+      const xra = 1.0;
+      const yra = 1.0;
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0.0, 0.0, xra, 0.0, 0.0, yra, 0.0, yra, xra, 0.0, xra, yra]), gl.STATIC_DRAW);
+      const x1 = x;
+      const y1 = y;
+      const x2 = x + width;
+      const y2 = y + height;
+      const points = new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]);
+      const xOff = x + width;
+      const yOff = y + height;
+
+      // this.theta = performance.now() / 1000;
+
+      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.0, yOff + zoom + 16 * zoom)
+      // , Matrix.shearX(this.shearX)
+      // , Matrix.shearX(this.shearY)
+      // , Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
+      // , Matrix.rotate(this.theta)
+      , _Matrix.Matrix.translate(-xOff, -yOff)));
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
+      gl.bufferData(gl.ARRAY_BUFFER, t, gl.STATIC_DRAW);
+    }
+  }], [{
+    key: "fromRect",
+    value: function fromRect(rect) {
+      return rectMap.get(rect);
+    }
+  }]);
+}();
+});
+
 ;require.register("sprite/Sprite.js", function(exports, require, module) {
 "use strict";
 
@@ -8315,8 +8668,8 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
     this.y = y || 0;
     this.z = z || 0;
     this.currentAnimation = null;
-    this.width = 32 || width;
-    this.height = 32 || height;
+    this.width = width || 32;
+    this.height = height || 32;
     this.originalWidth = originalWidth !== null && originalWidth !== void 0 ? originalWidth : this.width;
     this.originalHeight = originalHeight !== null && originalHeight !== void 0 ? originalHeight : this.height;
     this.tiled = tiled;
@@ -8329,7 +8682,6 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
     this.xCenter = 0.5;
     this.yCenter = 1.0;
     this.visible = false;
-    this.moving = false;
     this.textures = [];
     this.frames = [];
     this.currentDelay = 0;
@@ -8410,7 +8762,6 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
       // Cleanup...
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.bindTexture(gl.TEXTURE_2D, null);
-      return;
     }
   }, {
     key: "changeAnimation",
@@ -8446,7 +8797,6 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
   }, {
     key: "setRectangle",
     value: function setRectangle(x, y, width, height) {
-      let transform = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
       const gl = this.spriteBoard.gl2d.context;
       const zoom = this.spriteBoard.zoomLevel;
       const xra = this.width / this.originalWidth;
@@ -8483,6 +8833,7 @@ var _MapRenderer = require("./MapRenderer");
 var _Parallax = require("./Parallax");
 var _Gl2d = require("../gl2d/Gl2d");
 var _Camera = require("./Camera");
+var _Region = require("./Region");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -8495,9 +8846,10 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
     _classCallCheck(this, SpriteBoard);
     this[_Bindable.Bindable.Prevent] = true;
     this.maps = [];
+    this.currentMap = null;
     this.world = world;
     this.sprites = new Set();
-    this.currentMap = null;
+    this.regions = new Set();
     this.screenScale = 1;
     this.zoomLevel = 2;
     this.mouse = {
@@ -8523,9 +8875,6 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       uniforms: uniforms
     });
     this.drawProgram.use();
-    this.colorLocation = this.drawProgram.uniforms.u_color;
-    this.tilePosLocation = this.drawProgram.uniforms.u_tileNo;
-    this.regionLocation = this.drawProgram.uniforms.u_region;
     this.drawLayer = this.gl2d.createTexture(1000, 1000);
     this.effectLayer = this.gl2d.createTexture(1000, 1000);
     this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
@@ -8588,11 +8937,13 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.effectBuffer);
       gl.clear(gl.COLOR_BUFFER_BIT);
       if (this.currentMap && this.currentMap.backgroundColor) {
-        const color = this.currentMap.backgroundColor.substr(1);
-        const r = parseInt(color.substr(-6, 2), 16) / 255;
-        const b = parseInt(color.substr(-4, 2), 16) / 255;
-        const g = parseInt(color.substr(-2, 2), 16) / 255;
-        const a = color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+        // const color = this.currentMap.backgroundColor.substr(1);
+        const color = this.currentMap.backgroundColor;
+        const r = color[0] / 255; //parseInt(color.substr(-6, 2), 16) / 255;
+        const b = color[1] / 255; //parseInt(color.substr(-4, 2), 16) / 255;
+        const g = color[2] / 255; //parseInt(color.substr(-2, 2), 16) / 255;
+        const a = color[3] / 255; //color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+
         gl.clearColor(r, g, b, a);
       } else {
         gl.clearColor(0, 0, 0, 1);
@@ -8604,7 +8955,7 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       gl.clear(gl.COLOR_BUFFER_BIT);
       this.drawProgram.uniformF('u_size', _Camera.Camera.width, _Camera.Camera.height);
       this.parallax && this.parallax.draw();
-      this.mapRenderers.forEach(mr => mr.draw());
+      this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));
       let sprites = [...this.sprites];
       sprites.sort((a, b) => {
         if (a.y === undefined) {
@@ -8616,6 +8967,9 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
         return a.y - b.y;
       });
       sprites.forEach(s => s.visible && s.draw(delta));
+      this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
+      this.regions.forEach(r => r.draw());
+      this.mapRenderers.forEach(mr => mr.draw(delta, 'foreground'));
 
       // Set the rectangle for both layers
       this.setRectangle(0, this.gl2d.element.height, this.gl2d.element.width, -this.gl2d.element.height);
@@ -8803,9 +9157,11 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const cache = new Map();
 let Tileset = exports.Tileset = /*#__PURE__*/function () {
   function Tileset(_ref) {
     let source = _ref.source,
+      src = _ref.src,
       map = _ref.map,
       firstgid = _ref.firstgid,
       columns = _ref.columns,
@@ -8824,12 +9180,14 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
     this.tileCount = tilecount !== null && tilecount !== void 0 ? tilecount : 0;
     this.tileHeight = tileheight !== null && tileheight !== void 0 ? tileheight : 0;
     this.tileWidth = tilewidth !== null && tilewidth !== void 0 ? tilewidth : 0;
-    if (source) {
-      this.source = new URL(source, location);
+    src = src !== null && src !== void 0 ? src : source;
+    if (src) {
+      this.src = new URL(src, location);
     }
     this.map = map;
+    this.animations = {};
     this.ready = this.getReady({
-      source: source,
+      src: src,
       columns: columns,
       image: image,
       imageheight: imageheight,
@@ -8846,7 +9204,7 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
   return _createClass(Tileset, [{
     key: "getReady",
     value: async function getReady(_ref2) {
-      let source = _ref2.source,
+      let src = _ref2.src,
         columns = _ref2.columns,
         image = _ref2.image,
         imageheight = _ref2.imageheight,
@@ -8858,19 +9216,23 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
         tileheight = _ref2.tileheight,
         tilewidth = _ref2.tilewidth,
         tiles = _ref2.tiles;
-      if (source) {
-        var _await$await$fetch$js = await (await fetch(source)).json();
-        columns = _await$await$fetch$js.columns;
-        image = _await$await$fetch$js.image;
-        imageheight = _await$await$fetch$js.imageheight;
-        imagewidth = _await$await$fetch$js.imagewidth;
-        margin = _await$await$fetch$js.margin;
-        name = _await$await$fetch$js.name;
-        spacing = _await$await$fetch$js.spacing;
-        tilecount = _await$await$fetch$js.tilecount;
-        tileheight = _await$await$fetch$js.tileheight;
-        tilewidth = _await$await$fetch$js.tilewidth;
-        tiles = _await$await$fetch$js.tiles;
+      if (src) {
+        if (!cache.has(src)) {
+          console.log(src);
+          cache.set(src, fetch(src));
+        }
+        var _await$await$cache$ge = await (await cache.get(src)).clone().json();
+        columns = _await$await$cache$ge.columns;
+        image = _await$await$cache$ge.image;
+        imageheight = _await$await$cache$ge.imageheight;
+        imagewidth = _await$await$cache$ge.imagewidth;
+        margin = _await$await$cache$ge.margin;
+        name = _await$await$cache$ge.name;
+        spacing = _await$await$cache$ge.spacing;
+        tilecount = _await$await$cache$ge.tilecount;
+        tileheight = _await$await$cache$ge.tileheight;
+        tilewidth = _await$await$cache$ge.tilewidth;
+        tiles = _await$await$cache$ge.tiles;
         for (const tile of tiles) {
           tile.id += this.firstGid;
         }
@@ -8881,27 +9243,37 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
       this.spacing = spacing !== null && spacing !== void 0 ? spacing : 0;
       this.tiles = tiles !== null && tiles !== void 0 ? tiles : [];
       this.tileCount = tilecount !== null && tilecount !== void 0 ? tilecount : 1;
-      this.image = new Image();
-      if (this.source) {
-        this.image.src = new URL(image, this.source);
+      let imgSrc = null;
+      if (this.src) {
+        imgSrc = new URL(image, this.src);
       } else if (this.map) {
-        this.image.src = new URL(image, this.map.src);
+        imgSrc = new URL(image, this.map.src);
       } else {
-        this.image.src = new URL(image, location);
+        imgSrc = new URL(image, location);
       }
-      await new Promise(accept => this.image.onload = () => accept());
+      if (!cache.has(imgSrc.href)) {
+        const image = new Image();
+        image.src = imgSrc;
+        cache.set(imgSrc.href, new Promise(accept => image.onload = () => accept(image)));
+      }
+      this.image = await cache.get(imgSrc.href);
       this.imageWidth = imagewidth !== null && imagewidth !== void 0 ? imagewidth : this.image.width;
       this.imageHeight = imageheight !== null && imageheight !== void 0 ? imageheight : this.image.height;
       this.tileWidth = tilewidth !== null && tilewidth !== void 0 ? tilewidth : this.imageWidth;
       this.tileHeight = tileheight !== null && tileheight !== void 0 ? tileheight : this.imageHeight;
       this.rows = Math.ceil(imageheight / tileheight) || 1;
+      for (const tile of this.tiles) {
+        if (tile.animation) {
+          this.animations[tile.id] = tile.animation;
+        }
+      }
     }
   }]);
 }();
 });
 
 ;require.register("sprite/texture.frag", function(exports, require, module) {
-module.exports = "// texture.frag\n#define M_PI 3.1415926535897932384626433832795\n#define M_TAU M_PI / 2.0\nprecision mediump float;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nuniform sampler2D u_image;\nuniform sampler2D u_effect;\nuniform sampler2D u_tiles;\nuniform sampler2D u_tileMapping;\n\nuniform vec2 u_size;\nuniform vec2 u_tileSize;\nuniform vec2 u_resolution;\nuniform vec2 u_mapTextureSize;\n\nuniform vec4 u_color;\nuniform vec4 u_region;\nuniform vec2 u_parallax;\nuniform vec2 u_scroll;\n\nuniform float u_time;\nuniform int u_renderTiles;\nuniform int u_renderParallax;\nuniform int u_renderMode;\n\nfloat masked = 0.0;\nfloat sorted = 1.0;\nfloat displace = 1.0;\nfloat blur = 1.0;\n\nvec2 rippleX(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(\n    v_texCoord.x + sin(v_texCoord.y * (a * u_size.y) + b) * c / u_size.x,\n    v_texCoord.y\n  );\n\n  if (rippled.x < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.x > u_size.x) {\n    rippled.x = u_size.x - (rippled.x - u_size.x);\n  }\n\n  return rippled;\n}\n\nvec2 rippleY(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(v_texCoord.x, v_texCoord.y + sin(v_texCoord.x * (a * u_size.x) + b) * c / u_size.y);\n\n  if (rippled.y < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.y > u_size.y) {\n    rippled.y = u_size.y - (rippled.y - u_size.y);\n  }\n\n  return rippled;\n}\n\nvec4 motionBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = originalColor;\n\n  const float max = 10.0;\n  float weight = 0.85;\n\n  for (float i = 0.0; i < max; i += 1.0) {\n    if(i > abs(magnitude) || originalColor.a < 1.0) {\n      break;\n    }\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight;\n    weight *= 0.8;\n  }\n\n  return dispColor;\n}\n\nvec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = texture2D(image, textCoord);\n\n  const float max = 10.0;\n  float weight = 0.65;\n\n  for (float i = 0.0; i < max; i += 0.25) {\n    if(i > abs(magnitude)) {\n      break;\n    }\n    vec4 dispColorUp = texture2D(image, textCoord + vec2(\n      cos(angle) * -i * sign(magnitude) / u_size.x,\n      sin(angle) * -i * sign(magnitude) / u_size.y\n    ));\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight * 0.5 + dispColorUp * weight * 0.5;\n    weight *= 0.70;\n  }\n\n  return dispColor;\n}\n\nvoid main() {\n  vec4 originalColor = texture2D(u_image, v_texCoord);\n  vec4 effectColor = texture2D(u_effect,  v_texCoord);\n\n  // This only applies when drawing the parallax background\n  if (u_renderParallax == 1) {\n\n    float texelSize = 1.0 / u_size.x;\n\n    vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)\n      + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);\n      // + vec2(u_time / 10000.0, 0.0);\n      // + vec2(, 0.0);\n      ;\n\n    gl_FragColor = texture2D(u_image,  parallaxCoord);\n\n    return;\n  }\n\n  // This only applies when drawing tiles.\n  if (u_renderTiles == 1) {\n    float xTiles = floor(u_size.x / u_tileSize.x);\n    float yTiles = floor(u_size.y / u_tileSize.y);\n\n    float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;\n    float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;\n\n    float inv_xTiles = 1.0 / xTiles;\n    float inv_yTiles = 1.0 / yTiles;\n\n    float xTile = floor(xT) * inv_xTiles;\n    float yTile = floor(yT) * inv_yTiles;\n\n    float xOff = (xT * inv_xTiles - xTile) * xTiles;\n    float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;\n\n    float xWrap = u_mapTextureSize.x / u_tileSize.x;\n    float yWrap = u_mapTextureSize.y / u_tileSize.y;\n\n    // Mode 1 draws tiles' x/y values as red & green\n    if (u_renderMode == 1) {\n      gl_FragColor = vec4(xTile, yTile, 0, 1.0);\n      return;\n    }\n\n    // Mode 2 is the same as mode 1 but adds combines\n    // internal tile x/y to the blue channel\n    if (u_renderMode == 2) {\n      gl_FragColor = vec4(xTile, yTile, (xOff + yOff) * 0.5, 1.0);\n      return;\n    }\n\n    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));\n\n    float lo = tile.r * 256.0;\n    float hi = tile.g * 256.0 * 256.0;\n\n    float tileNumber = lo + hi;\n\n    if (tileNumber == 0.0) {\n      gl_FragColor.a = 0.0;\n      return;\n    }\n\n    // Mode 3 uses the tile number for the red/green channels\n    if (u_renderMode == 3) {\n      gl_FragColor = tile;\n      gl_FragColor.b = 0.5;\n      gl_FragColor.a = 1.0;\n      return;\n    }\n\n    // Mode 4 normalizes the tile number to all channels\n    if (u_renderMode == 4) {\n      gl_FragColor = vec4(\n        mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , 1.0\n      );\n      return;\n    }\n\n    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));\n    float tileSetY = floor((-1.0 + tileNumber) / xWrap);\n\n    vec4 tileColor = texture2D(u_tiles, vec2(\n      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)\n      , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)\n    ));\n\n    gl_FragColor = tileColor;\n\n    return;\n  }\n\n  // This if/else block only applies\n  // when we're drawing the effectBuffer\n  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) {\n    if (masked < 1.0 || originalColor.a > 0.0) {\n      gl_FragColor = u_region;\n    }\n    return;\n  }\n  else if (u_region.a > 0.0) {\n    if (sorted > 0.0) {\n      gl_FragColor = vec4(0, 0, 0, originalColor.a > 0.0 ? 1.0 : 0.0);\n    }\n    else {\n      gl_FragColor = vec4(0, 0, 0, 0.0);\n    }\n    return;\n  };\n\n  // Mode 5 draws the effect buffer to the screen\n  if (u_renderMode == 5) {\n    gl_FragColor = effectColor;\n    return;\n  }\n\n  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);\n\n  // This if/else block only applies\n  // when we're drawing the drawBuffer\n  if (effectColor == vec4(0, 1, 1, 1)) { // Water region\n    vec2 texCoord = v_texCoord;\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      texCoord = rippleX(v_texCoord, ripple.x, ripple.y, ripple.z);\n      v_blurredColor = texture2D(u_image, texCoord);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = linearBlur(u_image, 0.0, 1.0, texCoord);\n    }\n    gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;\n  }\n  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region\n    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      v_blurredColor = texture2D(u_image, v_displacement);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = motionBlur(u_image, -M_TAU, 1.0, v_displacement);\n    }\n    gl_FragColor = v_blurredColor * 0.75 + effectColor * 0.25;\n  }\n  else { // Null region\n    gl_FragColor = originalColor;\n  }\n}\n"
+module.exports = "// texture.frag\n#define M_PI 3.1415926535897932384626433832795\n#define M_TAU M_PI / 2.0\nprecision mediump float;\n\nvarying vec2 v_texCoord;\nvarying vec2 v_position;\n\nuniform sampler2D u_image;\nuniform sampler2D u_effect;\nuniform sampler2D u_tiles;\nuniform sampler2D u_tileMapping;\n\nuniform vec2 u_size;\nuniform vec2 u_tileSize;\nuniform vec2 u_resolution;\nuniform vec2 u_mapTextureSize;\n\nuniform vec4 u_color;\nuniform vec4 u_region;\nuniform vec2 u_parallax;\nuniform vec2 u_scroll;\n\nuniform float u_time;\nuniform int u_renderTiles;\nuniform int u_renderParallax;\nuniform int u_renderMode;\n\nfloat masked = 0.0;\nfloat sorted = 1.0;\nfloat displace = 1.0;\nfloat blur = 1.0;\n\nvec2 rippleX(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(\n    v_texCoord.x + sin(v_texCoord.y * (a * u_size.y) + b) * c / u_size.x,\n    v_texCoord.y\n  );\n\n  if (rippled.x < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.x > u_size.x) {\n    rippled.x = u_size.x - (rippled.x - u_size.x);\n  }\n\n  return rippled;\n}\n\nvec2 rippleY(vec2 texCoord, float a, float b, float c) {\n  vec2 rippled = vec2(v_texCoord.x, v_texCoord.y + sin(v_texCoord.x * (a * u_size.x) + b) * c / u_size.y);\n\n  if (rippled.y < 0.0) {\n    rippled.x = abs(rippled.x);\n  }\n  else if (rippled.y > u_size.y) {\n    rippled.y = u_size.y - (rippled.y - u_size.y);\n  }\n\n  return rippled;\n}\n\nvec4 motionBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = originalColor;\n\n  const float max = 10.0;\n  float weight = 0.85;\n\n  for (float i = 0.0; i < max; i += 1.0) {\n    if(i > abs(magnitude) || originalColor.a < 1.0) {\n      break;\n    }\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight;\n    weight *= 0.8;\n  }\n\n  return dispColor;\n}\n\nvec4 linearBlur(sampler2D image, float angle, float magnitude, vec2 textCoord) {\n  vec4 originalColor = texture2D(image, textCoord);\n  vec4 dispColor = texture2D(image, textCoord);\n\n  const float max = 10.0;\n  float weight = 0.65;\n\n  for (float i = 0.0; i < max; i += 0.25) {\n    if(i > abs(magnitude)) {\n      break;\n    }\n    vec4 dispColorUp = texture2D(image, textCoord + vec2(\n      cos(angle) * -i * sign(magnitude) / u_size.x,\n      sin(angle) * -i * sign(magnitude) / u_size.y\n    ));\n    vec4 dispColorDown = texture2D(image, textCoord + vec2(\n      cos(angle) * i * sign(magnitude) / u_size.x,\n      sin(angle) * i * sign(magnitude) / u_size.y\n    ));\n    dispColor = dispColor * (1.0 - weight) + dispColorDown * weight * 0.5 + dispColorUp * weight * 0.5;\n    weight *= 0.70;\n  }\n\n  return dispColor;\n}\n\nvoid main() {\n  vec4 originalColor = texture2D(u_image, v_texCoord);\n  vec4 effectColor = texture2D(u_effect,  v_texCoord);\n\n  // This only applies when drawing the parallax background\n  if (u_renderParallax == 1) {\n\n    float texelSize = 1.0 / u_size.x;\n\n    vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)\n      + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);\n      // + vec2(u_time / 10000.0, 0.0);\n      // + vec2(, 0.0);\n      ;\n\n    gl_FragColor = texture2D(u_image,  parallaxCoord);\n\n    return;\n  }\n\n  // This only applies when drawing tiles.\n  if (u_renderTiles == 1) {\n    float xTiles = floor(u_size.x / u_tileSize.x);\n    float yTiles = floor(u_size.y / u_tileSize.y);\n\n    float xT = (v_texCoord.x * u_size.x) / u_tileSize.x;\n    float yT = (v_texCoord.y * u_size.y) / u_tileSize.y;\n\n    float inv_xTiles = 1.0 / xTiles;\n    float inv_yTiles = 1.0 / yTiles;\n\n    float xTile = floor(xT) * inv_xTiles;\n    float yTile = floor(yT) * inv_yTiles;\n\n    float xOff = (xT * inv_xTiles - xTile) * xTiles;\n    float yOff = (yT * inv_yTiles - yTile) * yTiles * -1.0 + 1.0;\n\n    float xWrap = u_mapTextureSize.x / u_tileSize.x;\n    float yWrap = u_mapTextureSize.y / u_tileSize.y;\n\n    // Mode 1 draws tiles' x/y values as red & green\n    if (u_renderMode == 1) {\n      gl_FragColor = vec4(xTile, yTile, 0, 1.0);\n      return;\n    }\n\n    // Mode 2 is the same as mode 1 but adds combines\n    // internal tile x/y to the blue channel\n    if (u_renderMode == 2) {\n      gl_FragColor = vec4(xTile, yTile, (xOff + yOff) * 0.5, 1.0);\n      return;\n    }\n\n    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));\n\n    float lo = tile.r * 256.0;\n    float hi = tile.g * 256.0 * 256.0;\n\n    float tileNumber = lo + hi;\n\n    if (tileNumber == 0.0) {\n      gl_FragColor.a = 0.0;\n      return;\n    }\n\n    // Mode 3 uses the tile number for the red/green channels\n    if (u_renderMode == 3) {\n      gl_FragColor = tile;\n      gl_FragColor.b = 0.5;\n      gl_FragColor.a = 1.0;\n      return;\n    }\n\n    // Mode 4 normalizes the tile number to all channels\n    if (u_renderMode == 4) {\n      gl_FragColor = vec4(\n        mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , mod(tileNumber, 256.0) / 256.0\n        , 1.0\n      );\n      return;\n    }\n\n    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));\n    float tileSetY = floor((-1.0 + tileNumber) / xWrap);\n\n    vec4 tileColor = texture2D(u_tiles, vec2(\n      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)\n      , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)\n    ));\n\n    if(tileColor.a > 0.0 && u_region == vec4(1.0, 1.0, 1.0, 0.0)) {\n      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n      return;\n    }\n\n    gl_FragColor = tileColor;\n\n    return;\n  }\n\n  // This if/else block only applies\n  // when we're drawing the effectBuffer\n  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) { // We have an effect color\n    if (masked < 1.0 || originalColor.a > 0.0) { // Use the provided color\n      gl_FragColor = u_region;\n    }\n    return;\n  }\n  else if (u_region.a > 0.0) {\n    if (sorted > 0.0) {\n      gl_FragColor = vec4(0.0, 0.0, 0.0, originalColor.a > 0.0 ? 1.0 : 0.0);\n    }\n    else {\n      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n    }\n    return;\n  };\n\n  // Mode 5 draws the effect buffer to the screen\n  if (u_renderMode == 5) {\n    gl_FragColor = effectColor;\n    return;\n  }\n\n  vec3 ripple = vec3(M_PI/8.0, u_time / 200.0, 1.0);\n\n  // This if/else block only applies\n  // when we're drawing the drawBuffer\n  if (effectColor == vec4(0, 1, 1, 1)) { // Water effect\n    vec2 texCoord = v_texCoord;\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      texCoord = rippleX(v_texCoord, ripple.x * 0.1, ripple.y, ripple.z * 2.0);\n      v_blurredColor = texture2D(u_image, texCoord);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = linearBlur(u_image, 0.0, 1.0, texCoord);\n    }\n    gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;\n  }\n  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire effect\n    vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);\n    vec4 v_blurredColor = originalColor;\n    if (displace > 0.0) {\n      v_blurredColor = texture2D(u_image, v_displacement);\n    }\n    if (blur > 0.0) {\n      v_blurredColor = motionBlur(u_image, -M_TAU, 1.0, v_displacement);\n    }\n    gl_FragColor = v_blurredColor * 0.75 + effectColor * 0.25;\n  }\n  else { // Null effect\n    gl_FragColor = originalColor;\n  }\n}\n"
 });
 
 ;require.register("sprite/texture.vert", function(exports, require, module) {
@@ -9009,29 +9381,30 @@ let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
 module.exports = "<div class = \"controller\">\n\t<div class = \"joystick\" cv-on = \"\n\t\ttouchstart:dragStick(event):p;\n\t\tmousedown:dragStick(event):p;\n\t\">\n\t\t<div class = \"pad\" style = \"position: relative; transform:translate([[x]]px,[[y]]px);\"></div>\n\t</div>\n\n\t<div class = \"button\">A</div>\n\t<div class = \"button\">B</div>\n\t<div class = \"button\">C</div>\n</div>"
 });
 
-;require.register("world/EntityPallet.js", function(exports, require, module) {
+;require.register("world/Pallet.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.EntityPallet = void 0;
+exports.Pallet = void 0;
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-const objectPallet = {};
-let EntityPallet = exports.EntityPallet = /*#__PURE__*/function () {
-  function EntityPallet() {
-    _classCallCheck(this, EntityPallet);
+let Pallet = exports.Pallet = /*#__PURE__*/function () {
+  function Pallet() {
+    _classCallCheck(this, Pallet);
+    _defineProperty(this, "objectPallet", {});
   }
-  return _createClass(EntityPallet, null, [{
+  return _createClass(Pallet, [{
     key: "resolve",
     value: async function resolve(typeName) {
       if (typeName[0] === '@') {
-        if (objectPallet[typeName]) {
-          return objectPallet[typeName];
+        if (this.objectPallet[typeName]) {
+          return this.objectPallet[typeName];
         }
       } else if (typeName === 'http://' || typeName === 'https://') {
         return (await import(typeName)).default;
@@ -9040,10 +9413,10 @@ let EntityPallet = exports.EntityPallet = /*#__PURE__*/function () {
   }, {
     key: "register",
     value: function register(typeName, spawnClass) {
-      if (objectPallet[typeName]) {
+      if (this.objectPallet[typeName]) {
         console.warn(`Overwriting spawnclass!`);
       }
-      objectPallet[typeName] = spawnClass;
+      this.objectPallet[typeName] = spawnClass;
     }
   }]);
 }();
@@ -9062,14 +9435,23 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 let Properties = exports.Properties = /*#__PURE__*/function () {
-  function Properties(properties, map) {
+  function Properties(properties, owner) {
     _classCallCheck(this, Properties);
     this.properties = {};
     for (const property of properties) {
       if (!this.properties[property.name]) {
         this.properties[property.name] = [];
       }
-      this.properties[property.name].push(property.value);
+      switch (property.type) {
+        case 'color':
+          this.properties[property.name].push(new Uint8ClampedArray([parseInt(property.value.substr(3, 2), 16), parseInt(property.value.substr(5, 2), 16), parseInt(property.value.substr(7, 2), 16), parseInt(property.value.substr(1, 2), 16)]));
+          break;
+        case 'file':
+          this.properties[property.name].push([new URL(property.value, owner.src)]);
+          break;
+        default:
+          this.properties[property.name].push(property.value);
+      }
     }
   }
   return _createClass(Properties, [{
@@ -9080,6 +9462,11 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
         return;
       }
       return this.properties[name][index];
+    }
+  }, {
+    key: "has",
+    value: function has(name) {
+      return !!this.properties[name];
     }
   }, {
     key: "getAll",
@@ -9098,10 +9485,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TileMap = void 0;
 var _Bindable = require("curvature/base/Bindable");
-var _EntityPallet = require("./EntityPallet");
 var _Tileset = require("../sprite/Tileset");
 var _QuickTree = require("../math/QuickTree");
 var _Spawner = require("../model/Spawner");
+var _SMTree = require("../math/SMTree");
+var _Region = require("../sprite/Region");
+var _Rectangle = require("../math/Rectangle");
+var _Properties = require("./Properties");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -9110,23 +9500,52 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-let TileMap = exports.TileMap = /*#__PURE__*/function () {
-  function TileMap(_ref) {
-    let fileName = _ref.fileName,
-      session = _ref.session,
+const cache = new Map();
+let Animation = /*#__PURE__*/function () {
+  function Animation(_ref) {
+    let frames = _ref.frames,
       x = _ref.x,
-      y = _ref.y,
-      width = _ref.width,
-      height = _ref.height;
+      y = _ref.y;
+    _classCallCheck(this, Animation);
+    this.x = x;
+    this.y = y;
+    this.acc = 0;
+    this.current = 0;
+    this.frames = frames;
+  }
+  return _createClass(Animation, [{
+    key: "animate",
+    value: function animate(delta) {
+      this.acc += delta;
+      while (this.acc > this.frames[this.current].duration) {
+        this.acc -= this.frames[this.current].duration;
+        this.current++;
+        if (this.current > -1 + this.frames.length) {
+          this.current = 0;
+        }
+      }
+      return 1 + this.frames[this.current].tileid;
+    }
+  }]);
+}();
+let TileMap = exports.TileMap = /*#__PURE__*/function () {
+  function TileMap(_ref2) {
+    let fileName = _ref2.fileName,
+      session = _ref2.session,
+      x = _ref2.x,
+      y = _ref2.y,
+      width = _ref2.width,
+      height = _ref2.height;
     _classCallCheck(this, TileMap);
     this[_Bindable.Bindable.Prevent] = true;
     this.src = fileName;
     this.backgroundColor = null;
     this.tileCount = 0;
-    this.xWorld = x;
-    this.yWorld = y;
-    this.width = width;
-    this.height = height;
+    this.x = x;
+    this.y = y;
+    this.worldWidth = width;
+    this.worldHeight = height;
+    this.rect = new _Rectangle.Rectangle(this.x, this.y, this.x + this.worldWidth, this.y + this.worldHeight);
     this.tileWidth = 0;
     this.tileHeight = 0;
     this.tileSetWidth = 0;
@@ -9134,7 +9553,6 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     this.pixels = [];
     this.image = document.createElement('img');
     this.session = session;
-    this.properties = {};
     this.entityDefs = {};
     this.emptyTiles = new Set();
     this.tilesIndexes = new Map();
@@ -9145,24 +9563,56 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     this.imageLayers = [];
     this.objectLayers = [];
     this.ready = this.getReady(fileName);
-    this.animations = new Map();
     this.visible = false;
-    this.quadTree = new _QuickTree.QuickTree(x, y, x + this.width, y + this.height);
+    this.age = 0;
+    this.quadTree = new _QuickTree.QuickTree(0, 0, this.worldWidth, this.worldHeight);
+    this.regionTree = new _SMTree.SMTree();
+    this.animationTrees = new Map();
+    this.entityMap = new Map();
+    this.xOrigin = x;
+    this.yOrigin = y;
+    this.animatedTiles = new Map();
+    this.animations = new Map();
   }
   return _createClass(TileMap, [{
+    key: "selectEntities",
+    value: function selectEntities(wx1, wy1, wx2, wy2) {
+      return this.quadTree.select(wx1 - this.x, wy1 - this.y, wx2 - this.x, wy2 - this.y, -this.x, -this.y);
+    }
+  }, {
+    key: "addEntity",
+    value: function addEntity(entity) {
+      return this.quadTree.add(entity, -this.x, -this.y);
+    }
+  }, {
+    key: "moveEntity",
+    value: function moveEntity(entity) {
+      return this.quadTree.move(entity, -this.x, -this.y);
+    }
+  }, {
     key: "getReady",
     value: async function getReady(src) {
-      const mapData = await (await fetch(src)).json();
+      var _mapData$properties;
+      if (!cache.has(src)) {
+        cache.set(src, fetch(src));
+      }
+      const mapData = await (await cache.get(src)).clone().json();
+      this.props = new _Properties.Properties((_mapData$properties = mapData.properties) !== null && _mapData$properties !== void 0 ? _mapData$properties : [], this);
+      mapData.layers.forEach(layer => {
+        var _layer$properties;
+        layer.props = new _Properties.Properties((_layer$properties = layer.properties) !== null && _layer$properties !== void 0 ? _layer$properties : [], this);
+      });
       this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
       this.tileLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class !== 'collision');
       this.imageLayers = mapData.layers.filter(layer => layer.type === 'imagelayer');
       this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
       this.backgroundColor = mapData.backgroundcolor;
-      if (mapData.properties) for (const property of mapData.properties) {
-        this.properties[property.name] = property.value;
+      if (mapData.class) {
+        this.controller = new (await this.session.mapPallet.resolve(mapData.class))();
+        this.controller.create(this);
       }
-      if (this.properties.backgroundColor) {
-        this.backgroundColor = this.properties.backgroundColor;
+      if (this.props.has('backgroundColor')) {
+        this.backgroundColor = this.props.get('backgroundColor');
       }
       const tilesets = mapData.tilesets.map(tilesetData => {
         if (tilesetData.source) {
@@ -9185,9 +9635,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     key: "assemble",
     value: function assemble(tilesets) {
       tilesets.sort((a, b) => a.firstGid - b.firstGid);
-      const tileTotal = this.tileCount = tilesets.reduce((a, b) => a.tileCount + b.tileCount, {
-        tileCount: 0
-      });
+      const tileTotal = this.tileCount = tilesets.reduce((a, b) => a + b.tileCount, 0);
       const size = Math.ceil(Math.sqrt(tileTotal));
       const destination = document.createElement('canvas');
       this.tileSetWidth = destination.width = size * this.tileWidth;
@@ -9224,12 +9672,13 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         }
         for (const tileData of tileset.tiles) {
           if (tileData.animation) {
-            this.animations.set(tileData.id, tileData.animation);
+            this.animatedTiles.set(tileData.id, tileData.animation);
           }
         }
       }
       this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
       this.tiles = ctxDestination;
+      const tilesWide = this.width;
       for (const layer of [...this.tileLayers, ...this.collisionLayers]) {
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d', {
@@ -9241,11 +9690,20 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         const tilePixels = new Uint8ClampedArray(tileValues.buffer);
         for (const i in tileValues) {
           const tile = tileValues[i];
-          if (this.animations.has(tile)) {
-            console.log({
-              i: i,
-              tile: tile
-            }, this.animations.get(tile));
+          if (this.animatedTiles.has(tile)) {
+            if (!this.animationTrees.has(layer)) {
+              this.animationTrees.set(layer, new _QuickTree.QuickTree(0, 0, this.width, this.height, 0.1));
+            }
+            const tree = this.animationTrees.get(layer);
+            const frames = this.animatedTiles.get(tile);
+            const x = i % this.width;
+            const y = Math.floor(i / this.width);
+            const animation = new Animation({
+              frames: frames,
+              x: x,
+              y: y
+            });
+            tree.add(animation);
           }
         }
         for (let i = 3; i < tilePixels.length; i += 4) {
@@ -9264,12 +9722,21 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         const entityDefs = layer.objects;
         for (const entityDef of entityDefs) {
           this.entityDefs[entityDef.id] = _objectSpread({}, entityDef);
-          entityDef.x += this.xWorld;
-          entityDef.y += this.yWorld;
-          if (!entityDef.type || entityDef.name === 'player-start') {
+          entityDef.x += this.x + (this.x - this.xOrigin);
+          entityDef.y += this.y + (this.y - this.yOrigin);
+          if (!entityDef.type || entityDef.name === '#player-start') {
             continue;
           }
-          const spawnClass = await _EntityPallet.EntityPallet.resolve(entityDef.type);
+          if (entityDef.name === '#region') {
+            const region = new _Region.Region(_objectSpread({
+              spriteBoard: this.session.spriteBoard,
+              session: this.session
+            }, entityDef));
+            this.session.spriteBoard.regions.add(region);
+            this.regionTree.add(region.rect);
+            continue;
+          }
+          const spawnClass = await this.session.entityPallet.resolve(entityDef.type);
           if (!spawnClass) {
             console.warn(`SpawnClass not found: ${entityDef.type}`);
             continue;
@@ -9284,9 +9751,27 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
             world: this.session.world,
             map: this
           }));
+          this.session.world.motionGraph.add(spawner, this);
+          spawner.lastMap = this;
           this.session.addEntity(spawner);
-          this.quadTree.add(spawner);
+          this.addEntity(spawner);
         }
+      }
+    }
+  }, {
+    key: "simulate",
+    value: function simulate(delta) {
+      const startX = this.x;
+      const startY = this.y;
+      this.age += delta;
+      this.controller && this.controller.simulate(this, delta);
+      this.session.world.motionGraph.moveChildren(this, this.x - startX, this.y - startY);
+      this.rect.x1 = this.x;
+      this.rect.y1 = this.y;
+      this.rect.x2 = this.x + this.width * this.tileWidth;
+      this.rect.y2 = this.x + this.height * this.tileHeight;
+      if (startX !== this.x || startY !== this.y) {
+        this.session.world.mapTree.move(this.session.world.mapRects.get(this));
       }
     }
   }, {
@@ -9332,8 +9817,8 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
   }, {
     key: "getTileFromLayer",
     value: function getTileFromLayer(layer, x, y) {
-      const localX = -this.xWorld + x;
-      const localY = -this.yWorld + y;
+      const localX = -this.x + x;
+      const localY = -this.y + y;
       if (localX < 0 || localX >= this.width * this.tileWidth || localY < 0 || localY >= this.height * this.tileWidth) {
         return false;
       }
@@ -9343,10 +9828,29 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
     }
   }, {
     key: "getSlice",
-    value: function getSlice(x, y, w, h) {
-      let t = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
-      return this.tileLayers.map(layer => this.contexts.get(layer)).map(context => context.getImageData(x, y, w, h).data);
-      return this.contexts.values().map(context => context.getImageData(x, y, w, h).data);
+    value: function getSlice(p, x, y, w, h) {
+      let delta = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
+      return this.tileLayers.filter(layer => {
+        var _layer$props$get;
+        return p === ((_layer$props$get = layer.props.get('priority')) !== null && _layer$props$get !== void 0 ? _layer$props$get : 'background');
+      }).map(layer => {
+        const context = this.contexts.get(layer);
+        const pixels = context.getImageData(x, y, w, h).data;
+        const tree = this.animationTrees.get(layer);
+        if (tree) {
+          const values = new Uint32Array(pixels.buffer);
+          const animations = tree.select(x, y, w, h);
+          for (const animation of animations) {
+            const xLocal = animation.x - x;
+            const yLocal = animation.y - y;
+            if (xLocal < w) {
+              const iLocal = xLocal + yLocal * w;
+              values[iLocal] = animation.animate(delta);
+            }
+          }
+        }
+        return pixels;
+      });
     }
   }, {
     key: "getTileImage",
@@ -9362,6 +9866,33 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       cc.putImageData(imageData, 0, 0);
       return c.toDataURL();
     }
+  }, {
+    key: "getRegionsForPoint",
+    value: function getRegionsForPoint(x, y) {
+      const results = new Set();
+      const rects = this.regionTree.query(x, y, x, y);
+      rects.forEach(r => {
+        if (!r.contains(x, y)) {
+          return;
+        }
+        results.add(_Region.Region.fromRect(r));
+      });
+      return results;
+    }
+  }, {
+    key: "getRegionsForRect",
+    value: function getRegionsForRect(x1, y1, x2, y2) {
+      const searchRect = new _Rectangle.Rectangle(x1, y1, x2, y2);
+      const results = new Set();
+      const rects = this.regionTree.query(x1, y1, x2, y2);
+      rects.forEach(r => {
+        if (!searchRect.isOverlapping(r)) {
+          return;
+        }
+        results.add(_Region.Region.fromRect(r));
+      });
+      return results;
+    }
   }]);
 }();
 });
@@ -9374,7 +9905,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.World = void 0;
 var _Bindable = require("curvature/base/Bindable");
-var _Rectangle = require("../math/Rectangle");
+var _MotionGraph = require("../math/MotionGraph");
 var _TileMap = require("./TileMap");
 var _SMTree = require("../math/SMTree");
 var _Ray = require("../math/Ray");
@@ -9386,41 +9917,51 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const cache = new Map();
 let World = exports.World = /*#__PURE__*/function () {
   function World(_ref) {
-    let source = _ref.source,
+    let src = _ref.src,
       session = _ref.session;
     _classCallCheck(this, World);
     this[_Bindable.Bindable.Prevent] = true;
-    this.ready = this.getReady(source);
+    this.src = new URL(src, location);
+    this.ready = this.getReady(this.src);
     this.maps = [];
-    this.mTree = new _SMTree.SMTree();
+    this.motionGraph = new _MotionGraph.MotionGraph();
     this.rectMap = new Map();
+    this.mapRects = new Map();
+    this.mapTree = new _SMTree.SMTree();
     this.session = session;
-    this.source = source;
+    this.age = 0;
   }
   return _createClass(World, [{
+    key: "simulate",
+    value: function simulate(delta) {
+      this.age += delta;
+    }
+  }, {
     key: "getReady",
     value: async function getReady(src) {
-      const worldData = await (await fetch(src)).json();
+      if (!cache.has(src)) {
+        cache.set(src, fetch(src));
+      }
+      const worldData = await (await cache.get(src)).clone().json();
       return await Promise.all(worldData.maps.map((m, i) => {
         m.fileName = new URL(m.fileName, src).href;
         const map = new _TileMap.TileMap(_objectSpread(_objectSpread({}, m), {}, {
           session: this.session
         }));
-        map.xWorld = m.x;
-        map.yWorld = m.y;
         this.maps[i] = map;
-        const rect = new _Rectangle.Rectangle(m.x, m.y, m.x + m.width, m.y + m.height);
-        this.rectMap.set(rect, map);
-        this.mTree.add(rect);
+        this.mapRects.set(map, map.rect);
+        this.rectMap.set(map.rect, map);
+        this.mapTree.add(map.rect);
         return map.ready;
       }));
     }
   }, {
     key: "getMapsForPoint",
     value: function getMapsForPoint(x, y) {
-      const rects = this.mTree.query(x, y, x, y);
+      const rects = this.mapTree.query(x, y, x, y);
       const maps = new Set();
       for (const rect of rects) {
         const map = this.rectMap.get(rect);
@@ -9432,7 +9973,7 @@ let World = exports.World = /*#__PURE__*/function () {
     key: "getMapsForRect",
     value: function getMapsForRect(x, y, w, h) {
       const result = new Set();
-      const rects = this.mTree.query(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
+      const rects = this.mapTree.query(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
       for (const rect of rects) {
         result.add(this.rectMap.get(rect));
       }
@@ -9473,7 +10014,7 @@ let World = exports.World = /*#__PURE__*/function () {
         }
         const w = 500;
         const h = 500;
-        const entities = tilemap.quadTree.select(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
+        const entities = tilemap.selectEntities(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5);
         for (const entity of entities) {
           if (entity.rect.contains(x, y)) {
             result.add(entity);
@@ -9491,7 +10032,20 @@ let World = exports.World = /*#__PURE__*/function () {
         if (!tilemap.visible) {
           continue;
         }
-        result = result.union(tilemap.quadTree.select(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5));
+        result = result.union(tilemap.selectEntities(x + -w * 0.5, y + -h * 0.5, x + w * 0.5, y + h * 0.5));
+      }
+      return result;
+    }
+  }, {
+    key: "getRegionsForPoint",
+    value: function getRegionsForPoint(x, y) {
+      const tilemaps = this.getMapsForPoint(x, y);
+      let result = new Set();
+      for (const tilemap of tilemaps) {
+        if (!tilemap.visible) {
+          continue;
+        }
+        result = result.union(tilemap.getRegionsForPoint(x, y));
       }
       return result;
     }

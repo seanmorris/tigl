@@ -200,6 +200,11 @@ void main() {
       , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)
     ));
 
+    if(tileColor.a > 0.0 && u_region == vec4(1.0, 1.0, 1.0, 0.0)) {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+    }
+
     gl_FragColor = tileColor;
 
     return;
@@ -207,18 +212,18 @@ void main() {
 
   // This if/else block only applies
   // when we're drawing the effectBuffer
-  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) {
-    if (masked < 1.0 || originalColor.a > 0.0) {
+  if (u_region.r > 0.0 || u_region.g > 0.0 || u_region.b > 0.0) { // We have an effect color
+    if (masked < 1.0 || originalColor.a > 0.0) { // Use the provided color
       gl_FragColor = u_region;
     }
     return;
   }
   else if (u_region.a > 0.0) {
     if (sorted > 0.0) {
-      gl_FragColor = vec4(0, 0, 0, originalColor.a > 0.0 ? 1.0 : 0.0);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, originalColor.a > 0.0 ? 1.0 : 0.0);
     }
     else {
-      gl_FragColor = vec4(0, 0, 0, 0.0);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
     return;
   };
@@ -233,11 +238,11 @@ void main() {
 
   // This if/else block only applies
   // when we're drawing the drawBuffer
-  if (effectColor == vec4(0, 1, 1, 1)) { // Water region
+  if (effectColor == vec4(0, 1, 1, 1)) { // Water effect
     vec2 texCoord = v_texCoord;
     vec4 v_blurredColor = originalColor;
     if (displace > 0.0) {
-      texCoord = rippleX(v_texCoord, ripple.x, ripple.y, ripple.z);
+      texCoord = rippleX(v_texCoord, ripple.x * 0.1, ripple.y, ripple.z * 2.0);
       v_blurredColor = texture2D(u_image, texCoord);
     }
     if (blur > 0.0) {
@@ -245,7 +250,7 @@ void main() {
     }
     gl_FragColor = v_blurredColor * 0.65 + effectColor * 0.35;
   }
-  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire region
+  else if (effectColor == vec4(1, 0, 0, 1)) { // Fire effect
     vec2 v_displacement = rippleY(v_texCoord, ripple.x * 3.0, ripple.y * 1.5, ripple.z * 0.333);
     vec4 v_blurredColor = originalColor;
     if (displace > 0.0) {
@@ -256,7 +261,7 @@ void main() {
     }
     gl_FragColor = v_blurredColor * 0.75 + effectColor * 0.25;
   }
-  else { // Null region
+  else { // Null effect
     gl_FragColor = originalColor;
   }
 }

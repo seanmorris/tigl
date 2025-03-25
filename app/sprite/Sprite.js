@@ -15,8 +15,8 @@ export class Sprite
 
 		this.currentAnimation = null;
 
-		this.width  = 32 || width;
-		this.height = 32 || height;
+		this.width  = width  || 32;
+		this.height = height || 32;
 
 		this.originalWidth = originalWidth ?? this.width;
 		this.originalHeight = originalHeight ?? this.height;
@@ -33,8 +33,6 @@ export class Sprite
 		this.yCenter = 1.0;
 
 		this.visible = false;
-		this.moving = false;
-
 		this.textures = [];
 		this.frames = [];
 		this.currentDelay = 0;
@@ -171,7 +169,6 @@ export class Sprite
 		// Cleanup...
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		return;
 	}
 
 	changeAnimation(name)
@@ -228,7 +225,7 @@ export class Sprite
 		return texture;
 	}
 
-	setRectangle(x, y, width, height, transform = [])
+	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
 		const zoom = this.spriteBoard.zoomLevel;
