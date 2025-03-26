@@ -1,0 +1,15 @@
+{
+	"name": "brunch-tiled-preprocessor",
+	"version": "0.0.0",
+	"description": "Automatically preprocessed tiled files.",
+	"keywords": ["tiled", "brunch"],
+	"main": "index.js",
+	"author": "Sean Morris <sean@seanmorr.is>",
+	"license": "Apache-2.0",
+	"devDependencies": {
+		"loggy": "^1.0.8"
+	},
+	"files":[
+		"index.js"
+	]
+}

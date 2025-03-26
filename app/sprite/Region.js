@@ -13,7 +13,7 @@ export class Region
 		return rectMap.get(rect);
 	}
 
-	constructor({x, y, z, width, height, spriteBoard})
+	constructor({x, y, z, width, height, session, spriteBoard})
 	{
 		this[Bindable.Prevent] = true;
 
@@ -23,6 +23,9 @@ export class Region
 
 		this.width  = width  || 32;
 		this.height = height || 32;
+
+		this.originalWidth = width;
+		this.originalHeight = height;
 
 		this.visible = false;
 
@@ -39,8 +42,7 @@ export class Region
 		rectMap.set(this.rect, this);
 
 		this.spriteBoard = spriteBoard;
-
-		// this.region = [0, 0, 0, 1];
+		this.session = session;
 		this.region = [0, 1, 1, 1];
 
 		const gl = this.spriteBoard.gl2d.context;
@@ -66,6 +68,48 @@ export class Region
 			, gl.RGBA
 			, gl.UNSIGNED_BYTE
 			, singlePixel
+		);
+	}
+
+	move(x, y)
+	{
+		this.x += x;
+		this.y += y;
+
+		this.rect.x1 += x;
+		this.rect.x2 += x;
+		this.rect.y1 += y;
+		this.rect.y2 += y;
+	}
+
+	resize(w, h, cx, cy)
+	{
+		const wStart = this.width;
+		const hStart = this.height;
+
+		const sx = cx * (1 - w/wStart) * wStart;
+		const sy = cy * (1 - h/hStart) * hStart;
+
+		this.width = w;
+		this.height = h;
+
+		this.x += sx;
+		this.y += sy;
+
+		this.rect.x1 = this.x;
+		this.rect.y1 = this.y;
+
+		this.rect.x2 = this.rect.x1 + w;
+		this.rect.y2 = this.rect.y1 + w;
+	}
+
+	simulate(delta)
+	{
+		this.resize(
+			this.width
+			, this.originalHeight * ((Math.sin(this.session.world.age / 3000) * 0.5) + 0.5)
+			, 1.0
+			, 1.0
 		);
 	}
 
@@ -135,14 +179,8 @@ export class Region
 		const xOff = x + width;
 		const yOff = y + height;
 
-		// this.theta = performance.now() / 1000;
-
 		const t = Matrix.transform(points, Matrix.composite(
 			Matrix.translate(xOff + -width * 0.0, yOff + zoom + 16 * zoom)
-			// , Matrix.shearX(this.shearX)
-			// , Matrix.shearX(this.shearY)
-			// , Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
-			// , Matrix.rotate(this.theta)
 			, Matrix.translate(-xOff, -yOff)
 		));
 

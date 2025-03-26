@@ -81,7 +81,8 @@ export class TileMap
 
 		this.props = new Properties(mapData.properties ?? [], this);
 
-		this.pixels = [];
+		this.pixels = null;
+		this.values = null;
 		this.image = document.createElement('img');
 		this.session = session;
 		this.entityDefs = {};
@@ -153,6 +154,8 @@ export class TileMap
 			cache.set(src, fetch(src));
 		}
 
+		await new Promise(a => setTimeout(a, 500));
+
 		const mapData = await (await cache.get(src)).clone().json();
 
 		this.props.add(...mapData.properties ?? []);
@@ -166,12 +169,6 @@ export class TileMap
 		this.imageLayers  = mapData.layers.filter(layer => layer.type === 'imagelayer');
 		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
 		this.backgroundColor = mapData.backgroundcolor;
-
-		if(mapData.class)
-		{
-			this.controller = new (await this.session.mapPallet.resolve(mapData.class));
-			this.controller.create(this);
-		}
 
 		if(this.props.has('backgroundColor'))
 		{
@@ -202,6 +199,12 @@ export class TileMap
 		await this.spawn();
 
 		this.loaded = true;
+
+		if(mapData.class)
+		{
+			this.controller = new (await this.session.mapPallet.resolve(mapData.class));
+			this.controller.create(this);
+		}
 
 		return this;
 	}
@@ -236,11 +239,13 @@ export class TileMap
 
 			for(let i = 0; i < tileset.tileCount; i++)
 			{
+				const gid = i + -1 + tileset.firstGid;
+
 				const xSource = (i * this.tileWidth) % tileset.imageWidth;
 				const ySource = Math.floor((i * this.tileWidth) / tileset.imageWidth) * this.tileHeight;
 
-				const xDestination = (i * this.tileWidth) % destination.width;
-				const yDestination = Math.floor((i * this.tileWidth) / destination.width) * this.tileHeight;
+				const xDestination = (gid * this.tileWidth) % destination.width;
+				const yDestination = Math.floor((gid * this.tileWidth) / destination.width) * this.tileHeight;
 				const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
 
 				ctxDestination.putImageData(tile, xDestination, yDestination);
@@ -259,7 +264,7 @@ export class TileMap
 
 				if(empty)
 				{
-					this.emptyTiles.add(i);
+					this.emptyTiles.add(gid);
 				}
 			}
 
@@ -273,6 +278,7 @@ export class TileMap
 		}
 
 		this.pixels = ctxDestination.getImageData(0, 0, destination.width, destination.height).data;
+		this.values = new Uint32Array(this.pixels.buffer);
 		this.tiles = ctxDestination;
 
 		for(const layer of [...this.tileLayers, ...this.collisionLayers])
@@ -376,8 +382,6 @@ export class TileMap
 					, session: this.session
 					, world: this.session.world
 					, map: this
-					, x: entityDef.x + (this.x - this.xOrigin)
-					, y: entityDef.y + (this.y - this.yOrigin)
 				});
 
 				this.session.world.motionGraph.add(spawner, this);
@@ -397,11 +401,12 @@ export class TileMap
 
 		const startX = this.x;
 		const startY = this.y;
+		const world = this.session.world;
 
 		this.age += delta;
 		this.controller && this.controller.simulate(this, delta);
 
-		this.session.world.motionGraph.moveChildren(
+		world.motionGraph.moveChildren(
 			this
 			, this.x - startX
 			, this.y - startY
@@ -414,8 +419,8 @@ export class TileMap
 
 		if(startX !== this.x || startY !== this.y)
 		{
-			this.session.world.mapTree.move(
-				this.session.world.mapRects.get(this)
+			world.mapTree.move(
+				world.mapRects.get(this)
 			);
 		}
 	}
@@ -454,11 +459,6 @@ export class TileMap
 
 		const pixel = this.getPixel(this.collisionLayers[z], x, y, z);
 
-		if(pixel === 0)
-		{
-			return true;
-		}
-
 		return pixel;
 	}
 
@@ -476,13 +476,15 @@ export class TileMap
 			return false;
 		}
 
-		const offsetX = Math.trunc(x % this.tileWidth);
-		const offsetY = Math.trunc(y % this.tileHeight);
+		const offsetX = Math.trunc((-this.x + x) % this.tileWidth);
+		const offsetY = Math.trunc((-this.y + y) % this.tileHeight);
 
 		const tileSetX = (gid * this.tileWidth) % this.tileSetWidth;
-		const tileSetY = Math.floor((gid * this.tileWidth) / this.tileSetWidth);
+		const tileSetY = Math.floor((gid * this.tileWidth) / this.tileSetWidth) * this.tileHeight;
 
-		return this.pixels[tileSetX + offsetX + (tileSetY + offsetY) * (this.tileSetWidth)];
+		const pixel = this.values[tileSetX + offsetX + (tileSetY + offsetY) * (this.tileSetWidth)];
+
+		return pixel;
 	}
 
 	getTileFromLayer(layer, x, y)
@@ -514,7 +516,7 @@ export class TileMap
 			return [];
 		}
 
-		return (this.tileLayers
+		return this.tileLayers
 			.filter(layer => p === (layer.props.get('priority') ?? 'background'))
 			.map(layer => {
 				const context = this.contexts.get(layer);
@@ -538,7 +540,7 @@ export class TileMap
 				}
 				return pixels;
 			}
-		));
+		);
 	}
 
 	getTileImage(gid)

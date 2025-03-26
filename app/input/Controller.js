@@ -170,7 +170,7 @@ export class Controller
 		this.willRumble = options;
 	}
 
-	readInput({keyboard, gamepads = []})
+	readInput({keyboard, onScreenJoyPad, gamepads = []})
 	{
 		const tilted   = {};
 		const pressed  = {};
@@ -356,6 +356,61 @@ export class Controller
 				tilted[i] = true;
 
 				this.tilt(i, axis);
+			}
+		}
+
+		if(onScreenJoyPad)
+		{
+			if(Math.abs(onScreenJoyPad.args.x) < this.deadZone)
+			{
+				if(!tilted[0])
+				{
+					this.tilt(0, 0);
+				}
+			}
+			else
+			{
+				tilted[0] = true;
+				this.tilt(0, onScreenJoyPad.args.x / 50);
+			}
+
+
+			if(Math.abs(onScreenJoyPad.args.y) < this.deadZone)
+			{
+				if(!tilted[1])
+				{
+					this.tilt(1, 0);
+				}
+			}
+			else
+			{
+				tilted[1] = true;
+				this.tilt(1, onScreenJoyPad.args.y / 50);
+			}
+
+			for(const i in onScreenJoyPad.buttons)
+			{
+				if(released[i])
+				{
+					continue;
+				}
+
+				if(pressed[i])
+				{
+					continue;
+				}
+
+				if(onScreenJoyPad.buttons[i] === 1)
+				{
+					this.press(i)
+					pressed[i] = true;
+				}
+				else if(onScreenJoyPad.buttons[i] === -1)
+				{
+					this.release(i);
+					released[i] = true;
+					onScreenJoyPad.buttons[i] = 0;
+				}
 			}
 		}
 

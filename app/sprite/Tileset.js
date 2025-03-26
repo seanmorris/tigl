@@ -44,7 +44,7 @@ export class Tileset
 				spacing, tilecount, tileheight, tilewidth, tiles
 			} = await (await cache.get(src)).clone().json());
 
-			for(const tile of tiles)
+			if(tiles) for(const tile of tiles)
 			{
 				tile.id += this.firstGid;
 			}

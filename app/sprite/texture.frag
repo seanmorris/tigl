@@ -196,7 +196,7 @@ void main() {
     float tileSetY = floor((-1.0 + tileNumber) / xWrap);
 
     vec4 tileColor = texture2D(u_tiles, vec2(
-      xOff / xWrap + tileSetX * (u_tileSize.y / u_mapTextureSize.y)
+      xOff / xWrap + tileSetX * (u_tileSize.x / u_mapTextureSize.x)
       , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)
     ));
 

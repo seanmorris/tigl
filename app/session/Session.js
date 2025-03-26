@@ -47,12 +47,14 @@ export class Session
 
 		this.paused = false;
 		this.loaded = false;
-		this.overscan = 640;
+		this.overscan = 320;
 
 		this.world = new World({src: worldSrc, session: this});
 		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
 
 		this.keyboard = keyboard;
+
+		this.onScreenJoyPad = onScreenJoyPad;
 
 		this.world.ready.then(() => this.initialize({keyboard, onScreenJoyPad}));
 
@@ -73,6 +75,13 @@ export class Session
 	async initialize()
 	{
 		this.loaded = true;
+
+		if(warpStart)
+		{
+			const maps = this.world.getMapsForPoint(...warpStart);
+
+			maps.forEach(map => map.initialize());
+		}
 
 		for(const map of this.world.maps)
 		{
@@ -170,7 +179,9 @@ export class Session
 			return false;
 		}
 
-		this.entities.forEach(entity => { if(entity.sprite) entity.sprite.visible = false; });
+		this.entities.forEach(entity => {
+			if(entity.sprite) entity.sprite.visible = false;
+		});
 
 		const player = this.player;
 
@@ -195,8 +206,22 @@ export class Session
 				, player.y + (Camera.height * 1.0) + 64
 			);
 
-			mapRegions.forEach(r => this.spriteBoard.regions.add(r));
+			mapRegions.forEach(region => {
+				region.simulate(delta);
+				this.spriteBoard.regions.add(region);
+			});
 		});
+
+		// const regions = this.world.getRegionsForRect(
+		// 	player.x
+		// 	, player.y
+		// 	// , (Camera.width * 1.0) + 64
+		// 	// , (Camera.height * 1.0) + 64
+		// 	, (Camera.width * 1 + this.overscan)
+		// 	, (Camera.height * 1 + this.overscan)
+		// );
+
+		// regions.size && console.log(regions);
 
 		const entities = this.world.getEntitiesForRect(
 			player.x

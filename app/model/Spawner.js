@@ -82,8 +82,8 @@ export class Spawner extends Entity
 
 		this.session.world.motionGraph.add(entity, map);
 		entity.lastMap = map;
-		this.session.removeEntity(this);
 		this.session.addEntity(entity);
+		this.session.removeEntity(this);
 		super.simulate();
 	}
 }

@@ -195,7 +195,35 @@ export class World
 				continue;
 			}
 
-			result = result.union(tilemap.getRegionsForPoint(x, y));
+			result = result.union(
+				tilemap.getRegionsForPoint(x, y)
+			);
+		}
+
+		return result;
+	}
+
+	getRegionsForRect(x, y, w, h)
+	{
+		const tilemaps = this.getMapsForRect(x, y, w, h);
+
+		let result = new Set;
+
+		for(const tilemap of tilemaps)
+		{
+			if(!tilemap.visible)
+			{
+				continue;
+			}
+
+			result = result.union(
+				tilemap.getRegionsForRect(
+					x + -w * 0.5
+					, y + -h * 0.5
+					, x + w * 0.5
+					, y + h * 0.5
+				)
+			);
 		}
 
 		return result;

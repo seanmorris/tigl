@@ -12,6 +12,8 @@ export class OnScreenJoyPad extends View
 		this.args.x = 0;
 		this.args.y = 0;
 
+		this.buttons = [];
+
 		window.addEventListener('mousemove', (event) => {
 			this.moveStick(event);
 		});
@@ -96,5 +98,19 @@ export class OnScreenJoyPad extends View
 		this.args.dragging = false;
 		this.args.x = 0;
 		this.args.y = 0;
+	}
+
+	releaseButton(event, button)
+	{
+		this.buttons[button] = -1;
+		console.log(button);
+	}
+
+	pressButton(event, button)
+	{
+		this.buttons[button] = this.buttons[button] || 0;
+		this.buttons[button]++
+		console.log(this.buttons[button]);
+
 	}
 }

@@ -22,7 +22,7 @@ export class Entity
 			, height = 32
 		} = entityData;
 
-		this.controller = controller;
+		this.id = entityData.id;
 
 		this.props = new Properties(entityData.properties ?? [], this);
 
@@ -37,8 +37,6 @@ export class Entity
 		this.width  = width;
 		this.height = height;
 
-		controller && controller.create(this, entityData);
-
 		this.sprite = sprite || new Sprite({
 			session
 			, src: '/thing.png'
@@ -48,6 +46,8 @@ export class Entity
 
 		this.inputManager = inputManager;
 		this.session = session;
+		this.controller = controller;
+		this.entityData = entityData;
 
 		this.rect = new Rectangle(
 			x - width * 0.5, y - height,
@@ -56,6 +56,9 @@ export class Entity
 
 		this.xOrigin = x;
 		this.yOrigin = x;
+
+		this.fresh = true;
+		this.map = null;
 	}
 
 	simulate()
@@ -63,19 +66,38 @@ export class Entity
 		const startX = this.x;
 		const startY = this.y;
 
+		const world = this.session.world;
+
+		const maps = world.getMapsForPoint(this.x, this.y);
+		const motionParent = world.motionGraph.getParent(this);
+
+		if(!world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
+		{
+			world.motionGraph.delete(this);
+		}
+
+		if(this.fresh)
+		{
+			this.controller && this.controller.create(this, this.entityData);
+			this.fresh = false;
+		}
+
 		this.controller && this.controller.simulate(this);
 
-		this.session.world.motionGraph.moveChildren(
-			this
-			, this.x - startX
-			, this.y - startY
-		);
+		if(startX !== 0 || startY !== 0)
+		{
+			world.motionGraph.moveChildren(
+				this
+				, this.x - startX
+				, this.y - startY
+			);
 
-		this.rect.x1 = this.x - this.width * 0.5;
-		this.rect.x2 = this.x + this.width * 0.5;
+			this.rect.x1 = this.x - this.width * 0.5;
+			this.rect.x2 = this.x + this.width * 0.5;
 
-		this.rect.y1 = this.y - this.height;
-		this.rect.y2 = this.y;
+			this.rect.y1 = this.y - this.height;
+			this.rect.y2 = this.y;
+		}
 
 		if(this.sprite)
 		{

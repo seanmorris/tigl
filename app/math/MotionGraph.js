@@ -82,16 +82,17 @@ export class MotionGraph
 				continue;
 			}
 
-			child.x += x;
-			child.y += y;
 			const maps = entity.session.world.getMapsForPoint(child.x, child.y);
 
 			if(child instanceof Entity)
 			{
+				child.x += x;
+				child.y += y;
 				maps.forEach(map => map.moveEntity(child));
 			}
 			else if(child instanceof Region)
 			{
+				child.move(x, y);
 				maps.forEach(map => map.regionTree.move(child.rect));
 			}
 

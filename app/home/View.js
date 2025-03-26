@@ -190,7 +190,7 @@ export class View extends BaseView
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
 			// , worldSrc: '/tile-world.world'
-			, worldSrc: '/compiled.world'
+			, worldSrc: '/tile-world.compiled.world'
 			, element: this.tags.canvas.element
 		});
 
@@ -203,6 +203,9 @@ export class View extends BaseView
 		let sThen = 0;
 
 		const simulate = now => {
+
+			setTimeout(() => simulate(performance.now()), 0);
+
 			if(document.hidden)
 			{
 				return;
@@ -218,13 +221,13 @@ export class View extends BaseView
 		};
 
 		const draw = now => {
-			if(document.hidden)
-			{
-				window.requestAnimationFrame(draw);
-				return;
-			}
 
 			window.requestAnimationFrame(draw);
+
+			if(document.hidden)
+			{
+				return;
+			}
 
 			if(!this.session.draw(now))
 			{
@@ -247,7 +250,7 @@ export class View extends BaseView
 		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 1.5;
 		this.resize();
 
-		setInterval(() => simulate(performance.now()), 0);
+		simulate(performance.now())
 		draw(performance.now());
 	}
 

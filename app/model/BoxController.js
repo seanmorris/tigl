@@ -8,17 +8,23 @@ export class BoxController
 	{
 		if(entityData.gid)
 		{
-			entity.x = entityData.x + entityData.width * 0.5;
-			entity.y = entityData.y + -1;
+			entity.x += entityData.width * 0.5;
+			entity.y += -1;
 		}
 		else
 		{
-			entity.x = entityData.x + entityData.width * 0.5;
-			entity.y = entityData.y + entityData.height + -1;
+			entity.x += entityData.width * 0.5;
+			entity.y += entityData.height + -1;
 		}
 
 		this.xOriginal = entity.x;
 		this.yOriginal = entity.y;
+
+		if(entity.lastMap)
+		{
+			this.xOriginal -= entity.lastMap.x;
+			this.yOriginal -= entity.lastMap.y;
+		}
 
 		entity.flags |= 0x1;
 	}
@@ -36,7 +42,7 @@ export class BoxController
 			const current = Math.cos(Math.sin(age/delay)**5)**(16);
 
 			const mapOffset = entity.lastMap
-				? entity.lastMap.x - entity.lastMap.xOrigin
+				? entity.lastMap.x
 				: 0;
 
 			entity.x = mapOffset + this.xOriginal + current * range;
@@ -50,7 +56,7 @@ export class BoxController
 			const current = Math.cos(Math.sin(age/delay)**5)**(16);
 
 			const mapOffset = entity.lastMap
-				? entity.lastMap.y - entity.lastMap.yOrigin
+				? entity.lastMap.y
 				: 0;
 
 			const yNew = this.yOriginal + mapOffset + current * range;
@@ -59,13 +65,13 @@ export class BoxController
 			{
 				const above = entity.session.world.getEntitiesForRect(
 					entity.x
-					, yNew + -entity.height * 0.5 + -(entity.y - yNew) * 0.5
+					, yNew + -entity.height * 0.5 + -(entity.y - yNew)
 					, entity.width
-					, yNew + -yNew + entity.height
+					, entity.y + -yNew + entity.height * 0.5
 				);
 
 				above.forEach(other => {
-					if(other.ySpeed < 0) return;
+					if(other.ySpeed < yNew - entity.y) return;
 					other.y = entity.y - entity.height
 				});
 			}

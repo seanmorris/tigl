@@ -23,14 +23,6 @@ export class Parallax
 
 		this.height = 0;
 
-		this.slices = [
-			'parallax/mountains-0.png'
-			, 'parallax/sky-0-recolor.png'
-			, 'parallax/sky-1-recolor.png'
-			, 'parallax/sky-1b-recolor.png'
-			, 'parallax/sky-2-recolor.png'
-		];
-
 		this.parallaxLayers = [];
 		this.textures = [];
 
