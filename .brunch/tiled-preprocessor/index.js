@@ -55,7 +55,7 @@ class TiledPreprocessor
 				{
 					const existing = fs.readFileSync(outputPath, {encoding:'utf8', flag:'r'});
 
-					logger.info(`Sparsed file is ${ageDiffSec} seconds newer than artifact, skipping: ${path}`);
+					logger.info(`Built file is ${ageDiffSec} seconds newer than artifact, skipping: ${path}`);
 
 					return Promise.resolve({path, data: existing});
 				}

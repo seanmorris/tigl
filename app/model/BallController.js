@@ -11,6 +11,8 @@ export class BallController
 		entity.width  = 32;
 	}
 
+	destroy(entity){}
+
 	simulate(entity)
 	{
 		const world = entity.session.world;
@@ -23,7 +25,6 @@ export class BallController
 			const h = world.castTerrainRay(
 				entity.x + 0
 				, entity.y + -16
-				, 0
 				, entity.xSpeed < 0 ? Math.PI : 0
 				, Math.abs(entity.xSpeed) + 16
 				, 0x01
@@ -32,7 +33,6 @@ export class BallController
 			const v = world.castTerrainRay(
 				entity.x + 0
 				, entity.y + -16
-				, 0
 				, Math.PI * 0.5 * Math.sign(entity.ySpeed)
 				, Math.abs(entity.ySpeed) + 16
 				, 0x1
@@ -63,4 +63,8 @@ export class BallController
 			entity.ySpeed = Math.sin(a) * s;
 		}
 	}
+
+	collide(entity, other, point){}
+	sleep(entity){}
+	wakeup(entity){}
 }

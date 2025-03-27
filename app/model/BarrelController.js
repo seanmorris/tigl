@@ -7,13 +7,17 @@ export class BarrelController
 		entity.xSpeed = 0;
 		entity.ySpeed = 0;
 
-		entity.height = 48;
-		entity.width = 32;
+		entity.height = 32;
+		entity.width = 26;
 
 		entity.ySpriteOffset = 6;
 
-		this.grounded = true;
+		entity.grounded = true;
 		this.shot = false;
+	}
+
+	destroy(entity)
+	{
 	}
 
 	simulate(entity)
@@ -23,12 +27,12 @@ export class BarrelController
 		if(!world.getSolid(entity.x, entity.y + 1))
 		{
 			entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
-			this.grounded = false;
+			entity.grounded = false;
 		}
 		else
 		{
 			entity.ySpeed = Math.min(0, entity.ySpeed);
-			this.grounded = true;
+			entity.grounded = true;
 		}
 
 		if(entity.xSpeed || entity.ySpeed)
@@ -37,8 +41,7 @@ export class BarrelController
 			const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
 			const hit = world.castRay(
 				entity.x
-				, entity.y + -entity.height * 0.5
-				, 0
+				, entity.y + -4
 				, direction
 				, distance
 				, 0x01
@@ -49,13 +52,8 @@ export class BarrelController
 
 			if(hit.terrain)
 			{
-				const actualDistance = Math.hypot(
-					entity.x - hit.terrain[0]
-					, entity.y - hit.terrain[1]
-				);
-
-				xMove = Math.cos(direction) * actualDistance;
-				yMove = Math.sin(direction) * actualDistance;
+				xMove = hit.terrain[0] - entity.x;
+				yMove = hit.terrain[1] - entity.y;
 			}
 
 			entity.x += xMove;
@@ -63,7 +61,7 @@ export class BarrelController
 
 			if(!this.shot)
 			{
-				entity.xSpeed *= 0.9;
+				entity.xSpeed *= 0.9125;
 			}
 		}
 		else
@@ -71,7 +69,7 @@ export class BarrelController
 			entity.shot = false;
 		}
 
-		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y - 1))
+		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
 		{
 			entity.ySpeed = 0;
 			entity.y--;
@@ -90,7 +88,7 @@ export class BarrelController
 			entity.x++;
 		}
 
-		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8))
 		{
 			this.stop(entity, entity.xSpeed);
 			entity.xSpeed = 0;
@@ -98,38 +96,44 @@ export class BarrelController
 		}
 	}
 
-	stop(entity)
-	{
-		entity.xSpeed && console.log(entity.xSpeed);
-
-		if(entity.xSpeed > 10)
-		{
-			entity.session.removeEntity(entity);
-		}
-	}
-
 	collide(entity, other, point)
 	{
-		if(Math.sign(entity.x - other.x) === Math.sign(other.xSpeed))
+		if(Math.abs(Math.sign(entity.x - other.x) - Math.sign(other.xSpeed)) < 2)
 		{
+			const dist = Math.abs(other.x + -entity.x);
+			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
+			const side = Math.sign(entity.x - other.x);
+
 			entity.xSpeed = other.xSpeed;
 
-			const min = 0.5 * (other.width + entity.width);
-
-			if(Math.abs(other.x + other.xSpeed + -entity.x) < min)
+			if(dist < min)
 			{
-				entity.xSpeed += -Math.sign(other.x + other.xSpeed + -entity.x);
+				entity.xSpeed += (min - dist) * side;
 			}
 
-			if(other.controller)
-			{
-				other.controller.pushing = entity;
-			}
+			other.controller.pushing = entity;
+
+			// const maps = entity.session.world.getMapsForPoint(entity.x, entity.y);
+			// maps.forEach(map => map.moveEntity(entity));
+			// console.log(maps);
 		}
 	}
 
-	destroy()
+	sleep(entity)
 	{
+	}
 
+	wakeup(entity)
+	{
+	}
+
+	stop(entity)
+	{
+		if(entity.xSpeed > 10)
+		{
+			// entity.session.removeEntity(entity);
+		}
+
+		this.shot = false;
 	}
 }

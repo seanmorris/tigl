@@ -7,17 +7,18 @@ export class QuadTree extends Rectangle
 	{
 		super(x1, y1, x2, y2);
 		this[Bindable.Prevent] = true;
+		this.count = 0;
 		this.items = new Set;
 		this.split = false;
 		this.minSize = minSize || 10;
 		this.backMap = parent ? parent.backMap : new Map
 		this.parent = parent;
+		this.root = parent ? parent.root : this;
 
 		this.ulCell = null;
 		this.urCell = null;
 		this.blCell = null;
 		this.brCell = null;
-		this.count = 0;
 
 	}
 
@@ -109,7 +110,7 @@ export class QuadTree extends Rectangle
 
 				if(!added)
 				{
-					console.warn('Bad split!');
+					this.root.onBadSplit(item);
 				}
 
 				this.items.delete(item);
@@ -180,14 +181,13 @@ export class QuadTree extends Rectangle
 		}
 
 		const cell = this.backMap.get(entity);
+		this.backMap.delete(entity);
 		cell.items.delete(entity);
 
 		if(cell.parent)
 		{
 			cell.parent.prune();
 		}
-
-		this.backMap.delete(entity);
 
 		let parent = cell;
 		while(parent)
@@ -300,5 +300,10 @@ export class QuadTree extends Rectangle
 		}
 
 		return new Set(this.items);
+	}
+
+	onBadSplit(item)
+	{
+		console.warn('Bad split!', item);
 	}
 }

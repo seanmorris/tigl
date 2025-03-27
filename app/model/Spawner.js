@@ -14,6 +14,8 @@ export class Spawner extends Entity
 		this.spawnClass = spawnData.spawnClass;
 		this.session = spawnData.session;
 		this.props = new Properties(spawnData.properties ?? [], this);
+
+		this.flags |= Entity.E_STATIC;
 	}
 
 	simulate()

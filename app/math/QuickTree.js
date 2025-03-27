@@ -63,4 +63,18 @@ export class QuickTree extends QuadTree
 
 		return result;
 	}
+
+	onBadSplit(item)
+	{
+		if(item.session && item.session.world)
+		{
+			const maps = item.session.world.getMapsForPoint(item.x, item.y);
+			maps.forEach(map => console.log(map.moveEntity(item)));
+
+			if(!maps.size)
+			{
+				console.warn('Bad split!', item);
+			}
+		}
+	}
 }

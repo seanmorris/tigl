@@ -229,41 +229,40 @@ export class World
 		return result;
 	}
 
-	castRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
+	castRay(startX, startY, angle, length = 320, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
 		return Ray.cast(
 			this
 			, startX
 			, startY
-			, layerId
 			, angle
-			, maxDistance
+			, length
 			, rayFlags
+			, layerId
 		);
 	}
 
-	castTerrainRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
+	castTerrainRay(startX, startY, angle, length = 320, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
 		return Ray.castTerrain(
 			this
 			, startX
 			, startY
-			, layerId
 			, angle
-			, maxDistance
+			, length
 			, rayFlags
+			, layerId
 		);
 	}
 
-	castEntityRay(startX, startY, layerId, angle, maxDistance = 320, rayFlags = Ray.DEFAULT_FLAGS)
+	castEntityRay(startX, startY, angle, length = 320, rayFlags = Ray.DEFAULT_FLAGS)
 	{
 		return Ray.castEntity(
 			this
 			, startX
 			, startY
-			, layerId
 			, angle
-			, maxDistance
+			, length
 			, endY
 			, rayFlags
 		);

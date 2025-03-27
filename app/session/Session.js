@@ -7,34 +7,29 @@ import { Entity } from '../model/Entity';
 import { Camera } from '../sprite/Camera';
 import { World } from "../world/World";
 
+import { MotionGraph } from "../math/MotionGraph";
 import { Controller } from '../input/Controller';
 import { Pallet } from "../world/Pallet";
 
-import { PlayerController } from '../model/PlayerController';
-import { BallController } from "../model/BallController";
-import { BarrelController } from "../model/BarrelController";
-import { BoxController } from "../model/BoxController";
-import { MapMover } from "../model/MapMover";
-import { MotionGraph } from "../math/MotionGraph";
-
 const input = new URLSearchParams(location.search);
-const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : [];
+const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
 
 console.log(location.search, input, warpStart);
 
 export class Session
 {
-	constructor({element, worldSrc, keyboard, onScreenJoyPad})
+	constructor({element, keyboard, onScreenJoyPad, worldSrc, mapPallet = {}, entityPallet = {}})
 	{
 		this.entityPallet = new Pallet;
 		this.mapPallet = new Pallet;
 
-		this.entityPallet.register('@basic-platformer', PlayerController);
-		this.entityPallet.register('@barrel', BarrelController);
-		this.entityPallet.register('@ball', BallController);
-		this.entityPallet.register('@box', BoxController);
+		Object.entries(entityPallet).forEach(
+			([keyword, spawnClass]) => this.entityPallet.register(keyword, spawnClass)
+		);
 
-		this.mapPallet.register('@moving-map', MapMover);
+		Object.entries(mapPallet).forEach(
+			([keyword, mapClass]) => this.mapPallet.register(keyword, mapClass)
+		);
 
 		this.fThen = 0;
 		this.sThen = 0;
@@ -44,10 +39,11 @@ export class Session
 
 		this.entities  = new Set;
 		this.removed = new WeakSet;
+		this.awake = new Set;
 
 		this.paused = false;
 		this.loaded = false;
-		this.overscan = 320;
+		this.overscan = 640;
 
 		this.world = new World({src: worldSrc, session: this});
 		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
@@ -138,6 +134,7 @@ export class Session
 	{
 		entity.destroy();
 		this.entities.delete(entity);
+		this.awake.delete(entity);
 		this.spriteBoard.sprites.delete(entity.sprite);
 		QuickTree.deleteFromAllTrees(entity);
 		MotionGraph.deleteFromAllGraphs(entity);
@@ -212,30 +209,31 @@ export class Session
 			});
 		});
 
-		// const regions = this.world.getRegionsForRect(
-		// 	player.x
-		// 	, player.y
-		// 	// , (Camera.width * 1.0) + 64
-		// 	// , (Camera.height * 1.0) + 64
-		// 	, (Camera.width * 1 + this.overscan)
-		// 	, (Camera.height * 1 + this.overscan)
-		// );
-
-		// regions.size && console.log(regions);
-
 		const entities = this.world.getEntitiesForRect(
 			player.x
 			, player.y
-			// , (Camera.width * 1.0) + 64
-			// , (Camera.height * 1.0) + 64
-			, (Camera.width * 1 + this.overscan)
+			, (Camera.width  * 1 + this.overscan)
 			, (Camera.height * 1 + this.overscan)
 		);
 
 		entities.delete(player);
 		entities.add(player);
 
+		const sleeping = this.awake.difference(entities);
+
+		sleeping.forEach(entity => {
+			if(entity.sprite) entity.sprite.visible = false;
+			entity.sleep();
+			this.awake.delete(entity);
+		});
+
 		entities.forEach(entity => {
+			this.awake.add(entity);
+
+			if(entity.sleeping)
+			{
+				entity.wakeup();
+			}
 
 			entity.simulate(delta);
 			if(this.removed.has(entity)) return;

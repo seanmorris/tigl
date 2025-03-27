@@ -20,6 +20,13 @@
             "width": 1024,
             "x": 1888,
             "y": 128
+        },
+        {
+            "fileName": "map-4.tmj",
+            "height": 1024,
+            "width": 1024,
+            "x": 2912,
+            "y": -416
         }
     ],
     "onlyShowAdjacentMaps": false,

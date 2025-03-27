@@ -89,7 +89,7 @@ class Segment
 	}
 }
 
-const isRectangle = (object) => {
+const isRectangle = object => {
 	return 'x1' in object
 		&& 'y1' in object
 		&& 'x2' in object
@@ -142,6 +142,10 @@ export class SMTree
 
 		for(let i = 1 + startIndex; i <= endIndex; i++)
 		{
+			if(this.segments[i].start < rectMin || this.segments[i].end > rectMax)
+			{
+				continue;
+			}
 			this.segments[i].add(rectangle);
 		}
 	}
@@ -208,7 +212,6 @@ export class SMTree
 
 	query(x1, y1, x2, y2)
 	{
-
 		const xStartIndex = this.findSegment(x1);
 		const xEndIndex = this.findSegment(x2);
 

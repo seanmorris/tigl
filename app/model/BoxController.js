@@ -1,3 +1,5 @@
+import { Entity } from "./Entity";
+
 export class BoxController
 {
 	static spriteColor = [0, 0, 0, 255];
@@ -20,14 +22,17 @@ export class BoxController
 		this.xOriginal = entity.x;
 		this.yOriginal = entity.y;
 
-		if(entity.lastMap)
+		if(entity.map)
 		{
-			this.xOriginal -= entity.lastMap.x;
-			this.yOriginal -= entity.lastMap.y;
+			this.xOriginal -= entity.map.x;
+			this.yOriginal -= entity.map.y;
 		}
 
-		entity.flags |= 0x1;
+		entity.flags |= Entity.E_PLATFORM;
+		entity.flags |= Entity.E_STATIC;
 	}
+
+	destroy(entity){}
 
 	simulate(entity)
 	{
@@ -60,18 +65,19 @@ export class BoxController
 				: 0;
 
 			const yNew = this.yOriginal + mapOffset + current * range;
+			const moved = yNew - entity.y;
 
-			if(yNew < entity.y)
+			if(moved < 0)
 			{
 				const above = entity.session.world.getEntitiesForRect(
 					entity.x
-					, yNew + -entity.height * 0.5 + -(entity.y - yNew)
+					, entity.y -entity.height * 0.5
 					, entity.width
-					, entity.y + -yNew + entity.height * 0.5
+					, entity.height + -moved
 				);
 
 				above.forEach(other => {
-					if(other.ySpeed < yNew - entity.y) return;
+					if(other.flags & Entity.E_STATIC || other.ySpeed < moved) return;
 					other.y = entity.y - entity.height
 				});
 			}
@@ -80,5 +86,7 @@ export class BoxController
 		}
 	}
 
-	collide(){}
+	collide(entity){}
+	sleep(entity){}
+	wakeup(entity){}
 }

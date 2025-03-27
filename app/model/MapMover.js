@@ -16,8 +16,6 @@ export class MapMover
 			const current = Math.cos(Math.sin(age/delay)**5)**(16);
 
 			map.y = this.yOriginal + current * range;
-
-			// map.y = Math.round(map.y);
 		}
 	}
 }

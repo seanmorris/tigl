@@ -27,12 +27,15 @@ export class Geometry
 		}
 
 		// Is our point within the bounds of line b?
-		const e = (cx * by - cy * bx) / crossProduct;
-		if(e < 0 || e > 1)
+		const t = (cx * by - cy * bx) / crossProduct;
+		if(t < 0 || t > 1)
 		{
 			return false;
 		}
 
-		return [x1a + e * ax, y1a + e * ay];
+		const x = x1a + t * ax;
+		const y = y1a + t * ay;
+
+		return [x, y, t];
 	}
 }

@@ -104,7 +104,7 @@ export class TileMap
 
 		this.age = 0;
 
-		this.quadTree = new QuickTree(0, 0, this.worldWidth, this.worldHeight);
+		this.quadTree = new QuickTree(-64, -64, this.worldWidth + 64, this.worldHeight + 64);
 		this.regionTree = new SMTree;
 		this.animationTrees = new Map;
 		this.entityMap = new Map;
@@ -154,7 +154,7 @@ export class TileMap
 			cache.set(src, fetch(src));
 		}
 
-		await new Promise(a => setTimeout(a, 500));
+		// await new Promise(a => setTimeout(a, 500));
 
 		const mapData = await (await cache.get(src)).clone().json();
 

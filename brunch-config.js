@@ -13,7 +13,7 @@ module.exports = {
 			wrapper: content => `module.exports = ${JSON.stringify(content)}`
 		}
 		, babel: {
-			plugins: ["macros"],
+			plugins: ['macros'],
 			targets: { browsers: ['>0.25%'] },
 			presets: [[
 				'@babel/preset-env', {

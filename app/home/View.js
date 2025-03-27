@@ -7,6 +7,14 @@ import { Keyboard } from 'curvature/input/Keyboard'
 import { Session } from '../session/Session';
 import { Config } from 'Config';
 
+import { PlayerController } from '../model/PlayerController';
+import { BallController } from "../model/BallController";
+import { BarrelController } from "../model/BarrelController";
+import { BoxController } from "../model/BoxController";
+
+import { MapMover } from "../model/MapMover";
+
+
 const Application = {};
 
 Application.onScreenJoyPad = new OnScreenJoyPad;
@@ -186,12 +194,25 @@ export class View extends BaseView
 
 	onRendered()
 	{
+		const gameDef = {
+			worldSrc: '/tile-world.compiled.world'
+			, mapPallet: {
+				'@moving-map': MapMover
+			}
+			, entityPallet: {
+				'@basic-platformer': PlayerController
+				, '@barrel': BarrelController
+				, '@ball': BallController
+				, '@box': BoxController
+			}
+		};
+
 		this.session = new Session({
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
 			// , worldSrc: '/tile-world.world'
-			, worldSrc: '/tile-world.compiled.world'
 			, element: this.tags.canvas.element
+			, ...gameDef
 		});
 
 		this.args.frameLock = this.session.frameLock;

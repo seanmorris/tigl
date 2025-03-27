@@ -5,7 +5,9 @@ import { Properties } from "../world/Properties";
 
 export class Entity
 {
-	static E_SOLID = 0b0000_0001
+	static E_SOLID    = 0b0000_0001;
+	static E_PLATFORM = 0b0001_0000;
+	static E_STATIC   = 0b1000_0000;
 
 	constructor(entityData)
 	{
@@ -22,9 +24,8 @@ export class Entity
 			, height = 32
 		} = entityData;
 
+		this.controller = controller;
 		this.id = entityData.id;
-
-		this.props = new Properties(entityData.properties ?? [], this);
 
 		this.xSpriteOffset = 0;
 		this.ySpriteOffset = sprite ? 0 : 15;
@@ -46,7 +47,7 @@ export class Entity
 
 		this.inputManager = inputManager;
 		this.session = session;
-		this.controller = controller;
+		this.props = new Properties(entityData.properties ?? [], this);
 		this.entityData = entityData;
 
 		this.rect = new Rectangle(
@@ -57,8 +58,13 @@ export class Entity
 		this.xOrigin = x;
 		this.yOrigin = x;
 
+		this.sleeping = false;
+
 		this.fresh = true;
-		this.map = null;
+		this.map = entityData.map;
+		this.grounded = false;
+
+		this.controller && this.controller.create(this, this.entityData);
 	}
 
 	simulate()
@@ -68,17 +74,22 @@ export class Entity
 
 		const world = this.session.world;
 
-		const maps = world.getMapsForPoint(this.x, this.y);
 		const motionParent = world.motionGraph.getParent(this);
+		const maps = world.getMapsForPoint(this.x, this.y);
+		const firstMap = [...maps][0];
 
 		if(!world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
 		{
 			world.motionGraph.delete(this);
 		}
 
+		if(this.grounded && !world.motionGraph.getParent(this))
+		{
+			world.motionGraph.add(this, firstMap);
+		}
+
 		if(this.fresh)
 		{
-			this.controller && this.controller.create(this, this.entityData);
 			this.fresh = false;
 		}
 
@@ -111,6 +122,24 @@ export class Entity
 	collide(other, point)
 	{
 		this.controller && this.controller.collide(this, other, point);
+	}
+
+	sleep()
+	{
+		if(!this.sleeping)
+		{
+			this.controller && this.controller.sleep(this);
+			this.sleeping = true;
+		}
+	}
+
+	wakeup()
+	{
+		if(this.sleeping)
+		{
+			this.controller && this.controller.wakeup(this);
+			this.sleeping = false;
+		}
 	}
 
 	destroy()

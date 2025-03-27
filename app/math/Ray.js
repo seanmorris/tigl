@@ -2,28 +2,32 @@ import { Geometry } from "./Geometry";
 
 export class Ray
 {
-	static T_LAST_EMPTY = 0b0000_0001;
-	static T_ALL_POINTS = 0b0000_0010;
+	static T_LAST_EMPTY  = 0b0000_0001;
+	static T_ALL_POINTS  = 0b0000_0010;
+	static T_SNAP_TO_INT = 0b0000_0100;
+	static T_GET_LENGTH  = 0b0000_1000;
+
+	static E_NO_MINK     = 0b0001_0000;
 
 	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
 
 	static DEFAULT_FLAGS = 0b0000_0000;
 
-	static cast(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
+	static cast(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId)
 	{
-		const terrain = this.castTerrain(world, startX, startY, layerId, angle, maxDistance, rayFlags);
-		const entities = this.castEntity(world, startX, startY, layerId, angle, maxDistance, rayFlags);
+		const terrain = this.castTerrain(world, startX, startY, angle, length, rayFlags, layerId);
+		const entities = this.castEntity(world, startX, startY, angle, length, rayFlags);
 
 		return {terrain, entities};
 	}
 
-	static castEntity(world, startX, startY, layerId, angle, maxDistance, rayFlags = this.DEFAULT_FLAGS)
+	static castEntity(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
 	{
 		const cos = Math.cos(angle);
 		const sin = Math.sin(angle);
 
-		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * maxDistance;
-		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * maxDistance;
+		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
+		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
 
 		const centerX = (startX + endX) * 0.5;
 		const centerY = (startY + endY) * 0.5;
@@ -36,7 +40,25 @@ export class Ray
 
 		for(const candidate of candidates)
 		{
-			const points = candidate.rect.toLines();
+			if(candidate === castingEntity)
+			{
+				continue;
+			}
+
+			let rect = candidate.rect;
+
+			if(castingEntity && !(rayFlags & this.E_NO_MINK))
+			{
+				rect = rect.expand(castingEntity.rect);
+			}
+
+			if(rect.contains(startX, startY))
+			{
+				collisions.set(candidate, [startX, startY, 0, 0]);
+				continue;
+			}
+
+			const points = rect.toLines();
 
 			for(let i = 0; i < points.length; i += 4)
 			{
@@ -53,7 +75,7 @@ export class Ray
 					{
 						const existing = collisions.get(candidate);
 
-						if(Math.hypot(startX - intersection[0], startY - intersection[1]) < Math.hypot(startX - existing[0], startY - existing[1]))
+						if(intersection[2] < existing[2])
 						{
 							collisions.set(candidate, intersection);
 						}
@@ -69,15 +91,15 @@ export class Ray
 		return collisions;
 	}
 
-	static castTerrain(world, startX, startY, layerId, angle, maxDistance = 320, rayFlags = this.DEFAULT_FLAGS)
+	static castTerrain(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
-		maxDistance = Math.ceil(maxDistance);
+		length = Math.ceil(length);
 
 		const cos = Math.cos(angle);
 		const sin = Math.sin(angle);
 
-		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * maxDistance;
-		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * maxDistance;
+		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
+		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
 
 		const bs = 32;
 
@@ -94,6 +116,11 @@ export class Ray
 
 		if(world.getSolid(startX, startY, layerId))
 		{
+			if(rayFlags & this.T_GET_LENGTH)
+			{
+				return 0;
+			}
+
 			return [startX, startY];
 		}
 
@@ -121,10 +148,8 @@ export class Ray
 		const solidsX = new Set;
 		const solidsY = new Set;
 
-		window.logPoints && console.time('rayCast');
-
 		let iterations = 0;
-		while(Math.abs(currentDistance) < maxDistance && !solidsX.size && !solidsY.size)
+		while(Math.abs(currentDistance) < length && !solidsX.size && !solidsY.size)
 		{
 			if(ox && (!oy || Math.abs(rayX) < Math.abs(rayY)))
 			{
@@ -199,7 +224,7 @@ export class Ray
 
 		const points = [...solidsX, ...solidsY];
 
-		if(rayFlags & this.ALL_POINTS)
+		if(rayFlags & this.T_ALL_POINTS)
 		{
 			return new solidsX.union(solidsY);
 		}
@@ -216,24 +241,33 @@ export class Ray
 			if(oy < 0 && nearest[1] % 1 < 0.00001) nearest[1] = Math.round(nearest[1]);
 		}
 
-		if(Math.sqrt(minDistSq) > maxDistance)
+		if(Math.sqrt(minDistSq) > length)
 		{
 			return;
 		}
 
-		if(rayFlags & this.T_LAST_EMPTY)
+		if(nearest)
 		{
-			if(!nearest)
+			if(rayFlags & this.T_LAST_EMPTY)
 			{
-				return;
+				nearest[0] += -cos * Math.sign(rayX);
+				nearest[1] += -sin * Math.sign(rayY);
 			}
 
-			return [
-				nearest[0] + -cos * Math.sign(rayX)
-				, nearest[1] + -sin * Math.sign(rayY)
-			]
-		}
+			if(rayFlags & this.T_SNAP_TO_INT)
+			{
+				if(ox > 0) nearest[0] = Math.floor(nearest[0]);
+				if(ox < 0) nearest[0] = Math.ceil(nearest[0]);
+				if(oy > 0) nearest[1] = Math.floor(nearest[1]);
+				if(oy < 0) nearest[1] = Math.ceil(nearest[1]);
+			}
 
-		return nearest;
+			if(rayFlags & this.T_GET_LENGTH)
+			{
+				return Math.hypot(startX - nearest[0], startY - nearest[1]);
+			}
+
+			return nearest;
+		}
 	}
 }

@@ -103,14 +103,12 @@ export class OnScreenJoyPad extends View
 	releaseButton(event, button)
 	{
 		this.buttons[button] = -1;
-		console.log(button);
 	}
 
 	pressButton(event, button)
 	{
 		this.buttons[button] = this.buttons[button] || 0;
-		this.buttons[button]++
-		console.log(this.buttons[button]);
+		this.buttons[button]++;
 
 	}
 }
