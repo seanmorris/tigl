@@ -289,14 +289,56 @@ export class TileMap
 			this.canvases.set(layer, canvas);
 			this.contexts.set(layer, context);
 
-			const tileValues = new Uint32Array(layer.data.map(t => 0 + t));
+			const tileValues = new Uint32Array(layer.data.map(Number));
 			const tilePixels = new Uint8ClampedArray(tileValues.buffer);
 
 			for(const i in tileValues)
 			{
-				const tile = tileValues[i];
+				const rotatedTile = tileValues[i];
+				const tile = rotatedTile & 0x0FFFFFFF;
+				const flip = tilePixels[i * 4 + 3];
 
-				if(this.animatedTiles.has(tile))
+				if(this.animatedTiles.has(tile) && !this.animatedTiles.has(rotatedTile))
+				{
+					const frames = this.animatedTiles.get(tile).map(f => ({...f}));
+					this.animatedTiles.set(rotatedTile, frames);
+
+					console.log(frames);
+
+					if(flip & 0x80)
+					{
+						frames.forEach(f => {
+							f.tileid &= 0x00FFFFFF;
+							f.tileid |= (0b1111_1110 << 24)
+						});
+					}
+
+					if(flip & 0x40)
+					{
+						frames.forEach(f => {
+							f.tileid &= 0x00FFFFFF;
+							f.tileid |= (0b1111_1101 << 24)
+						});
+					}
+
+					if(flip & 0x20000000)
+					{
+						frames.forEach(f => {
+							f.tileid &= 0x00FFFFFF;
+							f.tileid |= (0b1111_1011 << 24)
+						});
+					}
+
+					if(flip & 0x60000000)
+					{
+						frames.forEach(f => {
+							f.tileid &= 0x00FFFFFF;
+							f.tileid |= (0b1111_0111 << 24)
+						});
+					}
+				}
+
+				if(this.animatedTiles.has(rotatedTile))
 				{
 					if(!this.animationTrees.has(layer))
 					{
@@ -309,7 +351,7 @@ export class TileMap
 					}
 
 					const tree = this.animationTrees.get(layer);
-					const frames = this.animatedTiles.get(tile);
+					const frames = this.animatedTiles.get(rotatedTile);
 
 					const x = i % this.width;
 					const y = Math.floor(i / this.width);
@@ -322,7 +364,31 @@ export class TileMap
 
 			for(let i = 3; i < tilePixels.length; i +=4)
 			{
-				tilePixels[i] = 0xFF - tilePixels[i];
+				const original = tilePixels[i];
+
+				tilePixels[i] = 0xFF;
+
+				if(original & 0x80)
+				{
+					tilePixels[i] &= 0b1111_1110;
+				}
+
+				if(original & 0x40)
+				{
+					tilePixels[i] &= 0b1111_1101;
+				}
+
+				if(original & 0x20)
+				{
+					tilePixels[i] &= 0b1111_1011;
+				}
+
+				if(original & 0x60)
+				{
+					tilePixels[i] &= 0b1111_0111;
+				}
+
+				if(original) console.log(tilePixels[i], original);
 			}
 
 			this.tilesIndexes.set(layer, tileValues);

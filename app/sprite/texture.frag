@@ -160,13 +160,12 @@ void main() {
 
     vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
 
-    float lo = tile.r  * 256.0;
-    float hi = tile.g  * 256.0 * 256.0;
-    // float vh = tile.b  * 256.0 * 256.0 * 256.0;
-    // float vv = (1.0 - tile.a) * 256.0 * 256.0 * 256.0 * 256.0;
+    int lo = int(tile.r * 256.0);
+    int hi = int(tile.g * 256.0);
+    int vh = int(tile.b * 256.0);
+    int vv = int(tile.a * 256.0);
 
-    // int tileNumber = int(lo + hi + vh + vv);
-    int tileNumber = int(lo + hi);
+    int tileNumber = hi * 256 + lo;
 
     if (tileNumber == 0) {
       gl_FragColor.a = 0.0;
@@ -192,22 +191,55 @@ void main() {
       return;
     }
 
-    // const int FLIPPED_HORIZONTALLY_FLAG  = 0x80000000;
-    // const int FLIPPED_VERTICALLY_FLAG    = 0x40000000;
-    // const int FLIPPED_DIAGONALLY_FLAG    = 0x20000000;
-
     float tileSetX = floor(mod((-1.0 + float(tileNumber)), xWrap));
     float tileSetY = floor((-1.0 + float(tileNumber)) / xWrap);
 
-    // if (tileNumber <= FLIPPED_HORIZONTALLY_FLAG) {
-    //   tileNumber += FLIPPED_HORIZONTALLY_FLAG;
-    //   xOff = 1.0 - xOff;
-    // }
+    if (vv == 254) { // Flipped Horizontally
+      xOff = 1.0 - xOff;
+    }
 
-    // if (tileNumber >= FLIPPED_VERTICALLY_FLAG) {
-    //   tileNumber -= FLIPPED_VERTICALLY_FLAG;
-    //   yOff = 1.0 - yOff;
-    // }
+    if (vv == 253) { // Flipped Vertically
+      yOff = 1.0 - yOff;
+    }
+
+    if (vv == 252) { // Flipped Both
+      xOff = 1.0 - xOff;
+      yOff = 1.0 - yOff;
+    }
+
+    if (vv == 245) {
+      xOff = xOff;
+      yOff = 1.0 - yOff;
+    }
+
+    if (vv == 244) {
+      xOff = 1.0 - xOff;
+      yOff = 1.0 - yOff;
+    }
+
+    if (vv == 243) { // Rotated left, flipped vertically
+      float tmp = xOff;
+      xOff = yOff;
+      yOff = tmp;
+    }
+
+    if (vv == 242) {
+      float tmp = xOff;
+      xOff = yOff;
+      yOff = 1.0 - tmp;
+    }
+
+    if (vv == 241) {
+      float tmp = xOff;
+      xOff = 1.0 - yOff;
+      yOff = tmp;
+    }
+
+    if (vv == 240) {
+      float tmp = xOff;
+      xOff = 1.0 - yOff;
+      yOff = 1.0 - tmp;
+    }
 
     vec4 tileColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileSetX * (u_tileSize.x / u_mapTextureSize.x)

@@ -1,3 +1,4 @@
+import { roundedSquareWave } from "../math/roundSquareWave";
 import { Entity } from "./Entity";
 
 export class BoxController
@@ -44,7 +45,8 @@ export class BoxController
 			const range = entity.props.get('xOscillate');
 			const delay = entity.props.get('delay') ?? 1500;
 			const age = entity.session.world.age;
-			const current = Math.cos(Math.sin(age/delay)**5)**(16);
+			// const current = Math.cos(Math.sin(age/delay)**4)**22;
+			const current = roundedSquareWave(age/delay, 0.6);
 
 			const mapOffset = entity.lastMap
 				? entity.lastMap.x
@@ -58,7 +60,8 @@ export class BoxController
 			const range = entity.props.get('yOscillate');
 			const delay = entity.props.get('delay') ?? 1500;
 			const age = entity.session.world.age;
-			const current = Math.cos(Math.sin(age/delay)**5)**(16);
+			// const current = 1 - Math.cos(Math.sin(age/delay)**4)**22;
+			const current = roundedSquareWave(age/delay, 0.6);
 
 			const mapOffset = entity.lastMap
 				? entity.lastMap.y
