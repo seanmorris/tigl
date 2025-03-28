@@ -5,8 +5,6 @@
         {
          "id":6,
          "image":"parallax\/sky-2-recolor.png",
-         "imageheight":48,
-         "imagewidth":512,
          "name":"Sky 2",
          "offsetx":0,
          "offsety":32,
@@ -20,8 +18,6 @@
         {
          "id":5,
          "image":"parallax\/sky-1b-recolor.png",
-         "imageheight":16,
-         "imagewidth":512,
          "name":"Sky 1b",
          "offsetx":0,
          "offsety":80,
@@ -35,8 +31,6 @@
         {
          "id":4,
          "image":"parallax\/sky-1-recolor.png",
-         "imageheight":32,
-         "imagewidth":512,
          "name":"Sky 1",
          "offsetx":0,
          "offsety":96,
@@ -50,8 +44,6 @@
         {
          "id":3,
          "image":"parallax\/mountains-0-recolor.png",
-         "imageheight":48,
-         "imagewidth":512,
          "name":"Mountains 1",
          "offsetx":0,
          "offsety":80,
@@ -65,8 +57,6 @@
         {
          "id":7,
          "image":"parallax\/mountains-1-recolor.png",
-         "imageheight":48,
-         "imagewidth":512,
          "name":"Mountains 0",
          "offsetx":0,
          "offsety":128,
@@ -79,8 +69,6 @@
         {
          "id":11,
          "image":"parallax\/mountains-1-recolor.png",
-         "imageheight":48,
-         "imagewidth":512,
          "name":"Mountains 0 Repeat",
          "offsetx":0,
          "offsety":176,
@@ -140,7 +128,7 @@
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 14, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 14, 2, 2147483650, 1073741826, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -600,7 +588,7 @@
          "value":1
         }],
  "renderorder":"right-down",
- "tiledversion":"1.11.2",
+ "tiledversion":"1.10.1",
  "tileheight":32,
  "tilesets":[
         {

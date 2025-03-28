@@ -322,7 +322,7 @@ export class TileMap
 
 			for(let i = 3; i < tilePixels.length; i +=4)
 			{
-				tilePixels[i] = 0xFF;
+				tilePixels[i] = 0xFF - tilePixels[i];
 			}
 
 			this.tilesIndexes.set(layer, tileValues);
@@ -415,13 +415,11 @@ export class TileMap
 		this.rect.x1 = this.x;
 		this.rect.y1 = this.y;
 		this.rect.x2 = this.x + this.width * this.tileWidth;
-		this.rect.y2 = this.x + this.height * this.tileHeight;
+		this.rect.y2 = this.y + this.height * this.tileHeight;
 
 		if(startX !== this.x || startY !== this.y)
 		{
-			world.mapTree.move(
-				world.mapRects.get(this)
-			);
+			world.mapTree.move(world.mapRects.get(this));
 		}
 	}
 

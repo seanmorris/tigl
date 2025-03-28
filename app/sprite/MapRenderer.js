@@ -143,9 +143,11 @@ export class MapRenderer
 				, this.height * zoom
 			);
 
+			this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+
 			if(priority === 'foreground')
 			{
-				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
 			}
 
 			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);

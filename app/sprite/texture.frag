@@ -114,9 +114,7 @@ void main() {
 
   // This only applies when drawing the parallax background
   if (u_renderParallax == 1) {
-
     float texelSize = 1.0 / u_size.x;
-
     vec2 parallaxCoord = v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0)
       + vec2(u_scroll.x * texelSize * u_parallax.x, 0.0);
       // + vec2(u_time / 10000.0, 0.0);
@@ -124,7 +122,6 @@ void main() {
       ;
 
     gl_FragColor = texture2D(u_image,  parallaxCoord);
-
     return;
   }
 
@@ -163,12 +160,15 @@ void main() {
 
     vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
 
-    float lo = tile.r * 256.0;
-    float hi = tile.g * 256.0 * 256.0;
+    float lo = tile.r  * 256.0;
+    float hi = tile.g  * 256.0 * 256.0;
+    // float vh = tile.b  * 256.0 * 256.0 * 256.0;
+    // float vv = (1.0 - tile.a) * 256.0 * 256.0 * 256.0 * 256.0;
 
-    float tileNumber = lo + hi;
+    // int tileNumber = int(lo + hi + vh + vv);
+    int tileNumber = int(lo + hi);
 
-    if (tileNumber == 0.0) {
+    if (tileNumber == 0) {
       gl_FragColor.a = 0.0;
       return;
     }
@@ -184,24 +184,42 @@ void main() {
     // Mode 4 normalizes the tile number to all channels
     if (u_renderMode == 4) {
       gl_FragColor = vec4(
-        mod(tileNumber, 256.0) / 256.0
-        , mod(tileNumber, 256.0) / 256.0
-        , mod(tileNumber, 256.0) / 256.0
+        mod(float(tileNumber), 256.0) / 256.0
+        , mod(float(tileNumber), 256.0) / 256.0
+        , mod(float(tileNumber), 256.0) / 256.0
         , 1.0
       );
       return;
     }
 
-    float tileSetX = floor(mod((-1.0 + tileNumber), xWrap));
-    float tileSetY = floor((-1.0 + tileNumber) / xWrap);
+    // const int FLIPPED_HORIZONTALLY_FLAG  = 0x80000000;
+    // const int FLIPPED_VERTICALLY_FLAG    = 0x40000000;
+    // const int FLIPPED_DIAGONALLY_FLAG    = 0x20000000;
+
+    float tileSetX = floor(mod((-1.0 + float(tileNumber)), xWrap));
+    float tileSetY = floor((-1.0 + float(tileNumber)) / xWrap);
+
+    // if (tileNumber <= FLIPPED_HORIZONTALLY_FLAG) {
+    //   tileNumber += FLIPPED_HORIZONTALLY_FLAG;
+    //   xOff = 1.0 - xOff;
+    // }
+
+    // if (tileNumber >= FLIPPED_VERTICALLY_FLAG) {
+    //   tileNumber -= FLIPPED_VERTICALLY_FLAG;
+    //   yOff = 1.0 - yOff;
+    // }
 
     vec4 tileColor = texture2D(u_tiles, vec2(
       xOff / xWrap + tileSetX * (u_tileSize.x / u_mapTextureSize.x)
       , yOff / yWrap + tileSetY * (u_tileSize.y / u_mapTextureSize.y)
     ));
 
-    if(tileColor.a > 0.0 && u_region == vec4(1.0, 1.0, 1.0, 0.0)) {
+    if(u_region == vec4(1.0, 1.0, 1.0, 1.0)) {
       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+    }
+    else if(u_region == vec4(1.0, 1.0, 1.0, 0.0)) {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
       return;
     }
 
@@ -223,7 +241,7 @@ void main() {
       gl_FragColor = vec4(0.0, 0.0, 0.0, originalColor.a > 0.0 ? 1.0 : 0.0);
     }
     else {
-      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
     return;
   };

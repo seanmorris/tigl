@@ -371,7 +371,7 @@ export class Controller
 			else
 			{
 				tilted[0] = true;
-				this.tilt(0, onScreenJoyPad.args.x / 50);
+				this.tilt(0, onScreenJoyPad.args.x / Math.max(75, onScreenJoyPad.limit));
 			}
 
 
@@ -385,7 +385,7 @@ export class Controller
 			else
 			{
 				tilted[1] = true;
-				this.tilt(1, onScreenJoyPad.args.y / 50);
+				this.tilt(1, onScreenJoyPad.args.y / Math.max(75, onScreenJoyPad.limit));
 			}
 
 			for(const i in onScreenJoyPad.buttons)

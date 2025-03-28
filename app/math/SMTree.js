@@ -87,6 +87,11 @@ class Segment
 
 		return empty;
 	}
+
+	has(rectangle)
+	{
+		return this.rectangles.has(rectangle);
+	}
 }
 
 const isRectangle = object => {
@@ -160,7 +165,7 @@ export class SMTree
 		if(!this.rectangles.has(rectangle))
 		{
 			console.warn('Rectangle not in tree!');
-			return;
+			return false;
 		}
 
 		const snapshot = this.snapshots.get(rectangle);
@@ -173,35 +178,43 @@ export class SMTree
 
 		const startIndex = this.findSegment(rectMin);
 		let endIndex = this.findSegment(rectMax);
+		let deleteCount = 0;
 
 		for(let i = startIndex; i <= endIndex; i++)
 		{
-			const rects = this.segments[i].rectangles;
-			const last = this.segments[i - 1].rectangles;
+			const segment = this.segments[i];
+			const prev = this.segments[i - 1];
+			const next = this.segments[i + 1];
 
-			rects.delete(rectangle);
+			if(segment.has(rectangle))
+			{
+				segment.delete(rectangle);
+				deleteCount++
+			}
 
-			if(rects.size !== last.size)
+			if(segment.rectangles.size !== prev.rectangles.size)
 			{
 				continue;
 			}
 
-			if(rects.symmetricDifference(last).size > 0)
+			if(segment.rectangles.symmetricDifference(prev.rectangles).size > 0)
 			{
 				continue;
 			}
 
-			this.segments[i - 1].end = this.segments[i].end;
+			prev.end = segment.end;
 
-			if(this.segments[i + 1])
+			if(next)
 			{
-				this.segments[i + 1].prev = this.segments[i - 1];
+				next.prev = prev;
 			}
 
 			this.segments.splice(i, 1);
 			endIndex--;
 			i--;
 		}
+
+		return deleteCount;
 	}
 
 	move(rectangle)

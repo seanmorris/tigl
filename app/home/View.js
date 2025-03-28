@@ -45,6 +45,8 @@ export class View extends BaseView
 
 		this.keyboard.listening = true;
 
+		this.args.mouseClass = 'mouse-moved';
+
 		this.keyboard.keys.bindTo('Home', (v,k,t,d)=>{
 			if(!this.session || v < 0) return;
 
@@ -273,6 +275,15 @@ export class View extends BaseView
 
 		simulate(performance.now())
 		draw(performance.now());
+	}
+
+	mousemove()
+	{
+		this.args.mouseClass = 'mouse-moved';
+
+		if(this.mouseTimer) clearTimeout(this.mouseTimer);
+
+		this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
 	}
 
 	resize(x, y)

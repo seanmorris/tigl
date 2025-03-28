@@ -24,3 +24,7 @@
 html {
 	user-select: none;
 }
+
+canvas.mouse-idle {
+	cursor: none;
+}

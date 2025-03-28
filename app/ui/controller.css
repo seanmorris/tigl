@@ -19,6 +19,12 @@ div.controller {
 	font-size: 16px;
 }
 
+div.controller div.buttons {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+}
+
 div.controller div.joystick {
 	display: flex;
 	justify-content: center;
@@ -43,6 +49,8 @@ div.controller div.joystick div.pad {
 }
 
 div.controller div.button {
+	user-select: none;
+	-webkit-user-select: none;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -54,7 +62,7 @@ div.controller div.button {
 
 	color: white;
 
-	margin: 0.5em;
+	margin: 1.5em;
 }
 
 div.controller div.button:not(:last-child) {
@@ -63,4 +71,45 @@ div.controller div.button:not(:last-child) {
 
 div.controller div.button:active {
 	background-color: red;
+}
+
+@media screen and (max-width: 800px) {
+	div.controller {
+		width: 100%;
+		bottom: 5rem;
+		justify-content: space-between;
+		background-color: rgba(255,255,255,0.5);
+		padding: 32px;
+	}
+
+	div.controller div.joystick {
+		width: 250px;
+		height: 250px;
+		border-radius: 15px;
+		margin-left: 64px;
+	}
+
+	div.controller div.joystick div.pad {
+		width: 50px;
+		height: 50px;
+	}
+
+	div.controller div.buttons {
+		margin-right: 32px;
+	}
+
+	div.controller div.button {
+		width: 110px;
+		height: 110px;
+		font-size: 32px;
+		margin: 1.5em;
+	}
+
+	div.controller div.buttons div.button:first-child {
+		transform: translateY(32px);
+	}
+
+	div.controller div.buttons div.button:last-child {
+		transform: translateY(-32px);
+	}
 }
