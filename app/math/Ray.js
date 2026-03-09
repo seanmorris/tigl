@@ -1,6 +1,13 @@
 import { Entity } from "../model/Entity";
 import { Geometry } from "./Geometry";
 
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
+const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BITS);
+
+const mod = (subj, pred) => ((subj % pred) + pred) + pred;
+
 export class Ray
 {
 	static T_LAST_EMPTY  = 0b0000_0001;
@@ -15,10 +22,18 @@ export class Ray
 
 	static DEFAULT_FLAGS = 0b0000_0000;
 
-	static cast(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
+	static cast(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
 	{
-		const terrain = this.castTerrain(world, startX, startY, angle, length, rayFlags, layerId);
-		const entities = this.castEntity(world, startX, startY, angle, length, rayFlags & this.E_NO_MINK, castingEntity);
+		const dx = endX - startX;
+		const dy = endY - startY;
+
+		const hypot = Math.hypot(dy, dx);
+
+		const cos = dx / hypot;
+		const sin = dy / hypot;
+
+		const terrain = this.castTerrain(world, startX, startY, endX, endY, rayFlags, layerId);
+		const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags & this.E_NO_MINK, castingEntity);
 
 		let hit = false;
 		let nearest = terrain;
@@ -38,7 +53,7 @@ export class Ray
 		}
 		else if(rayFlags & this.T_GET_LENGTH)
 		{
-			nearest = [Math.cos(angle) * terrain, Math.sin(angle) * terrain, terrain/length];
+			nearest = [cos * terrain, sin * terrain, terrain/hypot];
 			minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
 		}
 		else if(terrain)
@@ -46,9 +61,6 @@ export class Ray
 			minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
 			hit = true;
 		}
-
-		const sin = Math.sin(angle);
-		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
 
 		for(const [entity, point] of entities.entries())
 		{
@@ -87,18 +99,12 @@ export class Ray
 			return {terrain, entities, x: nearest[0], y: nearest[1], hit, t: nearest[2], d: minDist, layerId: nearest[3], ...nearest};
 		}
 
-		return {terrain, entities, hit, d: Number.isFinite(minDist) ? minDist : length};
+		return {terrain, entities, hit, d: Number.isFinite(minDist) ? minDist : hypot};
 
 	}
 
-	static castEntity(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
+	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
 	{
-		const cos = Math.cos(angle);
-		const sin = Math.sin(angle);
-
-		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
-		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
-
 		const centerX = (startX + endX) * 0.5;
 		const centerY = (startY + endY) * 0.5;
 
@@ -184,40 +190,43 @@ export class Ray
 		return collisions;
 	}
 
-	static castTerrain(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
+	static castTerrain(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
-		length = Math.ceil(length);
+		if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+		if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+		if(-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX ) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+		if(-MAX_GRID_IDX > endY || endY >= MAX_GRID_IDX ) throw new Error(`endY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
 
-		const cos = Math.cos(angle);
-		const sin = Math.sin(angle);
+		const qStartX = Math.trunc(startX * SUBGRID_SIZE) * SUBGRID_INVR;
+		const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
 
-		const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
-		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
+		const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
+		const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
 
-		const bs = 32;
+		const startTile = world.getCollisionTile(qStartX, qStartY, layerId);
 
-		const dx = endX - startX;
-		const dy = endY - startY;
+		const dx = qEndX - qStartX;
+		const dy = qEndY - qStartY;
 
-		const ox = Math.sign(dx);
-		const oy = Math.sign(dy);
+		const hypot = Math.hypot(dy, dx);
 
-		const sx = dx ? Math.hypot(1, (dy / dx)) : 0;
-		const sy = dy ? Math.hypot(1, (dx / dy)) : 0;
-
-		let currentDistance = 0;
-
-		if(world.getSolidTerrain(startX, startY, layerId))
+		if(hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId))
 		{
 			if(rayFlags & this.T_GET_LENGTH)
 			{
 				return 0;
 			}
 
-			return [startX, startY];
+			return [qStartX, qStartY];
 		}
 
-		const startTile = world.getCollisionTile(startX, startY, layerId);
+		const cos = dx / hypot;
+		const sin = dy / hypot;
+
+		const bs = 32;
+
+		const sx = dx ? hypot / dx : 0;
+		const sy = dy ? hypot / dy : 0;
 
 		const initMode = startTile === null ? 0 : 1;
 
@@ -227,116 +236,104 @@ export class Ray
 		let oldModeX = false;
 		let oldModeY = false;
 
-		let bf = initMode ? 1 : 1;
+		let bf = 1;
 
-		const ax = ox > 0 ? (bs - startX % bs) : ((startX % bs) + 1);
-		const ay = oy > 0 ? (bs - startY % bs) : ((startY % bs) + 1);
+		const ax = sx > 0 ? (bs - qStartX % bs) : ((qStartX % bs) + 1);
+		const ay = sy > 0 ? (bs - qStartY % bs) : ((qStartY % bs) + 1);
 
 		let checkX = initMode ? 0 : ax;
 		let checkY = initMode ? 0 : ay;
 
-		let rayX = checkX * sx * ox;
-		let rayY = checkY * sy * oy;
+		let rayX = checkX * sx;
+		let rayY = checkY * sy;
 
-		const solidsX = new Set;
-		const solidsY = new Set;
+		let solidX = null;
+		let solidY = null;
+
+		const ox = Math.sign(dx);
+		const oy = Math.sign(dy);
 
 		let iterations = 0;
-		while(Math.abs(currentDistance) < length && !solidsX.size && !solidsY.size)
+		while( (ox && Math.abs(rayX) < hypot) || (oy && Math.abs(rayY) < hypot) )
 		{
-			if(ox && (!oy || Math.abs(rayX) < Math.abs(rayY)))
+			if(sx && (!sy || Math.abs(rayX) < Math.abs(rayY)))
 			{
 				const mag = Math.abs(rayX);
 
-				let px = startX + mag * cos;
-				let py = startY + mag * sin;
-				let pt = mag / length;
-
-				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
-				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
-				if(ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
-				if(oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+				let pt = mag / hypot;
+				let px = qStartX + checkX * ox;
+				let py = qStartY + pt * dy;
 
 				oldModeX = modeX;
 				modeX = world.getCollisionTile(px, py, layerId);
-				bf = modeX ? 1:bs;
+				bf = modeX ? 1 : bs;
 
 				if(!modeX && oldModeX)
 				{
-					bf = ox < 0
-						? ((startX + -checkX + 1) % bs)
-						: (bs - ((startX + checkX) % bs));
+					bf = sx < 0
+						? mod((qStartX + -checkX + 1), bs)
+						: mod((qStartX + checkX), bs);
 				}
 
 				if(world.getSolidTerrain(px, py, layerId))
 				{
-					solidsX.add([px, py, pt, layerId]);
+					solidX = [px, py, pt, layerId];
 					break;
 				}
 
-				currentDistance = Math.abs(rayX);
 				checkX += bf;
-				rayX = checkX * sx * ox;
+				rayX = checkX * sx;
 			}
 			else
 			{
 				const mag = Math.abs(rayY);
 
-				let px = startX + mag * cos;
-				let py = startY + mag * sin;
-				let pt = mag / length;
-
-				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
-				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
-				if(ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
-				if(oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+				let pt = mag / hypot;
+				let py = qStartY + checkY * oy;
+				let px = qStartX + pt * dx;
 
 				oldModeY = modeY;
 				modeY = world.getCollisionTile(px, py, layerId)
-
-				bf = modeY ? 1:bs;
+				bf = modeY ? 1 : bs;
 
 				if(!modeY && oldModeY)
 				{
-					bf = oy < 0
-						? ((startY + -checkY + 1) % bs)
-						: (bs - ((startY + checkY) % bs));
+					bf = sy < 0
+						? mod((qStartY + -checkY + 1), bs)
+						: mod((qStartY + checkY), bs);
 				}
 
 				if(world.getSolidTerrain(px, py, layerId))
 				{
-					solidsY.add([px, py, pt, layerId]);
+					solidY = [px, py, pt, layerId];
 					break;
 				}
 
-				currentDistance = Math.abs(rayY);
 				checkY += bf;
-				rayY = checkY * sy * oy;
+				rayY = checkY * sy;
 			}
 
 			iterations++;
 		}
 
-		const points = [...solidsX, ...solidsY];
+		const points = [... solidX ? [solidX] : [], ... solidY ? [solidY] : []];
 
 		if(rayFlags & this.T_ALL_POINTS)
 		{
-			return new solidsX.union(solidsY);
+			return new Set(points);
 		}
 
-		const distSquares = points.map(s => (s[0] - startX) ** 2 + (s[1] - startY) ** 2);
+		const distSquares = new Array(points.length);
+
+		for(const p in points)
+		{
+			distSquares[p] = (points[p][0] - qStartX) ** 2 + (points[p][1] - qStartY) **2
+		}
+
 		const minDistSq   = Math.min(...distSquares);
 		const nearest     = points[ distSquares.indexOf(minDistSq) ];
 
-		if(nearest)
-		{
-			if(ox > 0 && nearest[0] % 1 > 0.99999) nearest[0] = Math.round(nearest[0]);
-			if(ox < 0 && nearest[0] % 1 < 0.00001) nearest[0] = Math.round(nearest[0]);
-			if(oy > 0 && nearest[1] % 1 > 0.99999) nearest[1] = Math.round(nearest[1]);
-			if(oy < 0 && nearest[1] % 1 < 0.00001) nearest[1] = Math.round(nearest[1]);
-		}
-
-		if(Math.sqrt(minDistSq) > length)
+		if(Math.sqrt(minDistSq) > hypot)
 		{
 			return;
 		}
@@ -345,21 +342,26 @@ export class Ray
 		{
 			if(rayFlags & this.T_LAST_EMPTY)
 			{
-				nearest[0] += -cos * Math.sign(rayX);
-				nearest[1] += -sin * Math.sign(rayY);
-			}
+				nearest[0] += -cos;
+				nearest[1] += -sin;
 
-			if(rayFlags & this.T_SNAP_TO_INT)
+				if(rayFlags & this.T_SNAP_TO_INT)
+				{
+					nearest[0] = Math.floor(nearest[0]);
+					nearest[1] = Math.floor(nearest[1]);
+				}
+			}
+			else if(rayFlags & this.T_SNAP_TO_INT)
 			{
-				if(ox > 0) nearest[0] = Math.floor(nearest[0]);
-				if(ox < 0) nearest[0] = Math.ceil(nearest[0]);
-				if(oy > 0) nearest[1] = Math.floor(nearest[1]);
-				if(oy < 0) nearest[1] = Math.ceil(nearest[1]);
+				if(sx > 0) nearest[0] = Math.round(nearest[0]);
+				if(sx < 0) nearest[0] = Math.round(nearest[0]);
+				if(sy > 0) nearest[1] = Math.round(nearest[1]);
+				if(sy < 0) nearest[1] = Math.round(nearest[1]);
 			}
 
 			if(rayFlags & this.T_GET_LENGTH)
 			{
-				return Math.hypot(startX - nearest[0], startY - nearest[1]);
+				return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
 			}
 
 			return nearest;

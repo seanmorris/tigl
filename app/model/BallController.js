@@ -25,16 +25,16 @@ export class BallController
 			const h = world.castTerrainRay(
 				entity.x + 0
 				, entity.y + -16
-				, entity.xSpeed < 0 ? Math.PI : 0
-				, Math.abs(entity.xSpeed) + 16
+				, entity.x + entity.xSpeed
+				, entity.y + -16
 				, 0x01
 			);
 
 			const v = world.castTerrainRay(
 				entity.x + 0
 				, entity.y + -16
-				, Math.PI * 0.5 * Math.sign(entity.ySpeed)
-				, Math.abs(entity.ySpeed) + 16
+				, entity.x
+				, entity.y + -16 + entity.ySpeed
 				, 0x1
 			);
 

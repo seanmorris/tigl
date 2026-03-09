@@ -154,18 +154,14 @@ export class PlayerController
 			{
 				this.pushing = null;
 			}
-
 		}
-
-		const angle = Math.atan2(entity.ySpeed, entity.xSpeed);
-		const length = Math.hypot(entity.ySpeed, entity.xSpeed);
 
 		const entities = Ray.castEntity(
 			world
 			, entity.x
 			, entity.y
-			, this.xDirection < 0 ? Math.PI : 0 // angle
-			, Math.min(length, entity.width * 0.5)
+			, entity.x + entity.xSpeed
+			, entity.y + entity.ySpeed
 			, Ray.T_LAST_EMPTY
 			, entity
 		);
@@ -198,19 +194,19 @@ export class PlayerController
 					world
 					, entity.x
 					, entity.y + 1
-					, this.xDirection < 0 ? Math.PI : 0  // angle
-					, length + entity.width * 0.5 + 1
+					, entity.x + entity.width * 0.5 * this.xDirection
+					, entity.y + 1
 					, Ray.T_LAST_EMPTY
 				);
 
-				if(footRayFront.d < entity.width * 0.5)
+				if(footRayFront.hit && footRayFront.d < entity.width * 0.5)
 				{
 					const checkRay = Ray.cast(
 						world
-						, footRayFront.x + this.xDirection
+						, footRayFront.x + entity.width * 0.5 * this.xDirection
 						, footRayFront.y + -entity.height
-						, Math.PI/2  // angle
-						, entity.height
+						, footRayFront.x + entity.width * 0.5 * this.xDirection
+						, footRayFront.y
 						, Ray.T_LAST_EMPTY
 					);
 
@@ -227,19 +223,19 @@ export class PlayerController
 					world
 					, entity.x
 					, entity.y + 1
-					, -this.xDirection < 0 ? Math.PI : 0
-					, length + entity.width * 0.5 + 1
+					, entity.x + entity.width * 0.5 * -this.xDirection
+					, entity.y + 1
 					, Ray.T_LAST_EMPTY
 				);
 
-				if(footRayBack.d < entity.width * 0.5)
+				if(footRayBack.hit && footRayBack.d < entity.width * 0.5)
 				{
 					const checkRay = Ray.cast(
 						world
 						, footRayBack.x + -this.xDirection
 						, footRayBack.y + -entity.height
-						, Math.PI/2  // angle
-						, entity.height
+						, footRayBack.x
+						, footRayBack.y
 						, Ray.T_LAST_EMPTY
 					);
 
@@ -250,21 +246,25 @@ export class PlayerController
 				}
 			}
 
+			// console.time('tcast');
+
 			const terrain = Ray.castTerrain(
 				world
 				, entity.x
 				, entity.y
-				, angle
-				, length
+				, entity.x + entity.xSpeed
+				, entity.y + entity.ySpeed
 				, Ray.T_LAST_EMPTY
 			);
+
+			// console.timeEnd('tcast');
 
 			const solidEntities = Ray.castEntity(
 				world
 				, entity.x
 				, entity.y
-				, angle
-				, length
+				, entity.x + entity.xSpeed
+				, entity.y + entity.ySpeed
 				, Ray.E_SOLID
 				, entity
 			);
@@ -324,9 +324,9 @@ export class PlayerController
 				world
 				, entity.x
 				, entity.y
-				, Math.PI / 2
-				, 4
-				, Ray.T_LAST_EMPTY
+				, entity.x
+				, entity.y + 4
+				, Ray.T_LAST_EMPTY | Ray.T_SNAP_TO_INT
 			);
 
 			if(groundSnapper)

@@ -6878,19 +6878,28 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
+const MAX_GRID_IDX = Math.pow(2, Math.log2(1 + Number.MAX_SAFE_INTEGER) - SUBGRID_BITS);
+const mod = (subj, pred) => subj % pred + pred + pred;
 let Ray = exports.Ray = /*#__PURE__*/function () {
   function Ray() {
     _classCallCheck(this, Ray);
   }
   return _createClass(Ray, null, [{
     key: "cast",
-    value: function cast(world, startX, startY, angle) {
-      let length = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+    value: function cast(world, startX, startY, endX, endY) {
       let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
       let layerId = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
       let castingEntity = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : null;
-      const terrain = this.castTerrain(world, startX, startY, angle, length, rayFlags, layerId);
-      const entities = this.castEntity(world, startX, startY, angle, length, rayFlags & this.E_NO_MINK, castingEntity);
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const hypot = Math.hypot(dy, dx);
+      const cos = dx / hypot;
+      const sin = dy / hypot;
+      const terrain = this.castTerrain(world, startX, startY, endX, endY, rayFlags, layerId);
+      const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags & this.E_NO_MINK, castingEntity);
       let hit = false;
       let nearest = terrain;
       let minDist = Infinity;
@@ -6903,14 +6912,12 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           }
         }
       } else if (rayFlags & this.T_GET_LENGTH) {
-        nearest = [Math.cos(angle) * terrain, Math.sin(angle) * terrain, terrain / length];
+        nearest = [cos * terrain, sin * terrain, terrain / hypot];
         minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
       } else if (terrain) {
         minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
         hit = true;
       }
-      const sin = Math.sin(angle);
-      const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
       for (const _ref of entities.entries()) {
         var _ref2 = _slicedToArray(_ref, 2);
         const entity = _ref2[0];
@@ -6950,19 +6957,14 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
         terrain: terrain,
         entities: entities,
         hit: hit,
-        d: Number.isFinite(minDist) ? minDist : length
+        d: Number.isFinite(minDist) ? minDist : hypot
       };
     }
   }, {
     key: "castEntity",
-    value: function castEntity(world, startX, startY, angle) {
-      let length = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+    value: function castEntity(world, startX, startY, endX, endY) {
       let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
       let castingEntity = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : null;
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
-      const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
       const centerX = (startX + endX) * 0.5;
       const centerY = (startY + endY) * 0.5;
       const sizeX = Math.max(320, Math.abs(startX - endX));
@@ -7018,122 +7020,116 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
     }
   }, {
     key: "castTerrain",
-    value: function castTerrain(world, startX, startY, angle) {
-      let length = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 320;
+    value: function castTerrain(world, startX, startY, endX, endY) {
       let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
       let layerId = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
-      length = Math.ceil(length);
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      const endX = startX + (Math.abs(cos) > Number.EPSILON ? cos : 0) * length;
-      const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
-      const bs = 32;
-      const dx = endX - startX;
-      const dy = endY - startY;
-      const ox = Math.sign(dx);
-      const oy = Math.sign(dy);
-      const sx = dx ? Math.hypot(1, dy / dx) : 0;
-      const sy = dy ? Math.hypot(1, dx / dy) : 0;
-      let currentDistance = 0;
-      if (world.getSolidTerrain(startX, startY, layerId)) {
+      if (-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+      if (-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+      if (-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+      if (-MAX_GRID_IDX > endY || endY >= MAX_GRID_IDX) throw new Error(`endY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+      const qStartX = Math.trunc(startX * SUBGRID_SIZE) * SUBGRID_INVR;
+      const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
+      const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
+      const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
+      const startTile = world.getCollisionTile(qStartX, qStartY, layerId);
+      const dx = qEndX - qStartX;
+      const dy = qEndY - qStartY;
+      const hypot = Math.hypot(dy, dx);
+      if (hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId)) {
         if (rayFlags & this.T_GET_LENGTH) {
           return 0;
         }
-        return [startX, startY];
+        return [qStartX, qStartY];
       }
-      const startTile = world.getCollisionTile(startX, startY, layerId);
+      const cos = dx / hypot;
+      const sin = dy / hypot;
+      const bs = 32;
+      const sx = dx ? hypot / dx : 0;
+      const sy = dy ? hypot / dy : 0;
       const initMode = startTile === null ? 0 : 1;
       let modeX = initMode;
       let modeY = initMode;
       let oldModeX = false;
       let oldModeY = false;
-      let bf = initMode ? 1 : 1;
-      const ax = ox > 0 ? bs - startX % bs : startX % bs + 1;
-      const ay = oy > 0 ? bs - startY % bs : startY % bs + 1;
+      let bf = 1;
+      const ax = sx > 0 ? bs - qStartX % bs : qStartX % bs + 1;
+      const ay = sy > 0 ? bs - qStartY % bs : qStartY % bs + 1;
       let checkX = initMode ? 0 : ax;
       let checkY = initMode ? 0 : ay;
-      let rayX = checkX * sx * ox;
-      let rayY = checkY * sy * oy;
-      const solidsX = new Set();
-      const solidsY = new Set();
+      let rayX = checkX * sx;
+      let rayY = checkY * sy;
+      let solidX = null;
+      let solidY = null;
+      const ox = Math.sign(dx);
+      const oy = Math.sign(dy);
       let iterations = 0;
-      while (Math.abs(currentDistance) < length && !solidsX.size && !solidsY.size) {
-        if (ox && (!oy || Math.abs(rayX) < Math.abs(rayY))) {
+      while (ox && Math.abs(rayX) < hypot || oy && Math.abs(rayY) < hypot) {
+        if (sx && (!sy || Math.abs(rayX) < Math.abs(rayY))) {
           const mag = Math.abs(rayX);
-          let px = startX + mag * cos;
-          let py = startY + mag * sin;
-          let pt = mag / length;
-          if (ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
-          if (oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
-          if (ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
-          if (oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+          let pt = mag / hypot;
+          let px = qStartX + checkX * ox;
+          let py = qStartY + pt * dy;
           oldModeX = modeX;
           modeX = world.getCollisionTile(px, py, layerId);
           bf = modeX ? 1 : bs;
           if (!modeX && oldModeX) {
-            bf = ox < 0 ? (startX + -checkX + 1) % bs : bs - (startX + checkX) % bs;
+            bf = sx < 0 ? mod(qStartX + -checkX + 1, bs) : mod(qStartX + checkX, bs);
           }
           if (world.getSolidTerrain(px, py, layerId)) {
-            solidsX.add([px, py, pt, layerId]);
+            solidX = [px, py, pt, layerId];
             break;
           }
-          currentDistance = Math.abs(rayX);
           checkX += bf;
-          rayX = checkX * sx * ox;
+          rayX = checkX * sx;
         } else {
           const mag = Math.abs(rayY);
-          let px = startX + mag * cos;
-          let py = startY + mag * sin;
-          let pt = mag / length;
-          if (ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
-          if (oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
-          if (ox <= 0 && px % 1 < 0.00001) px = Math.round(px);
-          if (oy <= 0 && py % 1 < 0.00001) py = Math.round(py);
+          let pt = mag / hypot;
+          let py = qStartY + checkY * oy;
+          let px = qStartX + pt * dx;
           oldModeY = modeY;
           modeY = world.getCollisionTile(px, py, layerId);
           bf = modeY ? 1 : bs;
           if (!modeY && oldModeY) {
-            bf = oy < 0 ? (startY + -checkY + 1) % bs : bs - (startY + checkY) % bs;
+            bf = sy < 0 ? mod(qStartY + -checkY + 1, bs) : mod(qStartY + checkY, bs);
           }
           if (world.getSolidTerrain(px, py, layerId)) {
-            solidsY.add([px, py, pt, layerId]);
+            solidY = [px, py, pt, layerId];
             break;
           }
-          currentDistance = Math.abs(rayY);
           checkY += bf;
-          rayY = checkY * sy * oy;
+          rayY = checkY * sy;
         }
         iterations++;
       }
-      const points = [...solidsX, ...solidsY];
+      const points = [...(solidX ? [solidX] : []), ...(solidY ? [solidY] : [])];
       if (rayFlags & this.T_ALL_POINTS) {
-        return new solidsX.union(solidsY);
+        return new Set(points);
       }
-      const distSquares = points.map(s => Math.pow(s[0] - startX, 2) + Math.pow(s[1] - startY, 2));
+      const distSquares = new Array(points.length);
+      for (const p in points) {
+        distSquares[p] = Math.pow(points[p][0] - qStartX, 2) + Math.pow(points[p][1] - qStartY, 2);
+      }
       const minDistSq = Math.min(...distSquares);
       const nearest = points[distSquares.indexOf(minDistSq)];
-      if (nearest) {
-        if (ox > 0 && nearest[0] % 1 > 0.99999) nearest[0] = Math.round(nearest[0]);
-        if (ox < 0 && nearest[0] % 1 < 0.00001) nearest[0] = Math.round(nearest[0]);
-        if (oy > 0 && nearest[1] % 1 > 0.99999) nearest[1] = Math.round(nearest[1]);
-        if (oy < 0 && nearest[1] % 1 < 0.00001) nearest[1] = Math.round(nearest[1]);
-      }
-      if (Math.sqrt(minDistSq) > length) {
+      if (Math.sqrt(minDistSq) > hypot) {
         return;
       }
       if (nearest) {
         if (rayFlags & this.T_LAST_EMPTY) {
-          nearest[0] += -cos * Math.sign(rayX);
-          nearest[1] += -sin * Math.sign(rayY);
-        }
-        if (rayFlags & this.T_SNAP_TO_INT) {
-          if (ox > 0) nearest[0] = Math.floor(nearest[0]);
-          if (ox < 0) nearest[0] = Math.ceil(nearest[0]);
-          if (oy > 0) nearest[1] = Math.floor(nearest[1]);
-          if (oy < 0) nearest[1] = Math.ceil(nearest[1]);
+          nearest[0] += -cos;
+          nearest[1] += -sin;
+          if (rayFlags & this.T_SNAP_TO_INT) {
+            nearest[0] = Math.floor(nearest[0]);
+            nearest[1] = Math.floor(nearest[1]);
+          }
+        } else if (rayFlags & this.T_SNAP_TO_INT) {
+          if (sx > 0) nearest[0] = Math.round(nearest[0]);
+          if (sx < 0) nearest[0] = Math.round(nearest[0]);
+          if (sy > 0) nearest[1] = Math.round(nearest[1]);
+          if (sy < 0) nearest[1] = Math.round(nearest[1]);
         }
         if (rayFlags & this.T_GET_LENGTH) {
-          return Math.hypot(startX - nearest[0], startY - nearest[1]);
+          return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
         }
         return nearest;
       }
@@ -7636,8 +7632,8 @@ let BallController = exports.BallController = /*#__PURE__*/function () {
       if (entity.xSpeed || entity.ySpeed) {
         let xMove = entity.xSpeed;
         let yMove = entity.ySpeed;
-        const h = world.castTerrainRay(entity.x + 0, entity.y + -16, entity.xSpeed < 0 ? Math.PI : 0, Math.abs(entity.xSpeed) + 16, 0x01);
-        const v = world.castTerrainRay(entity.x + 0, entity.y + -16, Math.PI * 0.5 * Math.sign(entity.ySpeed), Math.abs(entity.ySpeed) + 16, 0x1);
+        const h = world.castTerrainRay(entity.x + 0, entity.y + -16, entity.x + entity.xSpeed, entity.y + -16, 0x01);
+        const v = world.castTerrainRay(entity.x + 0, entity.y + -16, entity.x, entity.y + -16 + entity.ySpeed, 0x1);
         if (h) {
           const actualDistance = h[0] - entity.x;
           xMove = actualDistance + -16 * Math.sign(entity.xSpeed);
@@ -7678,6 +7674,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.BarrelController = void 0;
+var _Ray = require("../math/Ray");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -7714,14 +7711,12 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         entity.grounded = true;
       }
       if (entity.xSpeed || entity.ySpeed) {
-        const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
-        const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
-        const hit = world.castRay(entity.x, entity.y + -4, direction, distance, 0x01);
+        const hit = world.castRay(entity.x, entity.y + -1, entity.x + entity.xSpeed, entity.y + entity.ySpeed + -1, _Ray.Ray.T_LAST_EMPTY | _Ray.Ray.T_SNAP_TO_INT);
         let xMove = entity.xSpeed;
         let yMove = entity.ySpeed;
         if (hit.terrain) {
           xMove = hit.terrain[0] - entity.x;
-          yMove = hit.terrain[1] - entity.y;
+          yMove = hit.terrain[1] - entity.y + 1;
         }
         entity.x += xMove;
         entity.y += yMove;
@@ -7741,13 +7736,21 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
       }
       while (world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8)) {
         this.stop(entity, entity.xSpeed);
-        entity.xSpeed = 0;
+        // entity.xSpeed = Math.min(0, entity.xSpeed);
         entity.x++;
       }
       while (world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8)) {
         this.stop(entity, entity.xSpeed);
-        entity.xSpeed = 0;
+        // entity.xSpeed = Math.max(0, entity.xSpeed);
         entity.x--;
+      }
+      if (!entity.grounded && entity.ySpeed >= 0) {
+        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 4, _Ray.Ray.T_LAST_EMPTY | _Ray.Ray.T_SNAP_TO_INT);
+        if (groundSnapper) {
+          entity.ySpeed = 0;
+          entity.y = groundSnapper[1];
+          entity.grounded = true;
+        }
       }
     }
   }, {
@@ -7757,9 +7760,8 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         const dist = Math.abs(other.x + -entity.x);
         const min = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
         const side = Math.sign(entity.x - other.x);
-        entity.xSpeed = other.xSpeed;
-        if (dist < min) {
-          entity.xSpeed += (min - dist) * side;
+        if (entity.grounded) {
+          entity.xSpeed = (min - dist) * side * 1.1;
         }
         other.controller.pushing = entity;
 
@@ -8094,7 +8096,8 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       entity.width = 24;
       entity.grounded = true;
       entity.grounded = 0;
-      this.gravity = 0.5;
+      this.gravity = 0.5; // 0x80
+
       this.lastMap = null;
       this.pushing = null;
       this.xDirection = 0;
@@ -8180,9 +8183,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           this.pushing = null;
         }
       }
-      const angle = Math.atan2(entity.ySpeed, entity.xSpeed);
-      const length = Math.hypot(entity.ySpeed, entity.xSpeed);
-      const entities = _Ray.Ray.castEntity(world, entity.x, entity.y, this.xDirection < 0 ? Math.PI : 0, Math.min(length, entity.width * 0.5), _Ray.Ray.T_LAST_EMPTY, entity);
+      const entities = _Ray.Ray.castEntity(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.T_LAST_EMPTY, entity);
       if (entities) {
         entities.delete(entity);
         entities.forEach((point, other) => {
@@ -8201,9 +8202,9 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
 
         // Ledge cases...
         if (!entity.grounded && xAxis) {
-          const footRayFront = _Ray.Ray.cast(world, entity.x, entity.y + 1, this.xDirection < 0 ? Math.PI : 0, length + entity.width * 0.5 + 1, _Ray.Ray.T_LAST_EMPTY);
-          if (footRayFront.d < entity.width * 0.5) {
-            const checkRay = _Ray.Ray.cast(world, footRayFront.x + this.xDirection, footRayFront.y + -entity.height, Math.PI / 2, entity.height, _Ray.Ray.T_LAST_EMPTY);
+          const footRayFront = _Ray.Ray.cast(world, entity.x, entity.y + 1, entity.x + entity.width * 0.5 * this.xDirection, entity.y + 1, _Ray.Ray.T_LAST_EMPTY);
+          if (footRayFront.hit && footRayFront.d < entity.width * 0.5) {
+            const checkRay = _Ray.Ray.cast(world, footRayFront.x + entity.width * 0.5 * this.xDirection, footRayFront.y + -entity.height, footRayFront.x + entity.width * 0.5 * this.xDirection, footRayFront.y, _Ray.Ray.T_LAST_EMPTY);
             if (checkRay.hit && checkRay.d > entity.height * 0.5) {
               coyote = true;
               entity.x += this.xDirection;
@@ -8211,16 +8212,22 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
               entity.ySpeed = Math.min(0, entity.ySpeed);
             }
           }
-          const footRayBack = _Ray.Ray.cast(world, entity.x, entity.y + 1, -this.xDirection < 0 ? Math.PI : 0, length + entity.width * 0.5 + 1, _Ray.Ray.T_LAST_EMPTY);
-          if (footRayBack.d < entity.width * 0.5) {
-            const checkRay = _Ray.Ray.cast(world, footRayBack.x + -this.xDirection, footRayBack.y + -entity.height, Math.PI / 2, entity.height, _Ray.Ray.T_LAST_EMPTY);
+          const footRayBack = _Ray.Ray.cast(world, entity.x, entity.y + 1, entity.x + entity.width * 0.5 * -this.xDirection, entity.y + 1, _Ray.Ray.T_LAST_EMPTY);
+          if (footRayBack.hit && footRayBack.d < entity.width * 0.5) {
+            const checkRay = _Ray.Ray.cast(world, footRayBack.x + -this.xDirection, footRayBack.y + -entity.height, footRayBack.x, footRayBack.y, _Ray.Ray.T_LAST_EMPTY);
             if (checkRay.hit && checkRay.d > entity.height * 0.5) {
               coyote = true;
             }
           }
         }
-        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, angle, length, _Ray.Ray.T_LAST_EMPTY);
-        const solidEntities = _Ray.Ray.castEntity(world, entity.x, entity.y, angle, length, _Ray.Ray.E_SOLID, entity);
+
+        // console.time('tcast');
+
+        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.T_LAST_EMPTY);
+
+        // console.timeEnd('tcast');
+
+        const solidEntities = _Ray.Ray.castEntity(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.E_SOLID, entity);
         let minDist = Infinity;
         if (solidEntities.size) for (const _ref of solidEntities.entries()) {
           var _ref2 = _slicedToArray(_ref, 2);
@@ -8259,7 +8266,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
         entity.y += entity.ySpeed;
       }
       if (!entity.grounded && entity.ySpeed >= 0) {
-        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, Math.PI / 2, 4, _Ray.Ray.T_LAST_EMPTY);
+        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 4, _Ray.Ray.T_LAST_EMPTY | _Ray.Ray.T_SNAP_TO_INT);
         if (groundSnapper) {
           entity.ySpeed = 0;
           entity.y = groundSnapper[1];
@@ -9605,7 +9612,7 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
     key: "zoom",
     value: function zoom(delta) {
       const max = this.screenScale * 32;
-      const min = this.screenScale * 0.2;
+      const min = 0; //this.screenScale * 0.1;
       const step = 0.05 * this.zoomLevel;
       let zoomLevel = delta * step + this.zoomLevel;
       if (zoomLevel < min) {
@@ -10299,8 +10306,8 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
           const xSource = i * this.tileWidth % tileset.imageWidth;
           const ySource = Math.floor(i * this.tileWidth / tileset.imageWidth) * this.tileHeight;
           const xDestination = gid * this.tileWidth % destination.width;
-          const yDestination = Math.floor(gid * this.tileWidth / destination.width) * this.tileHeight;
           const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
+          const yDestination = Math.floor(gid * this.tileWidth / destination.width) * this.tileHeight;
           ctxDestination.putImageData(tile, xDestination, yDestination);
           const pixels = new Uint32Array(tile.data.buffer);
           let empty = true;
@@ -10794,26 +10801,23 @@ let World = exports.World = /*#__PURE__*/function () {
     }
   }, {
     key: "castRay",
-    value: function castRay(startX, startY, angle) {
-      let length = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 320;
+    value: function castRay(startX, startY, endX, endY) {
       let rayFlags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _Ray.Ray.DEFAULT_FLAGS;
       let layerId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-      return _Ray.Ray.cast(this, startX, startY, angle, length, rayFlags, layerId);
+      return _Ray.Ray.cast(this, startX, startY, endX, endY, rayFlags, layerId);
     }
   }, {
     key: "castTerrainRay",
-    value: function castTerrainRay(startX, startY, angle) {
-      let length = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 320;
+    value: function castTerrainRay(startX, startY, endX, endY) {
       let rayFlags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _Ray.Ray.DEFAULT_FLAGS;
       let layerId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-      return _Ray.Ray.castTerrain(this, startX, startY, angle, length, rayFlags, layerId);
+      return _Ray.Ray.castTerrain(this, startX, startY, endX, endY, rayFlags, layerId);
     }
   }, {
     key: "castEntityRay",
-    value: function castEntityRay(startX, startY, angle) {
-      let length = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 320;
+    value: function castEntityRay(startX, startY, endX, endY) {
       let rayFlags = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : _Ray.Ray.DEFAULT_FLAGS;
-      return _Ray.Ray.castEntity(this, startX, startY, angle, length, endY, rayFlags);
+      return _Ray.Ray.castEntity(this, startX, startY, endX, endY, endY, rayFlags);
     }
   }]);
 }();

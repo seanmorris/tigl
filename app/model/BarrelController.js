@@ -1,3 +1,5 @@
+import { Ray } from "../math/Ray";
+
 export class BarrelController
 {
 	static spriteImage = '/barrel.png';
@@ -37,14 +39,12 @@ export class BarrelController
 
 		if(entity.xSpeed || entity.ySpeed)
 		{
-			const direction = Math.atan2(entity.ySpeed, entity.xSpeed);
-			const distance = Math.hypot(entity.ySpeed, entity.xSpeed);
 			const hit = world.castRay(
 				entity.x
-				, entity.y + -4
-				, direction
-				, distance
-				, 0x01
+				, entity.y + -1
+				, entity.x + entity.xSpeed
+				, entity.y + entity.ySpeed + -1
+				, Ray.T_LAST_EMPTY | Ray.T_SNAP_TO_INT
 			);
 
 			let xMove = entity.xSpeed;
@@ -53,7 +53,7 @@ export class BarrelController
 			if(hit.terrain)
 			{
 				xMove = hit.terrain[0] - entity.x;
-				yMove = hit.terrain[1] - entity.y;
+				yMove = hit.terrain[1] - entity.y + 1;
 			}
 
 			entity.x += xMove;
@@ -84,15 +84,34 @@ export class BarrelController
 		while(world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8))
 		{
 			this.stop(entity, entity.xSpeed);
-			entity.xSpeed = 0;
+			// entity.xSpeed = Math.min(0, entity.xSpeed);
 			entity.x++;
 		}
 
 		while(world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8))
 		{
 			this.stop(entity, entity.xSpeed);
-			entity.xSpeed = 0;
+			// entity.xSpeed = Math.max(0, entity.xSpeed);
 			entity.x--;
+		}
+
+		if(!entity.grounded && entity.ySpeed >= 0)
+		{
+			const groundSnapper = Ray.castTerrain(
+				world
+				, entity.x
+				, entity.y
+				, entity.x
+				, entity.y + 4
+				, Ray.T_LAST_EMPTY | Ray.T_SNAP_TO_INT
+			);
+
+			if(groundSnapper)
+			{
+				entity.ySpeed = 0;
+				entity.y = groundSnapper[1];
+				entity.grounded = true;
+			}
 		}
 	}
 
@@ -104,11 +123,9 @@ export class BarrelController
 			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
 			const side = Math.sign(entity.x - other.x);
 
-			entity.xSpeed = other.xSpeed;
-
-			if(dist < min)
+			if(entity.grounded)
 			{
-				entity.xSpeed += (min - dist) * side;
+				entity.xSpeed = (min - dist) * side * 1.1;
 			}
 
 			other.controller.pushing = entity;

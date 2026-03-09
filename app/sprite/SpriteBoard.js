@@ -290,7 +290,7 @@ export class SpriteBoard
 	zoom(delta)
 	{
 		const max = this.screenScale * 32;
-		const min = this.screenScale * 0.2;
+		const min = 0;//this.screenScale * 0.1;
 		const step = 0.05 * this.zoomLevel;
 
 		let zoomLevel = delta * step + this.zoomLevel;
