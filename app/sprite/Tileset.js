@@ -34,17 +34,14 @@ export class Tileset
 	}){
 		if(src)
 		{
-			if(!cache.has(src))
-			{
-				console.log(src);
-				cache.set(src, fetch(src));
-			}
+			if(!cache.has(src)) cache.set(src, fetch(src));
 
 			({columns, image, imageheight, imagewidth, margin, name,
 				spacing, tilecount, tileheight, tilewidth, tiles
 			} = await (await cache.get(src)).clone().json());
 
-			if(tiles) for(const tile of tiles)
+			if(tiles)
+			for(const tile of tiles)
 			{
 				tile.id += this.firstGid;
 			}

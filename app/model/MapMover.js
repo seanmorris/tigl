@@ -15,6 +15,7 @@ export class MapMover
 			const range = map.props.get('yOscillate');
 			const delay = map.props.get('delay');
 			const age = map.session.world.age;
+			// const current = roundedSquareWave(age/delay, 0.6);
 			const current = roundedSquareWave(age/delay, 0.6);
 
 			map.y = this.yOriginal + current * range;

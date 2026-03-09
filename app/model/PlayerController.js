@@ -22,12 +22,14 @@ export class PlayerController
 		entity.grounded = true;
 		entity.grounded = 0;
 
-		this.gravity = 0.5;
+		this.gravity = 0.5; // 0x80
 
 		this.lastMap = null;
 		this.pushing = null;
 
 		this.xDirection = 0;
+		this.maxAirJumps = 1;
+		this.airJumps = 0;
 	}
 
 	destroy(entity){}
@@ -51,22 +53,14 @@ export class PlayerController
 		const regions = world.getRegionsForPoint(entity.x, entity.y);
 		const maps = world.getMapsForPoint(entity.x, entity.y);
 
-		const solidTerrain = world.getSolid(entity.x, entity.y + 1);
-
-		const solidEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)]
-			.filter(entity => entity.flags & Entity.E_SOLID || entity.flags & Entity.E_PLATFORM);
-
-
-		// const platformEntities = [...world.getEntitiesForPoint(entity.x, entity.y + 1)]
-		// 	.filter(entity => entity.flags & Entity.E_PLATFORM);
+		const solidTerrain = world.getSolidTerrain(entity.x, entity.y + 1);
+		const solidEntitiesBelow = world.getEntitiesForPoint(entity.x, entity.y + 1, Entity.E_SOLID | Entity.E_PLATFORM);
 
 		const firstMap = [...maps][0];
 
 		let gravity = this.gravity;
 
-		regions.forEach(region => {
-			gravity *= region.gravity ?? 1;
-		})
+		regions.forEach(region => gravity *= region.gravity ?? 1);
 
 		if(!solidTerrain)
 		{
@@ -84,18 +78,33 @@ export class PlayerController
 			world.motionGraph.add(entity, firstMap);
 			this.lastMap = firstMap;
 		}
-		else if(solidEntities.length)
+		else if(solidEntitiesBelow.size)
 		{
-			const otherTop = solidEntities[0].y - solidEntities[0].height;
+			let minTop = Infinity;
 
-			if(entity.ySpeed >= 0 && entity.y < otherTop + 16)
+			for(const solidEntity of solidEntitiesBelow)
 			{
-				entity.y = otherTop;
-				entity.ySpeed = Math.min(0, entity.ySpeed);
-				entity.grounded = true;
+				const otherTop = solidEntity.y - solidEntity.height;
 
-				world.motionGraph.add(entity, solidEntities[0]);
+				if(minTop > otherTop)
+				{
+					minTop = otherTop;
+				}
+				else
+				{
+					continue;
+				}
+
+				if(entity.ySpeed >= 0 && entity.y < otherTop + 16)
+				{
+					entity.y = otherTop;
+					entity.ySpeed = Math.min(0, entity.ySpeed);
+					entity.grounded = true;
+
+					world.motionGraph.add(entity, solidEntity);
+				}
 			}
+
 		}
 		else if(maps.has(this.lastMap))
 		{
@@ -110,9 +119,9 @@ export class PlayerController
 		{
 			this.xDirection = Math.sign(xAxis);
 
-			if(!world.getSolid(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y))
+			if(!world.getSolidTerrain(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y + -entity.height * 0.5))
 			{
-				entity.xSpeed += xAxis * (entity.grounded ? 0.2 : 0.3);
+				entity.xSpeed += xAxis * (entity.grounded ? 0.16 : 0.32);
 			}
 
 			if(Math.abs(entity.xSpeed) > 8)
@@ -155,7 +164,7 @@ export class PlayerController
 			world
 			, entity.x
 			, entity.y
-			, this.xDirection < 0 ? Math.PI : 0
+			, this.xDirection < 0 ? Math.PI : 0 // angle
 			, Math.min(length, entity.width * 0.5)
 			, Ray.T_LAST_EMPTY
 			, entity
@@ -170,6 +179,8 @@ export class PlayerController
 			});
 		}
 
+		let coyote = false;
+
 		if(entity.xSpeed || entity.ySpeed)
 		{
 			regions.forEach(region => {
@@ -180,28 +191,61 @@ export class PlayerController
 				}
 			});
 
-			if(!entity.grounded)
+			// Ledge cases...
+			if(!entity.grounded && xAxis)
 			{
-				const footRay = Ray.castTerrain(
+				const footRayFront = Ray.cast(
 					world
 					, entity.x
 					, entity.y + 1
-					, this.xDirection < 0 ? Math.PI : 0
-					, length + entity.width * 0.5
+					, this.xDirection < 0 ? Math.PI : 0  // angle
+					, length + entity.width * 0.5 + 1
 					, Ray.T_LAST_EMPTY
 				);
 
-				if(footRay)
+				if(footRayFront.d < entity.width * 0.5)
 				{
-					const footDistance = Math.hypot(
-						entity.x - footRay[0]
-						, entity.y - footRay[1]
+					const checkRay = Ray.cast(
+						world
+						, footRayFront.x + this.xDirection
+						, footRayFront.y + -entity.height
+						, Math.PI/2  // angle
+						, entity.height
+						, Ray.T_LAST_EMPTY
 					);
 
-					if(footDistance < entity.width * 0.5)
+					if(checkRay.hit && checkRay.d > entity.height * 0.5)
 					{
-						entity.y -= 2;
-						entity.x += Math.sign(entity.xSpeed);
+						coyote = true;
+						entity.x += this.xDirection;
+						entity.y = footRayFront.y + checkRay.d + -entity.height;
+						entity.ySpeed = Math.min(0, entity.ySpeed);
+					}
+				}
+
+				const footRayBack = Ray.cast(
+					world
+					, entity.x
+					, entity.y + 1
+					, -this.xDirection < 0 ? Math.PI : 0
+					, length + entity.width * 0.5 + 1
+					, Ray.T_LAST_EMPTY
+				);
+
+				if(footRayBack.d < entity.width * 0.5)
+				{
+					const checkRay = Ray.cast(
+						world
+						, footRayBack.x + -this.xDirection
+						, footRayBack.y + -entity.height
+						, Math.PI/2  // angle
+						, entity.height
+						, Ray.T_LAST_EMPTY
+					);
+
+					if(checkRay.hit && checkRay.d > entity.height * 0.5)
+					{
+						coyote = true;
 					}
 				}
 			}
@@ -215,17 +259,82 @@ export class PlayerController
 				, Ray.T_LAST_EMPTY
 			);
 
-			let xMove = entity.xSpeed;
-			let yMove = entity.ySpeed;
+			const solidEntities = Ray.castEntity(
+				world
+				, entity.x
+				, entity.y
+				, angle
+				, length
+				, Ray.E_SOLID
+				, entity
+			);
 
-			if(terrain)
+			let minDist = Infinity;
+
+			if(solidEntities.size)
+			for(const [solid, point] of solidEntities.entries())
 			{
-				xMove = terrain[0] - entity.x;
-				yMove = terrain[1] - entity.y;
+				if((solid.flags & Entity.E_SOLID))
+				{
+					const [x,y,t] = point;
+
+					if(t < minDist)
+					{
+						minDist = t;
+
+						const solidTop = solid.y + -solid.height;
+						const solidLeft = solid.x + -solid.width * 0.5;
+						const solidRight = solid.x + solid.width * 0.5;
+
+						const myTop = entity.y + -entity.height;
+
+						if(entity.x >= solidLeft && entity.x <= solidRight)
+						{
+							if(Math.sign(solid.y - entity.y) === Math.sign(entity.ySpeed))
+							{
+								entity.y = y;
+								entity.ySpeed = 0;
+							}
+						}
+
+						if(entity.y > solidTop && myTop < solid.y)
+						{
+							if(Math.sign(solid.x - entity.x) === Math.sign(entity.xSpeed))
+							{
+								entity.x = x;
+								entity.xSpeed = 0;
+							}
+						}
+					}
+				}
+			}
+			else if(terrain)
+			{
+				entity.xSpeed = terrain[0] - entity.x;
+				entity.ySpeed = terrain[1] - entity.y;
 			}
 
-			entity.x += xMove;
-			entity.y += yMove;
+			entity.x += entity.xSpeed;
+			entity.y += entity.ySpeed;
+		}
+
+		if(!entity.grounded && entity.ySpeed >= 0)
+		{
+			const groundSnapper = Ray.castTerrain(
+				world
+				, entity.x
+				, entity.y
+				, Math.PI / 2
+				, 4
+				, Ray.T_LAST_EMPTY
+			);
+
+			if(groundSnapper)
+			{
+				entity.ySpeed = 0;
+				entity.y = groundSnapper[1];
+				entity.grounded = true;
+			}
 		}
 
 		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
@@ -240,13 +349,13 @@ export class PlayerController
 			entity.y++;
 		}
 
-		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8))
 		{
 			entity.xSpeed = 0;
 			entity.x++;
 		}
 
-		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
 		{
 			entity.xSpeed = 0;
 			entity.x--;
@@ -254,6 +363,7 @@ export class PlayerController
 
 		if(entity.grounded)
 		{
+			this.airJumps = 0;
 			this.state = xAxis ? 'walking' : 'standing';
 
 			if(xAxis < 0)
@@ -268,11 +378,19 @@ export class PlayerController
 
 		if(entity.inputManager)
 		{
-			if(entity.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
+			const canJump = entity.grounded || coyote || this.airJumps < this.maxAirJumps;
+
+			if(canJump && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === 1)
 			{
+				if(!entity.grounded || coyote)
+				{
+					this.airJumps++;
+				}
+
 				entity.grounded = false;
 				this.state = 'jumping';
 				entity.ySpeed = -10;
+				entity.y--;
 			}
 
 			if(!entity.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1)
@@ -307,21 +425,31 @@ export class PlayerController
 			this.xDirection = 1;
 			this.direction = 'east';
 		}
+
+		if(Math.abs(entity.xSpeed) < 0.001)
+		{
+			entity.xSpeed = 0;
+		}
+
+		if(Math.abs(entity.ySpeed) < 0.001)
+		{
+			entity.ySpeed = 0;
+		}
 	}
 
 	collide(entity, other, point)
 	{
-		if(other.flags & Entity.E_PLATFORM)
-		{
-			const otherTop = other.y - other.height;
+		// if(other.flags & Entity.E_PLATFORM)
+		// {
+		// 	const otherTop = other.y - other.height;
 
-			if(entity.ySpeed > 0 && entity.y < otherTop + 16)
-			{
-				entity.ySpeed = 0;
-				entity.grounded = true;
-				this.y = otherTop;
-			}
-		}
+		// 	if(entity.ySpeed > 0 && entity.y < otherTop + 16)
+		// 	{
+		// 		entity.ySpeed = 0;
+		// 		entity.grounded = true;
+		// 		this.y = otherTop;
+		// 	}
+		// }
 	}
 
 	sleep(entity){}

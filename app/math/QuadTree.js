@@ -15,11 +15,43 @@ export class QuadTree extends Rectangle
 		this.parent = parent;
 		this.root = parent ? parent.root : this;
 
-		this.ulCell = null;
-		this.urCell = null;
-		this.blCell = null;
-		this.brCell = null;
+		this.ulCell = this.ulCache = null;
+		this.urCell = this.urCache = null;
+		this.blCell = this.blCache = null;
+		this.brCell = this.brCache = null;
 
+		this.cellName = 'r';
+	}
+
+	static getLeaf(parent, xCell, yCell, cache = null)
+	{
+		if(cache)
+		{
+			const leaf = cache.deref();
+			if(leaf) return leaf;
+		}
+
+		const xSize = parent.x2 - parent.x1;
+		const ySize = parent.y2 - parent.y1;
+
+		const xSizeHalf = 0.5 * xSize;
+		const ySizeHalf = 0.5 * ySize;
+
+		const x1 = parent.x1 + xSizeHalf * xCell;
+		const x2 = x1 + xSizeHalf;
+
+		const y1 = parent.y1 + ySizeHalf * yCell;
+		const y2 = y1 + ySizeHalf;
+
+		const leaf = new QuadTree(
+			x1, y1, x2, y2
+			, parent.minSize
+			, parent
+		);
+
+		leaf.cellName = parent.cellName + `:${xCell}${yCell}`;
+
+		return leaf;
 	}
 
 	add(entity, xOffset = 0, yOffset = 0)
@@ -28,7 +60,7 @@ export class QuadTree extends Rectangle
 		{
 			if(!this.parent)
 			{
-				console.warn('No QuadTree cell found!');
+				// console.warn('No QuadTree cell found!');
 			}
 			return false;
 		}
@@ -47,46 +79,19 @@ export class QuadTree extends Rectangle
 		{
 			this.split  = true;
 
-			const xSizeHalf = 0.5 * xSize;
-			const ySizeHalf = 0.5 * ySize;
+			this.ulCell = QuadTree.getLeaf(this, 0, 0, this.ulCache);
+			this.urCell = QuadTree.getLeaf(this, 1, 0, this.urCache);
+			this.blCell = QuadTree.getLeaf(this, 0, 1, this.blCache);
+			this.brCell = QuadTree.getLeaf(this, 1, 1, this.brCache);
 
-			this.ulCell = new QuadTree(
-				this.x1
-				, this.y1
-				, this.x1 + xSizeHalf
-				, this.y1 + ySizeHalf
-				, this.minSize
-				, this
-			);
+			this.ulCache = new WeakRef(this.ulCell);
+			this.urCache = new WeakRef(this.urCell);
+			this.blCache = new WeakRef(this.blCell);
+			this.brCache = new WeakRef(this.brCell);
 
-			this.blCell = new QuadTree(
-				this.x1
-				, this.y1 + ySizeHalf
-				, this.x1 + xSizeHalf
-				, this.y2
-				, this.minSize
-				, this
-			);
-
-			this.urCell = new QuadTree(
-				this.x1 + xSizeHalf
-				, this.y1
-				, this.x2
-				, this.y1 + ySizeHalf
-				, this.minSize
-				, this
-			);
-
-			this.brCell = new QuadTree(
-				this.x1 + xSizeHalf
-				, this.y1 + ySizeHalf
-				, this.x2
-				, this.y2
-				, this.minSize
-				, this
-			);
-
+			// console.log('SPLIT', this.cellName);
 			let parent = this;
+
 			while(parent)
 			{
 				parent.count -= this.items.size;
@@ -222,6 +227,8 @@ export class QuadTree extends Rectangle
 		}
 
 		this.split = false;
+
+		// console.log('PRUNE', this.cellName);
 
 		this.ulCell = null;
 		this.urCell = null;

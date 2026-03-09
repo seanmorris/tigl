@@ -24,7 +24,7 @@ export class BarrelController
 	{
 		const world = entity.session.world;
 
-		if(!world.getSolid(entity.x, entity.y + 1))
+		if(!world.getSolidTerrain(entity.x, entity.y + 1))
 		{
 			entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
 			entity.grounded = false;
@@ -69,26 +69,26 @@ export class BarrelController
 			entity.shot = false;
 		}
 
-		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
+		if(world.getSolidTerrain(entity.x, entity.y) && !world.getSolidTerrain(entity.x, entity.y + -entity.height))
 		{
 			entity.ySpeed = 0;
 			entity.y--;
 		}
 
-		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
+		while(world.getSolidTerrain(entity.x, entity.y + -entity.height) && !world.getSolidTerrain(entity.x, entity.y))
 		{
 			entity.ySpeed = 0;
 			entity.y++;
 		}
 
-		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
+		while(world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8))
 		{
 			this.stop(entity, entity.xSpeed);
 			entity.xSpeed = 0;
 			entity.x++;
 		}
 
-		while(world.getSolid(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8))
+		while(world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8))
 		{
 			this.stop(entity, entity.xSpeed);
 			entity.xSpeed = 0;

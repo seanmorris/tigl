@@ -9,3 +9,10 @@ trim_trailing_whitespace = true
 [*.{frag,vert}]
 indent_style = space
 indent_size  = 2
+
+[*.hwad]
+end_of_line          = unset
+insert_final_newline = unset
+insert_final_newline = unset
+charset              = unset
+trim_trailing_whitespace = unset

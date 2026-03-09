@@ -8,9 +8,9 @@ import { Session } from '../session/Session';
 import { Config } from 'Config';
 
 import { PlayerController } from '../model/PlayerController';
-import { BallController } from "../model/BallController";
+import { BallController }   from "../model/BallController";
 import { BarrelController } from "../model/BarrelController";
-import { BoxController } from "../model/BoxController";
+import { BoxController }    from "../model/BoxController";
 
 import { MapMover } from "../model/MapMover";
 
@@ -270,7 +270,7 @@ export class View extends BaseView
 			}
 		};
 
-		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 1.5;
+		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 3;
 		this.resize();
 
 		simulate(performance.now())

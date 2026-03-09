@@ -21,7 +21,7 @@ export class QuickTree extends QuadTree
 		{
 			if(!this.parent)
 			{
-				console.warn('Failed to add object to QuickTree.');
+				// console.warn('Failed to add object to QuickTree.');
 			}
 
 			return;
@@ -69,7 +69,7 @@ export class QuickTree extends QuadTree
 		if(item.session && item.session.world)
 		{
 			const maps = item.session.world.getMapsForPoint(item.x, item.y);
-			maps.forEach(map => console.log(map.moveEntity(item)));
+			maps.forEach(map => map.moveEntity(item));
 
 			if(!maps.size)
 			{

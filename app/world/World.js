@@ -3,6 +3,7 @@ import { MotionGraph } from '../math/MotionGraph';
 import { TileMap } from './TileMap';
 import { SMTree } from '../math/SMTree';
 import { Ray } from "../math/Ray";
+import { Entity } from '../model/Entity';
 
 const cache = new Map;
 
@@ -91,6 +92,15 @@ export class World
 
 	getSolid(x, y, z)
 	{
+		const terrain = this.getSolidTerrain(x, y, z);
+		if(terrain) return terrain;
+
+		const solidEntities = this.getEntitiesForPoint(x, y, Entity.E_SOLID);
+		if(solidEntities.size) return solidEntities;
+	}
+
+	getSolidTerrain(x, y, z)
+	{
 		const maps = this.getMapsForPoint(x, y);
 
 		for(const map of maps)
@@ -123,7 +133,7 @@ export class World
 		return null;
 	}
 
-	getEntitiesForPoint(x, y)
+	getEntitiesForPoint(x, y, entiyFlags = 0)
 	{
 		const tilemaps = this.getMapsForPoint(x, y);
 
@@ -147,6 +157,11 @@ export class World
 
 			for(const entity of entities)
 			{
+				if(entiyFlags && !(entity.flags & entiyFlags))
+				{
+					continue;
+				}
+
 				if(entity.rect.contains(x, y))
 				{
 					result.add(entity);

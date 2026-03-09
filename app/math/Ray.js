@@ -1,3 +1,4 @@
+import { Entity } from "../model/Entity";
 import { Geometry } from "./Geometry";
 
 export class Ray
@@ -8,17 +9,86 @@ export class Ray
 	static T_GET_LENGTH  = 0b0000_1000;
 
 	static E_NO_MINK     = 0b0001_0000;
+	static E_SOLID       = 0b0010_0000;
 
 	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
 
 	static DEFAULT_FLAGS = 0b0000_0000;
 
-	static cast(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId)
+	static cast(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
 	{
 		const terrain = this.castTerrain(world, startX, startY, angle, length, rayFlags, layerId);
-		const entities = this.castEntity(world, startX, startY, angle, length, rayFlags);
+		const entities = this.castEntity(world, startX, startY, angle, length, rayFlags & this.E_NO_MINK, castingEntity);
 
-		return {terrain, entities};
+		let hit = false;
+		let nearest = terrain;
+		let minDist = Infinity;
+		if(rayFlags & this.T_ALL_POINTS)
+		{
+			for(const point of terrain)
+			{
+				const dist = Math.hypot(startY - point[1], startX - point[0]);
+
+				if(dist < minDist)
+				{
+					nearest = point;
+					minDist = dist;
+				}
+			}
+		}
+		else if(rayFlags & this.T_GET_LENGTH)
+		{
+			nearest = [Math.cos(angle) * terrain, Math.sin(angle) * terrain, terrain/length];
+			minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
+		}
+		else if(terrain)
+		{
+			minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
+			hit = true;
+		}
+
+		const sin = Math.sin(angle);
+		const endY = startY + (Math.abs(sin) > Number.EPSILON ? sin : 0) * length;
+
+		for(const [entity, point] of entities.entries())
+		{
+			const dist = Math.hypot(startY - point[1], startX - point[0]);
+
+			if(!(entity.flags & Entity.E_SOLID) && !(entity.flags & Entity.E_PLATFORM))
+			{
+				continue;
+			}
+
+			if(entity.flags & Entity.E_PLATFORM)
+			{
+				if(startY > endY)
+				{
+					continue;
+				}
+
+				const entityTop = entity.y + -entity.height;
+
+				if(castingEntity && castingEntity.y > entityTop + 16)
+				{
+					continue;
+				}
+			}
+
+			if(dist < minDist)
+			{
+				nearest = point;
+				minDist = dist;
+				hit = true;
+			}
+		}
+
+		if(nearest)
+		{
+			return {terrain, entities, x: nearest[0], y: nearest[1], hit, t: nearest[2], d: minDist, layerId: nearest[3], ...nearest};
+		}
+
+		return {terrain, entities, hit, d: Number.isFinite(minDist) ? minDist : length};
+
 	}
 
 	static castEntity(world, startX, startY, angle, length = 320, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
@@ -43,6 +113,29 @@ export class Ray
 			if(candidate === castingEntity)
 			{
 				continue;
+			}
+
+			if(rayFlags & this.E_SOLID)
+			{
+				if(!(candidate.flags & Entity.E_SOLID) && !(candidate.flags & Entity.E_PLATFORM))
+				{
+					continue;
+				}
+
+				if(candidate.flags & Entity.E_PLATFORM && !(rayFlags & this.E_SOLID))
+				{
+					if(startY > endY)
+					{
+						continue;
+					}
+
+					const candidateTop = candidate.y + -candidate.height;
+
+					if(castingEntity && castingEntity.y > candidateTop + 16)
+					{
+						continue;
+					}
+				}
 			}
 
 			let rect = candidate.rect;
@@ -114,7 +207,7 @@ export class Ray
 
 		let currentDistance = 0;
 
-		if(world.getSolid(startX, startY, layerId))
+		if(world.getSolidTerrain(startX, startY, layerId))
 		{
 			if(rayFlags & this.T_GET_LENGTH)
 			{
@@ -155,8 +248,9 @@ export class Ray
 			{
 				const mag = Math.abs(rayX);
 
-				let px = (startX + mag * cos);
-				let py = (startY + mag * sin);
+				let px = startX + mag * cos;
+				let py = startY + mag * sin;
+				let pt = mag / length;
 
 				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
 				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
@@ -174,9 +268,9 @@ export class Ray
 						: (bs - ((startX + checkX) % bs));
 				}
 
-				if(world.getSolid(px, py, layerId))
+				if(world.getSolidTerrain(px, py, layerId))
 				{
-					solidsX.add([px, py]);
+					solidsX.add([px, py, pt, layerId]);
 					break;
 				}
 
@@ -188,8 +282,9 @@ export class Ray
 			{
 				const mag = Math.abs(rayY);
 
-				let px = (startX + mag * cos);
-				let py = (startY + mag * sin);
+				let px = startX + mag * cos;
+				let py = startY + mag * sin;
+				let pt = mag / length;
 
 				if(ox >= 0 && px % 1 > 0.99999) px = Math.round(px);
 				if(oy >= 0 && py % 1 > 0.99999) py = Math.round(py);
@@ -208,9 +303,9 @@ export class Ray
 						: (bs - ((startY + checkY) % bs));
 				}
 
-				if(world.getSolid(px, py, layerId))
+				if(world.getSolidTerrain(px, py, layerId))
 				{
-					solidsY.add([px, py]);
+					solidsY.add([px, py, pt, layerId]);
 					break;
 				}
 
@@ -269,5 +364,7 @@ export class Ray
 
 			return nearest;
 		}
+
+		return null;
 	}
 }

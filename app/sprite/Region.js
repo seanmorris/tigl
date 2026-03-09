@@ -39,6 +39,13 @@ export class Region
 			, this.y + this.height
 		);
 
+		this.bounds = new Rectangle(
+			this.x
+			, this.y
+			, this.x + this.width
+			, this.y + this.height
+		);
+
 		rectMap.set(this.rect, this);
 
 		this.spriteBoard = spriteBoard;
@@ -80,12 +87,20 @@ export class Region
 		this.rect.x2 += x;
 		this.rect.y1 += y;
 		this.rect.y2 += y;
+
+		this.bounds.x1 += x;
+		this.bounds.x2 += x;
+		this.bounds.y1 += y;
+		this.bounds.y2 += y;
 	}
 
 	resize(w, h, cx, cy)
 	{
 		const wStart = this.width;
 		const hStart = this.height;
+
+		const rwStart = this.rect.x2 - this.rect.x1;
+		const rhStart = this.rect.y2 - this.rect.y1;
 
 		const sx = cx * (1 - w/wStart) * wStart;
 		const sy = cy * (1 - h/hStart) * hStart;
@@ -96,11 +111,22 @@ export class Region
 		this.x += sx;
 		this.y += sy;
 
-		this.rect.x1 = this.x;
-		this.rect.y1 = this.y;
+		if(rwStart < w)
+		{
+			this.rect.x1 = this.x;
+			this.rect.x2 = this.rect.x1 + w;
+		}
 
-		this.rect.x2 = this.rect.x1 + w;
-		this.rect.y2 = this.rect.y1 + w;
+		if(rhStart < h)
+		{
+			this.rect.y1 = this.y;
+			this.rect.y2 = this.rect.y1 + h;
+		}
+
+		this.bounds.x1 = this.x;
+		this.bounds.x2 = this.x + w;
+		this.bounds.y1 = this.y;
+		this.bounds.y2 = this.y + h;
 	}
 
 	simulate(delta)
@@ -124,9 +150,9 @@ export class Region
 
 		this.setRectangle(
 			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
-			, this.y * zoom + -Camera.y + (this.spriteBoard.height / 2)
+			, (this.y + -1) * zoom + -Camera.y + (this.spriteBoard.height / 2)
 			, this.width * zoom
-			, this.height * zoom
+			, (this.height + -1) * zoom
 		);
 
 		// gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);

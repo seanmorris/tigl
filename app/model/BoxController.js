@@ -30,7 +30,12 @@ export class BoxController
 		}
 
 		entity.flags |= Entity.E_PLATFORM;
-		entity.flags |= Entity.E_STATIC;
+		// entity.flags |= Entity.E_STATIC;
+
+		if(entity.props.get('solid'))
+		{
+			entity.flags |= Entity.E_SOLID;
+		}
 	}
 
 	destroy(entity){}

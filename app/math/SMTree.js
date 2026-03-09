@@ -64,24 +64,24 @@ class Segment
 
 	add(rectangle)
 	{
+		this.rectangles.add(rectangle);
+		this.size = this.rectangles.size;
+
 		if(this.subTree)
 		{
 			this.subTree.add(rectangle);
 		}
-
-		this.rectangles.add(rectangle);
-		this.size = this.rectangles.size;
 	}
 
 	delete(rectangle)
 	{
+		this.rectangles.delete(rectangle);
+		this.size = this.rectangles.size;
+
 		if(this.subTree)
 		{
 			this.subTree.delete(rectangle);
 		}
-
-		this.rectangles.delete(rectangle);
-		this.size = this.rectangles.size;
 
 		const empty = (!this.rectangles.size) && this.start > -Infinity;
 
@@ -145,12 +145,13 @@ export class SMTree
 			return;
 		}
 
-		for(let i = 1 + startIndex; i <= endIndex; i++)
+		for(let i = startIndex; i <= endIndex; i++)
 		{
-			if(this.segments[i].start < rectMin || this.segments[i].end > rectMax)
+			if(this.segments[i].start >= rectMax || this.segments[i].end <= rectMin)
 			{
 				continue;
 			}
+
 			this.segments[i].add(rectangle);
 		}
 	}
@@ -272,7 +273,7 @@ export class SMTree
 		let lo = 0;
 		let hi = -1 + this.segments.length;
 
-		do
+		while(lo <= hi)
 		{
 			const current = Math.floor((lo + hi) * 0.5);
 			const segment = this.segments[current];
@@ -291,7 +292,7 @@ export class SMTree
 			{
 				hi = -1 + current;
 			}
-		} while(lo <= hi);
+		}
 
 		return -1;
 	}

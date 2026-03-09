@@ -220,7 +220,7 @@ export class TileMap
 		const size = Math.ceil(Math.sqrt(tileTotal));
 
 		const destination = document.createElement('canvas');
-		this.tileSetWidth  = destination.width  = size * this.tileWidth;
+		this.tileSetWidth = destination.width  = size * this.tileWidth;
 		this.tileSetHeight = destination.height = Math.ceil(tileTotal / size) * this.tileHeight;
 
 		const ctxDestination = destination.getContext('2d', {willReadFrequently: true});
@@ -245,8 +245,9 @@ export class TileMap
 				const ySource = Math.floor((i * this.tileWidth) / tileset.imageWidth) * this.tileHeight;
 
 				const xDestination = (gid * this.tileWidth) % destination.width;
-				const yDestination = Math.floor((gid * this.tileWidth) / destination.width) * this.tileHeight;
+
 				const tile = ctxSource.getImageData(xSource, ySource, this.tileWidth, this.tileHeight);
+				const yDestination = Math.floor((gid * this.tileWidth) / destination.width) * this.tileHeight;
 
 				ctxDestination.putImageData(tile, xDestination, yDestination);
 
@@ -636,13 +637,16 @@ export class TileMap
 		}
 
 		const rects = this.regionTree.query(x, y, x, y);
-		rects.forEach(r => {
-			if(!r.contains(x, y))
+		rects.forEach(rect => {
+
+			const region = Region.fromRect(rect);
+
+			if(!region.bounds.contains(x, y))
 			{
 				return;
 			}
 
-			results.add(Region.fromRect(r));
+			results.add(region);
 		});
 
 		return results;

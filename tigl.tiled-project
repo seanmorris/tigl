@@ -7,6 +7,14 @@
     "folders": [
         "."
     ],
+    "properties": [
+        {
+            "name": "Something",
+            "propertytype": "",
+            "type": "object",
+            "value": 0
+        }
+    ],
     "propertyTypes": [
     ]
 }

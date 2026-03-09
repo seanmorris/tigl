@@ -159,23 +159,6 @@ test('Can find non-overlapping rects in a field', () => {
 	assert(fastResult100.size === 100, 'fastResult100 should hold 100 results.');
 
 	assert(fastTime < slowTime, 'SMTree expected to be faster than fullScan.');
-
-	const moves = [
-		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-		, -640, -640, -640, -640, -640, -640, -640, -640, -640, -640
-		, -32, -32, -32, -32, -32, -32, -32, -32
-	];
-
-	for(const move of moves)
-	{
-		const s = performance.now();
-		last.x1 += move;
-		last.x2 += move;
-		tree.delete(last);
-		tree.add(last);
-		const time = performance.now() - s;
-		console.log({move, time});
-	}
 });
 
 test('Can find overlapping rects in a field', () => {
@@ -206,10 +189,10 @@ test('Can find overlapping rects in a field', () => {
 
 	const fastStart = performance.now();
 
-	const fastResult1   = tree.query(0, 0, 10,   10);
-	const fastResult10  = tree.query(0, 0, 1000, 10);
-	const fastResult25  = tree.query(0, 0, 500,  500);
-	const fastResult100 = tree.query(0, 0, 1000, 1000);
+	const fastResult1   = tree.query(0, 0, 10,  10);
+	const fastResult10  = tree.query(0, 0, 999, 10);
+	const fastResult25  = tree.query(0, 0, 499, 499);
+	const fastResult100 = tree.query(0, 0, 999, 999);
 
 	const fastTime = performance.now() - fastStart;
 
@@ -220,10 +203,10 @@ test('Can find overlapping rects in a field', () => {
 
 	const slowStart = performance.now();
 
-	const slowResult1   = fullScan(rects, 0, 0, 10,   10);
-	const slowResult10  = fullScan(rects, 0, 0, 1000, 10);
-	const slowResult25  = fullScan(rects, 0, 0, 500,  500);
-	const slowResult100 = fullScan(rects, 0, 0, 1000, 1000);
+	const slowResult1   = fullScan(rects, 0, 0, 10,  10);
+	const slowResult10  = fullScan(rects, 0, 0, 999, 10);
+	const slowResult25  = fullScan(rects, 0, 0, 499, 499);
+	const slowResult100 = fullScan(rects, 0, 0, 999, 999);
 
 	const slowTime = performance.now() - slowStart;
 

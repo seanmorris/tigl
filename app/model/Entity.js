@@ -78,7 +78,7 @@ export class Entity
 		const maps = world.getMapsForPoint(this.x, this.y);
 		const firstMap = [...maps][0];
 
-		if(!world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
+		if(motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
 		{
 			world.motionGraph.delete(this);
 		}
