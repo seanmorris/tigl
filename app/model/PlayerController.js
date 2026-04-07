@@ -7,6 +7,7 @@ const waterRegion = [0, 1, 1];
 export class PlayerController
 {
 	static spriteSheet = '/player.tsj';
+	static spriteColor = [0, 255, 255, 255];
 
 	create(entity, entityData)
 	{
@@ -16,8 +17,24 @@ export class PlayerController
 		entity.xSpeed = 0;
 		entity.ySpeed = 0;
 
+		this.xSpeedMax = 8;
+
+		this.acceleration = 0.16;
+		this.decceleration = 0.75;
+
+		this.airAcceleration = 0.32;
+
 		entity.height = 34;
 		entity.width = 24;
+
+		entity.sprite.width = 24;
+		entity.sprite.height = 34;
+
+		// entity.width = 4;
+		// entity.height = 34;
+
+		// entity.sprite.width = 4;
+		// entity.sprite.height = 34;
 
 		entity.grounded = true;
 		entity.grounded = 0;
@@ -44,6 +61,9 @@ export class PlayerController
 		{
 			entity.height = 34;
 		}
+
+		if(Math.abs(entity.xSpeed) < 0.01) entity.xSpeed = 0;
+		if(Math.abs(entity.ySpeed) < 0.01) entity.ySpeed = 0;
 
 		const xAxis = entity.inputManager ? ( Math.min(1, Math.max(entity.inputManager.axes[0].magnitude || 0, -1)) || 0 ) : 0;
 		const yAxis = entity.inputManager ? ( Math.min(1, Math.max(entity.inputManager.axes[1].magnitude || 0, -1)) || 0 ) : 0;
@@ -121,17 +141,17 @@ export class PlayerController
 
 			if(!world.getSolidTerrain(entity.x + Math.sign(xAxis) * entity.width * 0.5 + Math.sign(xAxis), entity.y + -entity.height * 0.5))
 			{
-				entity.xSpeed += xAxis * (entity.grounded ? 0.16 : 0.32);
+				entity.xSpeed += xAxis * (entity.grounded ? this.acceleration : this.airAcceleration);
 			}
 
-			if(Math.abs(entity.xSpeed) > 8)
+			if(Math.abs(entity.xSpeed) > this.xSpeedMax)
 			{
-				entity.xSpeed = 8 * Math.sign(entity.xSpeed);
+				entity.xSpeed = this.xSpeedMax * Math.sign(entity.xSpeed);
 			}
 
 			if(entity.grounded && xAxis && Math.sign(xAxis) !== Math.sign(entity.xSpeed))
 			{
-				entity.xSpeed *= 0.75;
+				entity.xSpeed *= this.decceleration;
 			}
 		}
 		else if(entity.grounded)
@@ -246,8 +266,6 @@ export class PlayerController
 				}
 			}
 
-			// console.time('tcast');
-
 			const terrain = Ray.castTerrain(
 				world
 				, entity.x
@@ -314,6 +332,7 @@ export class PlayerController
 				entity.ySpeed = terrain[1] - entity.y;
 			}
 
+			// console.log(entity.y, entity.ySpeed);
 			entity.x += entity.xSpeed;
 			entity.y += entity.ySpeed;
 		}
@@ -326,11 +345,13 @@ export class PlayerController
 				, entity.y
 				, entity.x
 				, entity.y + 4
-				, Ray.T_LAST_EMPTY | Ray.T_SNAP_TO_INT
+				// , Ray.T_SNAP_TO_INT
+				, Ray.T_LAST_EMPTY
 			);
 
 			if(groundSnapper)
 			{
+				// console.log(groundSnapper);
 				entity.ySpeed = 0;
 				entity.y = groundSnapper[1];
 				entity.grounded = true;
@@ -349,16 +370,16 @@ export class PlayerController
 			entity.y++;
 		}
 
-		while(world.getSolid(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * -0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
 		{
 			entity.xSpeed = 0;
-			entity.x++;
+			entity.x = Math.floor(entity.x + 1);
 		}
 
-		while(world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8) && !world.getSolid(entity.x - entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8) && !world.getSolid(entity.x + entity.width * -0.5, entity.y + -8))
 		{
 			entity.xSpeed = 0;
-			entity.x--;
+			entity.x = Math.floor(entity.x + -1);
 		}
 
 		if(entity.grounded)

@@ -6,11 +6,19 @@
         {
          "id":6,
          "image":"parallax\/sky-2-recolor.png",
+         "imageheight":48,
+         "imagewidth":512,
          "name":"Sky 2",
          "offsetx":0,
          "offsety":32,
          "opacity":1,
-         "parallaxx":0.9,
+         "parallaxx":0.5,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -19,11 +27,19 @@
         {
          "id":5,
          "image":"parallax\/sky-1b-recolor.png",
+         "imageheight":16,
+         "imagewidth":512,
          "name":"Sky 1b",
          "offsetx":0,
          "offsety":80,
          "opacity":1,
-         "parallaxx":0.8,
+         "parallaxx":0.65,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -32,11 +48,19 @@
         {
          "id":4,
          "image":"parallax\/sky-1-recolor.png",
+         "imageheight":32,
+         "imagewidth":512,
          "name":"Sky 1",
          "offsetx":0,
          "offsety":96,
          "opacity":1,
          "parallaxx":0.7,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -45,11 +69,19 @@
         {
          "id":3,
          "image":"parallax\/mountains-0-recolor.png",
+         "imageheight":48,
+         "imagewidth":512,
          "name":"Mountains 1",
          "offsetx":0,
          "offsety":80,
          "opacity":1,
          "parallaxx":0.85,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -58,10 +90,18 @@
         {
          "id":7,
          "image":"parallax\/mountains-1-recolor.png",
+         "imageheight":48,
+         "imagewidth":512,
          "name":"Mountains 0",
          "offsetx":0,
          "offsety":128,
          "opacity":1,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -70,10 +110,18 @@
         {
          "id":13,
          "image":"parallax\/mountains-1-recolor.png",
+         "imageheight":48,
+         "imagewidth":512,
          "name":"Mountains 0 Repeat",
          "offsetx":0,
          "offsety":176,
          "opacity":1,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -522,6 +570,11 @@
         {
          "name":"backgroundColor",
          "type":"color",
+         "value":"#ff400000"
+        }, 
+        {
+         "name":"backgroundColorUpper",
+         "type":"color",
          "value":"#ff408080"
         }, 
         {
@@ -535,7 +588,7 @@
          "value":256
         }],
  "renderorder":"right-down",
- "tiledversion":"1.10.1",
+ "tiledversion":"1.11.2",
  "tileheight":32,
  "tilesets":[
         {

@@ -1,10 +1,15 @@
 export class Properties
 {
-	constructor(properties, owner)
+	constructor(properties, owner, defaults = [])
 	{
 		this.properties = {};
 		this.owner = owner;
 		this.add(...properties);
+
+		for(const {name} of defaults)
+		{
+			if(!this.has(name)) this.add(...defaults);
+		}
 	}
 
 	get(name, index = 0)
@@ -40,12 +45,14 @@ export class Properties
 						parseInt(property.value.substr(7 ,2), 16),
 						parseInt(property.value.substr(1 ,2), 16),
 					]));
+
 					break;
 
 				case 'file':
 						this.properties[ property.name ].push([
 							new URL(property.value, this.owner.src)
 						]);
+
 						break;
 
 				default:

@@ -1,7 +1,7 @@
 // texture.frag
 #define M_PI 3.1415926535897932384626433832795
 #define M_TAU M_PI / 2.0
-precision mediump float;
+precision highp float;
 
 varying vec2 v_texCoord;
 varying vec2 v_position;
@@ -18,6 +18,8 @@ uniform vec2 u_mapTextureSize;
 
 uniform vec4 u_color;
 uniform vec4 u_region;
+uniform vec4 u_tint;
+
 uniform vec2 u_parallax;
 uniform vec2 u_scroll;
 
@@ -160,10 +162,10 @@ void main() {
 
     vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
 
-    int lo = int(tile.r * 256.0);
-    int hi = int(tile.g * 256.0);
-    int vh = int(tile.b * 256.0);
-    int vv = int(tile.a * 256.0);
+    int lo = int(tile.r * 255.0);
+    int hi = int(tile.g * 255.0);
+    int vh = int(tile.b * 255.0);
+    int vv = int(tile.a * 255.0);
 
     int tileNumber = hi * 256 + lo;
 
@@ -183,9 +185,9 @@ void main() {
     // Mode 4 normalizes the tile number to all channels
     if (u_renderMode == 4) {
       gl_FragColor = vec4(
-        mod(float(tileNumber), 256.0) / 256.0
-        , mod(float(tileNumber), 256.0) / 256.0
-        , mod(float(tileNumber), 256.0) / 256.0
+        mod(float(tileNumber), 256.0) / 255.0
+        , mod(float(tileNumber), 256.0) / 255.0
+        , mod(float(tileNumber), 256.0) / 255.0
         , 1.0
       );
       return;
@@ -255,7 +257,7 @@ void main() {
       return;
     }
 
-    gl_FragColor = tileColor;
+    gl_FragColor = tileColor * u_tint;
 
     return;
   }

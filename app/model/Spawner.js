@@ -76,6 +76,7 @@ export class Spawner extends Entity
 		const entity = new Entity({
 			...entityDef
 			, controller
+			, spawnClass
 			, session: this.session
 			, x: this.x
 			, y: this.y
@@ -84,6 +85,7 @@ export class Spawner extends Entity
 
 		this.session.world.motionGraph.add(entity, map);
 		entity.lastMap = map;
+		map.entities.set(entity.id, entity);
 		this.session.addEntity(entity);
 		this.session.removeEntity(this);
 		super.simulate();

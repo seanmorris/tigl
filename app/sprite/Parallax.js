@@ -7,6 +7,7 @@ class ParallaxLayer
 	height = 0;
 	offset = 0;
 	parallax = 0;
+	props = null;
 }
 
 export class Parallax
@@ -45,7 +46,7 @@ export class Parallax
 				const texture = this.textures[index] = gl.createTexture();
 				const layer = this.parallaxLayers[index] = new ParallaxLayer;
 
-				const layerBottom = image.height + layerData.offsety;
+				const layerBottom = image.height + (layerData.offsety ?? 0);
 
 				if(this.height < layerBottom)
 				{
@@ -57,6 +58,7 @@ export class Parallax
 				layer.height = image.height;
 				layer.offset = layerData.offsety ?? 0;
 				layer.parallax = layerData.parallaxx ?? 1;
+				layer.props = layerData.props;
 
 				gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -105,9 +107,22 @@ export class Parallax
 			this.spriteBoard.drawProgram.uniformF('u_size', layer.width, layer.width);
 			this.spriteBoard.drawProgram.uniformF('u_parallax', layer.parallax, 0);
 
+			const from = layer.props.get('from') ?? 'bottom';
+
+			let anchor = this.spriteBoard.height + (-this.height + layer.offset) * zoom;
+
+			if(from === 'center')
+			{
+				anchor = (0.5 * this.spriteBoard.height) + (0.5 * -this.height + layer.offset) * zoom;
+			}
+			else if(from === 'top')
+			{
+				anchor = (this.height + layer.offset) * zoom;
+			}
+
 			this.setRectangle(
 				0
-				, this.spriteBoard.height + (-this.height + layer.offset) * zoom
+				, anchor
 				, layer.width * zoom
 				, layer.height * zoom
 				, layer.width

@@ -1,5 +1,10 @@
 const depthSymbol = Symbol('depth');
 
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
+const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BITS);
+
 class Segment
 {
 	constructor(start, end, prev, dimension = 2, depth = 0)
@@ -118,7 +123,7 @@ export class SMTree
 	{
 		if(!isRectangle(rectangle))
 		{
-			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2.');
+			throw new Error('Object supplied is not a Rectangle. Must have properties: x1, y1, x2, y2 where x1 < x2 && y1 < y2');
 		}
 
 		this.rectangles.add(rectangle);
@@ -230,6 +235,7 @@ export class SMTree
 		const xEndIndex = this.findSegment(x2);
 
 		let results = new Set;
+
 		for(let i = xStartIndex; i <= xEndIndex; i++)
 		{
 			const segment = this.segments[i];
@@ -246,6 +252,62 @@ export class SMTree
 			{
 				results = results.union(segment.subTree.segments[j].rectangles);
 			}
+		}
+
+		return results;
+	}
+
+	queryLine(x1, y1, x2, y2)
+	{
+		if(x1 > x2) [x1, x2] = [x2, x1];
+		if(y1 > y2) [y1, y2] = [y2, y1];
+
+		const dx = x2 - x1;
+		const dy = y2 - y1;
+		const ror = dy / dx;
+		const inv = dx / dy;
+
+		let index = this.findSegment(x1);
+		let xCurrent = x1;
+		let yCurrent = y1;
+		let rects = new Set;
+		const results = new Map;
+
+		do
+		{
+			const segment = this.segments[index];
+			const xToEnd = Math.min(segment.end, x2) - xCurrent;
+			xCurrent += xToEnd;
+			yCurrent = Number.isFinite(ror) ? yCurrent + xToEnd * ror : y2
+			index++;
+
+			const subIndex = segment.subTree.findSegment(yCurrent);
+			const subSegment = segment.subTree.segments[subIndex];
+
+			rects = rects.union(subSegment.rectangles);
+		}
+		while(xCurrent < x2);
+
+		for(const rect of rects)
+		{
+			let ax = Math.max(x1, rect.x1);
+			let bx = Math.min(x2, rect.x2);
+			let ay = Number.isFinite(ror) ? y1 + (ax - x1) * ror : Math.max(y1, rect.y1);
+			let by = Number.isFinite(ror) ? y1 + (bx - x1) * ror : Math.min(y2, rect.y2);
+
+			if(ay < rect.y1)
+			{
+				ax += (rect.y1 - ay) * inv;
+				ay = rect.y1
+			}
+
+			if(by > rect.y2)
+			{
+				bx += (rect.y2 - by) * inv;
+				by = rect.y2;
+			}
+
+			results.set(rect, [ax, ay, bx, by]);
 		}
 
 		return results;

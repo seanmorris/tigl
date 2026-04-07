@@ -217,3 +217,5 @@ test('Can find overlapping rects in a field', () => {
 
 	assert(fastTime < slowTime, 'SMTree expected to be faster than fullScan.');
 });
+
+

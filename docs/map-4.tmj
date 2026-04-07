@@ -11,7 +11,13 @@
          "offsetx":0,
          "offsety":32,
          "opacity":1,
-         "parallaxx":0.9,
+         "parallaxx":0.5,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -26,7 +32,13 @@
          "offsetx":0,
          "offsety":80,
          "opacity":1,
-         "parallaxx":0.8,
+         "parallaxx":0.65,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -42,6 +54,12 @@
          "offsety":96,
          "opacity":1,
          "parallaxx":0.7,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -57,6 +75,12 @@
          "offsety":80,
          "opacity":1,
          "parallaxx":0.85,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -71,6 +95,12 @@
          "offsetx":0,
          "offsety":128,
          "opacity":1,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -85,6 +115,12 @@
          "offsetx":0,
          "offsety":176,
          "opacity":1,
+         "properties":[
+                {
+                 "name":"from",
+                 "type":"string",
+                 "value":"center"
+                }],
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -350,10 +386,21 @@
                  "type":"@barrel",
                  "visible":true,
                  "width":0,
-                 "x":304,
-                 "y":983
+                 "x":365,
+                 "y":808
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"backgroundColor",
+                 "type":"color",
+                 "value":"#ff400000"
+                }, 
+                {
+                 "name":"backgroundColorUpper",
+                 "type":"color",
+                 "value":"#ff408080"
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,
@@ -366,7 +413,17 @@
         {
          "name":"backgroundColor",
          "type":"color",
+         "value":"#ff400000"
+        }, 
+        {
+         "name":"backgroundColorUpper",
+         "type":"color",
          "value":"#ff408080"
+        }, 
+        {
+         "name":"backgroundSplit",
+         "type":"float",
+         "value":0.5
         }],
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

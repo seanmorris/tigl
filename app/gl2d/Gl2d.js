@@ -93,7 +93,12 @@ export class Gl2d
 	constructor(element)
 	{
 		this.element = element || document.createElement('canvas');
-		this.context = this.element.getContext('webgl');
+		this.context = this.element.getContext('webgl2');
+
+		if(!this.context)
+		{
+			this.context = this.element.getContext('webgl');
+		}
 	}
 
 	createShader(location)

@@ -1,11 +1,14 @@
 import { Bindable } from 'curvature/base/Bindable';
 
+const emptyPixel = new Uint8Array(4);
+
 export class MapRenderer
 {
-	constructor({spriteBoard, map})
+	constructor({spriteBoard, map, session})
 	{
 		this[Bindable.Prevent] = true;
 		this.spriteBoard = spriteBoard;
+		this.session = session;
 
 		this.loaded = false;
 
@@ -16,6 +19,9 @@ export class MapRenderer
 		this.tileWidth  = 0;
 		this.tileHeight = 0;
 
+		this.lastSliceKey = null;
+		this.tileBuffers = new WeakMap;
+		this.blankBuffer = new Uint32Array(this.width * this.height);
 		this.xOffset = 0;
 		this.yOffset = 0;
 
@@ -23,6 +29,11 @@ export class MapRenderer
 
 		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
 		this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
+		this.priorityInitialized = {};
+
+		// this.renderPath = 'slice';
+		this.renderPath = session.hasWebgl2 ? 'webgl2' : 'canvas';
+		// this.renderPath = 'webgl2';
 
 		map.initialize();
 
@@ -104,6 +115,7 @@ export class MapRenderer
 		this.spriteBoard.drawProgram.uniformF('u_tileSize', this.tileWidth, this.tileHeight);
 		this.spriteBoard.drawProgram.uniformF('u_mapTextureSize', this.map.tileSetWidth, this.map.tileSetHeight);
 		this.spriteBoard.drawProgram.uniformI('u_renderTiles', 1);
+		this.spriteBoard.drawProgram.uniformF('u_tint', 1, 1, 1, 1);
 
 		gl.activeTexture(gl.TEXTURE2);
 		gl.bindTexture(gl.TEXTURE_2D, this.tileTexture);
@@ -113,52 +125,267 @@ export class MapRenderer
 		gl.bindTexture(gl.TEXTURE_2D, this.tileMapping);
 		this.spriteBoard.drawProgram.uniformI('u_tileMapping', 3);
 
-		const tilePixelLayers = this.map.getSlice(
-			priority
-			, xTile
-			, yTile
-			, tilesWide
-			, tilesHigh
-			, delta
-		);
-
-		for(const tilePixels of tilePixelLayers)
+		if(this.renderPath === 'webgl2')
 		{
-			gl.texImage2D(
-				gl.TEXTURE_2D
-				, 0
-				, gl.RGBA
-				, tilesWide
-				, tilesHigh
-				, 0
-				, gl.RGBA
-				, gl.UNSIGNED_BYTE
-				, tilePixels
-			);
-
-			this.setRectangle(
-				xPos + this.tileWidth * 0.5 * zoom
-				, yPos + this.tileHeight * zoom
-				, this.width * zoom
-				, this.height * zoom
-			);
-
-			this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
-
-			if(priority === 'foreground')
+			for(const layer of this.map.tileLayers)
 			{
-				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
+				if(layer.props.get('priority') !== priority)
+				{
+					continue;
+				}
+
+				this.spriteBoard.drawProgram.uniformF(
+					'u_tint',
+					layer.tintcolor[0] / 255,
+					layer.tintcolor[1] / 255,
+					layer.tintcolor[2] / 255,
+					layer.tintcolor[3] / 255,
+				);
+
+				if(!this.priorityInitialized[priority])
+				{
+					gl.texImage2D(
+						gl.TEXTURE_2D // target
+						, 0 // level
+						, gl.RGBA // internalFormat
+						, tilesWide // width
+						, tilesHigh // height
+						, 0 // border
+						, gl.RGBA // format
+						, gl.UNSIGNED_BYTE // type
+						, null // srcData
+					);
+
+					this.priorityInitialized[priority] = true;
+				}
+
+				const emptyPixels = new Uint8Array(this.blankBuffer.buffer);
+				const tilePixels = new Uint8Array(layer.data.buffer);
+
+				gl.texSubImage2D(
+					gl.TEXTURE_2D // target
+					, 0 // level
+					, 0 // xoffset
+					, 0 // yoffset
+					, tilesWide // width
+					, tilesHigh // height
+					, gl.RGBA // format
+					, gl.UNSIGNED_BYTE// type
+					, emptyPixels // srcData
+				);
+
+				const xs = Math.max(0, xTile);
+				const xd = -Math.min(0, xTile);
+				const ys = Math.max(0, yTile);
+				const yd = -Math.min(0, yTile);
+
+				const wc = Math.max(0, Math.min(tilesWide - xd, layer.width - xs));
+				const hc = Math.max(0, Math.min(tilesHigh - yd, layer.height - ys));
+
+				gl.pixelStorei(gl.UNPACK_ROW_LENGTH, layer.width);
+				gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, xs);
+				gl.pixelStorei(gl.UNPACK_SKIP_ROWS, ys);
+
+				gl.texSubImage2D(
+					gl.TEXTURE_2D // target
+					, 0 // level
+					, xd // xoffset
+					, yd // yoffset
+					, wc // width
+					, hc // height
+					, gl.RGBA // format
+					, gl.UNSIGNED_BYTE// type
+					, tilePixels // srcData
+				);
+
+				this.setRectangle(
+					xPos + this.tileWidth * 0.5 * zoom
+					, yPos + this.tileHeight * zoom
+					, this.width * zoom
+					, this.height * zoom
+				);
+
+				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+
+				if(priority === 'foreground')
+				{
+					this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
+				}
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+				gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+				gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+				gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+			}
+		}
+
+		if(this.renderPath === 'slice')
+		{
+			const sliceKey = xTile + ',' + yTile + ',' + tilesWide + ',' + tilesHigh;
+
+			for(const layer of this.map.tileLayers)
+			{
+				if(layer.props.get('priority') !== priority)
+				{
+					continue;
+				}
+
+				if(!this.tileBuffers.has(layer))
+				{
+					this.tileBuffers.set(layer, new Uint32Array(this.width * this.height));
+				}
+
+				const tileBuffer = this.tileBuffers.get(layer);
+				const tilePixels = new Uint8Array(tileBuffer.buffer);
+
+				if(this.lastSliceKey !== sliceKey)
+				{}
+
+				tileBuffer.set(this.blankBuffer);
+
+				this.map.getStaticSlice(
+					tileBuffer,
+					tilesWide,
+					layer,
+					xTile,
+					yTile,
+					tilesWide,
+					tilesHigh
+				);
+
+				if(!this.priorityInitialized[priority])
+				{
+					gl.texImage2D(
+						gl.TEXTURE_2D // target
+						, 0 // level
+						, gl.RGBA // internalFormat
+						, tilesWide // width
+						, tilesHigh // height
+						, 0 // border
+						, gl.RGBA // format
+						, gl.UNSIGNED_BYTE // type
+						, tilePixels // srcData
+					);
+
+					this.priorityInitialized[priority] = true;
+				}
+				else
+				{
+					gl.texSubImage2D(
+						gl.TEXTURE_2D // target
+						, 0 // level
+						, 0 // xoffset
+						, 0 // yoffset
+						, tilesWide // width
+						, tilesHigh // height
+						, gl.RGBA // format
+						, gl.UNSIGNED_BYTE// type
+						, tilePixels // srcData
+					);
+				}
+
+				this.setRectangle(
+					xPos + this.tileWidth * 0.5 * zoom
+					, yPos + this.tileHeight * zoom
+					, this.width * zoom
+					, this.height * zoom
+				);
+
+				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+
+				if(priority === 'foreground')
+				{
+					this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
+				}
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
 			}
 
-			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
-			gl.drawArrays(gl.TRIANGLES, 0, 6);
-			this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+			this.lastSliceKey = sliceKey;
+		}
 
-			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
-			gl.drawArrays(gl.TRIANGLES, 0, 6);
+		if(this.renderPath === 'canvas')
+		{
+
+			const tilePixelLayers = this.map.getSlice(
+				priority
+				, xTile
+				, yTile
+				, tilesWide
+				, tilesHigh
+				, delta
+				, !!this.priorityInitialized[priority]
+			);
+
+			for(const tilePixels of tilePixelLayers)
+			{
+				if(!this.priorityInitialized[priority])
+				{
+					gl.texImage2D(
+						gl.TEXTURE_2D // target
+						, 0 // level
+						, gl.RGBA // internalFormat
+						, tilesWide // width
+						, tilesHigh // height
+						, 0 // border
+						, gl.RGBA // format
+						, gl.UNSIGNED_BYTE // type
+						, tilePixels // srcData
+					);
+
+					this.priorityInitialized[priority] = true;
+				}
+				else
+				{
+					gl.texSubImage2D(
+						gl.TEXTURE_2D // target
+						, 0 // level
+						, 0 // xoffset
+						, 0 // yoffset
+						, tilesWide // width
+						, tilesHigh // height
+						, gl.RGBA // format
+						, gl.UNSIGNED_BYTE// type
+						, tilePixels // srcData
+					);
+				}
+
+				this.setRectangle(
+					xPos + this.tileWidth * 0.5 * zoom
+					, yPos + this.tileHeight * zoom
+					, this.width * zoom
+					, this.height * zoom
+				);
+
+				this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
+
+				if(priority === 'foreground')
+				{
+					this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
+				}
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
+
+				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+			}
 		}
 
 		// Cleanup...
+
 		this.spriteBoard.drawProgram.uniformI('u_renderTiles', 0);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -183,6 +410,27 @@ export class MapRenderer
 
 		this.xOffset = x - this.width;
 		this.yOffset = y - this.height;
+
+		for(const id in this.priorityInitialized)
+		{
+			this.priorityInitialized[id] = false;
+		}
+
+		for(const layer of this.map.tileLayers)
+		{
+			if(this.tileBuffers.has(layer))
+			{
+				if(this.tileBuffers.get(layer).length === this.width * this.height)
+				{
+					continue;
+				}
+			}
+
+			this.tileBuffers.set(layer, new Uint32Array(this.width * this.height));
+		}
+
+		this.lastSliceKey = null;
+		this.blankBuffer = new Uint32Array(this.width * this.height);
 	}
 
 	simulate()

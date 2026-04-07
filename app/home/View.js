@@ -13,6 +13,7 @@ import { BarrelController } from "../model/BarrelController";
 import { BoxController }    from "../model/BoxController";
 
 import { MapMover } from "../model/MapMover";
+import { RopeController } from '../model/RopeController';
 
 
 const Application = {};
@@ -203,6 +204,7 @@ export class View extends BaseView
 			}
 			, entityPallet: {
 				'@basic-platformer': PlayerController
+				, '@rope': RopeController
 				, '@barrel': BarrelController
 				, '@ball': BallController
 				, '@box': BoxController
@@ -212,8 +214,8 @@ export class View extends BaseView
 		this.session = new Session({
 			onScreenJoyPad: this.args.joypad
 			, keyboard: this.keyboard
-			// , worldSrc: '/tile-world.world'
 			, element: this.tags.canvas.element
+			// , worldSrc: '/tile-world.world'
 			, ...gameDef
 		});
 
@@ -225,56 +227,50 @@ export class View extends BaseView
 		let fThen = 0;
 		let sThen = 0;
 
-		const simulate = now => {
+		const fpsTarget = 60;
+		const fpsInv = 1000/fpsTarget;
 
-			setTimeout(() => simulate(performance.now()), 0);
+		const update = now => {
 
-			if(document.hidden)
-			{
-				return;
-			}
-
-			if(!this.session.simulate(now))
-			{
-				return;
-			}
-
-			this.args.sps = (1000 / (now - sThen)).toFixed(3);
-			sThen = now;
-		};
-
-		const draw = now => {
-
-			window.requestAnimationFrame(draw);
+			window.requestAnimationFrame(update);
 
 			if(document.hidden)
 			{
 				return;
 			}
 
-			if(!this.session.draw(now))
 			{
-				return;
+				const delta = now - sThen;
+				let acc = Math.min(delta, fpsInv * 10);
+
+				while(acc >= 980/60)
+				{
+					this.session.simulate(now)
+					this.args.sps = (1000 / delta).toFixed(0);
+					sThen = now;
+					acc -= fpsInv;
+				}
 			}
 
-			this.args.fps = (1000 / (now - fThen)).toFixed(3);
-			this.args.camX = Number(Camera.x).toFixed(3);
-			this.args.camY = Number(Camera.y).toFixed(3);
+			this.session.draw(now);
+
+			this.args.fps = (1000 / (now - fThen)).toFixed(0);
+			this.args.camX = Number(Camera.x).toFixed(4);
+			this.args.camY = Number(Camera.y).toFixed(4);
 
 			fThen = now;
 
 			if(this.session.spriteBoard.following)
 			{
-				this.args.posX = Number(this.session.spriteBoard.following.x).toFixed(3);
-				this.args.posY = Number(this.session.spriteBoard.following.y).toFixed(3);
+				this.args.posX = Number(this.session.spriteBoard.following.x).toFixed(4);
+				this.args.posY = Number(this.session.spriteBoard.following.y).toFixed(4);
 			}
 		};
 
 		this.session.spriteBoard.zoomLevel = document.body.clientHeight / 1280 * 3;
 		this.resize();
 
-		simulate(performance.now())
-		draw(performance.now());
+		update(performance.now());
 	}
 
 	mousemove()

@@ -9,14 +9,15 @@ import { Region } from './Region';
 
 export class SpriteBoard
 {
-	constructor({element, world})
+	constructor({element, session})
 	{
 		this[Bindable.Prevent] = true;
+
+		this.session = session;
 
 		this.maps = [];
 
 		this.currentMap = null;
-		this.world = world;
 		this.sprites = new Set;
 		this.regions = new Set;
 
@@ -54,6 +55,7 @@ export class SpriteBoard
 			, 'u_tileSize'
 			, 'u_resolution'
 			, 'u_mapTextureSize'
+			, 'u_tint'
 
 			, 'u_region'
 			, 'u_parallax'
@@ -75,8 +77,9 @@ export class SpriteBoard
 
 		this.drawProgram.use();
 
-		this.drawLayer = this.gl2d.createTexture(1000, 1000);
-		this.effectLayer = this.gl2d.createTexture(1000, 1000);
+		this.drawLayer = this.gl2d.createTexture(1, 1);
+		this.effectLayer = this.gl2d.createTexture(1, 1);
+		this.skyTexture = this.gl2d.createTexture(1, 1);
 
 		this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
 		this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
@@ -90,8 +93,18 @@ export class SpriteBoard
 		this.following = null;
 	}
 
+	loadWorld(world)
+	{
+		this.world = world;
+	}
+
 	draw(delta)
 	{
+		if(!this.world)
+		{
+			return;
+		}
+
 		if(this.following)
 		{
 			Camera.x = this.following.x * this.zoomLevel || 0;
@@ -129,7 +142,7 @@ export class SpriteBoard
 					mapRenderers.add(this.mapRenderers.get(map));
 					return;
 				}
-				const renderer = new MapRenderer({spriteBoard: this, map});
+				const renderer = new MapRenderer({spriteBoard: this, map, session: this.session});
 				mapRenderers.add(renderer);
 				renderer.resize(Camera.width, Camera.height);
 				this.mapRenderers.set(map, renderer);
@@ -163,10 +176,10 @@ export class SpriteBoard
 			// const color = this.currentMap.backgroundColor.substr(1);
 			const color = this.currentMap.backgroundColor;
 
-			const r = color[0] / 255; //parseInt(color.substr(-6, 2), 16) / 255;
-			const b = color[1] / 255; //parseInt(color.substr(-4, 2), 16) / 255;
-			const g = color[2] / 255; //parseInt(color.substr(-2, 2), 16) / 255;
-			const a = color[3] / 255; //color.length === 8 ? parseInt(color.substr(-8, 2), 16) / 255 : 1;
+			const r = (0 + color[0]) / 255;
+			const b = (0 + color[1]) / 255;
+			const g = (0 + color[2]) / 255;
+			const a = (0 + color[3]) / 255;
 
 			gl.clearColor(r, g, b, a);
 		}
@@ -178,6 +191,42 @@ export class SpriteBoard
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
+		if(this.currentMap && this.currentMap.props.has('backgroundColorUpper'))
+		{
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, this.skyTexture);
+
+			const color = this.currentMap.props.get('backgroundColorUpper');
+			const split = Math.min(1, Math.max(0, this.currentMap.props.get('backgroundSplit') ?? 0.5));
+
+			const r = (0 + color[0]);
+			const b = (0 + color[1]);
+			const g = (0 + color[2]);
+			const a = (0 + color[3]);
+
+			gl.texSubImage2D(
+				gl.TEXTURE_2D
+				, 0
+				, 0
+				, 0
+				, 1
+				, 1
+				, gl.RGBA
+				, gl.UNSIGNED_BYTE
+				, new Uint8Array([r, g, b, a])
+			);
+
+			this.setRectangle(
+				0
+				, this.gl2d.element.height * split
+				, this.gl2d.element.width
+				, -this.gl2d.element.height * split
+			);
+
+			gl.bindFramebuffer(gl.FRAMEBUFFER, this.drawBuffer);
+			gl.drawArrays(gl.TRIANGLES, 0, 6);
+		}
+
 		gl.clearColor(0, 0, 0, 0);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.clear(gl.COLOR_BUFFER_BIT);
@@ -187,12 +236,12 @@ export class SpriteBoard
 		let sprites = [...this.sprites];
 
 		sprites.sort((a,b) => {
-		if(a.y === undefined)
-		{
-			return -1;
-		}
+			if(a.y === undefined)
+			{
+				return -1;
+			}
 
-		if(b.y === undefined)
+			if(b.y === undefined)
 			{
 				return 1;
 			}
@@ -236,8 +285,8 @@ export class SpriteBoard
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		gl.activeTexture(gl.TEXTURE1);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		gl.activeTexture(gl.TEXTURE4);
-		gl.bindTexture(gl.TEXTURE_2D, null);
+		// gl.activeTexture(gl.TEXTURE4);
+		// gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	resize(width, height)

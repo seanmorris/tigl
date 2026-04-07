@@ -2,6 +2,7 @@ import { Bindable } from "curvature/base/Bindable";
 import { Rectangle } from "../math/Rectangle";
 import { Sprite } from '../sprite/Sprite';
 import { Properties } from "../world/Properties";
+import { SpriteSheet } from "../sprite/SpriteSheet";
 
 export class Entity
 {
@@ -15,6 +16,7 @@ export class Entity
 
 		const {
 			controller
+			, spawnClass
 			, session
 			, inputManager
 			, sprite
@@ -28,7 +30,7 @@ export class Entity
 		this.id = entityData.id;
 
 		this.xSpriteOffset = 0;
-		this.ySpriteOffset = sprite ? 0 : 15;
+		this.ySpriteOffset = 0;
 
 		this.flags = 0b0000_0000;
 
@@ -40,7 +42,11 @@ export class Entity
 
 		this.sprite = sprite || new Sprite({
 			session
-			, src: '/thing.png'
+			// , src: '/thing.png'
+			// , color: spawnClass ? spawnClass.spriteColor : null
+			, spriteSheet: spawnClass
+				? new SpriteSheet({src: spawnClass.spriteSheet})
+				: null
 			, width: 32
 			, height: 32
 		});
@@ -115,8 +121,6 @@ export class Entity
 			this.sprite.x = this.x + this.xSpriteOffset;
 			this.sprite.y = this.y + this.ySpriteOffset;
 		}
-
-		this.fixFPE();
 	}
 
 	collide(other, point)
@@ -145,13 +149,5 @@ export class Entity
 	destroy()
 	{
 		this.controller && this.controller.destroy(this);
-	}
-
-	fixFPE()
-	{
-		if(this.x % 1 > 0.99999) this.x = Math.round(this.x);
-		if(this.y % 1 > 0.99999) this.y = Math.round(this.y);
-		if(this.x % 1 < 0.00001) this.x = Math.round(this.x);
-		if(this.y % 1 < 0.00001) this.y = Math.round(this.y);
 	}
 }

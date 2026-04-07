@@ -25,9 +25,11 @@ export class Sprite
 		this.scale   = 1;
 		this.scaleX  = 1;
 		this.scaleY  = 1;
-		this.theta   = 0;
+		this.theta   = 0; //Math.PI;
 		this.shearX  = 0;
 		this.shearY  = 0;
+		this.repeatX = 1;
+		this.repeatY = 1;
 
 		this.xCenter = 0.5;
 		this.yCenter = 1.0;
@@ -171,7 +173,7 @@ export class Sprite
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
-	changeAnimation(name)
+	changeAnimation(name, reset = true)
 	{
 		if(!this.spriteSheet ||!this.spriteSheet.animations[name])
 		{
@@ -183,6 +185,7 @@ export class Sprite
 		{
 			this.currentAnimation = name;
 			this.currentDelay = 0;
+			this.currentFrame = -1;
 		}
 	}
 
@@ -228,10 +231,11 @@ export class Sprite
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
-		const zoom = this.spriteBoard.zoomLevel;
+		// const xra = (this.width / this.originalWidth) * this.repeatX;
+		// const yra = (this.height / this.originalHeight) * this.repeatY;
 
-		const xra = this.width / this.originalWidth;
-		const yra = this.height / this.originalHeight;
+		const xra = (this.width / this.originalWidth) * this.repeatX;
+		const yra = (this.height / this.originalHeight) * this.repeatY;
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -242,6 +246,8 @@ export class Sprite
 			xra, 0.0,
 			xra, yra,
 		]), gl.STATIC_DRAW);
+
+		const zoom = this.spriteBoard.zoomLevel;
 
 		const x1 = x;
 		const y1 = y;
@@ -264,10 +270,10 @@ export class Sprite
 
 		const t = Matrix.transform(points, Matrix.composite(
 			Matrix.translate(xOff + -width * 0.5, yOff + zoom + 16 * zoom)
+			, Matrix.rotate(this.theta)
 			, Matrix.shearX(this.shearX)
 			, Matrix.shearX(this.shearY)
 			, Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
-			, Matrix.rotate(this.theta)
 			, Matrix.translate(-xOff, -yOff)
 		));
 

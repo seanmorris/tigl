@@ -6,7 +6,7 @@ const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BITS);
 
-const mod = (subj, pred) => ((subj % pred) + pred) + pred;
+const mod = (subj, pred) => ((subj % pred) + pred) % pred;
 
 export class Ray
 {
@@ -111,6 +111,35 @@ export class Ray
 		const sizeX = Math.max(320, Math.abs(startX - endX));
 		const sizeY = Math.max(320, Math.abs(startY - endY));
 
+		if(false)
+		{
+			if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+			if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+			if(-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX ) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+			if(-MAX_GRID_IDX > endY || endY >= MAX_GRID_IDX ) throw new Error(`endY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
+
+			const qStartX = Math.trunc(startX * SUBGRID_SIZE) * SUBGRID_INVR;
+			const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
+
+			const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
+			const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
+
+			const dx = qEndX - qStartX;
+			const dy = qEndY - qStartY;
+
+			const hypot = Math.hypot(dy, dx);
+
+			const maps = world.getMapsForPoint(startX, startY);
+
+			for(const map of maps)
+			{
+				const tree = map.quadTree;
+				const leaf = tree.findLeaf(startX, startY);
+
+				console.log(leaf);
+			}
+		}
+
 		const candidates = world.getEntitiesForRect(centerX, centerY, sizeX, sizeY);
 		const collisions = new Map;
 
@@ -192,6 +221,86 @@ export class Ray
 
 	static castTerrain(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
+		const mapSegments = world.mapTree.queryLine(startX, startY, endX, endY);
+		let points = new Set();
+
+		for(const [rect, segment] of mapSegments)
+		{
+			const map = world.rectMap.get(rect);
+			const xOff = Math.trunc(mod(map.x, map.tileWidth)* SUBGRID_SIZE) * SUBGRID_INVR;
+			const yOff = Math.trunc(mod(map.y, map.tileHeight)* SUBGRID_SIZE) * SUBGRID_INVR;
+
+			points = points.union(this.castTerrainInMap(world, ...segment, layerId, xOff, yOff));
+		}
+
+		if(rayFlags & this.T_ALL_POINTS)
+		{
+			return points;
+		}
+
+		points = [...points];
+
+		const distSquares = new Array(points.length);
+
+		const qStartX = Math.trunc(startX * SUBGRID_SIZE) * SUBGRID_INVR;
+		const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
+
+		const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
+		const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
+
+		for(const p in points)
+		{
+			distSquares[p] = (points[p][0] - qStartX) ** 2 + (points[p][1] - qStartY) **2
+		}
+
+		const minDistSq = Math.min(...distSquares);
+		const nearest = points[ distSquares.indexOf(minDistSq) ];
+
+		const dx = qEndX - qStartX;
+		const dy = qEndY - qStartY;
+
+		const hypot = Math.hypot(dy, dx);
+
+		const sx = dx ? hypot / dx : 0;
+		const sy = dy ? hypot / dy : 0;
+
+		if(Math.sqrt(minDistSq) > hypot)
+		{
+			return;
+		}
+
+		if(nearest)
+		{
+			if(rayFlags & this.T_LAST_EMPTY)
+			{
+				const cos = hypot ? dx / hypot : 0;
+				const sin = hypot ? dy / hypot : 0;
+
+				nearest[0] += -cos;
+				nearest[1] += -sin;
+			}
+
+			if(rayFlags & this.T_SNAP_TO_INT)
+			{
+				if(sx > 0) nearest[0] = Math.floor(nearest[0]);
+				if(sx < 0) nearest[0] = Math.ceil(nearest[0]);
+				if(sy > 0) nearest[1] = Math.floor(nearest[1]);
+				if(sy < 0) nearest[1] = Math.ceil(nearest[1]);
+			}
+
+			if(rayFlags & this.T_GET_LENGTH)
+			{
+				return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
+			}
+
+			return nearest;
+		}
+
+		return null;
+	}
+
+	static castTerrainInMap(world, startX, startY, endX, endY, layerId = 0, xOff = 0, yOff = 0)
+	{
 		if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
 		if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
 		if(-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX ) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
@@ -210,23 +319,17 @@ export class Ray
 
 		const hypot = Math.hypot(dy, dx);
 
-		if(hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId))
-		{
-			if(rayFlags & this.T_GET_LENGTH)
-			{
-				return 0;
-			}
-
-			return [qStartX, qStartY];
-		}
-
-		const cos = dx / hypot;
-		const sin = dy / hypot;
-
-		const bs = 32;
-
 		const sx = dx ? hypot / dx : 0;
 		const sy = dy ? hypot / dy : 0;
+
+		if(hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId))
+		{
+			const nearest = [qStartX, qStartY];
+
+			return new Set([nearest]);
+		}
+
+		const bs = 32;
 
 		const initMode = startTile === null ? 0 : 1;
 
@@ -238,8 +341,8 @@ export class Ray
 
 		let bf = 1;
 
-		const ax = sx > 0 ? (bs - qStartX % bs) : ((qStartX % bs) + 1);
-		const ay = sy > 0 ? (bs - qStartY % bs) : ((qStartY % bs) + 1);
+		const ax = xOff + (sx > 0 ? (bs - qStartX % bs) : ((qStartX % bs) + 1));
+		const ay = yOff + (sy > 0 ? (bs - qStartY % bs) : ((qStartY % bs) + 1));
 
 		let checkX = initMode ? 0 : ax;
 		let checkY = initMode ? 0 : ay;
@@ -271,8 +374,8 @@ export class Ray
 				if(!modeX && oldModeX)
 				{
 					bf = sx < 0
-						? mod((qStartX + -checkX + 1), bs)
-						: mod((qStartX + checkX), bs);
+						? (qStartX + -checkX + 1) % bs
+						: (qStartX + checkX) % bs
 				}
 
 				if(world.getSolidTerrain(px, py, layerId))
@@ -299,8 +402,8 @@ export class Ray
 				if(!modeY && oldModeY)
 				{
 					bf = sy < 0
-						? mod((qStartY + -checkY + 1), bs)
-						: mod((qStartY + checkY), bs);
+						? (qStartY + -checkY + 1) % bs
+						: (qStartY + checkY) % bs;
 				}
 
 				if(world.getSolidTerrain(px, py, layerId))
@@ -316,57 +419,8 @@ export class Ray
 			iterations++;
 		}
 
-		const points = [... solidX ? [solidX] : [], ... solidY ? [solidY] : []];
-
-		if(rayFlags & this.T_ALL_POINTS)
-		{
-			return new Set(points);
-		}
-
-		const distSquares = new Array(points.length);
-
-		for(const p in points)
-		{
-			distSquares[p] = (points[p][0] - qStartX) ** 2 + (points[p][1] - qStartY) **2
-		}
-
-		const minDistSq   = Math.min(...distSquares);
-		const nearest     = points[ distSquares.indexOf(minDistSq) ];
-
-		if(Math.sqrt(minDistSq) > hypot)
-		{
-			return;
-		}
-
-		if(nearest)
-		{
-			if(rayFlags & this.T_LAST_EMPTY)
-			{
-				nearest[0] += -cos;
-				nearest[1] += -sin;
-
-				if(rayFlags & this.T_SNAP_TO_INT)
-				{
-					nearest[0] = Math.floor(nearest[0]);
-					nearest[1] = Math.floor(nearest[1]);
-				}
-			}
-			else if(rayFlags & this.T_SNAP_TO_INT)
-			{
-				if(sx > 0) nearest[0] = Math.round(nearest[0]);
-				if(sx < 0) nearest[0] = Math.round(nearest[0]);
-				if(sy > 0) nearest[1] = Math.round(nearest[1]);
-				if(sy < 0) nearest[1] = Math.round(nearest[1]);
-			}
-
-			if(rayFlags & this.T_GET_LENGTH)
-			{
-				return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
-			}
-
-			return nearest;
-		}
-
-		return null;
+		return new Set([... solidX ? [solidX] : [], ... solidY ? [solidY] : []]);
 	}
 }
+
+window.Ray = Ray;

@@ -20,6 +20,9 @@ export class QuadTree extends Rectangle
 		this.blCell = this.blCache = null;
 		this.brCell = this.brCache = null;
 
+		this.xSide = 0;
+		this.ySide = 0;
+
 		this.cellName = 'r';
 	}
 
@@ -50,6 +53,9 @@ export class QuadTree extends Rectangle
 		);
 
 		leaf.cellName = parent.cellName + `:${xCell}${yCell}`;
+
+		leaf.xSide = xCell ? 1 : -1;
+		leaf.ySide = yCell ? 1 : -1;
 
 		return leaf;
 	}
@@ -88,8 +94,6 @@ export class QuadTree extends Rectangle
 			this.urCache = new WeakRef(this.urCell);
 			this.blCache = new WeakRef(this.blCell);
 			this.brCache = new WeakRef(this.brCell);
-
-			// console.log('SPLIT', this.cellName);
 			let parent = this;
 
 			while(parent)
@@ -227,8 +231,6 @@ export class QuadTree extends Rectangle
 		}
 
 		this.split = false;
-
-		// console.log('PRUNE', this.cellName);
 
 		this.ulCell = null;
 		this.urCell = null;

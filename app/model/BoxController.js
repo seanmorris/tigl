@@ -86,7 +86,7 @@ export class BoxController
 
 				above.forEach(other => {
 					if(other.flags & Entity.E_STATIC || other.ySpeed < moved) return;
-					other.y = entity.y - entity.height
+					other.y = entity.y - entity.height;
 				});
 			}
 

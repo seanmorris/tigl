@@ -6,6 +6,7 @@ import { SMTree } from '../math/SMTree';
 import { Region } from '../sprite/Region';
 import { Rectangle } from '../math/Rectangle';
 import { Properties } from './Properties';
+import { parseColor } from '../sprite/parseColor';
 
 const cache = new Map;
 
@@ -53,7 +54,9 @@ export class TileMap
 			, height
 		} = mapData;
 
-		this[Bindable.Prevent] = true;
+		console.log(Bindable);
+
+		Bindable.Prevent && (this[Bindable.Prevent] = true);
 		this.src = fileName;
 		this.backgroundColor = null;
 		this.tileCount = 0;
@@ -88,7 +91,6 @@ export class TileMap
 		this.entityDefs = {};
 
 		this.emptyTiles = new Set;
-		this.tilesIndexes = new Map;
 		this.canvases = new Map;
 		this.contexts = new Map;
 		this.tiles = null;
@@ -107,10 +109,13 @@ export class TileMap
 		this.quadTree = new QuickTree(-64, -64, this.worldWidth + 64, this.worldHeight + 64);
 		this.regionTree = new SMTree;
 		this.animationTrees = new Map;
-		this.entityMap = new Map;
+		this.entities = new Map;
 
 		this.animatedTiles = new Map;
 		this.animations = new Map;
+
+		this.lastSliceKeys = {};
+		this.lastSlices = {};
 
 		// this.ready = this.getReady(fileName);
 	}
@@ -161,7 +166,13 @@ export class TileMap
 		this.props.add(...mapData.properties ?? []);
 
 		mapData.layers.forEach(layer => {
-			layer.props = new Properties(layer.properties ?? [], this);
+			layer.data = new Uint32Array(layer.data);
+			layer.props = new Properties(layer.properties ?? [], this, layer.type !== 'tilelayer' ? [] : [
+				{name: 'priority', type: 'string', value: 'background'}
+			]);
+			layer.tintcolor = layer.tintcolor
+				? parseColor(layer.tintcolor)
+				: new Uint8ClampedArray([255, 255, 255, 255]);
 		})
 
 		this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
@@ -228,11 +239,11 @@ export class TileMap
 		for(const tileset of tilesets)
 		{
 			const image = tileset.image;
-			const source = document.createElement('canvas');
 
-			source.width = image.width;
-			source.height = image.height;
-
+			// const source = document.createElement('canvas');
+			// source.width = image.width;
+			// source.height = image.height;
+			const source = new OffscreenCanvas(image.width, image.height);
 			const ctxSource = source.getContext('2d', {willReadFrequently: true});
 
 			ctxSource.drawImage(image, 0, 0);
@@ -284,12 +295,6 @@ export class TileMap
 
 		for(const layer of [...this.tileLayers, ...this.collisionLayers])
 		{
-			const canvas = document.createElement('canvas');
-			const context = canvas.getContext('2d', {willReadFrequently: true});
-
-			this.canvases.set(layer, canvas);
-			this.contexts.set(layer, context);
-
 			const tileValues = new Uint32Array(layer.data.map(Number));
 			const tilePixels = new Uint8ClampedArray(tileValues.buffer);
 
@@ -392,11 +397,19 @@ export class TileMap
 				if(original) console.log(tilePixels[i], original);
 			}
 
-			this.tilesIndexes.set(layer, tileValues);
+			if(!this.session.hasWebgl2)
+			{
+				// const canvas = document.createElement('canvas');
+				// canvas.width = this.width;
+				// canvas.height = this.height;
+				const canvas = new OffscreenCanvas(this.width, this.height);
+				const context = canvas.getContext('2d', {willReadFrequently: true});
 
-			canvas.width = this.width;
-			canvas.height = this.height;
-			context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
+				this.canvases.set(layer, canvas);
+				this.contexts.set(layer, context);
+
+				context.putImageData(new ImageData(tilePixels, this.width, this.height), 0, 0);
+			}
 		}
 	}
 
@@ -581,31 +594,91 @@ export class TileMap
 			return [];
 		}
 
-		return this.tileLayers
-			.filter(layer => p === (layer.props.get('priority') ?? 'background'))
-			.map(layer => {
-				const context = this.contexts.get(layer);
-				const pixels = context.getImageData(x, y, w, h).data;
-				const tree = this.animationTrees.get(layer);
-				if(tree)
-				{
-					const values = new Uint32Array(pixels.buffer);
-					const animations = tree.select(x, y, x + w, y + h);
-					for(const animation of animations)
-					{
-						const xLocal = animation.x - x;
-						const yLocal = animation.y - y;
+		const sliceKey = x + ',' + y + ',' + w + ',' + h;
 
-						if(xLocal < w)
-						{
-							const iLocal = xLocal + yLocal * w;
-							values[iLocal] = animation.animate(delta);
-						}
+		const pixelLayers = [];
+
+		if(sliceKey !== this.lastSliceKeys[p])
+		{
+			for(const layer of this.tileLayers)
+			{
+				if(p !== layer.props.get('priority'))
+				{
+					continue;
+				}
+
+				const context = this.contexts.get(layer);
+
+				const pixels = context.getImageData(
+					x // Math.max(x, 0)
+					, y // , Math.max(y, 0)
+					, w // , w + Math.min(x, 0)
+					, h // , h + Math.min(y, 0)
+				).data;
+
+				pixelLayers.push(new Uint8Array(pixels.buffer));
+			}
+
+			this.lastSliceKeys[p] = sliceKey
+			this.lastSlices[p] = pixelLayers;
+		}
+		else
+		{
+			pixelLayers.push(...this.lastSlices[p]);
+		}
+
+		for(const l in this.tileLayers)
+		{
+			const layer = this.tileLayers[l];
+			const pixels = pixelLayers[l];
+
+			if(p !== layer.props.get('priority'))
+			{
+				continue;
+			}
+
+			const tree = this.animationTrees.get(layer);
+
+			if(tree)
+			{
+				const values = new Uint32Array(pixels.buffer);
+				const animations = tree.select(x, y, x + w, y + h);
+				for(const animation of animations)
+				{
+					const xLocal = animation.x - x;
+					const yLocal = animation.y - y;
+
+					if(xLocal < w)
+					{
+						const iLocal = xLocal + yLocal * w;
+						values[iLocal] = animation.animate(delta);
 					}
 				}
-				return pixels;
 			}
-		);
+		}
+
+		return pixelLayers;
+	}
+
+	getStaticSlice(buffer, width, layer, x, y, w, h)
+	{
+		// buffer.fill(0);
+
+		const xs = Math.max(0, x);
+		const xd = -Math.min(0, x);
+		const ys = Math.max(0, y);
+		const yd = -Math.min(0, y);
+
+		const wc = Math.max(0, Math.min(w - xd, layer.width - xs));
+		const hc = Math.max(0, Math.min(h - yd, layer.height - ys));
+
+		for(let i = 0; i < hc; ++i)
+		{
+			const os = xs + (i + ys) * layer.width;
+			const od = xd + (i + yd) * width;
+
+			buffer.set(layer.data.subarray(os, os + wc), od);
+		}
 	}
 
 	getTileImage(gid)

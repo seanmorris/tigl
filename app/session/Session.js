@@ -45,8 +45,13 @@ export class Session
 		this.loaded = false;
 		this.overscan = 640;
 
-		this.world = new World({src: worldSrc, session: this});
-		this.spriteBoard = new SpriteBoard({element, world: this.world, session: this});
+		this.hasWebgl2 = !!(new OffscreenCanvas(0, 0).getContext('webgl2'));
+		this.hasWebgl = this.hasWebgl2 || !!(new OffscreenCanvas(0, 0).getContext('webgl'));
+
+		this.spriteBoard = new SpriteBoard({element, session: this});
+		this.world = window.world = new World({src: worldSrc, session: this});
+
+		this.spriteBoard.loadWorld(this.world);
 
 		this.keyboard = keyboard;
 
@@ -58,6 +63,7 @@ export class Session
 		this.controller.zero();
 
 		this.gamepad = null;
+
 		window.addEventListener('gamepadconnected', event => {
 			this.gamepad = event.gamepad;
 		});
@@ -100,16 +106,17 @@ export class Session
 
 			const player = this.player = new Entity({
 				controller: new playerClass,
+				spawnClass: playerClass,
 				session: this,
 				x: startX,
 				y: startY,
 				inputManager: this.controller,
-				sprite: new Sprite({
-					session: this,
-					spriteSheet: new SpriteSheet({
-						src: '/player.tsj'
-					}),
-				}),
+				// sprite: new Sprite({
+				// 	session: this,
+				// 	spriteSheet: new SpriteSheet({
+				// 		src: '/player.tsj'
+				// 	}),
+				// }),
 				camera: Camera,
 			});
 
@@ -150,10 +157,10 @@ export class Session
 
 		const delta = now - this.sThen;
 
-		if(this.simulationLock == 0 || 0.2 + delta < (1000 / this.simulationLock))
-		{
-			return false;
-		}
+		// if(this.simulationLock == 0 || delta < (1000 / this.simulationLock))
+		// {
+		// 	return false;
+		// }
 
 		this.sThen = now;
 
@@ -260,10 +267,10 @@ export class Session
 
 		const delta = now - this.fThen;
 
-		if(this.frameLock == 0 || 0.2 + delta < (1000 / this.frameLock))
-		{
-			return false;
-		}
+		// if(this.frameLock == 0 || delta < (1000 / this.frameLock))
+		// {
+		// 	return false;
+		// }
 
 		this.spriteBoard.draw(delta);
 		this.fThen = now;

@@ -11,9 +11,10 @@
 		"test": "node --test test/*"
 	},
 	"dependencies": {
+		"brunch-tiled-preprocessor": "file:.brunch/tiled-preprocessor/",
 		"curvature": "^0.0.68-f",
 		"import-mapper": "^0.0.4",
-		"brunch-tiled-preprocessor": "file:.brunch/tiled-preprocessor/"
+		"libtuple": "^1.0.0"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.26.4",
