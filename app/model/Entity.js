@@ -68,6 +68,7 @@ export class Entity
 
 		this.fresh = true;
 		this.map = entityData.map;
+		this.currentMap = this.map;
 		this.grounded = false;
 
 		this.controller && this.controller.create(this, this.entityData);
@@ -80,26 +81,26 @@ export class Entity
 
 		const world = this.session.world;
 
-		const motionParent = world.motionGraph.getParent(this);
-		const maps = world.getMapsForPoint(this.x, this.y);
-		const firstMap = [...maps][0];
-
-		if(motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
-		{
-			world.motionGraph.delete(this);
-		}
-
-		if(this.grounded && !world.motionGraph.getParent(this))
-		{
-			world.motionGraph.add(this, firstMap);
-		}
-
 		if(this.fresh)
 		{
 			this.fresh = false;
 		}
 
 		this.controller && this.controller.simulate(this);
+
+		const motionParent = world.motionGraph.getParent(this);
+		const maps = world.getMapsForPoint(this.x, this.y);
+		// const firstMap = [...maps][0];
+
+		if(motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
+		{
+			world.motionGraph.delete(this);
+		}
+
+		if(this.grounded && this.currentMap)
+		{
+			world.motionGraph.add(this, this.currentMap);
+		}
 
 		if(startX !== 0 || startY !== 0)
 		{

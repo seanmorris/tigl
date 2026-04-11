@@ -227,7 +227,7 @@ export class Ray
 		for(const [rect, segment] of mapSegments)
 		{
 			const map = world.rectMap.get(rect);
-			points = points.union(this.castTerrainInMap(map, ...segment, layerId));
+			points = points.union(this.castTerrainInMap(map, ...segment, rayFlags, layerId));
 		}
 
 		if(rayFlags & this.T_ALL_POINTS)
@@ -277,15 +277,6 @@ export class Ray
 				nearest[1] += -sin;
 			}
 
-			if(rayFlags & this.T_SNAP_TO_INT)
-			{
-				// @TODO: Snap to PIXEL EDGE if the map is offset.
-				if(sx > 0) nearest[0] = Math.floor(nearest[0]);
-				if(sx < 0) nearest[0] = Math.ceil(nearest[0]);
-				if(sy > 0) nearest[1] = Math.floor(nearest[1]);
-				if(sy < 0) nearest[1] = Math.ceil(nearest[1]);
-			}
-
 			if(rayFlags & this.T_GET_LENGTH)
 			{
 				return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
@@ -297,7 +288,7 @@ export class Ray
 		return null;
 	}
 
-	static castTerrainInMap(tileMap, startX, startY, endX, endY, layerId = 0)
+	static castTerrainInMap(tileMap, startX, startY, endX, endY, rayFlags, layerId = 0)
 	{
 		if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
 		if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
@@ -379,11 +370,42 @@ export class Ray
 						: (qStartX + checkX) % bs
 				}
 
+				if(rayFlags & this.T_SNAP_TO_INT)
+				{
+					const moX = mod(tileMap.x, 1);
+					const poX = mod(px, 1);
+
+					if(moX > poX)
+					{
+						if(sx > 0) px = Math.floor(px) + (moX - 1);
+						if(sx < 0) px = Math.ceil(px) + moX;
+					}
+					else if(moX < poX)
+					{
+						if(sx > 0) px = Math.ceil(px) + (moX - 1);
+						if(sx < 0) px = Math.floor(px) + moX;
+					}
+
+					const moY = mod(tileMap.y, 1);
+					const poY = mod(py, 1);
+
+					if(moY > poY)
+					{
+						if(sy > 0) py = Math.floor(py) + (moY - 1);
+						if(sy < 0) py = Math.ceil(py) + moY;
+					}
+					else if(moY < poY)
+					{
+						if(sy > 0) py = Math.floor(py) + moY;
+						if(sy < 0) py = Math.ceil(py) + (moY - 1);
+					}
+				}
+
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
 
 				if(tileMap.getSolid(px, py, layerId))
 				{
-					solidX = [px, py, pt, layerId];
+					solidX = [px, py, pt, layerId, tileMap];
 					break;
 				}
 
@@ -409,11 +431,43 @@ export class Ray
 						: (qStartY + checkY) % bs;
 				}
 
+				if(rayFlags & this.T_SNAP_TO_INT)
+				{
+					const moX = mod(tileMap.x, 1);
+					const poX = mod(px, 1);
+
+					if(moX > poX)
+					{
+						if(sx > 0) px = Math.floor(px) + (moX - 1);
+						if(sx < 0) px = Math.ceil(px) + moX;
+					}
+					else if(moX < poX)
+					{
+						if(sx > 0) px = Math.ceil(px) + (moX - 1);
+						if(sx < 0) px = Math.floor(px) + moX;
+					}
+
+					const moY = mod(tileMap.y, 1);
+					const poY = mod(py, 1);
+
+					if(moY > poY)
+					{
+						if(sy > 0) py = Math.floor(py) + (moY - 1);
+						if(sy < 0) py = Math.ceil(py) + moY;
+					}
+					else if(moY < poY)
+					{
+						if(sy > 0) py = Math.floor(py) + moY;
+						if(sy < 0) py = Math.ceil(py) + (moY - 1);
+					}
+
+				}
+
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
 
 				if(tileMap.getSolid(px, py, layerId))
 				{
-					solidY = [px, py, pt, layerId];
+					solidY = [px, py, pt, layerId, tileMap];
 					break;
 				}
 

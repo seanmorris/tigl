@@ -488,7 +488,6 @@ export class TileMap
 
 		if(startX !== this.x || startY !== this.y)
 		{
-
 			world.motionGraph.moveChildren(
 				this
 				, this.x - startX

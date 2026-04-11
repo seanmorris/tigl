@@ -39,6 +39,8 @@ export class PlayerController
 		this.pushing = null;
 
 		this.xDirection = 0;
+
+		this.jumpPower = 9.9;
 		this.maxAirJumps = 1;
 		this.airJumps = 0;
 	}
@@ -268,6 +270,7 @@ export class PlayerController
 				, entity.y
 				, entity.x + entity.xSpeed
 				, entity.y + entity.ySpeed
+				, Ray.T_SNAP_TO_INT
 			);
 
 			// console.timeEnd('tcast');
@@ -325,12 +328,14 @@ export class PlayerController
 			{
 				entity.xSpeed = terrain[0] - entity.x;
 				entity.ySpeed = terrain[1] - entity.y;
+				entity.currentMap = terrain[4];
 			}
 
-			// console.log(entity.y, entity.ySpeed);
 			entity.x += entity.xSpeed;
 			entity.y += entity.ySpeed;
 		}
+
+		let snapped = false;
 
 		if(!entity.grounded && entity.ySpeed >= 0)
 		{
@@ -339,9 +344,8 @@ export class PlayerController
 				, entity.x
 				, entity.y
 				, entity.x
-				, entity.y + 6
-				// , Ray.T_SNAP_TO_INT
-				// , Ray.T_LAST_EMPTY
+				, entity.y + entity.ySpeed + 6
+				, Ray.T_SNAP_TO_INT
 			);
 
 			if(groundSnapper)
@@ -349,7 +353,12 @@ export class PlayerController
 				console.log(groundSnapper);
 				entity.ySpeed = 0;
 				entity.y = groundSnapper[1];
+				entity.currentMap = groundSnapper[4];
 				entity.grounded = true;
+
+				console.log(entity.y, firstMap.y);
+
+				snapped = true;
 			}
 		}
 
@@ -405,7 +414,7 @@ export class PlayerController
 
 				entity.grounded = false;
 				this.state = 'jumping';
-				entity.ySpeed = -10;
+				entity.ySpeed = -this.jumpPower;
 				entity.y--;
 			}
 
@@ -451,6 +460,8 @@ export class PlayerController
 		{
 			entity.ySpeed = 0;
 		}
+
+		snapped && console.log(entity.y, firstMap.y);
 	}
 
 	collide(entity, other, point)

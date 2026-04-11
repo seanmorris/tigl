@@ -8190,7 +8190,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
         const rect = _ref4[0];
         const segment = _ref4[1];
         const map = world.rectMap.get(rect);
-        points = points.union(this.castTerrainInMap(map, ...segment, layerId));
+        points = points.union(this.castTerrainInMap(map, ...segment, rayFlags, layerId));
       }
       if (rayFlags & this.T_ALL_POINTS) {
         return points;
@@ -8221,13 +8221,6 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           nearest[0] += -cos;
           nearest[1] += -sin;
         }
-        if (rayFlags & this.T_SNAP_TO_INT) {
-          // @TODO: Snap to PIXEL EDGE if the map is offset.
-          if (sx > 0) nearest[0] = Math.floor(nearest[0]);
-          if (sx < 0) nearest[0] = Math.ceil(nearest[0]);
-          if (sy > 0) nearest[1] = Math.floor(nearest[1]);
-          if (sy < 0) nearest[1] = Math.ceil(nearest[1]);
-        }
         if (rayFlags & this.T_GET_LENGTH) {
           return Math.hypot(qStartX - nearest[0], qStartY - nearest[1]);
         }
@@ -8237,8 +8230,8 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
     }
   }, {
     key: "castTerrainInMap",
-    value: function castTerrainInMap(tileMap, startX, startY, endX, endY) {
-      let layerId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
+    value: function castTerrainInMap(tileMap, startX, startY, endX, endY, rayFlags) {
+      let layerId = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
       if (-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
       if (-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
       if (-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
@@ -8289,9 +8282,29 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           if (!modeX && oldModeX) {
             bf = sx < 0 ? (qStartX + -checkX + 1) % bs : (qStartX + checkX) % bs;
           }
+          if (rayFlags & this.T_SNAP_TO_INT) {
+            const moX = mod(tileMap.x, 1);
+            const poX = mod(px, 1);
+            if (moX > poX) {
+              if (sx > 0) px = Math.floor(px) + (moX - 1);
+              if (sx < 0) px = Math.ceil(px) + moX;
+            } else if (moX < poX) {
+              if (sx > 0) px = Math.ceil(px) + (moX - 1);
+              if (sx < 0) px = Math.floor(px) + moX;
+            }
+            const moY = mod(tileMap.y, 1);
+            const poY = mod(py, 1);
+            if (moY > poY) {
+              if (sy > 0) py = Math.floor(py) + (moY - 1);
+              if (sy < 0) py = Math.ceil(py) + moY;
+            } else if (moY < poY) {
+              if (sy > 0) py = Math.floor(py) + moY;
+              if (sy < 0) py = Math.ceil(py) + (moY - 1);
+            }
+          }
           if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
           if (tileMap.getSolid(px, py, layerId)) {
-            solidX = [px, py, pt, layerId];
+            solidX = [px, py, pt, layerId, tileMap];
             break;
           }
           checkX += bf;
@@ -8307,9 +8320,29 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           if (!modeY && oldModeY) {
             bf = sy < 0 ? (qStartY + -checkY + 1) % bs : (qStartY + checkY) % bs;
           }
+          if (rayFlags & this.T_SNAP_TO_INT) {
+            const moX = mod(tileMap.x, 1);
+            const poX = mod(px, 1);
+            if (moX > poX) {
+              if (sx > 0) px = Math.floor(px) + (moX - 1);
+              if (sx < 0) px = Math.ceil(px) + moX;
+            } else if (moX < poX) {
+              if (sx > 0) px = Math.ceil(px) + (moX - 1);
+              if (sx < 0) px = Math.floor(px) + moX;
+            }
+            const moY = mod(tileMap.y, 1);
+            const poY = mod(py, 1);
+            if (moY > poY) {
+              if (sy > 0) py = Math.floor(py) + (moY - 1);
+              if (sy < 0) py = Math.ceil(py) + moY;
+            } else if (moY < poY) {
+              if (sy > 0) py = Math.floor(py) + moY;
+              if (sy < 0) py = Math.ceil(py) + (moY - 1);
+            }
+          }
           if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
           if (tileMap.getSolid(px, py, layerId)) {
-            solidY = [px, py, pt, layerId];
+            solidY = [px, py, pt, layerId, tileMap];
             break;
           }
           checkY += bf;
@@ -9192,6 +9225,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
     this.sleeping = false;
     this.fresh = true;
     this.map = entityData.map;
+    this.currentMap = this.map;
     this.grounded = false;
     this.controller && this.controller.create(this, this.entityData);
   }
@@ -9201,19 +9235,20 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       const startX = this.x;
       const startY = this.y;
       const world = this.session.world;
-      const motionParent = world.motionGraph.getParent(this);
-      const maps = world.getMapsForPoint(this.x, this.y);
-      const firstMap = [...maps][0];
-      if (motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent)) {
-        world.motionGraph.delete(this);
-      }
-      if (this.grounded && !world.motionGraph.getParent(this)) {
-        world.motionGraph.add(this, firstMap);
-      }
       if (this.fresh) {
         this.fresh = false;
       }
       this.controller && this.controller.simulate(this);
+      const motionParent = world.motionGraph.getParent(this);
+      const maps = world.getMapsForPoint(this.x, this.y);
+      // const firstMap = [...maps][0];
+
+      if (motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent)) {
+        world.motionGraph.delete(this);
+      }
+      if (this.grounded && this.currentMap) {
+        world.motionGraph.add(this, this.currentMap);
+      }
       if (startX !== 0 || startY !== 0) {
         world.motionGraph.moveChildren(this, this.x - startX, this.y - startY);
         this.rect.x1 = this.x - this.width * 0.5;
@@ -9272,6 +9307,9 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 let MapMover = exports.MapMover = /*#__PURE__*/function () {
   function MapMover() {
     _classCallCheck(this, MapMover);
@@ -9280,6 +9318,7 @@ let MapMover = exports.MapMover = /*#__PURE__*/function () {
     key: "create",
     value: function create(map) {
       this.yOriginal = map.y;
+      console.log(this.yOriginal);
     }
   }, {
     key: "simulate",
@@ -9289,9 +9328,12 @@ let MapMover = exports.MapMover = /*#__PURE__*/function () {
         const range = map.props.get('yOscillate');
         const delay = map.props.get('delay');
         const age = map.session.world.age;
-        // const current = roundedSquareWave(age/delay, 0.6);
         const current = (0, _roundSquareWave.roundedSquareWave)(age / delay, 0.6);
-        map.y = this.yOriginal + current * range;
+        map.y = Math.trunc((this.yOriginal + (current * range + 0.001)) * SUBGRID_SIZE) * SUBGRID_INVR;
+
+        // map.y = this.yOriginal + Math.round(current * range);
+        // map.y = this.yOriginal + current * range;
+        // map.y = this.yOriginal + (142.66015625 - 128);
       }
     }
   }]);
@@ -9347,6 +9389,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       this.lastMap = null;
       this.pushing = null;
       this.xDirection = 0;
+      this.jumpPower = 9.9;
       this.maxAirJumps = 1;
       this.airJumps = 0;
     }
@@ -9471,7 +9514,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
 
         // console.time('tcast');
 
-        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed);
+        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.T_SNAP_TO_INT);
 
         // console.timeEnd('tcast');
 
@@ -9509,22 +9552,22 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
         } else if (terrain) {
           entity.xSpeed = terrain[0] - entity.x;
           entity.ySpeed = terrain[1] - entity.y;
+          entity.currentMap = terrain[4];
         }
-
-        // console.log(entity.y, entity.ySpeed);
         entity.x += entity.xSpeed;
         entity.y += entity.ySpeed;
       }
+      let snapped = false;
       if (!entity.grounded && entity.ySpeed >= 0) {
-        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 6
-        // , Ray.T_SNAP_TO_INT
-        // , Ray.T_LAST_EMPTY
-        );
+        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + entity.ySpeed + 6, _Ray.Ray.T_SNAP_TO_INT);
         if (groundSnapper) {
           console.log(groundSnapper);
           entity.ySpeed = 0;
           entity.y = groundSnapper[1];
+          entity.currentMap = groundSnapper[4];
           entity.grounded = true;
+          console.log(entity.y, firstMap.y);
+          snapped = true;
         }
       }
       if (world.getSolid(entity.x, entity.y + -1) && !world.getSolid(entity.x, entity.y + -entity.height)) {
@@ -9560,7 +9603,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
           }
           entity.grounded = false;
           this.state = 'jumping';
-          entity.ySpeed = -10;
+          entity.ySpeed = -this.jumpPower;
           entity.y--;
         }
         if (!entity.grounded && entity.inputManager.buttons[0] && entity.inputManager.buttons[0].time === -1) {
@@ -9591,6 +9634,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       if (Math.abs(entity.ySpeed) < 0.001) {
         entity.ySpeed = 0;
       }
+      snapped && console.log(entity.y, firstMap.y);
     }
   }, {
     key: "collide",
@@ -11165,7 +11209,6 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       }
       zoomLevel = Math.trunc(zoomLevel * 256) / 256;
       if (this.zoomLevel !== zoomLevel) {
-        console.log(zoomLevel);
         this.zoomLevel = zoomLevel;
         this.resize();
       }

@@ -365,7 +365,6 @@ export class SpriteBoard
 
 		if(this.zoomLevel !== zoomLevel)
 		{
-			console.log(zoomLevel);
 			this.zoomLevel = zoomLevel;
 			this.resize();
 		}
