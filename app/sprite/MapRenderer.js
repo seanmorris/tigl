@@ -73,7 +73,7 @@ export class MapRenderer
 		const gl = this.spriteBoard.gl2d.context;
 
 		const x = -this.map.x + this.spriteBoard.following.x;
-		const y = -this.map.y + this.spriteBoard.following.y;
+		const y = -this.map.y + this.spriteBoard.following.y + this.spriteBoard.following.height * -0.5;
 
 		const zoom = this.spriteBoard.zoomLevel;
 
@@ -200,7 +200,7 @@ export class MapRenderer
 
 				this.setRectangle(
 					xPos + this.tileWidth * 0.5 * zoom
-					, yPos + this.tileHeight * zoom
+					, yPos + this.tileHeight * 0.5 * zoom
 					, this.width * zoom
 					, this.height * zoom
 				);
@@ -292,7 +292,7 @@ export class MapRenderer
 
 				this.setRectangle(
 					xPos + this.tileWidth * 0.5 * zoom
-					, yPos + this.tileHeight * zoom
+					, yPos + this.tileHeight * 0.5 * zoom
 					, this.width * zoom
 					, this.height * zoom
 				);
@@ -363,7 +363,7 @@ export class MapRenderer
 
 				this.setRectangle(
 					xPos + this.tileWidth * 0.5 * zoom
-					, yPos + this.tileHeight * zoom
+					, yPos + this.tileHeight * 0.5 * zoom
 					, this.width * zoom
 					, this.height * zoom
 				);

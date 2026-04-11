@@ -150,9 +150,9 @@ export class Region
 
 		this.setRectangle(
 			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
-			, (this.y + -1) * zoom + -Camera.y + (this.spriteBoard.height / 2)
+			, this.y * zoom + -Camera.y + (this.spriteBoard.height / 2)
 			, this.width * zoom
-			, (this.height + -1) * zoom
+			, this.height * zoom
 		);
 
 		// gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
@@ -206,7 +206,7 @@ export class Region
 		const yOff = y + height;
 
 		const t = Matrix.transform(points, Matrix.composite(
-			Matrix.translate(xOff + -width * 0.0, yOff + zoom + 16 * zoom)
+			Matrix.translate(xOff + -width * 0.0, yOff)
 			, Matrix.translate(-xOff, -yOff)
 		));
 

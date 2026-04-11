@@ -8190,9 +8190,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
         const rect = _ref4[0];
         const segment = _ref4[1];
         const map = world.rectMap.get(rect);
-        const xOff = Math.trunc(mod(map.x, map.tileWidth) * SUBGRID_SIZE) * SUBGRID_INVR;
-        const yOff = Math.trunc(mod(map.y, map.tileHeight) * SUBGRID_SIZE) * SUBGRID_INVR;
-        points = points.union(this.castTerrainInMap(world, ...segment, layerId, xOff, yOff));
+        points = points.union(this.castTerrainInMap(map, ...segment, layerId));
       }
       if (rayFlags & this.T_ALL_POINTS) {
         return points;
@@ -8224,6 +8222,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           nearest[1] += -sin;
         }
         if (rayFlags & this.T_SNAP_TO_INT) {
+          // @TODO: Snap to PIXEL EDGE if the map is offset.
           if (sx > 0) nearest[0] = Math.floor(nearest[0]);
           if (sx < 0) nearest[0] = Math.ceil(nearest[0]);
           if (sy > 0) nearest[1] = Math.floor(nearest[1]);
@@ -8238,10 +8237,8 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
     }
   }, {
     key: "castTerrainInMap",
-    value: function castTerrainInMap(world, startX, startY, endX, endY) {
+    value: function castTerrainInMap(tileMap, startX, startY, endX, endY) {
       let layerId = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-      let xOff = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
-      let yOff = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 0;
       if (-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
       if (-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
       if (-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
@@ -8250,15 +8247,16 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
       const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
       const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
       const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
-      const startTile = world.getCollisionTile(qStartX, qStartY, layerId);
+      const xOff = Math.trunc(mod(tileMap.x, tileMap.tileWidth) * SUBGRID_SIZE) * SUBGRID_INVR;
+      const yOff = Math.trunc(mod(tileMap.y, tileMap.tileHeight) * SUBGRID_SIZE) * SUBGRID_INVR;
+      const startTile = tileMap.getCollisionTile(qStartX, qStartY, layerId);
       const dx = qEndX - qStartX;
       const dy = qEndY - qStartY;
       const hypot = Math.hypot(dy, dx);
       const sx = dx ? hypot / dx : 0;
       const sy = dy ? hypot / dy : 0;
-      if (hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId)) {
-        const nearest = [qStartX, qStartY];
-        return new Set([nearest]);
+      if (hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId)) {
+        return new Set([qStartX, qStartY]);
       }
       const bs = 32;
       const initMode = startTile === null ? 0 : 1;
@@ -8277,20 +8275,22 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
       let solidY = null;
       const ox = Math.sign(dx);
       const oy = Math.sign(dy);
+      if (window.smDebug) window.debugPoints = [];
       let iterations = 0;
-      while (ox && Math.abs(rayX) < hypot || oy && Math.abs(rayY) < hypot) {
+      while (ox && Math.abs(rayX) <= hypot || oy && Math.abs(rayY) <= hypot) {
         if (sx && (!sy || Math.abs(rayX) < Math.abs(rayY))) {
           const mag = Math.abs(rayX);
           let pt = mag / hypot;
           let px = qStartX + checkX * ox;
           let py = qStartY + pt * dy;
           oldModeX = modeX;
-          modeX = world.getCollisionTile(px, py, layerId);
+          modeX = tileMap.getCollisionTile(px, py, layerId);
           bf = modeX ? 1 : bs;
           if (!modeX && oldModeX) {
             bf = sx < 0 ? (qStartX + -checkX + 1) % bs : (qStartX + checkX) % bs;
           }
-          if (world.getSolidTerrain(px, py, layerId)) {
+          if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
+          if (tileMap.getSolid(px, py, layerId)) {
             solidX = [px, py, pt, layerId];
             break;
           }
@@ -8302,12 +8302,13 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           let py = qStartY + checkY * oy;
           let px = qStartX + pt * dx;
           oldModeY = modeY;
-          modeY = world.getCollisionTile(px, py, layerId);
+          modeY = tileMap.getCollisionTile(px, py, layerId);
           bf = modeY ? 1 : bs;
           if (!modeY && oldModeY) {
             bf = sy < 0 ? (qStartY + -checkY + 1) % bs : (qStartY + checkY) % bs;
           }
-          if (world.getSolidTerrain(px, py, layerId)) {
+          if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
+          if (tileMap.getSolid(px, py, layerId)) {
             solidY = [px, py, pt, layerId];
             break;
           }
@@ -8315,6 +8316,10 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           rayY = checkY * sy;
         }
         iterations++;
+      }
+      if (window.smDebug) {
+        console.log(window.debugPoints);
+        console.log('================================');
       }
       return new Set([...(solidX ? [solidX] : []), ...(solidY ? [solidY] : [])]);
     }
@@ -9051,10 +9056,10 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
     value: function create(entity, entityData) {
       if (entityData.gid) {
         entity.x += entityData.width * 0.5;
-        entity.y += -1;
+        // entity.y += -1;
       } else {
         entity.x += entityData.width * 0.5;
-        entity.y += entityData.height + -1;
+        entity.y += entityData.height;
       }
       this.xOriginal = entity.x;
       this.yOriginal = entity.y;
@@ -9335,13 +9340,6 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       entity.width = 24;
       entity.sprite.width = 24;
       entity.sprite.height = 34;
-
-      // entity.width = 4;
-      // entity.height = 34;
-
-      // entity.sprite.width = 4;
-      // entity.sprite.height = 34;
-
       entity.grounded = true;
       entity.grounded = 0;
       this.gravity = 0.5; // 0x80
@@ -9470,7 +9468,10 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
             }
           }
         }
-        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.T_LAST_EMPTY);
+
+        // console.time('tcast');
+
+        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed);
 
         // console.timeEnd('tcast');
 
@@ -9515,17 +9516,18 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
         entity.y += entity.ySpeed;
       }
       if (!entity.grounded && entity.ySpeed >= 0) {
-        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 4
+        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 6
         // , Ray.T_SNAP_TO_INT
-        , _Ray.Ray.T_LAST_EMPTY);
+        // , Ray.T_LAST_EMPTY
+        );
         if (groundSnapper) {
-          // console.log(groundSnapper);
+          console.log(groundSnapper);
           entity.ySpeed = 0;
           entity.y = groundSnapper[1];
           entity.grounded = true;
         }
       }
-      if (world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height)) {
+      if (world.getSolid(entity.x, entity.y + -1) && !world.getSolid(entity.x, entity.y + -entity.height)) {
         entity.ySpeed = 0;
         entity.y--;
       }
@@ -9624,6 +9626,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.RopeController = void 0;
+var _Ray = require("../math/Ray");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -9640,13 +9643,9 @@ let RopeController = exports.RopeController = /*#__PURE__*/function () {
       this.width = 1;
       window.e = entity;
       const world = entity.session.world;
-
-      // console.time('QL');
-      // for(let i = 0; i < 20_000; ++i)
-      // {
-      // 	world.mapTree.queryLine(0, i / 1000, 1024, 1000 - (i / 1000));
-      // }
-      // console.timeEnd('QL');
+      window.smDebug = true;
+      console.log(_Ray.Ray.castTerrain(world, 64, 500, 960, 500, 0));
+      window.smDebug = false;
     }
   }, {
     key: "destroy",
@@ -9660,9 +9659,7 @@ let RopeController = exports.RopeController = /*#__PURE__*/function () {
       const endY = endpoint.y;
       const length = Math.hypot(entity.y - endY, entity.x - endX) + 1;
       const theta = Math.atan2(entity.y - endY, entity.x - endX) + -Math.PI * 0.5;
-
-      // entity.sprite.theta = theta;
-      entity.sprite.theta = theta + performance.now() / 5000;
+      entity.sprite.theta = theta;
       const scale = length / entity.sprite.height;
       entity.sprite.scaleY = scale;
       entity.sprite.repeatY = scale;
@@ -10204,7 +10201,7 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
       }
       const gl = this.spriteBoard.gl2d.context;
       const x = -this.map.x + this.spriteBoard.following.x;
-      const y = -this.map.y + this.spriteBoard.following.y;
+      const y = -this.map.y + this.spriteBoard.following.y + this.spriteBoard.following.height * -0.5;
       const zoom = this.spriteBoard.zoomLevel;
       const halfTileWidth = this.tileWidth * 0.5;
       const halfTileHeight = this.tileHeight * 0.5;
@@ -10280,7 +10277,7 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
           , gl.UNSIGNED_BYTE // type
           , tilePixels // srcData
           );
-          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * zoom, this.width * zoom, this.height * zoom);
+          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * 0.5 * zoom, this.width * zoom, this.height * zoom);
           this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
           if (priority === 'foreground') {
             this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
@@ -10333,7 +10330,7 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
             , tilePixels // srcData
             );
           }
-          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * zoom, this.width * zoom, this.height * zoom);
+          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * 0.5 * zoom, this.width * zoom, this.height * zoom);
           this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
           if (priority === 'foreground') {
             this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
@@ -10373,7 +10370,7 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
             , tilePixels // srcData
             );
           }
-          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * zoom, this.width * zoom, this.height * zoom);
+          this.setRectangle(xPos + this.tileWidth * 0.5 * zoom, yPos + this.tileHeight * 0.5 * zoom, this.width * zoom, this.height * zoom);
           this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 0);
           if (priority === 'foreground') {
             this.spriteBoard.drawProgram.uniformF('u_region', 1, 1, 1, 1);
@@ -10685,7 +10682,7 @@ let Region = exports.Region = /*#__PURE__*/function () {
       this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
-      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width / 2, (this.y + -1) * zoom + -_Camera.Camera.y + this.spriteBoard.height / 2, this.width * zoom, (this.height + -1) * zoom);
+      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width / 2, this.y * zoom + -_Camera.Camera.y + this.spriteBoard.height / 2, this.width * zoom, this.height * zoom);
 
       // gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
       // gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -10717,7 +10714,7 @@ let Region = exports.Region = /*#__PURE__*/function () {
       const points = new Float32Array([x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2]);
       const xOff = x + width;
       const yOff = y + height;
-      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.0, yOff + zoom + 16 * zoom), _Matrix.Matrix.translate(-xOff, -yOff)));
+      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.0, yOff), _Matrix.Matrix.translate(-xOff, -yOff)));
       gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
       gl.bufferData(gl.ARRAY_BUFFER, t, gl.STATIC_DRAW);
     }
@@ -10779,6 +10776,7 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
     this.theta = 0; //Math.PI;
     this.shearX = 0;
     this.shearY = 0;
+    this.shearX2 = 0;
     this.repeatX = 1;
     this.repeatY = 1;
     this.xCenter = 0.5;
@@ -10920,7 +10918,7 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
 
       // this.theta = performance.now() / 1000;
 
-      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.5, yOff + zoom + 16 * zoom), _Matrix.Matrix.rotate(this.theta), _Matrix.Matrix.shearX(this.shearX), _Matrix.Matrix.shearX(this.shearY), _Matrix.Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY), _Matrix.Matrix.translate(-xOff, -yOff)));
+      const t = _Matrix.Matrix.transform(points, _Matrix.Matrix.composite(_Matrix.Matrix.translate(xOff + -width * 0.5, yOff), _Matrix.Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY), _Matrix.Matrix.rotate(this.theta), _Matrix.Matrix.shearX(this.shearX2), _Matrix.Matrix.shearY(this.shearY), _Matrix.Matrix.shearX(this.shearX), _Matrix.Matrix.translate(-xOff, -yOff)));
       gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_position);
       gl.bufferData(gl.ARRAY_BUFFER, t, gl.STATIC_DRAW);
     }
@@ -11006,9 +11004,11 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
         return;
       }
       if (this.following) {
-        _Camera.Camera.x = this.following.x * this.zoomLevel || 0;
-        _Camera.Camera.y = this.following.y * this.zoomLevel || 0;
-        const maps = [...this.world.getMapsForPoint(this.following.x, this.following.y)];
+        const focusX = this.following.x;
+        const focusY = this.following.y + this.following.height * -0.5;
+        _Camera.Camera.x = focusX * this.zoomLevel || 0;
+        _Camera.Camera.y = focusY * this.zoomLevel || 0;
+        const maps = [...this.world.getMapsForPoint(focusX, focusY)];
         if (maps[0] && this.currentMap !== maps[0]) {
           const parallax = this.nextParallax = new _Parallax.Parallax({
             spriteBoard: this,
@@ -11021,7 +11021,7 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
           });
           this.currentMap = maps[0];
         }
-        const visibleMaps = this.world.getMapsForRect(this.following.x, this.following.y, _Camera.Camera.width, _Camera.Camera.height);
+        const visibleMaps = this.world.getMapsForRect(focusX, focusY, _Camera.Camera.width, _Camera.Camera.height);
         const mapRenderers = new Set();
         visibleMaps.forEach(map => {
           map.visible = true;
@@ -11152,7 +11152,7 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
     key: "zoom",
     value: function zoom(delta) {
       const max = this.screenScale * 32;
-      const min = 0; //this.screenScale * 0.1;
+      const min = this.screenScale * 0.5;
       const step = 0.05 * this.zoomLevel;
       let zoomLevel = delta * step + this.zoomLevel;
       if (zoomLevel < min) {
@@ -11163,7 +11163,9 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       if (Math.abs(zoomLevel - 1) < 0.05) {
         zoomLevel = 1;
       }
+      zoomLevel = Math.trunc(zoomLevel * 256) / 256;
       if (this.zoomLevel !== zoomLevel) {
+        console.log(zoomLevel);
         this.zoomLevel = zoomLevel;
         this.resize();
       }
@@ -12044,12 +12046,12 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       const world = this.session.world;
       this.age += delta;
       this.controller && this.controller.simulate(this, delta);
-      world.motionGraph.moveChildren(this, this.x - startX, this.y - startY);
-      this.rect.x1 = this.x;
-      this.rect.y1 = this.y;
-      this.rect.x2 = this.x + this.width * this.tileWidth;
-      this.rect.y2 = this.y + this.height * this.tileHeight;
       if (startX !== this.x || startY !== this.y) {
+        world.motionGraph.moveChildren(this, this.x - startX, this.y - startY);
+        this.rect.x1 = this.x;
+        this.rect.y1 = this.y;
+        this.rect.x2 = this.x + this.width * this.tileWidth;
+        this.rect.y2 = this.y + this.height * this.tileHeight;
         world.mapTree.move(world.mapRects.get(this));
       }
     }

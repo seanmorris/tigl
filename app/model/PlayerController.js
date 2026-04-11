@@ -30,12 +30,6 @@ export class PlayerController
 		entity.sprite.width = 24;
 		entity.sprite.height = 34;
 
-		// entity.width = 4;
-		// entity.height = 34;
-
-		// entity.sprite.width = 4;
-		// entity.sprite.height = 34;
-
 		entity.grounded = true;
 		entity.grounded = 0;
 
@@ -266,13 +260,14 @@ export class PlayerController
 				}
 			}
 
+			// console.time('tcast');
+
 			const terrain = Ray.castTerrain(
 				world
 				, entity.x
 				, entity.y
 				, entity.x + entity.xSpeed
 				, entity.y + entity.ySpeed
-				, Ray.T_LAST_EMPTY
 			);
 
 			// console.timeEnd('tcast');
@@ -344,21 +339,21 @@ export class PlayerController
 				, entity.x
 				, entity.y
 				, entity.x
-				, entity.y + 4
+				, entity.y + 6
 				// , Ray.T_SNAP_TO_INT
-				, Ray.T_LAST_EMPTY
+				// , Ray.T_LAST_EMPTY
 			);
 
 			if(groundSnapper)
 			{
-				// console.log(groundSnapper);
+				console.log(groundSnapper);
 				entity.ySpeed = 0;
 				entity.y = groundSnapper[1];
 				entity.grounded = true;
 			}
 		}
 
-		if(world.getSolid(entity.x, entity.y) && !world.getSolid(entity.x, entity.y + -entity.height))
+		if(world.getSolid(entity.x, entity.y + -1) && !world.getSolid(entity.x, entity.y + -entity.height))
 		{
 			entity.ySpeed = 0;
 			entity.y--;

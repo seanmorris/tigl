@@ -227,10 +227,7 @@ export class Ray
 		for(const [rect, segment] of mapSegments)
 		{
 			const map = world.rectMap.get(rect);
-			const xOff = Math.trunc(mod(map.x, map.tileWidth)* SUBGRID_SIZE) * SUBGRID_INVR;
-			const yOff = Math.trunc(mod(map.y, map.tileHeight)* SUBGRID_SIZE) * SUBGRID_INVR;
-
-			points = points.union(this.castTerrainInMap(world, ...segment, layerId, xOff, yOff));
+			points = points.union(this.castTerrainInMap(map, ...segment, layerId));
 		}
 
 		if(rayFlags & this.T_ALL_POINTS)
@@ -282,6 +279,7 @@ export class Ray
 
 			if(rayFlags & this.T_SNAP_TO_INT)
 			{
+				// @TODO: Snap to PIXEL EDGE if the map is offset.
 				if(sx > 0) nearest[0] = Math.floor(nearest[0]);
 				if(sx < 0) nearest[0] = Math.ceil(nearest[0]);
 				if(sy > 0) nearest[1] = Math.floor(nearest[1]);
@@ -299,7 +297,7 @@ export class Ray
 		return null;
 	}
 
-	static castTerrainInMap(world, startX, startY, endX, endY, layerId = 0, xOff = 0, yOff = 0)
+	static castTerrainInMap(tileMap, startX, startY, endX, endY, layerId = 0)
 	{
 		if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
 		if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
@@ -312,7 +310,10 @@ export class Ray
 		const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
 		const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
 
-		const startTile = world.getCollisionTile(qStartX, qStartY, layerId);
+		const xOff = Math.trunc(mod(tileMap.x, tileMap.tileWidth)* SUBGRID_SIZE) * SUBGRID_INVR;
+		const yOff = Math.trunc(mod(tileMap.y, tileMap.tileHeight)* SUBGRID_SIZE) * SUBGRID_INVR;
+
+		const startTile = tileMap.getCollisionTile(qStartX, qStartY, layerId);
 
 		const dx = qEndX - qStartX;
 		const dy = qEndY - qStartY;
@@ -322,11 +323,9 @@ export class Ray
 		const sx = dx ? hypot / dx : 0;
 		const sy = dy ? hypot / dy : 0;
 
-		if(hypot === 0 || startTile && world.getSolidTerrain(qStartX, qStartY, layerId))
+		if(hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId))
 		{
-			const nearest = [qStartX, qStartY];
-
-			return new Set([nearest]);
+			return new Set([qStartX, qStartY]);
 		}
 
 		const bs = 32;
@@ -356,8 +355,10 @@ export class Ray
 		const ox = Math.sign(dx);
 		const oy = Math.sign(dy);
 
+		if(window.smDebug) window.debugPoints = [];
+
 		let iterations = 0;
-		while( (ox && Math.abs(rayX) < hypot) || (oy && Math.abs(rayY) < hypot) )
+		while( (ox && Math.abs(rayX) <= hypot) || (oy && Math.abs(rayY) <= hypot) )
 		{
 			if(sx && (!sy || Math.abs(rayX) < Math.abs(rayY)))
 			{
@@ -368,7 +369,7 @@ export class Ray
 				let py = qStartY + pt * dy;
 
 				oldModeX = modeX;
-				modeX = world.getCollisionTile(px, py, layerId);
+				modeX = tileMap.getCollisionTile(px, py, layerId);
 				bf = modeX ? 1 : bs;
 
 				if(!modeX && oldModeX)
@@ -378,7 +379,9 @@ export class Ray
 						: (qStartX + checkX) % bs
 				}
 
-				if(world.getSolidTerrain(px, py, layerId))
+				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
+
+				if(tileMap.getSolid(px, py, layerId))
 				{
 					solidX = [px, py, pt, layerId];
 					break;
@@ -396,7 +399,7 @@ export class Ray
 				let px = qStartX + pt * dx;
 
 				oldModeY = modeY;
-				modeY = world.getCollisionTile(px, py, layerId)
+				modeY = tileMap.getCollisionTile(px, py, layerId)
 				bf = modeY ? 1 : bs;
 
 				if(!modeY && oldModeY)
@@ -406,7 +409,9 @@ export class Ray
 						: (qStartY + checkY) % bs;
 				}
 
-				if(world.getSolidTerrain(px, py, layerId))
+				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
+
+				if(tileMap.getSolid(px, py, layerId))
 				{
 					solidY = [px, py, pt, layerId];
 					break;
@@ -417,6 +422,12 @@ export class Ray
 			}
 
 			iterations++;
+		}
+
+		if(window.smDebug)
+		{
+			console.log(window.debugPoints);
+			console.log('================================');
 		}
 
 		return new Set([... solidX ? [solidX] : [], ... solidY ? [solidY] : []]);

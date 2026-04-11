@@ -486,19 +486,20 @@ export class TileMap
 		this.age += delta;
 		this.controller && this.controller.simulate(this, delta);
 
-		world.motionGraph.moveChildren(
-			this
-			, this.x - startX
-			, this.y - startY
-		);
-
-		this.rect.x1 = this.x;
-		this.rect.y1 = this.y;
-		this.rect.x2 = this.x + this.width * this.tileWidth;
-		this.rect.y2 = this.y + this.height * this.tileHeight;
-
 		if(startX !== this.x || startY !== this.y)
 		{
+
+			world.motionGraph.moveChildren(
+				this
+				, this.x - startX
+				, this.y - startY
+			);
+
+			this.rect.x1 = this.x;
+			this.rect.y1 = this.y;
+			this.rect.x2 = this.x + this.width * this.tileWidth;
+			this.rect.y2 = this.y + this.height * this.tileHeight;
+
 			world.mapTree.move(world.mapRects.get(this));
 		}
 	}

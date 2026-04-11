@@ -107,10 +107,13 @@ export class SpriteBoard
 
 		if(this.following)
 		{
-			Camera.x = this.following.x * this.zoomLevel || 0;
-			Camera.y = this.following.y * this.zoomLevel || 0;
+			const focusX = this.following.x;
+			const focusY = this.following.y  + this.following.height * -0.5;
 
-			const maps = [...this.world.getMapsForPoint(this.following.x, this.following.y)];
+			Camera.x = focusX * this.zoomLevel || 0;
+			Camera.y = focusY * this.zoomLevel || 0;
+
+			const maps = [...this.world.getMapsForPoint(focusX, focusY)];
 
 			if(maps[0] && this.currentMap !== maps[0])
 			{
@@ -127,8 +130,8 @@ export class SpriteBoard
 			}
 
 			const visibleMaps = this.world.getMapsForRect(
-				this.following.x
-				, this.following.y
+				focusX
+				, focusY
 				, Camera.width
 				, Camera.height
 			);
@@ -339,7 +342,7 @@ export class SpriteBoard
 	zoom(delta)
 	{
 		const max = this.screenScale * 32;
-		const min = 0;//this.screenScale * 0.1;
+		const min = this.screenScale * 0.5;
 		const step = 0.05 * this.zoomLevel;
 
 		let zoomLevel = delta * step + this.zoomLevel;
@@ -358,8 +361,11 @@ export class SpriteBoard
 			zoomLevel = 1;
 		}
 
+		zoomLevel = Math.trunc(zoomLevel * 256) / 256;
+
 		if(this.zoomLevel !== zoomLevel)
 		{
+			console.log(zoomLevel);
 			this.zoomLevel = zoomLevel;
 			this.resize();
 		}

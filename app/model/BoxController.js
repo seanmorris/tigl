@@ -12,12 +12,12 @@ export class BoxController
 		if(entityData.gid)
 		{
 			entity.x += entityData.width * 0.5;
-			entity.y += -1;
+			// entity.y += -1;
 		}
 		else
 		{
 			entity.x += entityData.width * 0.5;
-			entity.y += entityData.height + -1;
+			entity.y += entityData.height;
 		}
 
 		this.xOriginal = entity.x;

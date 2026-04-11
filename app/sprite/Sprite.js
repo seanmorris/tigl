@@ -28,6 +28,7 @@ export class Sprite
 		this.theta   = 0; //Math.PI;
 		this.shearX  = 0;
 		this.shearY  = 0;
+		this.shearX2 = 0;
 		this.repeatX = 1;
 		this.repeatY = 1;
 
@@ -269,11 +270,12 @@ export class Sprite
 		// this.theta = performance.now() / 1000;
 
 		const t = Matrix.transform(points, Matrix.composite(
-			Matrix.translate(xOff + -width * 0.5, yOff + zoom + 16 * zoom)
-			, Matrix.rotate(this.theta)
-			, Matrix.shearX(this.shearX)
-			, Matrix.shearX(this.shearY)
+			Matrix.translate(xOff + -width * 0.5, yOff)
 			, Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
+			, Matrix.rotate(this.theta)
+			, Matrix.shearX(this.shearX2)
+			, Matrix.shearY(this.shearY)
+			, Matrix.shearX(this.shearX)
 			, Matrix.translate(-xOff, -yOff)
 		));
 
