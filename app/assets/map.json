@@ -375,8 +375,8 @@
                  "type":"@basic-platformer",
                  "visible":true,
                  "width":0,
-                 "x":434,
-                 "y":96
+                 "x":129,
+                 "y":325
                 }, 
                 {
                  "height":0,
@@ -387,8 +387,8 @@
                  "type":"@barrel",
                  "visible":true,
                  "width":0,
-                 "x":336,
-                 "y":80
+                 "x":103,
+                 "y":314
                 }, 
                 {
                  "height":192,

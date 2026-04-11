@@ -97,7 +97,7 @@ export class Entity
 			world.motionGraph.delete(this);
 		}
 
-		if(this.grounded && this.currentMap)
+		if(this.grounded && this.currentMap && !world.motionGraph.getParent(this))
 		{
 			world.motionGraph.add(this, this.currentMap);
 		}

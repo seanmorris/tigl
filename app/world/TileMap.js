@@ -54,8 +54,6 @@ export class TileMap
 			, height
 		} = mapData;
 
-		console.log(Bindable);
-
 		Bindable.Prevent && (this[Bindable.Prevent] = true);
 		this.src = fileName;
 		this.backgroundColor = null;

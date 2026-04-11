@@ -14,8 +14,6 @@ import { Pallet } from "../world/Pallet";
 const input = new URLSearchParams(location.search);
 const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
 
-console.log(location.search, input, warpStart);
-
 export class Session
 {
 	constructor({element, keyboard, onScreenJoyPad, worldSrc, mapPallet = {}, entityPallet = {}})

@@ -6640,7 +6640,7 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
 });
 
 ;require.register("home/view.tmp.html", function(exports, require, module) {
-module.exports = "<canvas\n\tcv-ref = \"canvas:curvature/base/Tag\"\n\tcv-on  = \"wheel:scroll(event):p;mousemove\"\n\tclass  = \"[[mouseClass]]\"\n></canvas>\n\n<div class = \"hud fps\">[[sps]] simulations/s / [[simulationLock]]\n[[fps]] frames/s      / [[frameLock]]\n\nRes [[rwidth]] x [[rheight]]\n    [[width]] x [[height]]\n\nCam [[camX]] x [[camY]]\nPos [[posX]] x [[posY]]\n\n𝚫 Sim:   Pg Up / Dn\n𝚫 Frame: Home / End\n𝚫 Scale: + / -\n</div>\n<div class = \"reticle\"></div>\n\n[[joypad]]\n"
+module.exports = "<canvas\n\tcv-ref = \"canvas:curvature/base/Tag\"\n\tcv-on  = \"wheel:scroll(event):p;mousemove\"\n\tclass  = \"[[mouseClass]]\"\n></canvas>\n\n<div class = \"hud fps\">[[sps]] simulations/s / [[simulationLock]]\n[[fps]] frames/s      / [[frameLock]]\n\nRes [[rwidth]] x [[rheight]]\n    [[width]] x [[height]]\n\nCam <span>[[camX]]</span> x <span>[[camY]]</span>\nPos <span>[[posX]]</span> x <span>[[posY]]</span>\n\n𝚫 Sim:   Pg Up / Dn\n𝚫 Frame: Home / End\n𝚫 Scale: + / -\n</div>\n<div class = \"reticle\"></div>\n\n[[joypad]]\n"
 });
 
 ;require.register("initialize.js", function(exports, require, module) {
@@ -8249,7 +8249,17 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
       const sx = dx ? hypot / dx : 0;
       const sy = dy ? hypot / dy : 0;
       if (hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId)) {
-        return new Set([qStartX, qStartY]);
+        const points = new Set([[qStartX, qStartY, 0, layerId, tileMap]]);
+        if (window.smDebug) {
+          console.log(points, {
+            startX: startX,
+            startY: startY,
+            endX: endX,
+            endY: endY
+          });
+          console.log('================================');
+        }
+        return points;
       }
       const bs = 32;
       const initMode = startTile === null ? 0 : 1;
@@ -8711,15 +8721,19 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
   }, {
     key: "queryLine",
     value: function queryLine(x1, y1, x2, y2) {
+      let invX = false,
+        invY = false;
       if (x1 > x2) {
-        var _ref2 = [x2, x1];
+        var _ref2 = [x2, x1, true];
         x1 = _ref2[0];
         x2 = _ref2[1];
+        invX = _ref2[2];
       }
       if (y1 > y2) {
-        var _ref3 = [y2, y1];
+        var _ref3 = [y2, y1, true];
         y1 = _ref3[0];
         y2 = _ref3[1];
+        invY = _ref3[2];
       }
       const dx = x2 - x1;
       const dy = y2 - y1;
@@ -8753,7 +8767,7 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
           bx += (rect.y2 - by) * inv;
           by = rect.y2;
         }
-        results.set(rect, [ax, ay, bx, by]);
+        results.set(rect, [invX ? bx : ax, invY ? by : ay, invX ? ax : bx, invY ? ay : by]);
       }
       return results;
     }
@@ -8977,6 +8991,8 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
   }, {
     key: "simulate",
     value: function simulate(entity) {
+      if (Math.abs(entity.xSpeed) < 0.01) entity.xSpeed = 0;
+      if (Math.abs(entity.ySpeed) < 0.01) entity.ySpeed = 0;
       const world = entity.session.world;
       if (!world.getSolidTerrain(entity.x, entity.y + 1)) {
         entity.ySpeed = Math.min(8, entity.ySpeed + 0.5);
@@ -8985,39 +9001,45 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         entity.ySpeed = Math.min(0, entity.ySpeed);
         entity.grounded = true;
       }
+      if (this.pushedBy) {
+        const other = this.pushedBy;
+        const dist = Math.abs(other.x + -entity.x);
+        const min = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
+        const side = Math.sign(entity.x - other.x);
+        entity.xSpeed = (min - dist) * side;
+      }
       if (entity.xSpeed || entity.ySpeed) {
-        const hit = world.castRay(entity.x, entity.y + -1, entity.x + entity.xSpeed, entity.y + entity.ySpeed + -1, _Ray.Ray.T_LAST_EMPTY | _Ray.Ray.T_SNAP_TO_INT);
-        let xMove = entity.xSpeed;
-        let yMove = entity.ySpeed;
+        const front = entity.x + entity.width * 0.5 * Math.sign(entity.xSpeed) + 1 * Math.sign(entity.xSpeed);
+        const hit = world.castRay(front, entity.y + -1, front + entity.xSpeed, entity.y + -1, _Ray.Ray.T_SNAP_TO_INT);
         if (hit.terrain) {
-          xMove = hit.terrain[0] - entity.x;
-          yMove = hit.terrain[1] - entity.y + 1;
+          entity.xSpeed = hit.terrain[0] - front;
+          // entity.ySpeed = hit.terrain[1] - entity.y + 1;
+
+          console.log(entity.xSpeed, hit);
         }
-        entity.x += xMove;
-        entity.y += yMove;
+        entity.x += entity.xSpeed;
+        entity.y += entity.ySpeed;
         if (!this.shot) {
           entity.xSpeed *= 0.9125;
         }
       } else {
         entity.shot = false;
       }
-      if (world.getSolidTerrain(entity.x, entity.y) && !world.getSolidTerrain(entity.x, entity.y + -entity.height)) {
+      if (world.getSolid(entity.x, entity.y + -1) && !world.getSolid(entity.x, entity.y + -entity.height)) {
         entity.ySpeed = 0;
         entity.y--;
       }
-      while (world.getSolidTerrain(entity.x, entity.y + -entity.height) && !world.getSolidTerrain(entity.x, entity.y)) {
+      while (world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y)) {
         entity.ySpeed = 0;
         entity.y++;
       }
-      while (world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8)) {
-        this.stop(entity, entity.xSpeed);
-        // entity.xSpeed = Math.min(0, entity.xSpeed);
-        entity.x++;
+      while (world.getSolid(entity.x + entity.width * -0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x = Math.floor(entity.x + 1);
       }
-      while (world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8)) {
-        this.stop(entity, entity.xSpeed);
-        // entity.xSpeed = Math.max(0, entity.xSpeed);
-        entity.x--;
+      while (world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8) && !world.getSolid(entity.x + entity.width * -0.5, entity.y + -8)) {
+        entity.xSpeed = 0;
+        entity.x = Math.floor(entity.x + -1);
       }
       if (!entity.grounded && entity.ySpeed >= 0) {
         const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + 4, _Ray.Ray.T_LAST_EMPTY | _Ray.Ray.T_SNAP_TO_INT);
@@ -9027,6 +9049,7 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
           entity.grounded = true;
         }
       }
+      this.pushedBy = null;
     }
   }, {
     key: "collide",
@@ -9035,14 +9058,8 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         const dist = Math.abs(other.x + -entity.x);
         const min = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
         const side = Math.sign(entity.x - other.x);
-        if (entity.grounded) {
-          entity.xSpeed = (min - dist) * side * 1.1;
-        }
-        other.controller.pushing = entity;
-
-        // const maps = entity.session.world.getMapsForPoint(entity.x, entity.y);
-        // maps.forEach(map => map.moveEntity(entity));
-        // console.log(maps);
+        this.pushedBy = other;
+        // other.controller.pushing = entity;
       }
     }
   }, {
@@ -9079,6 +9096,9 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 let BoxController = exports.BoxController = /*#__PURE__*/function () {
   function BoxController() {
     _classCallCheck(this, BoxController);
@@ -9124,6 +9144,7 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
         const current = (0, _roundSquareWave.roundedSquareWave)(age / delay, 0.6);
         const mapOffset = entity.lastMap ? entity.lastMap.x : 0;
         entity.x = mapOffset + this.xOriginal + current * range;
+        entity.x = Math.round(entity.x * SUBGRID_SIZE) * SUBGRID_INVR;
       }
       if (entity.props.has('yOscillate')) {
         var _entity$props$get2;
@@ -9134,7 +9155,8 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
         const current = (0, _roundSquareWave.roundedSquareWave)(age / delay, 0.6);
         const mapOffset = entity.lastMap ? entity.lastMap.y : 0;
         const yNew = this.yOriginal + mapOffset + current * range;
-        const moved = yNew - entity.y;
+        const yNewqQ = Math.round(yNew * SUBGRID_SIZE) * SUBGRID_INVR;
+        const moved = yNewqQ - entity.y;
         if (moved < 0) {
           const above = entity.session.world.getEntitiesForRect(entity.x, entity.y - entity.height * 0.5, entity.width, entity.height + -moved);
           above.forEach(other => {
@@ -9142,7 +9164,7 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
             other.y = entity.y - entity.height;
           });
         }
-        entity.y = yNew;
+        entity.y = yNewqQ;
       }
     }
   }, {
@@ -9246,7 +9268,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       if (motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent)) {
         world.motionGraph.delete(this);
       }
-      if (this.grounded && this.currentMap) {
+      if (this.grounded && this.currentMap && !world.motionGraph.getParent(this)) {
         world.motionGraph.add(this, this.currentMap);
       }
       if (startX !== 0 || startY !== 0) {
@@ -9318,22 +9340,16 @@ let MapMover = exports.MapMover = /*#__PURE__*/function () {
     key: "create",
     value: function create(map) {
       this.yOriginal = map.y;
-      console.log(this.yOriginal);
     }
   }, {
     key: "simulate",
     value: function simulate(map, delta) {
-      // return;
       if (map.props.get('yOscillate')) {
         const range = map.props.get('yOscillate');
         const delay = map.props.get('delay');
         const age = map.session.world.age;
         const current = (0, _roundSquareWave.roundedSquareWave)(age / delay, 0.6);
-        map.y = Math.trunc((this.yOriginal + (current * range + 0.001)) * SUBGRID_SIZE) * SUBGRID_INVR;
-
-        // map.y = this.yOriginal + Math.round(current * range);
-        // map.y = this.yOriginal + current * range;
-        // map.y = this.yOriginal + (142.66015625 - 128);
+        map.y = Math.round((this.yOriginal + current * range) * SUBGRID_SIZE) * SUBGRID_INVR;
       }
     }
   }]);
@@ -9514,7 +9530,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
 
         // console.time('tcast');
 
-        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x + entity.xSpeed, entity.y + entity.ySpeed, _Ray.Ray.T_SNAP_TO_INT);
+        const terrain = _Ray.Ray.castTerrain(world, entity.x, entity.y + -1, entity.x + entity.xSpeed, entity.y + entity.ySpeed + -1, _Ray.Ray.T_SNAP_TO_INT);
 
         // console.timeEnd('tcast');
 
@@ -9561,12 +9577,10 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       if (!entity.grounded && entity.ySpeed >= 0) {
         const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + entity.ySpeed + 6, _Ray.Ray.T_SNAP_TO_INT);
         if (groundSnapper) {
-          console.log(groundSnapper);
           entity.ySpeed = 0;
           entity.y = groundSnapper[1];
           entity.currentMap = groundSnapper[4];
           entity.grounded = true;
-          console.log(entity.y, firstMap.y);
           snapped = true;
         }
       }
@@ -9634,7 +9648,6 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       if (Math.abs(entity.ySpeed) < 0.001) {
         entity.ySpeed = 0;
       }
-      snapped && console.log(entity.y, firstMap.y);
     }
   }, {
     key: "collide",
@@ -9688,7 +9701,15 @@ let RopeController = exports.RopeController = /*#__PURE__*/function () {
       window.e = entity;
       const world = entity.session.world;
       window.smDebug = true;
-      console.log(_Ray.Ray.castTerrain(world, 64, 500, 960, 500, 0));
+
+      // console.log(Ray.castTerrain(
+      // 	world, 64, 500, 1024, 500, 0
+      // ));
+
+      console.log(_Ray.Ray.castTerrain(
+      // world, 64, 466, 1024, 466, 0
+      // world, 990, 466, 0, 466, 0
+      world, 64, 466, 990, 466, 0));
       window.smDebug = false;
     }
   }, {
@@ -9868,7 +9889,6 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const input = new URLSearchParams(location.search);
 const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
-console.log(location.search, input, warpStart);
 let Session = exports.Session = /*#__PURE__*/function () {
   function Session(_ref) {
     let element = _ref.element,
@@ -11782,7 +11802,6 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       y = mapData.y,
       width = mapData.width,
       height = mapData.height;
-    console.log(_Bindable.Bindable);
     _Bindable.Bindable.Prevent && (this[_Bindable.Bindable.Prevent] = true);
     this.src = fileName;
     this.backgroundColor = null;

@@ -316,7 +316,15 @@ export class Ray
 
 		if(hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId))
 		{
-			return new Set([qStartX, qStartY]);
+			const points = new Set([ [qStartX, qStartY, 0, layerId, tileMap] ]);
+
+			if(window.smDebug)
+			{
+				console.log(points, {startX, startY, endX, endY});
+				console.log('================================');
+			}
+
+			return points;
 		}
 
 		const bs = 32;

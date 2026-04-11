@@ -9,13 +9,10 @@ export class MapMover
 	create(map)
 	{
 		this.yOriginal = map.y;
-
-		console.log(this.yOriginal);
 	}
 
 	simulate(map, delta)
 	{
-		// return;
 		if(map.props.get('yOscillate'))
 		{
 			const range = map.props.get('yOscillate');
@@ -23,11 +20,7 @@ export class MapMover
 			const age = map.session.world.age;
 			const current = roundedSquareWave(age/delay, 0.6);
 
-			map.y = Math.trunc((this.yOriginal + (current * range + 0.001)) * SUBGRID_SIZE) * SUBGRID_INVR;
-
-			// map.y = this.yOriginal + Math.round(current * range);
-			// map.y = this.yOriginal + current * range;
-			// map.y = this.yOriginal + (142.66015625 - 128);
+			map.y = Math.round((this.yOriginal + (current * range)) * SUBGRID_SIZE) * SUBGRID_INVR;
 		}
 	}
 }

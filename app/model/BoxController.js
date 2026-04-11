@@ -1,6 +1,10 @@
 import { roundedSquareWave } from "../math/roundSquareWave";
 import { Entity } from "./Entity";
 
+const SUBGRID_BITS = 8;
+const SUBGRID_SIZE = 1 << SUBGRID_BITS;
+const SUBGRID_INVR = 1 / SUBGRID_SIZE;
+
 export class BoxController
 {
 	static spriteColor = [0, 0, 0, 255];
@@ -58,6 +62,8 @@ export class BoxController
 				: 0;
 
 			entity.x = mapOffset + this.xOriginal + current * range;
+
+			entity.x = Math.round(entity.x * SUBGRID_SIZE) * SUBGRID_INVR;
 		}
 
 		if(entity.props.has('yOscillate'))
@@ -72,8 +78,9 @@ export class BoxController
 				? entity.lastMap.y
 				: 0;
 
-			const yNew = this.yOriginal + mapOffset + current * range;
-			const moved = yNew - entity.y;
+			const yNew = (this.yOriginal + mapOffset + current * range);
+			const yNewqQ = Math.round(yNew * SUBGRID_SIZE) * SUBGRID_INVR;
+			const moved = yNewqQ - entity.y;
 
 			if(moved < 0)
 			{
@@ -90,7 +97,7 @@ export class BoxController
 				});
 			}
 
-			entity.y = yNew;
+			entity.y = yNewqQ;
 		}
 	}
 

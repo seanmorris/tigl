@@ -24,6 +24,9 @@ export class BarrelController
 
 	simulate(entity)
 	{
+		if(Math.abs(entity.xSpeed) < 0.01) entity.xSpeed = 0;
+		if(Math.abs(entity.ySpeed) < 0.01) entity.ySpeed = 0;
+
 		const world = entity.session.world;
 
 		if(!world.getSolidTerrain(entity.x, entity.y + 1))
@@ -37,27 +40,39 @@ export class BarrelController
 			entity.grounded = true;
 		}
 
+		if(this.pushedBy)
+		{
+			const other = this.pushedBy;
+
+			const dist = Math.abs(other.x + -entity.x);
+			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
+			const side = Math.sign(entity.x - other.x);
+
+			entity.xSpeed = (min - dist) * side;
+		}
+
 		if(entity.xSpeed || entity.ySpeed)
 		{
-			const hit = world.castRay(
-				entity.x
-				, entity.y + -1
-				, entity.x + entity.xSpeed
-				, entity.y + entity.ySpeed + -1
-				, Ray.T_LAST_EMPTY | Ray.T_SNAP_TO_INT
-			);
+			const front = entity.x + (entity.width * 0.5 * Math.sign(entity.xSpeed)) + 1 * Math.sign(entity.xSpeed);
 
-			let xMove = entity.xSpeed;
-			let yMove = entity.ySpeed;
+			const hit = world.castRay(
+				front
+				, entity.y + -1
+				, front + entity.xSpeed
+				, entity.y + -1
+				, Ray.T_SNAP_TO_INT
+			);
 
 			if(hit.terrain)
 			{
-				xMove = hit.terrain[0] - entity.x;
-				yMove = hit.terrain[1] - entity.y + 1;
+				entity.xSpeed = hit.terrain[0] - front;
+				// entity.ySpeed = hit.terrain[1] - entity.y + 1;
+
+				console.log(entity.xSpeed, hit);
 			}
 
-			entity.x += xMove;
-			entity.y += yMove;
+			entity.x += entity.xSpeed;
+			entity.y += entity.ySpeed;
 
 			if(!this.shot)
 			{
@@ -69,30 +84,28 @@ export class BarrelController
 			entity.shot = false;
 		}
 
-		if(world.getSolidTerrain(entity.x, entity.y) && !world.getSolidTerrain(entity.x, entity.y + -entity.height))
+		if(world.getSolid(entity.x, entity.y + -1) && !world.getSolid(entity.x, entity.y + -entity.height))
 		{
 			entity.ySpeed = 0;
 			entity.y--;
 		}
 
-		while(world.getSolidTerrain(entity.x, entity.y + -entity.height) && !world.getSolidTerrain(entity.x, entity.y))
+		while(world.getSolid(entity.x, entity.y + -entity.height) && !world.getSolid(entity.x, entity.y))
 		{
 			entity.ySpeed = 0;
 			entity.y++;
 		}
 
-		while(world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * -0.5, entity.y + -8) && !world.getSolid(entity.x + entity.width * 0.5, entity.y + -8))
 		{
-			this.stop(entity, entity.xSpeed);
-			// entity.xSpeed = Math.min(0, entity.xSpeed);
-			entity.x++;
+			entity.xSpeed = 0;
+			entity.x = Math.floor(entity.x + 1);
 		}
 
-		while(world.getSolidTerrain(entity.x + entity.width * 0.5, entity.y + -8) && !world.getSolidTerrain(entity.x + -entity.width * 0.5, entity.y + -8))
+		while(world.getSolid(entity.x + entity.width * 0.5 + -1, entity.y + -8) && !world.getSolid(entity.x + entity.width * -0.5, entity.y + -8))
 		{
-			this.stop(entity, entity.xSpeed);
-			// entity.xSpeed = Math.max(0, entity.xSpeed);
-			entity.x--;
+			entity.xSpeed = 0;
+			entity.x = Math.floor(entity.x + -1);
 		}
 
 		if(!entity.grounded && entity.ySpeed >= 0)
@@ -113,6 +126,8 @@ export class BarrelController
 				entity.grounded = true;
 			}
 		}
+
+		this.pushedBy = null;
 	}
 
 	collide(entity, other, point)
@@ -123,16 +138,8 @@ export class BarrelController
 			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
 			const side = Math.sign(entity.x - other.x);
 
-			if(entity.grounded)
-			{
-				entity.xSpeed = (min - dist) * side * 1.1;
-			}
-
-			other.controller.pushing = entity;
-
-			// const maps = entity.session.world.getMapsForPoint(entity.x, entity.y);
-			// maps.forEach(map => map.moveEntity(entity));
-			// console.log(maps);
+			this.pushedBy = other;
+			// other.controller.pushing = entity;
 		}
 	}
 

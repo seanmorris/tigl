@@ -259,8 +259,9 @@ export class SMTree
 
 	queryLine(x1, y1, x2, y2)
 	{
-		if(x1 > x2) [x1, x2] = [x2, x1];
-		if(y1 > y2) [y1, y2] = [y2, y1];
+		let invX = false, invY = false;
+		if(x1 > x2) [x1, x2, invX] = [x2, x1, true];
+		if(y1 > y2) [y1, y2, invY] = [y2, y1, true];
 
 		const dx = x2 - x1;
 		const dy = y2 - y1;
@@ -307,7 +308,12 @@ export class SMTree
 				by = rect.y2;
 			}
 
-			results.set(rect, [ax, ay, bx, by]);
+			results.set(rect, [
+				invX ? bx : ax
+				, invY ? by : ay
+				, invX ? ax : bx
+				, invY ? ay : by
+			]);
 		}
 
 		return results;

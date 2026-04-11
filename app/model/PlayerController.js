@@ -267,9 +267,9 @@ export class PlayerController
 			const terrain = Ray.castTerrain(
 				world
 				, entity.x
-				, entity.y
+				, entity.y + -1
 				, entity.x + entity.xSpeed
-				, entity.y + entity.ySpeed
+				, entity.y + entity.ySpeed + -1
 				, Ray.T_SNAP_TO_INT
 			);
 
@@ -350,13 +350,10 @@ export class PlayerController
 
 			if(groundSnapper)
 			{
-				console.log(groundSnapper);
 				entity.ySpeed = 0;
 				entity.y = groundSnapper[1];
 				entity.currentMap = groundSnapper[4];
 				entity.grounded = true;
-
-				console.log(entity.y, firstMap.y);
 
 				snapped = true;
 			}
@@ -460,8 +457,6 @@ export class PlayerController
 		{
 			entity.ySpeed = 0;
 		}
-
-		snapped && console.log(entity.y, firstMap.y);
 	}
 
 	collide(entity, other, point)
