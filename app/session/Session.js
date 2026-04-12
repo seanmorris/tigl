@@ -10,6 +10,8 @@ import { World } from "../world/World";
 import { MotionGraph } from "../math/MotionGraph";
 import { Controller } from '../input/Controller';
 import { Pallet } from "../world/Pallet";
+import { parseColor } from "../sprite/parseColor";
+import { CursorController } from "../model/CursorController";
 
 const input = new URLSearchParams(location.search);
 const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
@@ -70,6 +72,28 @@ export class Session
 			if(!this.gamepad) return;
 			this.gamepad = null;
 		});
+
+		this.mouse = {x: null, y: null};
+
+		element.addEventListener('mousemove', event => {
+			this.mouse.x = event.clientX;
+			this.mouse.y = event.clientY;
+			this.moveCursor(this.mouse.x, this.mouse.y);
+		});
+
+		element.addEventListener('mousedown', event => {
+			event.preventDefault();
+			this.cursor.buttons = event.buttons;
+		});
+
+		element.addEventListener('mouseup', event => {
+			event.preventDefault();
+			this.cursor.buttons = event.buttons;
+		});
+
+		element.addEventListener('contextmenu', event => {
+			event.preventDefault();
+		});
 	}
 
 	async initialize()
@@ -102,7 +126,7 @@ export class Session
 			const startX = warpStart[0] ?? startDef.x;
 			const startY = warpStart[1] ?? startDef.y;
 
-			const player = this.player = new Entity({
+			this.player = new Entity({
 				controller: new playerClass,
 				spawnClass: playerClass,
 				session: this,
@@ -118,8 +142,28 @@ export class Session
 				camera: Camera,
 			});
 
-			this.spriteBoard.following = player;
-			this.addEntity(player);
+			this.spriteBoard.following = this.player;
+			this.addEntity(this.player);
+
+			this.cursor = new Entity({
+				controller: new CursorController,
+				x: startX,
+				y: startY,
+				session: this,
+				sprite: new Sprite({
+					// color: parseColor('00FFFF'),
+					spriteSheet: new SpriteSheet({src: '/cursor.tsj'}),
+					session: this,
+					width: 32,
+					height: 32,
+				}),
+				width: 1,
+				height: 1,
+				xSpriteOffset: 16,
+				ySpriteOffset: 32,
+			});
+
+			this.addEntity(this.cursor);
 		}
 	}
 
@@ -146,21 +190,17 @@ export class Session
 		this.removed.add(entity);
 	}
 
-	simulate(now)
+	simulate(delta)
 	{
 		if(!this.loaded)
 		{
 			return false;
 		}
 
-		const delta = now - this.sThen;
-
 		// if(this.simulationLock == 0 || delta < (1000 / this.simulationLock))
 		// {
 		// 	return false;
 		// }
-
-		this.sThen = now;
 
 		this.keyboard.update();
 		this.controller.update({gamepad: this.gamepad});
@@ -181,6 +221,7 @@ export class Session
 			return false;
 		}
 
+		// @TODO: Review this.
 		this.entities.forEach(entity => {
 			if(entity.sprite) entity.sprite.visible = false;
 		});
@@ -222,7 +263,7 @@ export class Session
 		);
 
 		entities.delete(player);
-		entities.add(player);
+		entities.delete(this.cursor);
 
 		const sleeping = this.awake.difference(entities);
 
@@ -232,26 +273,11 @@ export class Session
 			this.awake.delete(entity);
 		});
 
-		entities.forEach(entity => {
-			this.awake.add(entity);
+		entities.forEach(entity => this.simulateEntity(entity, delta));
 
-			if(entity.sleeping)
-			{
-				entity.wakeup();
-			}
-
-			entity.simulate(delta);
-			if(this.removed.has(entity)) return;
-
-			const maps = this.world.getMapsForPoint(entity.x, entity.y);
-			maps.forEach(map => map.moveEntity(entity));
-
-			if(entity.sprite)
-			{
-				this.spriteBoard.sprites.add(entity.sprite);
-				entity.sprite.visible = true;
-			}
-		});
+		this.simulateEntity(this.player, delta);
+		this.moveCursor(this.mouse.x, this.mouse.y);
+		this.simulateEntity(this.cursor, delta);
 
 		return true;
 	}
@@ -274,5 +300,54 @@ export class Session
 		this.fThen = now;
 
 		return true;
+	}
+
+	simulateEntity(entity, delta)
+	{
+		this.awake.add(entity);
+
+		if(entity.sleeping)
+		{
+			entity.wakeup();
+		}
+
+		entity.simulate(delta);
+		if(this.removed.has(entity)) return;
+
+		const maps = this.world.getMapsForPoint(entity.x, entity.y);
+		maps.forEach(map => map.moveEntity(entity));
+
+		if(entity.sprite)
+		{
+			this.spriteBoard.sprites.add(entity.sprite);
+			entity.sprite.visible = true;
+		}
+	}
+
+	moveCursor(clientX, clientY)
+	{
+		const screenX = -0.5 + (clientX / this.spriteBoard.width);
+		const screenY = -0.5 + (clientY / this.spriteBoard.height);
+
+		const zoom  = this.spriteBoard.zoomLevel;
+
+		const w = this.spriteBoard.width  / zoom;
+		const h = this.spriteBoard.height / zoom;
+
+		const following = this.spriteBoard.following;
+
+		if(!following)
+		{
+			return;
+		}
+
+		const focusX = following.x;
+		const focusY = following.y + following.height * -0.5;
+
+		const x = w * screenX + focusX;
+		const y = h * screenY + focusY;
+
+		this.cursor.x = x;
+		this.cursor.y = y;
 	}
 }

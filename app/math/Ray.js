@@ -361,8 +361,6 @@ export class Ray
 
 			const points = new Set([ [px, py, 0, layerId, tileMap] ]);
 
-			console.log(0, {yo: tileMap.y, h:horiz, by, py});
-
 			if(window.smDebug)
 			{
 				console.log(points, {px, py, endX, endY});
@@ -456,8 +454,6 @@ export class Ray
 						py = vert[1];
 					}
 
-					console.log(1, {yo: tileMap.y, h:horiz[1], by, py});
-
 					solidX = [px, py, pt, layerId, tileMap];
 					break;
 				}
@@ -519,8 +515,6 @@ export class Ray
 						px = vert[0];
 						py = vert[1];
 					}
-
-					console.log(2, {yo: tileMap.y, h:horiz[1], by, py});
 
 					solidY = [px, py, pt, layerId, tileMap];
 

@@ -239,17 +239,15 @@ export class View extends BaseView
 				return;
 			}
 
-			{
-				const delta = now - sThen;
-				let acc = Math.min(delta, fpsInv * 10);
+			const delta = Math.min(now - sThen, fpsInv * 10);
+			let acc = delta;
 
-				while(acc >= 980/60)
-				{
-					this.session.simulate(now)
-					this.args.sps = (1000 / delta).toFixed(0);
-					sThen = now;
-					acc -= fpsInv;
-				}
+			while(acc >= 980/60)
+			{
+				this.session.simulate(fpsInv)
+				this.args.sps = (1000 / delta).toFixed(0);
+				sThen = now;
+				acc -= fpsInv;
 			}
 
 			this.session.draw(now);
@@ -275,7 +273,7 @@ export class View extends BaseView
 
 	mousemove()
 	{
-		this.args.mouseClass = 'mouse-moved';
+		// this.args.mouseClass = 'mouse-moved';
 
 		if(this.mouseTimer) clearTimeout(this.mouseTimer);
 
@@ -316,5 +314,11 @@ export class View extends BaseView
 		}
 
 		this.session.spriteBoard.zoom(delta);
+
+		const element = this.tags.canvas.element;
+		const zoomLevel  = this.session.spriteBoard.zoomLevel;
+
+		this.args.rwidth = Math.trunc(element.clientWidth  / zoomLevel);
+		this.args.rheight = Math.trunc(element.clientHeight / zoomLevel);
 	}
 }

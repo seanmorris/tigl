@@ -1,4 +1,5 @@
 import { Ray } from "../math/Ray";
+import { Entity } from "./Entity";
 
 export class BarrelController
 {
@@ -9,13 +10,15 @@ export class BarrelController
 		entity.xSpeed = 0;
 		entity.ySpeed = 0;
 
-		entity.height = 32;
+		entity.height = 36;
 		entity.width = 26;
 
 		entity.ySpriteOffset = 6;
 
 		entity.grounded = true;
 		this.shot = false;
+
+		entity.flags |= Entity.E_PLATFORM;
 	}
 
 	destroy(entity)
@@ -49,6 +52,12 @@ export class BarrelController
 			const side = Math.sign(entity.x - other.x);
 
 			entity.xSpeed = (min - dist) * side;
+
+			if(dist < min * 0.75)
+			{
+				entity.ySpeed = Math.max(-2, entity.ySpeed - 1);
+				entity.xSpeed = -other.controller.xDirection;
+			}
 		}
 
 		if(entity.xSpeed || entity.ySpeed)
@@ -127,17 +136,26 @@ export class BarrelController
 			}
 		}
 
+		const children = world.motionGraph.getChildren(entity);
+
+		if(children)
+		for(const child of children)
+		{
+			child.sprite.z = this.y + 1;
+		}
+
 		this.pushedBy = null;
 	}
 
 	collide(entity, other, point)
 	{
+		if(other.y <= entity.y + - entity.height)
+		{
+			return;
+		}
+
 		if(Math.abs(Math.sign(entity.x - other.x) - Math.sign(other.xSpeed)) < 2)
 		{
-			const dist = Math.abs(other.x + -entity.x);
-			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
-			const side = Math.sign(entity.x - other.x);
-
 			this.pushedBy = other;
 			// other.controller.pushing = entity;
 		}

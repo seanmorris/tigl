@@ -12,7 +12,7 @@ export class Entity
 
 	constructor(entityData)
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 
 		const {
 			controller
@@ -24,13 +24,15 @@ export class Entity
 			, y = 0
 			, width = 32
 			, height = 32
+			, xSpriteOffset = 0
+			, ySpriteOffset = 0
 		} = entityData;
 
 		this.controller = controller;
 		this.id = entityData.id;
 
-		this.xSpriteOffset = 0;
-		this.ySpriteOffset = 0;
+		this.xSpriteOffset = xSpriteOffset;
+		this.ySpriteOffset = ySpriteOffset;
 
 		this.flags = 0b0000_0000;
 
@@ -47,8 +49,8 @@ export class Entity
 			, spriteSheet: spawnClass
 				? new SpriteSheet({src: spawnClass.spriteSheet})
 				: null
-			, width: 32
-			, height: 32
+			, width
+			, height
 		});
 
 		this.inputManager = inputManager;
@@ -74,7 +76,7 @@ export class Entity
 		this.controller && this.controller.create(this, this.entityData);
 	}
 
-	simulate()
+	simulate(delta)
 	{
 		const startX = this.x;
 		const startY = this.y;
@@ -86,7 +88,7 @@ export class Entity
 			this.fresh = false;
 		}
 
-		this.controller && this.controller.simulate(this);
+		this.controller && this.controller.simulate(this, delta);
 
 		const motionParent = world.motionGraph.getParent(this);
 		const maps = world.getMapsForPoint(this.x, this.y);

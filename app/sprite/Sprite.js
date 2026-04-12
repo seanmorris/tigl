@@ -153,8 +153,8 @@ export class Sprite
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 
 		this.setRectangle(
-			this.x * zoom + -Camera.x + (this.spriteBoard.width / 2)
-			, this.y * zoom + -Camera.y + (this.spriteBoard.height / 2) + -this.height * zoom
+			this.x * zoom + -Camera.x + (this.spriteBoard.width * 0.5)
+			, this.y * zoom + -Camera.y + (this.spriteBoard.height * 0.5) + -this.height * zoom
 			, this.width * zoom
 			, this.height * zoom
 		);

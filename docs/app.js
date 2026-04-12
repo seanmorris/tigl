@@ -6579,15 +6579,13 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
         if (document.hidden) {
           return;
         }
-        {
-          const delta = now - sThen;
-          let acc = Math.min(delta, fpsInv * 10);
-          while (acc >= 980 / 60) {
-            this.session.simulate(now);
-            this.args.sps = (1000 / delta).toFixed(0);
-            sThen = now;
-            acc -= fpsInv;
-          }
+        const delta = Math.min(now - sThen, fpsInv * 10);
+        let acc = delta;
+        while (acc >= 980 / 60) {
+          this.session.simulate(fpsInv);
+          this.args.sps = (1000 / delta).toFixed(0);
+          sThen = now;
+          acc -= fpsInv;
         }
         this.session.draw(now);
         this.args.fps = (1000 / (now - fThen)).toFixed(0);
@@ -6606,7 +6604,8 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
   }, {
     key: "mousemove",
     value: function mousemove() {
-      this.args.mouseClass = 'mouse-moved';
+      // this.args.mouseClass = 'mouse-moved';
+
       if (this.mouseTimer) clearTimeout(this.mouseTimer);
       this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
     }
@@ -6634,6 +6633,10 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
         return;
       }
       this.session.spriteBoard.zoom(delta);
+      const element = this.tags.canvas.element;
+      const zoomLevel = this.session.spriteBoard.zoomLevel;
+      this.args.rwidth = Math.trunc(element.clientWidth / zoomLevel);
+      this.args.rheight = Math.trunc(element.clientHeight / zoomLevel);
     }
   }]);
 }(_View.View);
@@ -7608,6 +7611,11 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
       return this.backmap.get(entity);
     }
   }, {
+    key: "getChildren",
+    value: function getChildren(entity) {
+      return this.entities.get(entity);
+    }
+  }, {
     key: "delete",
     value: function _delete(entity) {
       if (!this.backmap.has(entity)) {
@@ -8274,12 +8282,6 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           py = vert[1];
         }
         const points = new Set([[px, py, 0, layerId, tileMap]]);
-        console.log(0, {
-          yo: tileMap.y,
-          h: horiz,
-          by: by,
-          py: py
-        });
         if (window.smDebug) {
           console.log(points, {
             px: px,
@@ -8339,12 +8341,6 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
               px = vert[0];
               py = vert[1];
             }
-            console.log(1, {
-              yo: tileMap.y,
-              h: horiz[1],
-              by: by,
-              py: py
-            });
             solidX = [px, py, pt, layerId, tileMap];
             break;
           }
@@ -8380,12 +8376,6 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
               px = vert[0];
               py = vert[1];
             }
-            console.log(2, {
-              yo: tileMap.y,
-              h: horiz[1],
-              by: by,
-              py: py
-            });
             solidY = [px, py, pt, layerId, tileMap];
             break;
           }
@@ -8998,6 +8988,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.BarrelController = void 0;
 var _Ray = require("../math/Ray");
+var _Entity = require("./Entity");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
@@ -9013,11 +9004,12 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
     value: function create(entity, entityData) {
       entity.xSpeed = 0;
       entity.ySpeed = 0;
-      entity.height = 32;
+      entity.height = 36;
       entity.width = 26;
       entity.ySpriteOffset = 6;
       entity.grounded = true;
       this.shot = false;
+      entity.flags |= _Entity.Entity.E_PLATFORM;
     }
   }, {
     key: "destroy",
@@ -9041,6 +9033,10 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         const min = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
         const side = Math.sign(entity.x - other.x);
         entity.xSpeed = (min - dist) * side;
+        if (dist < min * 0.75) {
+          entity.ySpeed = Math.max(-2, entity.ySpeed - 1);
+          entity.xSpeed = -other.controller.xDirection;
+        }
       }
       if (entity.xSpeed || entity.ySpeed) {
         const front = entity.x + entity.width * 0.5 * Math.sign(entity.xSpeed);
@@ -9083,15 +9079,19 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
           entity.grounded = true;
         }
       }
+      const children = world.motionGraph.getChildren(entity);
+      if (children) for (const child of children) {
+        child.sprite.z = this.y + 1;
+      }
       this.pushedBy = null;
     }
   }, {
     key: "collide",
     value: function collide(entity, other, point) {
+      if (other.y <= entity.y + -entity.height) {
+        return;
+      }
       if (Math.abs(Math.sign(entity.x - other.x) - Math.sign(other.xSpeed)) < 2) {
-        const dist = Math.abs(other.x + -entity.x);
-        const min = 0.5 * (other.width + entity.width) + Math.abs(other.xSpeed);
-        const side = Math.sign(entity.x - other.x);
         this.pushedBy = other;
         // other.controller.pushing = entity;
       }
@@ -9166,7 +9166,7 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
     value: function destroy(entity) {}
   }, {
     key: "simulate",
-    value: function simulate(entity) {
+    value: function simulate(entity, delta) {
       entity.sprite.width = entity.width;
       entity.sprite.height = entity.height;
       if (entity.props.has('xOscillate')) {
@@ -9194,7 +9194,7 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
         if (moved < 0) {
           const above = entity.session.world.getEntitiesForRect(entity.x, entity.y - entity.height * 0.5, entity.width, entity.height + -moved);
           above.forEach(other => {
-            if (other.flags & _Entity.Entity.E_STATIC || other.ySpeed < moved) return;
+            if (other.flags & _Entity.Entity.E_STATIC || other.grounded || other.ySpeed < moved) return;
             other.y = entity.y - entity.height;
           });
         }
@@ -9213,6 +9213,68 @@ let BoxController = exports.BoxController = /*#__PURE__*/function () {
   }]);
 }();
 _defineProperty(BoxController, "spriteColor", [0, 0, 0, 255]);
+});
+
+;require.register("model/CursorController.js", function(exports, require, module) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CursorController = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+const BUTTON_LEFT = 0x1;
+const BUTTON_RIGHT = 0x2;
+const BUTTON_MIDDLE = 0x4;
+let CursorController = exports.CursorController = /*#__PURE__*/function () {
+  function CursorController() {
+    _classCallCheck(this, CursorController);
+  }
+  return _createClass(CursorController, [{
+    key: "create",
+    value: function create(entity, entityData) {
+      entity.buttons = 0;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy(entity) {}
+  }, {
+    key: "simulate",
+    value: function simulate(entity, delta) {
+      if (entity.buttons) {
+        entity.sprite.changeAnimation('pressing');
+        // console.log(entity.buttons);
+        const others = entity.session.world.getEntitiesForPoint(entity.x, entity.y);
+        for (const other of others) {
+          other.ySpeed = -20;
+          other.y--;
+        }
+      } else {
+        entity.sprite.changeAnimation('normal');
+      }
+    }
+  }, {
+    key: "collide",
+    value: function collide(entity, other) {
+      // if(entity.buttons)
+      // {
+      // 	other.ySpeed = -20;
+      // 	other.y--;
+      // }
+      // console.log(other);
+    }
+  }, {
+    key: "sleep",
+    value: function sleep(entity) {}
+  }, {
+    key: "wakeup",
+    value: function wakeup(entity) {}
+  }]);
+}();
 });
 
 ;require.register("model/Entity.js", function(exports, require, module) {
@@ -9237,7 +9299,8 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
   function Entity(entityData) {
     var _entityData$propertie;
     _classCallCheck(this, Entity);
-    this[_Bindable.Bindable.Prevent] = true;
+    // this[Bindable.Prevent] = true;
+
     const controller = entityData.controller,
       spawnClass = entityData.spawnClass,
       session = entityData.session,
@@ -9250,11 +9313,15 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       _entityData$width = entityData.width,
       width = _entityData$width === void 0 ? 32 : _entityData$width,
       _entityData$height = entityData.height,
-      height = _entityData$height === void 0 ? 32 : _entityData$height;
+      height = _entityData$height === void 0 ? 32 : _entityData$height,
+      _entityData$xSpriteOf = entityData.xSpriteOffset,
+      xSpriteOffset = _entityData$xSpriteOf === void 0 ? 0 : _entityData$xSpriteOf,
+      _entityData$ySpriteOf = entityData.ySpriteOffset,
+      ySpriteOffset = _entityData$ySpriteOf === void 0 ? 0 : _entityData$ySpriteOf;
     this.controller = controller;
     this.id = entityData.id;
-    this.xSpriteOffset = 0;
-    this.ySpriteOffset = 0;
+    this.xSpriteOffset = xSpriteOffset;
+    this.ySpriteOffset = ySpriteOffset;
     this.flags = 0;
     this.x = x;
     this.y = y;
@@ -9268,8 +9335,8 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
       spriteSheet: spawnClass ? new _SpriteSheet.SpriteSheet({
         src: spawnClass.spriteSheet
       }) : null,
-      width: 32,
-      height: 32
+      width: width,
+      height: height
     });
     this.inputManager = inputManager;
     this.session = session;
@@ -9287,14 +9354,14 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
   }
   return _createClass(Entity, [{
     key: "simulate",
-    value: function simulate() {
+    value: function simulate(delta) {
       const startX = this.x;
       const startY = this.y;
       const world = this.session.world;
       if (this.fresh) {
         this.fresh = false;
       }
-      this.controller && this.controller.simulate(this);
+      this.controller && this.controller.simulate(this, delta);
       const motionParent = world.motionGraph.getParent(this);
       const maps = world.getMapsForPoint(this.x, this.y);
       // const firstMap = [...maps][0];
@@ -9911,6 +9978,8 @@ var _World = require("../world/World");
 var _MotionGraph = require("../math/MotionGraph");
 var _Controller = require("../input/Controller");
 var _Pallet = require("../world/Pallet");
+var _parseColor = require("../sprite/parseColor");
+var _CursorController = require("../model/CursorController");
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
@@ -9988,6 +10057,26 @@ let Session = exports.Session = /*#__PURE__*/function () {
       if (!this.gamepad) return;
       this.gamepad = null;
     });
+    this.mouse = {
+      x: null,
+      y: null
+    };
+    element.addEventListener('mousemove', event => {
+      this.mouse.x = event.clientX;
+      this.mouse.y = event.clientY;
+      this.moveCursor(this.mouse.x, this.mouse.y);
+    });
+    element.addEventListener('mousedown', event => {
+      event.preventDefault();
+      this.cursor.buttons = event.buttons;
+    });
+    element.addEventListener('mouseup', event => {
+      event.preventDefault();
+      this.cursor.buttons = event.buttons;
+    });
+    element.addEventListener('contextmenu', event => {
+      event.preventDefault();
+    });
   }
   return _createClass(Session, [{
     key: "initialize",
@@ -10010,7 +10099,7 @@ let Session = exports.Session = /*#__PURE__*/function () {
         const playerClass = await this.entityPallet.resolve(startDef.type);
         const startX = (_warpStart$ = warpStart[0]) !== null && _warpStart$ !== void 0 ? _warpStart$ : startDef.x;
         const startY = (_warpStart$2 = warpStart[1]) !== null && _warpStart$2 !== void 0 ? _warpStart$2 : startDef.y;
-        const player = this.player = new _Entity.Entity({
+        this.player = new _Entity.Entity({
           controller: new playerClass(),
           spawnClass: playerClass,
           session: this,
@@ -10025,8 +10114,28 @@ let Session = exports.Session = /*#__PURE__*/function () {
           // }),
           camera: _Camera.Camera
         });
-        this.spriteBoard.following = player;
-        this.addEntity(player);
+        this.spriteBoard.following = this.player;
+        this.addEntity(this.player);
+        this.cursor = new _Entity.Entity({
+          controller: new _CursorController.CursorController(),
+          x: startX,
+          y: startY,
+          session: this,
+          sprite: new _Sprite.Sprite({
+            // color: parseColor('00FFFF'),
+            spriteSheet: new _SpriteSheet.SpriteSheet({
+              src: '/cursor.tsj'
+            }),
+            session: this,
+            width: 32,
+            height: 32
+          }),
+          width: 1,
+          height: 1,
+          xSpriteOffset: 16,
+          ySpriteOffset: 32
+        });
+        this.addEntity(this.cursor);
       }
     }
   }, {
@@ -10052,18 +10161,16 @@ let Session = exports.Session = /*#__PURE__*/function () {
     }
   }, {
     key: "simulate",
-    value: function simulate(now) {
+    value: function simulate(delta) {
       if (!this.loaded) {
         return false;
       }
-      const delta = now - this.sThen;
 
       // if(this.simulationLock == 0 || delta < (1000 / this.simulationLock))
       // {
       // 	return false;
       // }
 
-      this.sThen = now;
       this.keyboard.update();
       this.controller.update({
         gamepad: this.gamepad
@@ -10079,6 +10186,8 @@ let Session = exports.Session = /*#__PURE__*/function () {
       if (this.paused || !this.player) {
         return false;
       }
+
+      // @TODO: Review this.
       this.entities.forEach(entity => {
         if (entity.sprite) entity.sprite.visible = false;
       });
@@ -10097,27 +10206,17 @@ let Session = exports.Session = /*#__PURE__*/function () {
       });
       const entities = this.world.getEntitiesForRect(player.x, player.y, _Camera.Camera.width * 1 + this.overscan, _Camera.Camera.height * 1 + this.overscan);
       entities.delete(player);
-      entities.add(player);
+      entities.delete(this.cursor);
       const sleeping = this.awake.difference(entities);
       sleeping.forEach(entity => {
         if (entity.sprite) entity.sprite.visible = false;
         entity.sleep();
         this.awake.delete(entity);
       });
-      entities.forEach(entity => {
-        this.awake.add(entity);
-        if (entity.sleeping) {
-          entity.wakeup();
-        }
-        entity.simulate(delta);
-        if (this.removed.has(entity)) return;
-        const maps = this.world.getMapsForPoint(entity.x, entity.y);
-        maps.forEach(map => map.moveEntity(entity));
-        if (entity.sprite) {
-          this.spriteBoard.sprites.add(entity.sprite);
-          entity.sprite.visible = true;
-        }
-      });
+      entities.forEach(entity => this.simulateEntity(entity, delta));
+      this.simulateEntity(this.player, delta);
+      this.moveCursor(this.mouse.x, this.mouse.y);
+      this.simulateEntity(this.cursor, delta);
       return true;
     }
   }, {
@@ -10137,6 +10236,41 @@ let Session = exports.Session = /*#__PURE__*/function () {
       this.fThen = now;
       return true;
     }
+  }, {
+    key: "simulateEntity",
+    value: function simulateEntity(entity, delta) {
+      this.awake.add(entity);
+      if (entity.sleeping) {
+        entity.wakeup();
+      }
+      entity.simulate(delta);
+      if (this.removed.has(entity)) return;
+      const maps = this.world.getMapsForPoint(entity.x, entity.y);
+      maps.forEach(map => map.moveEntity(entity));
+      if (entity.sprite) {
+        this.spriteBoard.sprites.add(entity.sprite);
+        entity.sprite.visible = true;
+      }
+    }
+  }, {
+    key: "moveCursor",
+    value: function moveCursor(clientX, clientY) {
+      const screenX = -0.5 + clientX / this.spriteBoard.width;
+      const screenY = -0.5 + clientY / this.spriteBoard.height;
+      const zoom = this.spriteBoard.zoomLevel;
+      const w = this.spriteBoard.width / zoom;
+      const h = this.spriteBoard.height / zoom;
+      const following = this.spriteBoard.following;
+      if (!following) {
+        return;
+      }
+      const focusX = following.x;
+      const focusY = following.y + following.height * -0.5;
+      const x = w * screenX + focusX;
+      const y = h * screenY + focusY;
+      this.cursor.x = x;
+      this.cursor.y = y;
+    }
   }]);
 }();
 });
@@ -10148,15 +10282,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Camera = void 0;
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
-function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-let Camera = exports.Camera = /*#__PURE__*/_createClass(function Camera() {
-  _classCallCheck(this, Camera);
-});
+let Camera = exports.Camera = /*#__PURE__*/function () {
+  function Camera() {
+    _classCallCheck(this, Camera);
+  }
+  return _createClass(Camera, [{
+    key: "followEntity",
+    value: function followEntity(entity, xOffset, yOffset) {}
+  }]);
+}();
 _defineProperty(Camera, "x", 0);
 _defineProperty(Camera, "y", 0);
 _defineProperty(Camera, "width", 0);
@@ -10948,7 +11088,7 @@ let Sprite = exports.Sprite = /*#__PURE__*/function () {
       this.spriteBoard.drawProgram.uniformF('u_region', 0, 0, 0, 0);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.texture);
-      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width / 2, this.y * zoom + -_Camera.Camera.y + this.spriteBoard.height / 2 + -this.height * zoom, this.width * zoom, this.height * zoom);
+      this.setRectangle(this.x * zoom + -_Camera.Camera.x + this.spriteBoard.width * 0.5, this.y * zoom + -_Camera.Camera.y + this.spriteBoard.height * 0.5 + -this.height * zoom, this.width * zoom, this.height * zoom);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {
@@ -11056,12 +11196,6 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
     this.regions = new Set();
     this.screenScale = 1;
     this.zoomLevel = 2;
-    this.mouse = {
-      x: null,
-      y: null,
-      clickX: null,
-      clickY: null
-    };
     this.parallax = null;
     this.width = element.width;
     this.height = element.height;
@@ -11084,10 +11218,6 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
     this.skyTexture = this.gl2d.createTexture(1, 1);
     this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
     this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
-    document.addEventListener('mousemove', event => {
-      this.mouse.x = event.clientX;
-      this.mouse.y = event.clientY;
-    });
     this.mapRenderers = new Map();
     this.following = null;
   }
@@ -11186,13 +11316,16 @@ let SpriteBoard = exports.SpriteBoard = /*#__PURE__*/function () {
       this.drawProgram.uniformF('u_size', _Camera.Camera.width, _Camera.Camera.height);
       let sprites = [...this.sprites];
       sprites.sort((a, b) => {
-        if (a.y === undefined) {
+        var _ref2, _a$z, _ref3, _b$z;
+        const az = (_ref2 = (_a$z = a.z) !== null && _a$z !== void 0 ? _a$z : a.y) !== null && _ref2 !== void 0 ? _ref2 : undefined;
+        const bz = (_ref3 = (_b$z = b.z) !== null && _b$z !== void 0 ? _b$z : b.y) !== null && _ref3 !== void 0 ? _ref3 : undefined;
+        if (az === undefined) {
           return -1;
         }
-        if (b.y === undefined) {
+        if (bz === undefined) {
           return 1;
         }
-        return a.y - b.y;
+        return az - bz;
       });
       this.parallax && this.parallax.draw();
       this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));

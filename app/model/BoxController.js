@@ -44,7 +44,7 @@ export class BoxController
 
 	destroy(entity){}
 
-	simulate(entity)
+	simulate(entity, delta)
 	{
 		entity.sprite.width  = entity.width;
 		entity.sprite.height = entity.height;
@@ -92,7 +92,7 @@ export class BoxController
 				);
 
 				above.forEach(other => {
-					if(other.flags & Entity.E_STATIC || other.ySpeed < moved) return;
+					if(other.flags & Entity.E_STATIC || other.grounded || other.ySpeed < moved) return;
 					other.y = entity.y - entity.height;
 				});
 			}

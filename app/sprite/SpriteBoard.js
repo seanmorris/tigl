@@ -24,13 +24,6 @@ export class SpriteBoard
 		this.screenScale = 1;
 		this.zoomLevel = 2;
 
-		this.mouse = {
-			x: null
-			, y: null
-			, clickX: null
-			, clickY: null
-		};
-
 		this.parallax = null;
 
 		this.width = element.width;
@@ -83,11 +76,6 @@ export class SpriteBoard
 
 		this.drawBuffer = this.gl2d.createFramebuffer(this.drawLayer);
 		this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
-
-		document.addEventListener('mousemove', event => {
-			this.mouse.x = event.clientX;
-			this.mouse.y = event.clientY;
-		});
 
 		this.mapRenderers = new Map;
 		this.following = null;
@@ -239,17 +227,19 @@ export class SpriteBoard
 		let sprites = [...this.sprites];
 
 		sprites.sort((a,b) => {
-			if(a.y === undefined)
+			const az = a.z ?? a.y ?? undefined;
+			const bz = b.z ?? b.y ?? undefined;
+			if(az === undefined)
 			{
 				return -1;
 			}
 
-			if(b.y === undefined)
+			if(bz === undefined)
 			{
 				return 1;
 			}
 
-			return a.y - b.y;
+			return az - bz;
 		});
 
 		this.parallax && this.parallax.draw();

@@ -35,6 +35,11 @@ export class MotionGraph
 		return this.backmap.get(entity);
 	}
 
+	getChildren(entity)
+	{
+		return this.entities.get(entity);
+	}
+
 	delete(entity)
 	{
 		if(!this.backmap.has(entity))
