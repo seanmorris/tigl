@@ -21,6 +21,7 @@ export class MapMover
 			const current = roundedSquareWave(age/delay, 0.6);
 
 			map.y = Math.round((this.yOriginal + (current * range)) * SUBGRID_SIZE) * SUBGRID_INVR;
+			// map.y = this.yOriginal + 0.25;
 		}
 	}
 }

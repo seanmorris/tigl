@@ -8248,12 +8248,42 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
       const hypot = Math.hypot(dy, dx);
       const sx = dx ? hypot / dx : 0;
       const sy = dy ? hypot / dy : 0;
-      if (hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId)) {
-        const points = new Set([[qStartX, qStartY, 0, layerId, tileMap]]);
+      const ox = Math.sign(dx);
+      const oy = Math.sign(dy);
+      if (startTile && tileMap.getSolid(qStartX, qStartY, layerId)) {
+        if (hypot === 0) {
+          return new Set([[qStartX, qStartY, 0, layerId, tileMap]]);
+        }
+        let px = qStartX;
+        let py = qStartY;
+        const lx = px - tileMap.x;
+        const ly = py - tileMap.y;
+        const bl = tileMap.x + Math.floor(lx);
+        const br = bl + 1;
+        const bt = tileMap.y + Math.floor(ly);
+        const bb = bt + 1;
+        const bx = ox > 0 ? bl : br;
+        const by = oy > 0 ? bt : bb;
+        const horiz = _Geometry.Geometry.lineIntersectsLine(qStartX + -dx, qStartY + -dy, qEndX, qEndY, bl, by, br, by);
+        const vert = _Geometry.Geometry.lineIntersectsLine(qStartX + -dx, qStartY + -dy, qEndX, qEndY, bx, bt, bx, bb);
+        if (horiz) {
+          px = horiz[0];
+          py = horiz[1];
+        } else if (vert) {
+          px = vert[0];
+          py = vert[1];
+        }
+        const points = new Set([[px, py, 0, layerId, tileMap]]);
+        console.log(0, {
+          yo: tileMap.y,
+          h: horiz,
+          by: by,
+          py: py
+        });
         if (window.smDebug) {
           console.log(points, {
-            startX: startX,
-            startY: startY,
+            px: px,
+            py: py,
             endX: endX,
             endY: endY
           });
@@ -8276,8 +8306,6 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
       let rayY = checkY * sy;
       let solidX = null;
       let solidY = null;
-      const ox = Math.sign(dx);
-      const oy = Math.sign(dy);
       if (window.smDebug) window.debugPoints = [];
       let iterations = 0;
       while (ox && Math.abs(rayX) <= hypot || oy && Math.abs(rayY) <= hypot) {
@@ -8292,28 +8320,31 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           if (!modeX && oldModeX) {
             bf = sx < 0 ? (qStartX + -checkX + 1) % bs : (qStartX + checkX) % bs;
           }
-          if (rayFlags & this.T_SNAP_TO_INT) {
-            const moX = mod(tileMap.x, 1);
-            const poX = mod(px, 1);
-            if (moX > poX) {
-              if (sx > 0) px = Math.floor(px) + (moX - 1);
-              if (sx < 0) px = Math.ceil(px) + moX;
-            } else if (moX < poX) {
-              if (sx > 0) px = Math.ceil(px) + (moX - 1);
-              if (sx < 0) px = Math.floor(px) + moX;
-            }
-            const moY = mod(tileMap.y, 1);
-            const poY = mod(py, 1);
-            if (moY > poY) {
-              if (sy > 0) py = Math.floor(py) + (moY - 1);
-              if (sy < 0) py = Math.ceil(py) + moY;
-            } else if (moY < poY) {
-              if (sy > 0) py = Math.floor(py) + moY;
-              if (sy < 0) py = Math.ceil(py) + (moY - 1);
-            }
-          }
           if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
           if (tileMap.getSolid(px, py, layerId)) {
+            const lx = px - tileMap.x;
+            const ly = py - tileMap.y;
+            const bl = tileMap.x + Math.floor(lx);
+            const br = bl + 1;
+            const bt = tileMap.y + Math.floor(ly);
+            const bb = bt + 1;
+            const bx = ox > 0 ? bl : br;
+            const by = oy > 0 ? bt : bb;
+            const horiz = _Geometry.Geometry.lineIntersectsLine(qStartX, qStartY, qEndX, qEndY, bl, by, br, by);
+            const vert = _Geometry.Geometry.lineIntersectsLine(qStartX, qStartY, qEndX, qEndY, bx, bt, bx, bb);
+            if (horiz) {
+              px = horiz[0];
+              py = horiz[1];
+            } else if (vert) {
+              px = vert[0];
+              py = vert[1];
+            }
+            console.log(1, {
+              yo: tileMap.y,
+              h: horiz[1],
+              by: by,
+              py: py
+            });
             solidX = [px, py, pt, layerId, tileMap];
             break;
           }
@@ -8330,28 +8361,31 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
           if (!modeY && oldModeY) {
             bf = sy < 0 ? (qStartY + -checkY + 1) % bs : (qStartY + checkY) % bs;
           }
-          if (rayFlags & this.T_SNAP_TO_INT) {
-            const moX = mod(tileMap.x, 1);
-            const poX = mod(px, 1);
-            if (moX > poX) {
-              if (sx > 0) px = Math.floor(px) + (moX - 1);
-              if (sx < 0) px = Math.ceil(px) + moX;
-            } else if (moX < poX) {
-              if (sx > 0) px = Math.ceil(px) + (moX - 1);
-              if (sx < 0) px = Math.floor(px) + moX;
-            }
-            const moY = mod(tileMap.y, 1);
-            const poY = mod(py, 1);
-            if (moY > poY) {
-              if (sy > 0) py = Math.floor(py) + (moY - 1);
-              if (sy < 0) py = Math.ceil(py) + moY;
-            } else if (moY < poY) {
-              if (sy > 0) py = Math.floor(py) + moY;
-              if (sy < 0) py = Math.ceil(py) + (moY - 1);
-            }
-          }
           if (window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
           if (tileMap.getSolid(px, py, layerId)) {
+            const lx = px - tileMap.x;
+            const ly = py - tileMap.y;
+            const bl = tileMap.x + Math.floor(lx);
+            const br = bl + 1;
+            const bt = tileMap.y + Math.floor(ly);
+            const bb = bt + 1;
+            const bx = sx > 0 ? bl : br;
+            const by = sy > 0 ? bt : bb;
+            const horiz = _Geometry.Geometry.lineIntersectsLine(qStartX, qStartY, qEndX, qEndY, bl, by, br, by);
+            const vert = _Geometry.Geometry.lineIntersectsLine(qStartX, qStartY, qEndX, qEndY, bx, bt, bx, bb);
+            if (horiz) {
+              px = horiz[0];
+              py = horiz[1];
+            } else if (vert) {
+              px = vert[0];
+              py = vert[1];
+            }
+            console.log(2, {
+              yo: tileMap.y,
+              h: horiz[1],
+              by: by,
+              py: py
+            });
             solidY = [px, py, pt, layerId, tileMap];
             break;
           }
@@ -9009,13 +9043,13 @@ let BarrelController = exports.BarrelController = /*#__PURE__*/function () {
         entity.xSpeed = (min - dist) * side;
       }
       if (entity.xSpeed || entity.ySpeed) {
-        const front = entity.x + entity.width * 0.5 * Math.sign(entity.xSpeed) + 1 * Math.sign(entity.xSpeed);
+        const front = entity.x + entity.width * 0.5 * Math.sign(entity.xSpeed);
         const hit = world.castRay(front, entity.y + -1, front + entity.xSpeed, entity.y + -1, _Ray.Ray.T_SNAP_TO_INT);
         if (hit.terrain) {
           entity.xSpeed = hit.terrain[0] - front;
           // entity.ySpeed = hit.terrain[1] - entity.y + 1;
 
-          console.log(entity.xSpeed, hit);
+          // console.log(entity.xSpeed, hit);
         }
         entity.x += entity.xSpeed;
         entity.y += entity.ySpeed;
@@ -9350,6 +9384,7 @@ let MapMover = exports.MapMover = /*#__PURE__*/function () {
         const age = map.session.world.age;
         const current = (0, _roundSquareWave.roundedSquareWave)(age / delay, 0.6);
         map.y = Math.round((this.yOriginal + current * range) * SUBGRID_SIZE) * SUBGRID_INVR;
+        // map.y = this.yOriginal + 0.25;
       }
     }
   }]);
@@ -9575,7 +9610,7 @@ let PlayerController = exports.PlayerController = /*#__PURE__*/function () {
       }
       let snapped = false;
       if (!entity.grounded && entity.ySpeed >= 0) {
-        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + entity.ySpeed + 6, _Ray.Ray.T_SNAP_TO_INT);
+        const groundSnapper = _Ray.Ray.castTerrain(world, entity.x, entity.y, entity.x, entity.y + Math.max(entity.ySpeed, 6), _Ray.Ray.T_SNAP_TO_INT);
         if (groundSnapper) {
           entity.ySpeed = 0;
           entity.y = groundSnapper[1];

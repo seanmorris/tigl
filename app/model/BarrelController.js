@@ -53,7 +53,7 @@ export class BarrelController
 
 		if(entity.xSpeed || entity.ySpeed)
 		{
-			const front = entity.x + (entity.width * 0.5 * Math.sign(entity.xSpeed)) + 1 * Math.sign(entity.xSpeed);
+			const front = entity.x + (entity.width * 0.5 * Math.sign(entity.xSpeed));
 
 			const hit = world.castRay(
 				front
@@ -68,7 +68,7 @@ export class BarrelController
 				entity.xSpeed = hit.terrain[0] - front;
 				// entity.ySpeed = hit.terrain[1] - entity.y + 1;
 
-				console.log(entity.xSpeed, hit);
+				// console.log(entity.xSpeed, hit);
 			}
 
 			entity.x += entity.xSpeed;

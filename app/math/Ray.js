@@ -301,8 +301,8 @@ export class Ray
 		const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
 		const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
 
-		const xOff = Math.trunc(mod(tileMap.x, tileMap.tileWidth)* SUBGRID_SIZE) * SUBGRID_INVR;
-		const yOff = Math.trunc(mod(tileMap.y, tileMap.tileHeight)* SUBGRID_SIZE) * SUBGRID_INVR;
+		const xOff = Math.trunc(mod(tileMap.x, tileMap.tileWidth) * SUBGRID_SIZE) * SUBGRID_INVR;
+		const yOff = Math.trunc(mod(tileMap.y, tileMap.tileHeight) * SUBGRID_SIZE) * SUBGRID_INVR;
 
 		const startTile = tileMap.getCollisionTile(qStartX, qStartY, layerId);
 
@@ -314,13 +314,58 @@ export class Ray
 		const sx = dx ? hypot / dx : 0;
 		const sy = dy ? hypot / dy : 0;
 
-		if(hypot === 0 || startTile && tileMap.getSolid(qStartX, qStartY, layerId))
+		const ox = Math.sign(dx);
+		const oy = Math.sign(dy);
+
+		if(startTile && tileMap.getSolid(qStartX, qStartY, layerId))
 		{
-			const points = new Set([ [qStartX, qStartY, 0, layerId, tileMap] ]);
+			if(hypot === 0)
+			{
+				return new Set([ [qStartX, qStartY, 0, layerId, tileMap] ]);
+			}
+
+			let px = qStartX;
+			let py = qStartY;
+
+			const lx = px - tileMap.x;
+			const ly = py  - tileMap.y;
+
+			const bl = tileMap.x + Math.floor(lx);
+			const br = bl + 1;
+			const bt = tileMap.y + Math.floor(ly);
+			const bb = bt + 1;
+
+			const bx = ox > 0 ? bl : br;
+			const by = oy > 0 ? bt : bb;
+
+			const horiz = Geometry.lineIntersectsLine(
+				qStartX + -dx, qStartY + -dy, qEndX, qEndY
+				, bl, by, br, by
+			);
+
+			const vert = Geometry.lineIntersectsLine(
+				qStartX + -dx, qStartY + -dy, qEndX, qEndY
+				, bx, bt, bx, bb
+			);
+
+			if(horiz)
+			{
+				px = horiz[0];
+				py = horiz[1];
+			}
+			else if(vert)
+			{
+				px = vert[0];
+				py = vert[1];
+			}
+
+			const points = new Set([ [px, py, 0, layerId, tileMap] ]);
+
+			console.log(0, {yo: tileMap.y, h:horiz, by, py});
 
 			if(window.smDebug)
 			{
-				console.log(points, {startX, startY, endX, endY});
+				console.log(points, {px, py, endX, endY});
 				console.log('================================');
 			}
 
@@ -351,9 +396,6 @@ export class Ray
 		let solidX = null;
 		let solidY = null;
 
-		const ox = Math.sign(dx);
-		const oy = Math.sign(dy);
-
 		if(window.smDebug) window.debugPoints = [];
 
 		let iterations = 0;
@@ -378,41 +420,44 @@ export class Ray
 						: (qStartX + checkX) % bs
 				}
 
-				if(rayFlags & this.T_SNAP_TO_INT)
-				{
-					const moX = mod(tileMap.x, 1);
-					const poX = mod(px, 1);
-
-					if(moX > poX)
-					{
-						if(sx > 0) px = Math.floor(px) + (moX - 1);
-						if(sx < 0) px = Math.ceil(px) + moX;
-					}
-					else if(moX < poX)
-					{
-						if(sx > 0) px = Math.ceil(px) + (moX - 1);
-						if(sx < 0) px = Math.floor(px) + moX;
-					}
-
-					const moY = mod(tileMap.y, 1);
-					const poY = mod(py, 1);
-
-					if(moY > poY)
-					{
-						if(sy > 0) py = Math.floor(py) + (moY - 1);
-						if(sy < 0) py = Math.ceil(py) + moY;
-					}
-					else if(moY < poY)
-					{
-						if(sy > 0) py = Math.floor(py) + moY;
-						if(sy < 0) py = Math.ceil(py) + (moY - 1);
-					}
-				}
-
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
 
 				if(tileMap.getSolid(px, py, layerId))
 				{
+					const lx = px - tileMap.x;
+					const ly = py - tileMap.y;
+
+					const bl = tileMap.x + Math.floor(lx);
+					const br = bl + 1;
+					const bt = tileMap.y + Math.floor(ly);
+					const bb = bt + 1;
+
+					const bx = ox > 0 ? bl : br;
+					const by = oy > 0 ? bt : bb;
+
+					const horiz = Geometry.lineIntersectsLine(
+						qStartX, qStartY, qEndX, qEndY
+						, bl, by, br, by
+					);
+
+					const vert = Geometry.lineIntersectsLine(
+						qStartX, qStartY, qEndX, qEndY
+						, bx, bt, bx, bb
+					);
+
+					if(horiz)
+					{
+						px = horiz[0];
+						py = horiz[1];
+					}
+					else if(vert)
+					{
+						px = vert[0];
+						py = vert[1];
+					}
+
+					console.log(1, {yo: tileMap.y, h:horiz[1], by, py});
+
 					solidX = [px, py, pt, layerId, tileMap];
 					break;
 				}
@@ -439,43 +484,46 @@ export class Ray
 						: (qStartY + checkY) % bs;
 				}
 
-				if(rayFlags & this.T_SNAP_TO_INT)
-				{
-					const moX = mod(tileMap.x, 1);
-					const poX = mod(px, 1);
-
-					if(moX > poX)
-					{
-						if(sx > 0) px = Math.floor(px) + (moX - 1);
-						if(sx < 0) px = Math.ceil(px) + moX;
-					}
-					else if(moX < poX)
-					{
-						if(sx > 0) px = Math.ceil(px) + (moX - 1);
-						if(sx < 0) px = Math.floor(px) + moX;
-					}
-
-					const moY = mod(tileMap.y, 1);
-					const poY = mod(py, 1);
-
-					if(moY > poY)
-					{
-						if(sy > 0) py = Math.floor(py) + (moY - 1);
-						if(sy < 0) py = Math.ceil(py) + moY;
-					}
-					else if(moY < poY)
-					{
-						if(sy > 0) py = Math.floor(py) + moY;
-						if(sy < 0) py = Math.ceil(py) + (moY - 1);
-					}
-
-				}
-
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
 
 				if(tileMap.getSolid(px, py, layerId))
 				{
+					const lx = px - tileMap.x;
+					const ly = py - tileMap.y;
+
+					const bl = tileMap.x + Math.floor(lx);
+					const br = bl + 1;
+					const bt = tileMap.y + Math.floor(ly);
+					const bb = bt + 1;
+
+					const bx = sx > 0 ? bl : br;
+					const by = sy > 0 ? bt : bb;
+
+					const horiz = Geometry.lineIntersectsLine(
+						qStartX, qStartY, qEndX, qEndY
+						, bl, by, br, by
+					);
+
+					const vert = Geometry.lineIntersectsLine(
+						qStartX, qStartY, qEndX, qEndY
+						, bx, bt, bx, bb
+					);
+
+					if(horiz)
+					{
+						px = horiz[0];
+						py = horiz[1];
+					}
+					else if(vert)
+					{
+						px = vert[0];
+						py = vert[1];
+					}
+
+					console.log(2, {yo: tileMap.y, h:horiz[1], by, py});
+
 					solidY = [px, py, pt, layerId, tileMap];
+
 					break;
 				}
 

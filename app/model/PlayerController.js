@@ -344,7 +344,7 @@ export class PlayerController
 				, entity.x
 				, entity.y
 				, entity.x
-				, entity.y + entity.ySpeed + 6
+				, entity.y + Math.max(entity.ySpeed, 6)
 				, Ray.T_SNAP_TO_INT
 			);
 
