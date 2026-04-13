@@ -1,12 +1,32 @@
+/**
+ * Represents a gamepad button
+ */
 export class Button
 {
-	active   = false;
+	/**
+	 * @property {boolean} active - Whether the button is pressed
+	 */
+	active = false;
 
+	/**
+	 * @property {number} pressure - How hard the button is pressed
+	 */
 	pressure = 0;
-	delta    = 0;
-	time     = 0;
 
-	update(options = {})
+	/**
+	 * @property {number} delta - How much the pressure changed on the last tick
+	 */
+	delta = 0;
+
+	/**
+	 * @property {number} time - How long has the button been pressed (ticks)
+	 */
+	time = 0;
+
+	/**
+	 * Update the state of the button by one tick
+	 */
+	update()
 	{
 		if(this.pressure)
 		{
@@ -27,6 +47,10 @@ export class Button
 		}
 	}
 
+	/**
+	 * Press the button to a given pressure level
+	 * @param {number} pressure - The new pressure level
+	 */
 	press(pressure)
 	{
 		this.delta    = Number(pressure - this.pressure).toFixed(3) - 0;
@@ -35,6 +59,9 @@ export class Button
 		this.time     = this.time > 0 ? this.time : 0;
 	}
 
+	/**
+	 * Release the button
+	 */
 	release()
 	{
 		// if(!this.active)
@@ -47,6 +74,9 @@ export class Button
 		this.active   = false;
 	}
 
+	/**
+	 * Reset the button
+	 */
 	zero()
 	{
 		this.pressure = this.delta = 0;

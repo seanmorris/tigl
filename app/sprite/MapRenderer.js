@@ -1,9 +1,25 @@
 import { Bindable } from 'curvature/base/Bindable';
 
+/**
+ * @import { SpriteBoard } from './SpriteBoard';
+ * @import { TileMap } from '../world/TileMap';
+ * @import { Session } from '../session/Session';
+ */
+
 const emptyPixel = new Uint8Array(4);
 
+/**
+ * Renders a TileMap
+ */
 export class MapRenderer
 {
+	/**
+	 * Construct a MapRenderer
+	 * @param {object} param0 - Named params
+	 * @param {SpriteBoard} param0.spriteBoard - The SpriteBoard to render to
+	 * @param {TileMap} param0.map - The TileMap to render
+	 * @param {Session} param0.session - The current Session
+	 */
 	constructor({spriteBoard, map, session})
 	{
 		this[Bindable.Prevent] = true;
@@ -63,6 +79,11 @@ export class MapRenderer
 		return (b + a % b) % b;
 	}
 
+	/**
+	 * Draw map layers by priority
+	 * @param {number} delta - MS since last tick
+	 * @param {string} priority - Which layer-priority to render
+	 */
 	draw(delta, priority)
 	{
 		if(!this.loaded)
@@ -400,6 +421,11 @@ export class MapRenderer
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	/**
+	 * Resize the render window
+	 * @param {number} x - The new width of the render window
+	 * @param {number} y - The new height of the render window
+	 */
 	resize(x, y)
 	{
 		this.width =  x + 0;
@@ -436,6 +462,13 @@ export class MapRenderer
 	simulate()
 	{}
 
+	/**
+	 * Set the rectangle in the viewport for rendering
+	 * @param {number} x - The x value of the top/left of the render window
+	 * @param {number} y - The y value of the top/left of the render window
+	 * @param {number} width - The width of the render window
+	 * @param {number} height - The height of the render window
+	 */
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;

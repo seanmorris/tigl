@@ -5,13 +5,38 @@ import { SMTree } from '../math/SMTree';
 import { Ray } from "../math/Ray";
 import { Entity } from '../model/Entity';
 
+/**
+ * @import { Region } from "../model/Region"
+ * @import { Session } from "../model/Session"
+ * @import { Rectangle } from "../math/Rectangle"
+ */
+
+
 const cache = new Map;
 
+/**
+ * Represents a world of multiples TileMaps
+ * @property {string|URL} src - The URL of the World data to load
+ * @property {Promise<void>} ready - Resolves when the World is loaded & ready
+ * @property {Array<TileMap>} maps - Tilemaps in the world
+ * @property {MotionGraph} motionGraph - The MotionGraph of the World
+ * @property {Map<Rectangle,TileMap>} mapRects - The Rectangles of the TileMaps
+ * @property {SMTree} mapTree - The SMTree for the TileMaps
+ * @property {Session} session - The current Session
+ * @property {boolean} async - Whether we're loading asyncronously
+ * @property {number} age - How old the World is in ms
+ */
 export class World
 {
+	/**
+	 * Construct a World object
+	 * @param {object} param0 - Named Params
+	 * @param {string|URL} param0.src - The URL of the World data to load
+	 * @param {Session} param0.session - The current Session
+	 */
 	constructor({src, session})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 		this.src = new URL(src, location);
 		this.ready = this.getReady(this.src);
 		this.maps = [];
@@ -24,11 +49,21 @@ export class World
 		this.age = 0;
 	}
 
+
+	/**
+	 * Tick the World's simulation logic once.
+	 * @param {number} delta - MS since last tick
+	 */
 	simulate(delta)
 	{
 		this.age += delta;
 	}
 
+	/**
+	 * Load & initialize the world from a URL
+	 * @param {string|URL} src - The URL of the World data to load
+	 * @returns {Promise<void>}
+	 */
 	async getReady(src)
 	{
 		if(!cache.has(src))
@@ -58,6 +93,12 @@ export class World
 		}));
 	}
 
+	/**
+	 * Get maps for a given point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {Set<TileMap>} - The TileMaps at the point
+	 */
 	getMapsForPoint(x, y)
 	{
 		const rects = this.mapTree.query(x, y, x, y);
@@ -72,6 +113,14 @@ export class World
 		return maps;
 	}
 
+	/**
+	 * Get maps for a given rectangle
+	 * @param {number} x - The x value of the top/left of the rectangle
+	 * @param {number} y - The y value of the top/left of the rectangle
+	 * @param {number} w - The width of the rectangle
+	 * @param {number} h - The height of the rectangle
+	 * @returns {Set<TileMap>} - The TileMaps in the rectangle
+	 */
 	getMapsForRect(x, y, w, h)
 	{
 		const result = new Set;
@@ -90,6 +139,13 @@ export class World
 		return result;
 	}
 
+	/**
+	 * Check if a given point is solid or space
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {Set<Entity>|number|false|void} - The Set of Entities at the point, or the tile ID at the point (if solid), or false if space
+	 */
 	getSolid(x, y, z)
 	{
 		const terrain = this.getSolidTerrain(x, y, z);
@@ -99,6 +155,13 @@ export class World
 		if(solidEntities.size) return solidEntities;
 	}
 
+	/**
+	 * Check if a given point is solid TERRAIN or space
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {number|false} - The tile ID at the point (if solid), false if space
+	 */
 	getSolidTerrain(x, y, z)
 	{
 		const maps = this.getMapsForPoint(x, y);
@@ -116,6 +179,13 @@ export class World
 		return null;
 	}
 
+	/**
+	 * Get the collision tile for a given point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {null|number} The tile at the point or null if no tile exists there
+	 */
 	getCollisionTile(x, y, z)
 	{
 		const maps = this.getMapsForPoint(x, y);
@@ -133,6 +203,13 @@ export class World
 		return null;
 	}
 
+	/**
+	 * Get Entities for a given point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} entiyFlags - Bitwise filter
+	 * @returns {Set<Entity>} - The Entities at the given point
+	 */
 	getEntitiesForPoint(x, y, entiyFlags = 0)
 	{
 		const tilemaps = this.getMapsForPoint(x, y);
@@ -172,6 +249,14 @@ export class World
 		return result;
 	}
 
+	/**
+	 * Get Entities for a given rectangle
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} w - The width of the rectangle
+	 * @param {number} h - The height of the rectangle
+	 * @returns {Set<Entity>} - The Entities in the given rectangle
+	 */
 	getEntitiesForRect(x, y, w, h)
 	{
 		const tilemaps = this.getMapsForRect(x, y, w, h);
@@ -197,6 +282,12 @@ export class World
 		return result;
 	}
 
+	/**
+	 * Get Regions for a given point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {Set<Region>} - The Regions at the point
+	 */
 	getRegionsForPoint(x, y)
 	{
 		const tilemaps = this.getMapsForPoint(x, y);
@@ -218,6 +309,14 @@ export class World
 		return result;
 	}
 
+	/**
+	 * Get Regions for a given rectangle
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} w - The width of the rectangle
+	 * @param {number} h - The height of the rectangle
+	 * @returns {Set<Region>} - The Regions in the given rectangle
+	 */
 	getRegionsForRect(x, y, w, h)
 	{
 		const tilemaps = this.getMapsForRect(x, y, w, h);
@@ -244,6 +343,16 @@ export class World
 		return result;
 	}
 
+	/**
+	 * Cast a Ray through the World
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {number} layerId - The id of the layer to scan
+	 * @returns {*} - The result of the raycast
+	 */
 	castRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
 		return Ray.cast(
@@ -257,6 +366,16 @@ export class World
 		);
 	}
 
+	/**
+	 * Scan for terrain along a Ray in the World
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {number} layerId - The id of the layer to scan
+	 * @returns {*} - The result of the raycast
+	 */
 	castTerrainRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
 		return Ray.castTerrain(
@@ -270,6 +389,15 @@ export class World
 		);
 	}
 
+	/**
+	 * Scan for Entities along a Ray in the World
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @returns {*} - The result of the raycast
+	 */
 	castEntityRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS)
 	{
 		return Ray.castEntity(

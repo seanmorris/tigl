@@ -7,8 +7,22 @@ import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
 import { Region } from './Region';
 
+/**
+ * @import { Session } from '../session/Session';
+ * @import { World } from '../world/World';
+*/
+
+/**
+ * Renders the whole game
+ */
 export class SpriteBoard
 {
+	/**
+	 * Construct a SpriteBoard
+	 * @param {object} param0 - Named params
+	 * @param {HTMLCanvasElement} param0.element - The vanvas to render to
+	 * @param {Session} param0.session - The current Session
+	 */
 	constructor({element, session})
 	{
 		this[Bindable.Prevent] = true;
@@ -81,11 +95,19 @@ export class SpriteBoard
 		this.following = null;
 	}
 
+	/**
+	 * Load a world
+	 * @param {World} world - The World to load
+	 */
 	loadWorld(world)
 	{
 		this.world = world;
 	}
 
+	/**
+	 * Draw the frame
+	 * @param {number} delta - MS since last tick
+	 */
 	draw(delta)
 	{
 		if(!this.world)
@@ -282,6 +304,11 @@ export class SpriteBoard
 		// gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	/**
+	 * Resize the render window
+	 * @param {number} width - The new width of the render window
+	 * @param {number} height - The new height of the render window
+	 */
 	resize(width, height)
 	{
 		const gl = this.gl2d.context;
@@ -329,6 +356,10 @@ export class SpriteBoard
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	/**
+	 * Change the zoom level by a given amount
+	 * @param {number} delta - How much to change the zoom by
+	 */
 	zoom(delta)
 	{
 		const max = this.screenScale * 32;
@@ -360,6 +391,13 @@ export class SpriteBoard
 		}
 	}
 
+	/**
+	 * Set the rectangle in the viewport for rendering
+	 * @param {number} x - The x value of the top/left of the render window
+	 * @param {number} y - The y value of the top/left of the render window
+	 * @param {number} width - The width of the render window
+	 * @param {number} height - The height of the render window
+	 */
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.gl2d.context;

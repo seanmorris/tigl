@@ -3,8 +3,58 @@ import { SpriteSheet } from "./SpriteSheet";
 import { Matrix } from "../math/Matrix";
 import { Camera } from "./Camera";
 
+/**
+ * @import { Session } from "../session/Session";
+ */
+
+/**
+ * Renders a bitmap from an image or spritesheet.
+ * @property {number} x - The x position
+ * @property {number} y - The y position
+ * @property {number} z - The z position (render order)
+ * @property {string|null} currentAnimation - The currently running animation
+ * @property {number} width - The on-screen width
+ * @property {number} height - The on-screen height
+ * @property {number} originalWidth - The original width of the sprite (used for tiling)
+ * @property {number} originalHeight - The original height of the sprite (used for tiling)
+ * @property {boolean} tiled - Whether the sprite is tiled
+ * @property {number} scale - The scale multiplier of the sprite
+ * @property {number} scaleX - The X scale multiplier of the sprite
+ * @property {number} scaleY - The Y scale multiplier of the sprite
+ * @property {number} theta - The rotation of the sprite in radians
+ * @property {number} shearX - The X shear factor
+ * @property {number} shearY - The Y shear factor
+ * @property {number} shearX2 - A second X shear factor, applied AFTER y-shearing.
+ * @property {number} repeatX - Repeat cound in the X direction
+ * @property {number} repeatY - Repeat cound in the Y direction
+ * @property {number} xCenter - Repeat cound in the X direction
+ * @property {number} yCenter - Repeat cound in the Y direction
+ * @property {boolean} visible - Whether the sprite is currently visible
+ * @property {Array} textures - List of textures keyed by ID loaded from a Spritesheet
+ * @property {number} currentDelay - Delay until next frame
+ * @property {number} currentFrame - Currently displayed frame
+ * @property {object} spriteBoard - The spriteboard the sprite is attached to
+ * @property {object} texture - The base texture for the sprite
+ */
 export class Sprite
 {
+	/**
+	 * Construct a Sprite object
+	 * @param {object} param0 - Named params
+	 * @param {string} param0.src - Image URL to generate a Sprite
+	 * @param {string} param0.color - Color to use if no image is provided
+	 * @param {string} param0.pixels - NOT USED
+	 * @param {Session} param0.session - Session associated with the sprite
+	 * @param {SpriteSheet} param0.spriteSheet - SpriteSheet used to render the sprite
+	 * @param {number} param0.x - The x position
+	 * @param {number} param0.y - The y position
+	 * @param {number} param0.z - The z position (render order)
+	 * @param {number} param0.width - The on-screen width
+	 * @param {number} param0.height - The on-screen height
+	 * @param {number} param0.originalWidth - The original width of the sprite (used for tiling)
+	 * @param {number} param0.originalHeight - The original height of the sprite (used for tiling)
+	 * @param {boolean} param0.tiled - Whether to tile the sprite
+	 */
 	constructor({src, color, pixels, session, spriteSheet, x, y, z, width, height, originalWidth, originalHeight, tiled = false})
 	{
 		this[Bindable.Prevent] = true;
@@ -37,25 +87,21 @@ export class Sprite
 
 		this.visible = false;
 		this.textures = [];
-		this.frames = [];
 		this.currentDelay = 0;
 		this.currentFrame = 0;
-		this.currentFrames = '';
 
-		this.speed    = 0;
-		this.maxSpeed = 4;
+		// this.RIGHT	= 0;
+		// this.DOWN	= 1;
+		// this.LEFT	= 2;
+		// this.UP		= 3;
 
-		this.RIGHT	= 0;
-		this.DOWN	= 1;
-		this.LEFT	= 2;
-		this.UP		= 3;
+		// this.EAST	= this.RIGHT;
+		// this.SOUTH	= this.DOWN;
+		// this.WEST	= this.LEFT;
+		// this.NORTH	= this.UP;
 
-		this.EAST	= this.RIGHT;
-		this.SOUTH	= this.DOWN;
-		this.WEST	= this.LEFT;
-		this.NORTH	= this.UP;
-
-		this.region = [0, 0, 0, 1];
+		// this.region = [0, 0, 0, 1];
+		// this.tint = [255, 255, 255, 255];
 
 		this.spriteBoard = session.spriteBoard;
 
@@ -114,6 +160,10 @@ export class Sprite
 		}
 	}
 
+	/**
+	 * Draw the sprite
+	 * @param {number} delta - MS since last tick
+	 */
 	draw(delta)
 	{
 		if(this.currentDelay > 0)
@@ -174,7 +224,11 @@ export class Sprite
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
-	changeAnimation(name, reset = true)
+	/**
+	 * Change the current animation.
+	 * @param {string} name - The animation to swtich to
+	 */
+	changeAnimation(name)
 	{
 		if(!this.spriteSheet ||!this.spriteSheet.animations[name])
 		{
@@ -190,6 +244,11 @@ export class Sprite
 		}
 	}
 
+	/**
+	 * Create a new texture given an array of pixel values
+	 * @param {Uint8Array} pixels - The pixels to use for the texture
+	 * @returns {WebGLTexture} - The texture
+	 */
 	createTexture(pixels)
 	{
 		const gl = this.spriteBoard.gl2d.context;
@@ -229,12 +288,16 @@ export class Sprite
 		return texture;
 	}
 
+	/**
+	 * Set the rectangle in the viewport for rendering
+	 * @param {number} x - The x value of the top/left of the render window
+	 * @param {number} y - The y value of the top/left of the render window
+	 * @param {number} width - The width of the render window
+	 * @param {number} height - The height of the render window
+	 */
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
-		// const xra = (this.width / this.originalWidth) * this.repeatX;
-		// const yra = (this.height / this.originalHeight) * this.repeatY;
-
 		const xra = (this.width / this.originalWidth) * this.repeatX;
 		const yra = (this.height / this.originalHeight) * this.repeatY;
 
@@ -248,7 +311,7 @@ export class Sprite
 			xra, yra,
 		]), gl.STATIC_DRAW);
 
-		const zoom = this.spriteBoard.zoomLevel;
+		// const zoom = this.spriteBoard.zoomLevel;
 
 		const x1 = x;
 		const y1 = y;

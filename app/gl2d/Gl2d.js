@@ -1,13 +1,43 @@
+/**
+ * Wraps a WebGLProgram
+ */
 class Program
 {
+	/**
+	 * @property {CanvasRenderingContext2D} context - Rendering context from canvas
+	 */
 	context = null;
+
+	/**
+	 * @property {WebGLProgram} program - The WebGLProgram object
+	 */
 	program = null;
 
+	/**
+	 * @property { {[string]: GLint} } attributes - Attributes keyed by name
+	 */
 	attributes = {};
+
+	/**
+	 * @property { {[string]: WebGLBuffer} } buffers - Attribute buffers keyed by name
+	 */
 	buffers = {};
+
+	/**
+	 * @property { {[string]: WebGLUniformLocation} } uniforms - Uniform locations keyed by name
+	 */
 	uniforms = {};
 
-	constructor({gl, vertexShader, fragmentShader, uniforms, attributes})
+	/**
+	 * Construct a Program object
+	 * @param {object} param0 - Named params
+	 * @param {WebGLRenderingContext} param0.gl - The WebGL rendering context
+	 * @param {WebGLShader} param0.vertexShader - The vertex shader
+	 * @param {WebGLShader} param0.fragmentShader - The fragment shader
+	 * @param {Array<string>} param0.attributes - List of attribute names
+	 * @param {Array<string>} param0.uniforms - List of uniform names
+	 */
+	constructor({gl, vertexShader, fragmentShader, attributes, uniforms})
 	{
 		this.context = gl;
 		this.program = gl.createProgram();
@@ -70,17 +100,30 @@ class Program
 		}
 	}
 
+	/**
+	 * Activate the program
+	 */
 	use()
 	{
 		this.context.useProgram(this.program);
 	}
 
+	/**
+	 * Set a floating point uniform[1,2,3,4]
+	 * @param {string} name - The uniform name
+	 * @param  {...number} floats - The floating point values to set
+	 */
 	uniformF(name, ...floats)
 	{
 		const gl = this.context;
 		gl[`uniform${floats.length}f`](this.uniforms[name], ...floats);
 	}
 
+	/**
+	 * Set an integer uniform[1,2,3,4]
+	 * @param {string} name - The uniform name
+	 * @param  {...number} ints - The integer values to set
+	 */
 	uniformI(name, ...ints)
 	{
 		const gl = this.context;
@@ -88,8 +131,15 @@ class Program
 	}
 }
 
+/**
+ * Wraps common GL operations
+ */
 export class Gl2d
 {
+	/**
+	 * Construct a Gl2d object
+	 * @param {HTMLCanvasElement} element - The canvas element to render to.
+	 */
 	constructor(element)
 	{
 		this.element = element || document.createElement('canvas');
@@ -101,6 +151,11 @@ export class Gl2d
 		}
 	}
 
+	/**
+	 * Create a new fragment or vertex shader
+	 * @param {string} location - The shader location
+	 * @returns {WebGLShader|void} - The shader
+	 */
 	createShader(location)
 	{
 		const extension = location.substring(location.lastIndexOf('.')+1);
@@ -136,12 +191,27 @@ export class Gl2d
 		this.context.deleteShader(shader);
 	}
 
+	/**
+	 * Create a new Program object
+	 * @param {object} param0 - Named params
+	 * @param {WebGLShader} param0.vertexShader - The vertex shader
+	 * @param {WebGLShader} param0.fragmentShader - The fragment shader
+	 * @param {Array<string>} param0.attributes - List of attribute names
+	 * @param {Array<string>} param0.uniforms - List of uniform names
+	 * @returns {Program} - The program
+	 */
 	createProgram({vertexShader, fragmentShader, uniforms, attributes})
 	{
 		const gl = this.context;
 		return new Program({gl, vertexShader, fragmentShader, uniforms, attributes});
 	}
 
+	/**
+	 * Create a new texture
+	 * @param {number} width - Texture width
+	 * @param {number} height - Texture height
+	 * @returns {WebGLTexture} - Texture object
+	 */
 	createTexture(width, height)
 	{
 		const gl = this.context;
@@ -169,6 +239,11 @@ export class Gl2d
 		return texture;
 	}
 
+	/**
+	 * Create a framebuffer for a texture
+	 * @param {WebGLTexture} texture - The texture
+	 * @returns {WebGLFramebuffer} - The framebuffer
+	 */
 	createFramebuffer(texture)
 	{
 		const gl = this.context;
@@ -188,6 +263,9 @@ export class Gl2d
 		return framebuffer;
 	}
 
+	/**
+	 * Enable alpha blending
+	 */
 	enableBlending()
 	{
 		const gl = this.context;

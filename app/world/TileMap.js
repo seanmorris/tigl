@@ -8,10 +8,25 @@ import { Rectangle } from '../math/Rectangle';
 import { Properties } from './Properties';
 import { parseColor } from '../sprite/parseColor';
 
+/**
+ * @import { Entity } from "../model/Entity";
+ * @import { Session } from "../model/Session";
+ */
+
 const cache = new Map;
 
+/**
+ * Represents an animated tile
+ */
 class Animation
 {
+	/**
+	 * Construct an Animation
+	 * @param {object} param0 - Named params
+	 * @param {Array<{duration:number,tileid:number}>} param0.frames - Array of frames
+	 * @param {number} param0.x - The x value of the tile to animate
+	 * @param {number} param0.y - The y value of the tile to animate
+	 */
 	constructor({frames, x, y})
 	{
 		this.x = x;
@@ -22,6 +37,11 @@ class Animation
 		this.frames = frames;
 	}
 
+	/**
+	 * Tick the animation by `delta` ms
+	 * @param {number} delta - The number of ms to advance the animation
+	 * @returns {number} - The id of the currently displayed frame
+	 */
 	animate(delta)
 	{
 		this.acc += delta;
@@ -41,8 +61,21 @@ class Animation
 	}
 }
 
+/**
+ * Represents a map of tiles, objects, & images.
+ */
 export class TileMap
 {
+	/**
+	 * Construct a TileMap object.
+	 * @param {object} mapData - Named params
+	 * @param {string} mapData.fileName -The filename/URL of the TileMap
+	 * @param {Session} mapData.session -The current Session
+	 * @param {number} mapData.x -The x position of the TileMap in the World
+	 * @param {number} mapData.y -The y position of the TileMap in the World
+	 * @param {number} mapData.width - The width of the TileMap
+	 * @param {number} mapData.height - The height of the TileMap
+	 */
 	constructor(mapData)
 	{
 		const {
@@ -118,6 +151,10 @@ export class TileMap
 		// this.ready = this.getReady(fileName);
 	}
 
+	/**
+	 * Set up the object
+	 * @returns {Promise<TileMap>} - Resolves when the TileMap is ready
+	 */
 	initialize()
 	{
 		if(this.ready)
@@ -128,6 +165,14 @@ export class TileMap
 		return this.ready = this.getReady(this.src);
 	}
 
+	/**
+	 * Find Entities in a given rectangle
+	 * @param {number} wx1 - The x value of the top/left corner
+	 * @param {number} wy1 - The y value of the top/left corner
+	 * @param {number} wx2 - The x value of the bottom/right corner
+	 * @param {number} wy2 - The y value of the bottom/right corner
+	 * @returns {Set<Entity>} - The Entities in the rectangle
+	 */
 	selectEntities(wx1, wy1, wx2, wy2)
 	{
 		return this.quadTree.select(
@@ -140,16 +185,31 @@ export class TileMap
 		);
 	}
 
+	/**
+	 * Add an Entity to the TileMap
+	 * @param {Entity} entity - The Entity to add
+	 * @returns {boolean} - Whether the Entity was added
+	 */
 	addEntity(entity)
 	{
 		return this.quadTree.add(entity, -this.x, -this.y);
 	}
 
+	/**
+	 * Move an Entity in the TileMap
+	 * @param {Entity} entity - The Entity to move
+	 * @returns {boolean} - Whether the move succeeded
+	 */
 	moveEntity(entity)
 	{
 		return this.quadTree.move(entity, -this.x, -this.y);
 	}
 
+	/**
+	 * Get a promise that resolves when the TileMap is ready to use
+	 * @param {string|URL} src - The URL of the TileMap to load
+	 * @returns {Promise<TileMap>} - Resolves when the TileMap is ready
+	 */
 	async getReady(src)
 	{
 		if(!cache.has(src))
@@ -218,6 +278,10 @@ export class TileMap
 		return this;
 	}
 
+	/**
+	 * Get the TileMap data ready for rendering
+	 * @param {Array<Tileset>} tilesets - Tilesets to prepare
+	 */
 	assemble(tilesets)
 	{
 		tilesets.sort((a, b) => a.firstGid - b.firstGid);
@@ -411,6 +475,9 @@ export class TileMap
 		}
 	}
 
+	/**
+	 * Spawn Entities defined in the object-layers
+	 */
 	async spawn()
 	{
 		for(const layer of this.objectLayers)
@@ -470,6 +537,11 @@ export class TileMap
 		}
 	}
 
+	/**
+	 * Tick the simulation once
+	 * @param {number} delta - The number of ms since the last tick
+	 * @returns {void}
+	 */
 	simulate(delta)
 	{
 		if(!this.loaded)
@@ -501,6 +573,13 @@ export class TileMap
 		}
 	}
 
+	/**
+	 * Get the collision tile for a point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {boolean|number} - Boolean or tile number
+	 */
 	getCollisionTile(x, y, z)
 	{
 		if(!this.loaded)
@@ -516,11 +595,25 @@ export class TileMap
 		return this.getTileFromLayer(this.collisionLayers[z], x, y);
 	}
 
+	/**
+	 * Get the color of a point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {number|false} - Boolean or uint32 color(number))/no tile (false)
+	 */
 	getColor(x, y, z = 0)
 	{
 		return this.getPixel(this.tileLayers[z], x, y, z);
 	}
 
+	/**
+	 * Check the solidity of a point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @param {number} z - The layer id to check
+	 * @returns {boolean|number} - Boolean or uint32 color indicating solid (true-y)/space (false-y)
+	 */
 	getSolid(x, y, z = 0)
 	{
 		if(!this.loaded)
@@ -538,6 +631,13 @@ export class TileMap
 		return pixel;
 	}
 
+	/**
+	 * Get the color of a point
+	 * @param {*} layer - The Tile Layer to sample
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {number|false} - Boolean or uint32 color(number))/no tile (false)
+	 */
 	getPixel(layer, x, y)
 	{
 		if(!this.loaded)
@@ -563,6 +663,13 @@ export class TileMap
 		return pixel;
 	}
 
+	/**
+	 * Get the tile for a given point
+	 * @param {*} layer - The tile layer to check
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {null|number} The tile at the point or null if no tile exists there
+	 */
 	getTileFromLayer(layer, x, y)
 	{
 		if(!this.loaded)
@@ -585,6 +692,16 @@ export class TileMap
 		return -1 + layer.data[tileX + tileY * this.width];
 	}
 
+	/**
+	 * Get a rectangular slice of tile layers at a given priority
+	 * @param {string} p - The priority to render
+	 * @param {number} x - The x value of the top/left corner of the rectangle to sample
+	 * @param {number} y - The y value of the top/left corner of the rectangle to sample
+	 * @param {number} w - The width of the rectangle to sample
+	 * @param {number} h - The height of the rectangle to sample
+	 * @param {number} delta -
+	 * @returns {*} - Array of pixel layers
+	 */
 	getSlice(p, x, y, w, h, delta = 0)
 	{
 		if(!this.loaded)
@@ -658,6 +775,16 @@ export class TileMap
 		return pixelLayers;
 	}
 
+	/**
+	 * Put a rectangular slice of a tile layer into a rendering buffer
+	 * @param {*} buffer = The rendering buffer
+	 * @param {number} width - The width of the rendering buffer
+	 * @param {number} layer - The layer to sample
+	 * @param {number} x - The x value of the top/left corner of the rectangle to sample
+	 * @param {number} y - The y value of the top/left corner of the rectangle to sample
+	 * @param {number} w - The width of the rectangle to sample
+	 * @param {number} h - The height of the rectangle to sample
+	 */
 	getStaticSlice(buffer, width, layer, x, y, w, h)
 	{
 		// buffer.fill(0);
@@ -679,6 +806,11 @@ export class TileMap
 		}
 	}
 
+	/**
+	 * Get the URL of a tile image given a tile gid
+	 * @param {number} gid - The gid of the tile
+	 * @returns {URL} - The URL of the tile image
+	 */
 	getTileImage(gid)
 	{
 		gid = -1 + gid;
@@ -698,6 +830,12 @@ export class TileMap
 		return c.toDataURL();
 	}
 
+	/**
+	 * Get Regions for a given point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {Set<Region>} - The Regions at the point
+	 */
 	getRegionsForPoint(x, y)
 	{
 		const results = new Set;
@@ -723,6 +861,14 @@ export class TileMap
 		return results;
 	}
 
+	/**
+	 * Get Regions for a given rectangle
+	 * @param {number} x1 - The x value of the top/left point
+	 * @param {number} y1 - The y value of the top/left point
+	 * @param {number} x2 - The x value of the bottom/right point
+	 * @param {number} y2 - The y value of the bottom/right point
+	 * @returns {Set<Region>} - The Regions in the given rectangle
+	 */
 	getRegionsForRect(x1, y1, x2, y2)
 	{
 		const results = new Set;

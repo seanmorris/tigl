@@ -9,6 +9,11 @@ export class PlayerController
 	static spriteSheet = '/player.tsj';
 	static spriteColor = [0, 255, 255, 255];
 
+	/**
+	 * Set up a new Entity
+	 * @param {Entity} entity
+	 * @param {object} entityData
+	 */
 	create(entity, entityData)
 	{
 		this.direction = 'south';
@@ -45,9 +50,18 @@ export class PlayerController
 		this.airJumps = 0;
 	}
 
+	/**
+	 * Break down an Entity before destruction
+	 * @param {Entity} entity
+	 */
 	destroy(entity){}
 
-	simulate(entity)
+	/**
+	 * Tick the Entity's simulation logic once.
+	 * @param {Entity} entity
+	 * @param {number} delta - MS since last tick
+	 */
+	simulate(entity, delta)
 	{
 		if(this.state === 'jumping')
 		{
@@ -459,6 +473,12 @@ export class PlayerController
 		}
 	}
 
+	/**
+	 * Handle two Entities colliding
+	 * @param {Entity} entity - The main entity in the collision
+	 * @param {Entity} other - The other entity in the collision
+	 * @param {[number, number]} point - The point where collision was detected
+	 */
 	collide(entity, other, point)
 	{
 		// if(other.flags & Entity.E_PLATFORM)
@@ -474,6 +494,15 @@ export class PlayerController
 		// }
 	}
 
+	/**
+	 * Put the Entity into sleep-mode
+	 * @param {Entity} entity
+	 */
 	sleep(entity){}
+
+	/**
+	 * Take the Entity out of sleep-mode
+	 * @param {Entity} entity
+	 */
 	wakeup(entity){}
 }

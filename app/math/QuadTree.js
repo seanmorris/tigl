@@ -1,8 +1,21 @@
 import { Bindable } from "curvature/base/Bindable";
 import { Rectangle } from "./Rectangle";
 
+/**
+ * @import { Entity } from "../model/Entity";
+ */
+
 export class QuadTree extends Rectangle
 {
+	/**
+	 * Construct a QuadTree object
+	 * @param {number} x1 - The x value of the top/left
+	 * @param {number} y1 - The y value of the top/left
+	 * @param {number} x2 - The x value of the bottom/right
+	 * @param {number} y2 - The y value of the bottom/right
+	 * @param {number} minSize - The minimum size of a cell
+	 * @param {QuadTree} parent - The parent cell (used internally to split the tree)
+	 */
 	constructor(x1, y1, x2, y2, minSize = 0, parent = null)
 	{
 		super(x1, y1, x2, y2);
@@ -26,6 +39,14 @@ export class QuadTree extends Rectangle
 		this.cellName = 'r';
 	}
 
+	/**
+	 * Gets a leaf node
+	 * @param {QuadTree} parent - The parent cell
+	 * @param {0|1} xCell - 0 = left, 1 = right
+	 * @param {0|1} yCell - 0 = top, 1 = bottom
+	 * @param {WeakRef} cache - WeakRef cache to recover node before GC
+	 * @returns {QuadTree} - The leaf node
+	 */
 	static getLeaf(parent, xCell, yCell, cache = null)
 	{
 		if(cache)
@@ -60,6 +81,13 @@ export class QuadTree extends Rectangle
 		return leaf;
 	}
 
+	/**
+	 *
+	 * @param {Entity} entity - The Entity to add to the QuadTree
+	 * @param {number} xOffset - The x offset (swaps between global/local coords)
+	 * @param {number} yOffset - The y offset (swaps between global/local coords)
+	 * @returns {boolean} - Whether the Entity was added
+	 */
 	add(entity, xOffset = 0, yOffset = 0)
 	{
 		if(!this.contains(entity.x + xOffset, entity.y + yOffset))
@@ -149,6 +177,13 @@ export class QuadTree extends Rectangle
 		}
 	}
 
+	/**
+	 * Move an entity already in the QuadTree
+	 * @param {Entity} entity - The Entity to move
+	 * @param {number} xOffset - The x offset (swaps between global/local coords)
+	 * @param {number} yOffset - The y offset (swaps between global/local coords)
+	 * @returns {boolean} - Whether the Entity was moved
+	 */
 	move(entity, xOffset = 0, yOffset = 0)
 	{
 		if(!this.backMap.has(entity))
@@ -181,6 +216,11 @@ export class QuadTree extends Rectangle
 		return true;
 	}
 
+	/**
+	 * Remove an Entity from the QuadTree
+	 * @param {Entity} entity - The entity to remove
+	 * @returns {boolean} - Whether the Entity was removed
+	 */
 	delete(entity)
 	{
 		if(!this.backMap.has(entity))
@@ -208,6 +248,10 @@ export class QuadTree extends Rectangle
 		return true;
 	}
 
+	/**
+	 * Returns whether the node is prunable
+	 * @returns {boolean} - Whether the node is prunable
+	 */
 	isPrunable()
 	{
 		if(this.split)
@@ -223,6 +267,10 @@ export class QuadTree extends Rectangle
 		}
 	}
 
+	/**
+	 * Prune/unsplit empty leaves.
+	 * @returns {boolean} - Whether the node is prunable
+	 */
 	prune()
 	{
 		if(!this.isPrunable())
@@ -240,6 +288,12 @@ export class QuadTree extends Rectangle
 		return true;
 	}
 
+	/**
+	 * Find the leaf node that contains the point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {QuadTree} - The leaf node containing the point
+	 */
 	findLeaf(x, y)
 	{
 		if(!this.contains(x, y))
@@ -258,6 +312,11 @@ export class QuadTree extends Rectangle
 			?? this.brCell.findLeaf(x, y);
 	}
 
+	/**
+	 * Check if a QuadTree has an Entity
+	 * @param {Entity} entity - The Entity to search for
+	 * @returns {boolean} Whether the Entity is in the QuadTree
+	 */
 	has(entity)
 	{
 		if(this.split)
@@ -271,6 +330,14 @@ export class QuadTree extends Rectangle
 		return this.items.has(entity);
 	}
 
+	/**
+	 * Select Entities by a rectangle.
+	 * @param {number} x1 - The x value of the top/left
+	 * @param {number} y1 - The y value of the top/left
+	 * @param {number} x2 - The x value of the bottom/right
+	 * @param {number} y2 - The y value of the bottom/right
+	 * @returns {Set<Entity>} = The Entities inside the rectangle
+	 */
 	select(x1, y1, x2, y2)
 	{
 		if(x1 > this.x2 || x2 < this.x1)
@@ -296,6 +363,10 @@ export class QuadTree extends Rectangle
 		return new Set(this.items);
 	}
 
+	/**
+	 * Dump the Entities in the QuadTree into a Set
+	 * @returns {Set<Entity>} - The Entities in the QuadTree
+	 */
 	dump()
 	{
 		if(this.split)
@@ -311,6 +382,10 @@ export class QuadTree extends Rectangle
 		return new Set(this.items);
 	}
 
+	/**
+	 * Throw a warning on a "bad split"
+	 * @param {Entity} item - The item that caused the bad split
+	 */
 	onBadSplit(item)
 	{
 		console.warn('Bad split!', item);

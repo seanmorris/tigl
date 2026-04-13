@@ -1,5 +1,15 @@
+/**
+ * Represents a Rectangle
+ */
 export class Rectangle
 {
+	/**
+	 * Construct a Rectangle object
+	 * @param {number} x1 - The x value of the top/left
+	 * @param {number} y1 - The y value of the top/left
+	 * @param {number} x2 - The x value of the bottom/right
+	 * @param {number} y2 - The y value of the bottom/right
+	 */
 	constructor(x1, y1, x2, y2)
 	{
 		if(x1 > x2 || y1 > y2)
@@ -13,6 +23,12 @@ export class Rectangle
 		this.y2 = y2;
 	}
 
+	/**
+	 * Check if a Rectangle contains a point
+	 * @param {number} x - The x value of the point
+	 * @param {number} y - The y value of the point
+	 * @returns {boolean} - Whether the Rectangle contains the point
+	 */
 	contains(x, y)
 	{
 		if(x < this.x1 || x >= this.x2)
@@ -28,6 +44,11 @@ export class Rectangle
 		return true;
 	}
 
+	/**
+	 * Check if a Rectangle overlaps another Rectangle
+	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @returns {boolean} - Whether the Rectangle contains the point
+	 */
 	isOverlapping(other)
 	{
 		if(this.x1 >= other.x2 || other.x1 >= this.x2)
@@ -43,6 +64,11 @@ export class Rectangle
 		return true;
 	}
 
+	/**
+	 * Check if a Rectangle is flush with another Rectangle (one edge is equal)
+	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @returns {boolean} - Whether the Rectangle contains the point
+	 */
 	isFlushWith(other)
 	{
 		if(this.x1 > other.x2 || other.x1 > this.x2)
@@ -64,8 +90,15 @@ export class Rectangle
 		{
 			return true;
 		}
+
+		return false;
 	}
 
+	/**
+	 * Find the intersecting sub-Rectangle of two Rectangles
+	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @returns {Rectangle|void} - The Rectangle representing the intersection
+	 */
 	intersection(other)
 	{
 		if(!this.isOverlapping(other))
@@ -79,6 +112,11 @@ export class Rectangle
 		);
 	}
 
+	/**
+	 * Check if `other` is entirely INSIDE the current Rectangle
+	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @returns {boolean} - Whether `other` is completely INSIDE the current Rectangle
+	 */
 	isInside(other)
 	{
 		return this.x1 >= other.x1
@@ -87,11 +125,21 @@ export class Rectangle
 			&& this.y2 <= other.y2;
 	}
 
+	/**
+	 * Check if `other` is entirely OUTSIDE the current Rectangle
+	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @returns {boolean} - Whether `other` is completely OUTSIDE the current Rectangle
+	 */
 	isOutside(other)
 	{
-		return other.isInside(this);
+		return !other.isInside(this);
 	}
 
+	/**
+	 * Clone a Rectangle object
+	 * @param {Rectangle} rectangle - The other Rectangle to compare against
+	 * @returns {Rectangle} - A Rectangle of the same dimensions as the current Rectangle
+	 */
 	static clone(rectangle)
 	{
 		return new Rectangle(
@@ -102,6 +150,15 @@ export class Rectangle
 		);
 	}
 
+	/**
+	 * Perform Minkowski-expansion of two Rectangles
+	 * @param {Rectangle} other - The other Rectangle to expand by
+	 * @param {number} cxa - The x value of the current rectangle
+	 * @param {number} cya - The y value of the current rectangle
+	 * @param {number} cxb - The x value of `other`
+	 * @param {number} cyb - The y value of `other`
+	 * @returns {Rectangle} - The expanded Rectangle
+	 */
 	expand(other, cxa = 0.5, cya = 1.0, cxb = 0.5, cyb = 1.0)
 	{
 		const ex = other.x2 - other.x1;
@@ -118,6 +175,10 @@ export class Rectangle
 		return new Rectangle(x1, y1, x2, y2);
 	}
 
+	/**
+	 * Break the Rectangle into a set of points representing its bounds
+	 * @returns {Array<number>} - A list of points representing the lines
+	 */
 	toLines()
 	{
 		const x1 = this.x1;
@@ -133,6 +194,11 @@ export class Rectangle
 		];
 	}
 
+	/**
+	 * Break the Rectangle into a set of points representing its triangularization in `dim` dimensions
+	 * @param {number} dim - Number of dimensions to represent triangles in
+	 * @returns {Array<number>} - A list of points representing the triangles
+	 */
 	toTriangles(dim = 2)
 	{
 		if(dim === 2)

@@ -1,5 +1,19 @@
+/**
+ * @import { Entity } from "../model/Entity";
+ * @import { TileMap } from "./TileMap";
+*/
+
+/**
+ * TMX-formatted Properties
+ */
 export class Properties
 {
+	/**
+	 * Construct a Properties object
+	 * @param {object} properties - Raw TMX propeties
+	 * @param {Entity|TileMap} owner - The owner Entity or TileMap
+	 * @param {object} defaults - Default values
+	 */
 	constructor(properties, owner, defaults = [])
 	{
 		this.properties = {};
@@ -12,6 +26,12 @@ export class Properties
 		}
 	}
 
+	/**
+	 * Get a property's value
+	 * @param {string} name - The name of the property
+	 * @param {number} index - The index of the value
+	 * @returns {any|void} - The value of the property
+	 */
 	get(name, index = 0)
 	{
 		if(!this.properties[name])
@@ -22,11 +42,20 @@ export class Properties
 		return this.properties[name][index];
 	}
 
+	/**
+	 * Check if a property exists
+	 * @param {string} name - The name of the property
+	 * @returns {boolean} Whether the property exists
+	 */
 	has(name)
 	{
 		return !!this.properties[name];
 	}
 
+	/**
+	 * Add one or more properties
+	 * @param  {...any} properties - The properties to add (TMX format)
+	 */
 	add(...properties)
 	{
 		for(const property of properties)
@@ -61,6 +90,11 @@ export class Properties
 		}
 	}
 
+	/**
+	 * Get all values for a given property
+	 * @param {string} name - The name of the property
+	 * @returns {Array<any>} - The list of values
+	 */
 	getAll(name)
 	{
 		return [...this.properties[name]];

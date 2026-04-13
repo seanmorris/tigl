@@ -4,12 +4,70 @@ import { Sprite } from '../sprite/Sprite';
 import { Properties } from "../world/Properties";
 import { SpriteSheet } from "../sprite/SpriteSheet";
 
+/**
+ * @import { TileMap } from "../world/TileMap";
+ * @import { Session } from "../world/World";
+ */
+
+/**
+ * Represents an entity
+ * @property {object} controller - The Entity controller object
+ * @property {number} id - The ID of the Entity
+ * @property {number} xSpriteOffset - The x offset for the Sprite
+ * @property {number} ySpriteOffset - The y offset for the Sprite
+ * @property {number} flags - The Entity flags
+ * @property {number} x - The x position
+ * @property {number} y - The y position
+ * @property {number} width - The hitbox width
+ * @property {number} height - The hitbox height
+ * @property {Sprite} sprite - The Sprite object
+ * @property {object} inputManager - The input manager object
+ * @property {Session} session - The Session
+ * @property {Properties} props - The properties
+ * @property {object} entityData - The original entityData object
+ * @property {Rectangle} rect - The Rectangle of the Entity
+ * @property {number} xOrigin - The original x position
+ * @property {number} yOrigin - The original y position
+ * @property {boolean} sleeping - Whether the Entity is asleep
+ * @property {boolean} fresh - Whether the Entity just spawned
+ * @property {TileMap} map - The map that spawned the Entity
+ * @property {TileMap} currentMap - The map the Entity is currently on
+ * @property {boolean} grounded - Whether the Entity is grounded
+ */
 export class Entity
 {
-	static E_SOLID    = 0b0000_0001;
-	static E_PLATFORM = 0b0001_0000;
-	static E_STATIC   = 0b1000_0000;
+	/**
+	 * @property {number} E_SOLID - Flag the Entity as Solid
+	 */
+	static E_SOLID = 0b0000_0001;
 
+	/**
+	 * @property {number} E_PLATFORM - Flag the Entity as a Platform
+	 */
+	static E_PLATFORM = 0b0001_0000;
+
+	/**
+	 * @property {number} E_STATIC - Flag the Entity as a Static
+	 */
+	static E_STATIC = 0b1000_0000;
+
+	/**
+	 * Construct an Entity object.
+	 * @param {object} entityData - Named params
+	 * @param {object} entityData.controller - The Entity Controller object
+	 * @param {new () => object} entityData.spawnClass - The SpawnClass of the Entity
+	 * @param {Session} entityData.session - The SpawnClass of the Entity
+	 * @param {object} entityData.inputManager - The inputManager for the Entity
+	 * @param {number} entityData.x - The x position of the Entity
+	 * @param {number} entityData.y - The y position of the Entity
+	 * @param {number} entityData.width - The width of the Entity
+	 * @param {number} entityData.height - The height  of the Entity
+	 * @param {number} entityData.xSpriteOffset - The x offset for the sprite
+	 * @param {number} entityData.ySpriteOffset - The y offset for the sprite
+	 * @param {number} entityData.id - The ID of the Entity
+	 * @param {number} entityData.properties - The raw properties of the Entity (TMX format)
+	 * @param {object} entityData.map - The tileMap that spawned the Entity
+	 */
 	constructor(entityData)
 	{
 		// this[Bindable.Prevent] = true;
@@ -64,7 +122,7 @@ export class Entity
 		);
 
 		this.xOrigin = x;
-		this.yOrigin = x;
+		this.yOrigin = y;
 
 		this.sleeping = false;
 
@@ -76,6 +134,10 @@ export class Entity
 		this.controller && this.controller.create(this, this.entityData);
 	}
 
+	/**
+	 * Tick the Entity's simulation logic once.
+	 * @param {number} delta - MS since last tick
+	 */
 	simulate(delta)
 	{
 		const startX = this.x;
@@ -126,11 +188,19 @@ export class Entity
 		}
 	}
 
+	/**
+	 * Handle two Entities colliding
+	 * @param {Entity} other - The other entity in the collision
+	 * @param {[number, number]} point - The point where collision was detected
+	 */
 	collide(other, point)
 	{
 		this.controller && this.controller.collide(this, other, point);
 	}
 
+	/**
+	 * Put the Entity into sleep-mode
+	 */
 	sleep()
 	{
 		if(!this.sleeping)
@@ -140,6 +210,9 @@ export class Entity
 		}
 	}
 
+	/**
+	 * Take the Entity out of sleep-mode
+	 */
 	wakeup()
 	{
 		if(this.sleeping)
@@ -149,6 +222,9 @@ export class Entity
 		}
 	}
 
+	/**
+	 * Destroy the Entity and remove it from play.
+	 */
 	destroy()
 	{
 		this.controller && this.controller.destroy(this);

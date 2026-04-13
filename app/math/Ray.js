@@ -1,6 +1,11 @@
 import { Entity } from "../model/Entity";
 import { Geometry } from "./Geometry";
 
+/**
+ * @import { TileMap } from "../world/TileMap";
+ * @import { World } from "../world/World";
+ */
+
 const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
@@ -8,20 +13,63 @@ const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BI
 
 const mod = (subj, pred) => ((subj % pred) + pred) % pred;
 
+/**
+ * Static class for casting rays
+ */
 export class Ray
 {
-	static T_LAST_EMPTY  = 0b0000_0001;
-	static T_ALL_POINTS  = 0b0000_0010;
+	/**
+	 * @property {number} T_LAST_EMPTY - Return the last empty pixel instead of the collision
+	 */
+	static T_LAST_EMPTY = 0b0000_0001;
+
+	/**
+	 * @property {number} T_ALL_POINTS - Return all solid points rather than the nearest
+	 */
+	static T_ALL_POINTS = 0b0000_0010;
+
+	/**
+	 * @property {number} T_SNAP_TO_INT - Snap the return point to the edge of the pixel
+	 */
 	static T_SNAP_TO_INT = 0b0000_0100;
-	static T_GET_LENGTH  = 0b0000_1000;
 
-	static E_NO_MINK     = 0b0001_0000;
-	static E_SOLID       = 0b0010_0000;
+	/**
+	 * @property {number} T_GET_LENGTH - Return the length of the ray instead of the point
+	 */
+	static T_GET_LENGTH = 0b0000_1000;
 
-	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
+	/**
+	 * @property {number} E_NO_MINK - Disable Minkowski expansion for entity raycasts
+	 */
+	static E_NO_MINK = 0b0001_0000;
 
+	/**
+	 * @property {number} E_SOLID - Only scan for solid/platform entities
+	 */
+	static E_SOLID = 0b0010_0000;
+
+	/**
+	 * @property {number} E_NO_MINK - Disable Minkowski expansion for entity raycasts
+	 */
 	static DEFAULT_FLAGS = 0b0000_0000;
 
+	// /**
+	//  * @property {number} E_ALL_ENTITIES - ...
+	//  */
+	// static E_ALL_ENTITIES = 0b0000_0001_0000_0000;
+
+	/**
+	 *
+	 * @param {World} world - The world to scan
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {number} layerId - The id of the layer to scan
+	 * @param {Entity} castingEntity - The Entity casting the ray
+	 * @returns
+	 */
 	static cast(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
 	{
 		const dx = endX - startX;
@@ -103,6 +151,17 @@ export class Ray
 
 	}
 
+	/**
+	 * Scan for entities in the world
+	 * @param {World} world - The world to scan
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {Entity} castingEntity - The Entity casting the ray
+	 * @returns {Map<Entity,Array<number,number,number>>}
+	 */
 	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
 	{
 		const centerX = (startX + endX) * 0.5;
@@ -219,6 +278,17 @@ export class Ray
 		return collisions;
 	}
 
+	/**
+	 * Scan for terrain along a ray
+	 * @param {World} world - The world to scan
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {number} layerId - The id of the layer to scan
+	 * @returns {Array<number,number,number,number,TileMap>|Set<Array<number,number,number,number,TileMap>>|void} - The nearest point, all points, or length, depending on rayFlags
+	 */
 	static castTerrain(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
 		const mapSegments = world.mapTree.queryLine(startX, startY, endX, endY);
@@ -288,6 +358,17 @@ export class Ray
 		return null;
 	}
 
+	/**
+	 * Scan for terrain in a map
+	 * @param {TileMap} tileMap - The TileMap to scan
+	 * @param {number} startX - The x value of the start point
+	 * @param {number} startY - The y value of the start point
+	 * @param {number} endX - The x value of the end point
+	 * @param {number} endY - The y value of the end point
+	 * @param {number} rayFlags - flags to affect raycast behavior
+	 * @param {number} layerId - The id of the layer to scan
+	 * @returns {Set<Array<number,number,number,number,TileMap>>}
+	 */
 	static castTerrainInMap(tileMap, startX, startY, endX, endY, rayFlags, layerId = 0)
 	{
 		if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);

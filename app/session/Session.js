@@ -13,11 +13,47 @@ import { Pallet } from "../world/Pallet";
 import { parseColor } from "../sprite/parseColor";
 import { CursorController } from "../model/CursorController";
 
+/**
+ * @import { Keyboard } from "curvature/input/Keyboard";
+ */
+
 const input = new URLSearchParams(location.search);
 const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
 
+/**
+ * Represents a play-session
+ * @param {Pallet} param0.mapPallet
+ * @param {Pallet} param0.entityPallet
+ * @param {number} fThen
+ * @param {number} sThen
+ * @param {number} frameLock
+ * @param {number} simulationLock
+ * @param {Set} entities
+ * @param {WeakSet} removed
+ * @param {Set} awake
+ * @param {boolean} paused
+ * @param {boolean} loaded
+ * @param {number} overscan
+ * @param {boolean} hasWebgl2
+ * @param {boolean} hasWebgl
+ * @param {SpriteBoard} spriteBoard
+ * @param {World} world
+ * @param {Keyboard} keyboard
+ * @param {object} OnScreenJoyPad
+ * @param {{x: number, y: number}} mouse
+ */
 export class Session
 {
+	/**
+	 * Construct a Session object
+	 * @param {object} param0 - Named params
+	 * @param {HTMLCanvasElement} param0.element - The canvas element to render to
+	 * @param {Keyboard} param0.keyboard - The keyboard object to take input from
+	 * @param {object} param0.onScreenJoyPad - The onScreenJoyPad object to take input from
+	 * @param {string|URL} param0.worldSrc - The URL of the World to load
+	 * @param {object} param0.mapPallet - Pallet of maps for dynamic loading
+	 * @param {object} param0.entityPallet - Pallet of Entity classes for dynamic loading
+	 */
 	constructor({element, keyboard, onScreenJoyPad, worldSrc, mapPallet = {}, entityPallet = {}})
 	{
 		this.entityPallet = new Pallet;
@@ -96,6 +132,9 @@ export class Session
 		});
 	}
 
+	/**
+	 * Initialize the Session
+	 */
 	async initialize()
 	{
 		this.loaded = true;
@@ -167,6 +206,10 @@ export class Session
 		}
 	}
 
+	/**
+	 * Add an Entity to the Session
+	 * @param {Entity} entity - The Entity to add
+	 */
 	addEntity(entity)
 	{
 		if(this.entities.has(entity))
@@ -179,6 +222,10 @@ export class Session
 		maps.forEach(map => map.addEntity(entity));
 	}
 
+	/**
+	 * Remove an Entity from the Session
+	 * @param {Entity} entity - The Entity to remove
+	 */
 	removeEntity(entity)
 	{
 		entity.destroy();
@@ -190,6 +237,11 @@ export class Session
 		this.removed.add(entity);
 	}
 
+	/**
+	 * Tick the Session's simulation logic once.
+	 * @param {number} delta - MS since last tick
+	 * @returns {boolean} - True if the update ran, false if it was skipped
+	 */
 	simulate(delta)
 	{
 		if(!this.loaded)
@@ -282,26 +334,12 @@ export class Session
 		return true;
 	}
 
-	draw(now)
-	{
-		if(!this.loaded)
-		{
-			return;
-		}
 
-		const delta = now - this.fThen;
-
-		// if(this.frameLock == 0 || delta < (1000 / this.frameLock))
-		// {
-		// 	return false;
-		// }
-
-		this.spriteBoard.draw(delta);
-		this.fThen = now;
-
-		return true;
-	}
-
+	/**
+	 * Tick the simulation logic for an Entity once.
+	 * @param {Entity} entity - The Entity to tick
+	 * @param {number} delta - MS since last tick
+	 */
 	simulateEntity(entity, delta)
 	{
 		this.awake.add(entity);
@@ -324,6 +362,36 @@ export class Session
 		}
 	}
 
+	/**
+	 * Draw the current frame of the Session
+	 * @param {number} now - Current timestamp in ms
+	 * @returns {boolean} - True if the render ran, false if it was skipped
+	 */
+	draw(now)
+	{
+		if(!this.loaded)
+		{
+			return false;
+		}
+
+		const delta = now - this.fThen;
+
+		// if(this.frameLock == 0 || delta < (1000 / this.frameLock))
+		// {
+		// 	return false;
+		// }
+
+		this.spriteBoard.draw(delta);
+		this.fThen = now;
+
+		return true;
+	}
+
+	/**
+	 * Move the cursor to the a position
+	 * @param {number} clientX - The clientX from the mouseEvent
+	 * @param {number} clientY - The clientY from the mouseEvent
+	 */
 	moveCursor(clientX, clientY)
 	{
 		const screenX = -0.5 + (clientX / this.spriteBoard.width);
