@@ -3,8 +3,23 @@ import { Sprite } from "../sprite/Sprite";
 import { Entity } from "./Entity";
 import { Properties } from "../world/Properties";
 
+/**
+ * @import { Session } from "../session/Session";
+ */
+
+/**
+ * Spawns other Entities in a TileMap
+ */
 export class Spawner extends Entity
 {
+	/**
+	 * Construct a Spawner object
+	 * @param {object} spawnData - Named params
+	 * @param {string} spawnData.spawnType - The `type` from the Entity definition
+	 * @param {new () => any} spawnData.spawnClass - The class of the Entity controller object
+	 * @param {Session} spawnData.session - The current Session
+	 * @param {*} spawnData.props - Properties from TMJ TileMap
+	 */
 	constructor(spawnData)
 	{
 		super(spawnData);
@@ -18,6 +33,9 @@ export class Spawner extends Entity
 		this.flags |= Entity.E_STATIC;
 	}
 
+	/**
+	 * Tick the simulation once.
+	 */
 	simulate()
 	{
 		const spawnClass = this.spawnData.spawnClass;

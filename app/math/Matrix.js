@@ -1,5 +1,12 @@
+/**
+ * Returns Arrays representing different Matrices
+ */
 export class Matrix
 {
+	/**
+	 * Returns the Identity matrix
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static identity()
 	{
 		return [
@@ -9,6 +16,12 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Returns a translation matrix
+	 * @param {number} dx - The x translation factor
+	 * @param {number} dy - The y translation factor
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static translate(dx, dy)
 	{
 		return [
@@ -18,6 +31,12 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Returns a scaling matrix
+	 * @param {number} dx - The x scaling factor
+	 * @param {number} dy - The y scaling factor
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static scale(dx, dy)
 	{
 		return [
@@ -27,6 +46,11 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Return a rotation matrix
+	 * @param {number} theta - The angle to rotate by
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static rotate(theta)
 	{
 		const s = Math.sin(theta);
@@ -39,6 +63,11 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Return an x-shearing matrix
+	 * @param {number} s - The angle to shear by
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static shearX(s)
 	{
 		return [
@@ -48,6 +77,11 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Return a y-shearing matrix
+	 * @param {number} s - The angle to shear by
+	 * @returns {Array<Array<number>>} - the matrix
+	 */
 	static shearY(s)
 	{
 		return [
@@ -57,6 +91,12 @@ export class Matrix
 		];
 	}
 
+	/**
+	 * Multiply two matrices
+	 * @param {Array<Array<number>>} matA - The first matrix to multiply
+	 * @param {Array<Array<number>>} matB - The second matrix to multiply
+	 * @returns {Array<Array<number>>} - the new matrix
+	 */
 	static multiply(matA, matB)
 	{
 		if(matA.length !== matB.length)
@@ -85,6 +125,11 @@ export class Matrix
 		return output;
 	}
 
+	/**
+	 * Compose multiple matrices into a single transformation matrix
+	 * @param  {...Array<Array<number>>} mats - The matrices to compose
+	 * @returns {Array<Array<number>>} - The resulting transformation matrix
+	 */
 	static composite(...mats)
 	{
 		let output = this.identity();
@@ -97,6 +142,12 @@ export class Matrix
 		return output;
 	}
 
+	/**
+	 * Transform points by a matrix
+	 * @param {Array<number>} points - The points to transformq
+	 * @param {Array<Array<number>>} matrix - The matrix to transform the points by
+	 * @returns {Array<number>} - The transformed points
+	 */
 	static transform(points, matrix)
 	{
 		const output = [];

@@ -4,15 +4,39 @@ import { Matrix } from "../math/Matrix";
 import { Camera } from "./Camera";
 import { Rectangle } from "../math/Rectangle";
 
+/**
+ * @import { Session } from "../session/Session";
+ * @import { SpriteBoard } from "./SpriteBoard";
+ */
+
 const rectMap = new WeakMap;
 
+/**
+ * Represents a Region of a TileMap
+ */
 export class Region
 {
+	/**
+	 * Given a Rectangle, return a registered Region
+	 * @param {Rectangle} rect - The Rectangle associated with a Region
+	 * @returns {Region|undefined} - The Region registered to the Rectangle or undefined if not registered
+	 */
 	static fromRect(rect)
 	{
 		return rectMap.get(rect);
 	}
 
+	/**
+	 * Construct a Region object
+	 * @param {object} param0 - Named params
+	 * @param {number} param0.x - The x value of the top/left of the Region
+	 * @param {number} param0.y - The y value of the top/left of the Region
+	 * @param {number} param0.z - The z value of the Region (render order)
+	 * @param {number} param0.width - The width of the Region
+	 * @param {number} param0.height - The height of the Region
+	 * @param {Session} param0.session - The current Session
+	 * @param {SpriteBoard} param0.spriteBoard - The height of the Region
+	 */
 	constructor({x, y, z, width, height, session, spriteBoard})
 	{
 		this[Bindable.Prevent] = true;
@@ -78,6 +102,11 @@ export class Region
 		);
 	}
 
+	/**
+	 * Move the Region object
+	 * @param {number} x - The x value to shift by
+	 * @param {number} y - The y value to shift by
+	 */
 	move(x, y)
 	{
 		this.x += x;
@@ -94,6 +123,13 @@ export class Region
 		this.bounds.y2 += y;
 	}
 
+	/**
+	 * Resize the Region
+	 * @param {number} w - The new width
+	 * @param {number} h - The new height
+	 * @param {number} cx - The x value to shift by
+	 * @param {number} cy - The y value to shift by
+	 */
 	resize(w, h, cx, cy)
 	{
 		const wStart = this.width;
@@ -129,6 +165,10 @@ export class Region
 		this.bounds.y2 = this.y + h;
 	}
 
+	/**
+	 * Tick the Region's simulation logic
+	 * @param {number} delta - Number of ms since last tick
+	 */
 	simulate(delta)
 	{
 		this.resize(
@@ -139,6 +179,10 @@ export class Region
 		);
 	}
 
+	/**
+	 * Render the Region
+	 * @param {number} delta - Number of ms since last render
+	 */
 	draw(delta)
 	{
 		const gl = this.spriteBoard.gl2d.context;
@@ -170,6 +214,13 @@ export class Region
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	/**
+	 * Set the rectangle in the viewport for rendering
+	 * @param {number} x - The x value of the top/left of the render window
+	 * @param {number} y - The y value of the top/left of the render window
+	 * @param {number} width - The width of the render window
+	 * @param {number} height - The height of the render window
+	 */
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;

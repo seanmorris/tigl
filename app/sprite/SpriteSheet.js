@@ -1,7 +1,35 @@
 import { Tileset } from "./Tileset";
 
+/**
+ * @import { TileMap } from "../world/TileMap";
+ */
+
+/**
+ * @class SpriteSheet
+ * Represents a SpriteSheet
+ * @augments Tileset
+ */
 export class SpriteSheet extends Tileset
 {
+	/**
+	 * Construct a SpriteSheet object
+	 * @param {object} tilesetData - Named params
+	 * @param {string|URL} tilesetData.src - The URL of the Tileset to load
+	 * @param {object} tilesetData.source - Alias of `src` for compatibility
+	 * @param {TileMap|undefined} tilesetData.map - The TileMap this Tileset belongs to
+	 * @param {number} tilesetData.firstgid - The first GID in this Tileset
+	 * @param {number} tilesetData.columns - The number of columns in the Tileset
+	 * @param {string|URL} tilesetData.image - The URL to the Tileset image
+	 * @param {number} tilesetData.imageheight - The width of the Tileset image
+	 * @param {number} tilesetData.imagewidth - The width of the Tileset image
+	 * @param {number} tilesetData.margin - The around each tile
+	 * @param {string} tilesetData.name - The name of the Tileset
+	 * @param {number} tilesetData.spacing - The spacing between each tile
+	 * @param {number} tilesetData.tilecount - The number of tiles
+	 * @param {number} tilesetData.tilewidth - The width of one tile
+	 * @param {number} tilesetData.tileheight - The height of one tile
+	 * @param {Array<number>} tilesetData.tiles - The tile GIDs
+	 */
 	constructor(tilesetData)
 	{
 		super(tilesetData);
@@ -28,8 +56,14 @@ export class SpriteSheet extends Tileset
 		});
 	}
 
+	/**
+	 * Split the source image into frames
+	 * @returns {void}
+	 */
 	processImage()
 	{
+		if(this.frames.length) return;
+
 		this.canvas.width  = this.image.width;
 		this.canvas.height = this.image.height;
 
@@ -41,6 +75,11 @@ export class SpriteSheet extends Tileset
 		}
 	}
 
+	/**
+	 * Get pixel data for a single frame
+	 * @param {number} frameId - The id of the frame
+	 * @returns {Uint8Array} - The pixel data
+	 */
 	getFrame(frameId)
 	{
 		frameId = frameId % this.tileCount;

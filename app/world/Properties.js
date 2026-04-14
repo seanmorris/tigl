@@ -1,10 +1,15 @@
 /**
  * @import { Entity } from "../model/Entity";
  * @import { TileMap } from "./TileMap";
-*/
+ */
 
 /**
- * TMX-formatted Properties
+ * @typedef {{name: string, color: string, value: string}} TmxPropertyDef
+ * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
+ */
+
+/**
+ * Parses TMX-formatted Properties
  */
 export class Properties
 {
@@ -54,7 +59,7 @@ export class Properties
 
 	/**
 	 * Add one or more properties
-	 * @param  {...any} properties - The properties to add (TMX format)
+	 * @param  {TmxPropertyDefList} properties - The properties to add (TMX format)
 	 */
 	add(...properties)
 	{

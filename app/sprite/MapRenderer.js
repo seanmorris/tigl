@@ -73,6 +73,12 @@ export class MapRenderer
 		});
 	}
 
+	/**
+	 * Modulo with consistent behavior in the negative numbers
+	 * @param {number} a - The dividend
+	 * @param {number} b - The modulus
+	 * @returns {number} - The residue
+	 */
 	negSafeMod(a,b)
 	{
 		if(a >= 0) return a % b;
@@ -459,8 +465,8 @@ export class MapRenderer
 		this.blankBuffer = new Uint32Array(this.width * this.height);
 	}
 
-	simulate()
-	{}
+	// simulate()
+	// {}
 
 	/**
 	 * Set the rectangle in the viewport for rendering

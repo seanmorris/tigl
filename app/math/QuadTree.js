@@ -5,6 +5,9 @@ import { Rectangle } from "./Rectangle";
  * @import { Entity } from "../model/Entity";
  */
 
+/**
+ * Represents a QuadTree or a single cell from one
+ */
 export class QuadTree extends Rectangle
 {
 	/**

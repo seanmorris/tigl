@@ -10,7 +10,7 @@ import { Region } from './Region';
 /**
  * @import { Session } from '../session/Session';
  * @import { World } from '../world/World';
-*/
+ */
 
 /**
  * Renders the whole game

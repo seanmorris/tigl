@@ -6,6 +6,14 @@ import { Geometry } from "./Geometry";
  * @import { World } from "../world/World";
  */
 
+/**
+ * @typedef {[number, number, number, number, TileMap]} TerrainPoint
+ * @typedef {[number, number, number]} EntityPoint
+ * @typedef {TerrainPoint|Set<TerrainPoint>|void} TerrainScanResult
+ * @typedef {Map<Entity,Array<EntityPoint>>} EntityScanResult
+ * @typedef {{terrain: TerrainScanResult, entities: EntityScanResult}} RaycastResult
+ */
+
 const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
@@ -68,7 +76,7 @@ export class Ray
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
 	 * @param {Entity} castingEntity - The Entity casting the ray
-	 * @returns
+	 * @returns {RaycastResult} - The result of the raycast
 	 */
 	static cast(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
 	{
@@ -160,7 +168,7 @@ export class Ray
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {Entity} castingEntity - The Entity casting the ray
-	 * @returns {Map<Entity,Array<number,number,number>>}
+	 * @returns {EntityScanResult} - The result of the raycast
 	 */
 	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
 	{
@@ -287,7 +295,7 @@ export class Ray
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
-	 * @returns {Array<number,number,number,number,TileMap>|Set<Array<number,number,number,number,TileMap>>|void} - The nearest point, all points, or length, depending on rayFlags
+	 * @returns {TerrainScanResult} - The nearest point, all points, or length, depending on rayFlags
 	 */
 	static castTerrain(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
@@ -367,7 +375,7 @@ export class Ray
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
-	 * @returns {Set<Array<number,number,number,number,TileMap>>}
+	 * @returns {Set<TerrainPoint>} - The result of the raycast
 	 */
 	static castTerrainInMap(tileMap, startX, startY, endX, endY, rayFlags, layerId = 0)
 	{

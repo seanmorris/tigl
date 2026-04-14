@@ -5,8 +5,28 @@ const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BITS);
 
+/**
+ * @typedef {{
+ *   x1: number,
+ *   y1: number,
+ *   x2: number,
+ *   y2: number,
+ * }} RectangleLike
+ */
+
+/**
+ * Represents a Segment of an SMTree
+ */
 class Segment
 {
+	/**
+	 *
+	 * @param {number} start - Where the segment starts
+	 * @param {number} end - Where the segment ends
+	 * @param {Segment} prev - Reference to the previous segment in the SMTree
+	 * @param {number} dimension - Number of dimensions in the SMTree
+	 * @param {number} depth - Depth (dimension) of this Segmment
+	 */
 	constructor(start, end, prev, dimension = 2, depth = 0)
 	{
 		this.start = start;
@@ -23,6 +43,11 @@ class Segment
 		this.prev  = prev;
 	}
 
+	/**
+	 * Split a Segment into two Segments
+	 * @param {number} at - The point to split at
+	 * @returns {Array<Segment>} - An array containing the Segments that replaced this one (or the current Segment if not split)
+	 */
 	split(at)
 	{
 		if(at < this.start || at > this.end)
@@ -67,6 +92,10 @@ class Segment
 		return [a, b];
 	}
 
+	/**
+	 * Add a RectangleLike to the Segment
+	 * @param {RectangleLike} rectangle - The RectangleLike to add
+	 */
 	add(rectangle)
 	{
 		this.rectangles.add(rectangle);
@@ -78,6 +107,11 @@ class Segment
 		}
 	}
 
+	/**
+	 * Remove a RectangleLike from the Segment
+	 * @param {RectangleLike} rectangle - The RectangleLike to remove
+	 * @returns {boolean} - Whether the Segment is empty after the delete
+	 */
 	delete(rectangle)
 	{
 		this.rectangles.delete(rectangle);
@@ -93,12 +127,22 @@ class Segment
 		return empty;
 	}
 
+	/**
+	 * Check if a RectangleLike is in the Segment
+	 * @param {RectangleLike} rectangle - The RectangleLike to check
+	 * @returns {void}
+	 */
 	has(rectangle)
 	{
 		return this.rectangles.has(rectangle);
 	}
 }
 
+/**
+ * Test if a given object is rectangle-like
+ * @param {object} object - The object to test
+ * @returns {boolean} - True if the object can be treated as a Rectangle
+ */
 const isRectangle = object => {
 	return 'x1' in object
 		&& 'y1' in object
@@ -108,8 +152,16 @@ const isRectangle = object => {
 		&& object.y1 < object.y2;
 };
 
+/**
+ * Represent a Segment Mapping Tree
+ */
 export class SMTree
 {
+	/**
+	 * Construct an SMTree Object
+	 * @param {object} args - Named param
+	 * @param {number} args.dimension - The number of dimensions in the tree
+	 */
 	constructor(args = {dimension: 2, [depthSymbol]: 0})
 	{
 		this.depth = args[depthSymbol];
@@ -119,6 +171,11 @@ export class SMTree
 		this.snapshots = new WeakMap;
 	}
 
+	/**
+	 * Add a RectangleLike to the SMTree
+	 * @param {RectangleLike} rectangle - The RectangleLike to add
+	 * @returns {void}
+	 */
 	add(rectangle)
 	{
 		if(!isRectangle(rectangle))
@@ -161,6 +218,11 @@ export class SMTree
 		}
 	}
 
+	/**
+	 * Remove a RectangleLike from the SMTree
+	 * @param {RectangleLike} rectangle - The RectangleLike to remove
+	 * @returns {false|number} - The number of Segments removed / false if RectangleLike is not in SMTree
+	 */
 	delete(rectangle)
 	{
 		if(!isRectangle(rectangle))
@@ -223,12 +285,24 @@ export class SMTree
 		return deleteCount;
 	}
 
+	/**
+	 * Move a RectangleLike in the SMTree
+	 * @param {RectangleLike} rectangle - The RectangleLike to move
+	 */
 	move(rectangle)
 	{
 		this.delete(rectangle);
 		this.add(rectangle);
 	}
 
+	/**
+	 * Find a set of RectangleLikes in the SMTree by a given rectangle
+	 * @param {number} x1 - The x value of the top/left
+	 * @param {number} y1 - The y value of the top/left
+	 * @param {number} x2 - The x value of the bottom/right
+	 * @param {number} y2 - The y value of the bottom/right
+	 * @returns {Set<RectangleLike>} - Set of RectangleLikes overlapping the given rectangle
+	 */
 	query(x1, y1, x2, y2)
 	{
 		const xStartIndex = this.findSegment(x1);
@@ -257,6 +331,15 @@ export class SMTree
 		return results;
 	}
 
+
+	/**
+	 * Find a set of RectangleLikes in the SMTree by a given line
+	 * @param {number} x1 - The x value of the start point
+	 * @param {number} y1 - The y value of the start point
+	 * @param {number} x2 - The x value of the end point
+	 * @param {number} y2 - The y value of the end point
+	 * @returns {Set<RectangleLike>} - Set of RectangleLikes overlapping the given rectangle
+	 */
 	queryLine(x1, y1, x2, y2)
 	{
 		let invX = false, invY = false;
@@ -319,6 +402,12 @@ export class SMTree
 		return results;
 	}
 
+	/**
+	 * Split a Segment into two Segments
+	 * @param {number} index - The index of the Segment to split
+	 * @param {number} at - The point to split at
+	 * @returns {void}
+	 */
 	splitSegment(index, at)
 	{
 		if(at <= this.segments[index].start || at >= this.segments[index].end)
@@ -331,6 +420,11 @@ export class SMTree
 		this.segments.splice(index, 1, ...splitSegments);
 	}
 
+	/**
+	 * Find the segment occupying a given point
+	 * @param {number} at - The point to search by
+	 * @returns {number} - The index of the new segment, -1 if not found
+	 */
 	findSegment(at)
 	{
 		if(isNaN(at))

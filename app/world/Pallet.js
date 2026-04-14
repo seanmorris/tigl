@@ -1,8 +1,18 @@
-
+/**
+ * Represents a Pallet to select classes by a predefined string
+ */
 export class Pallet
 {
+	/**
+	 * @property {{string: new () => any}} objectPallet - Stores the classes by typeName
+	 */
 	objectPallet = {};
 
+	/**
+	 * Resolve a class by `typeName`
+	 * @param {string} typeName - The string that refers to a class in the Pallet
+	 * @returns {new () => any} - The class
+	 */
 	async resolve(typeName)
 	{
 		if(typeName[0] === '@')
@@ -18,6 +28,11 @@ export class Pallet
 		}
 	}
 
+	/**
+	 * Resolve a class by `typeName`
+	 * @param {string} typeName - The string that refers to a class in the Pallet
+	 * @param {new () => any} spawnClass - The class to register
+	 */
 	register(typeName, spawnClass)
 	{
 		if(this.objectPallet[typeName])

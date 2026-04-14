@@ -1,5 +1,24 @@
+/**
+ * @typedef {[number, number, number]} LineIntersection
+ */
+
+/**
+ * Helper for some Geometric functions
+ */
 export class Geometry
 {
+	/**
+	 * Check if two lines intersect.
+	 * @param {number} x1a - The x value of the start point of line A
+	 * @param {number} y1a - The y value of the start point of line A
+	 * @param {number} x2a - The x value of the end point of line A
+	 * @param {number} y2a - The y value of the end point of line A
+	 * @param {number} x1b - The x value of the start point of line B
+	 * @param {number} y1b - The y value of the start point of line B
+	 * @param {number} x2b - The x value of the end point of line B
+	 * @param {number} y2b - The y value of the end point of line B
+	 * @returns {LineIntersection|false} - The intersection point, or false if the lines do not intersect
+	 */
 	static lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b)
 	{
 		const ax = x2a - x1a;

@@ -1,17 +1,58 @@
 import { Bindable } from 'curvature/base/Bindable';
 
+/**
+ * @import { Properties } from '../world/Properties';
+ * @import { SpriteBoard } from './SpriteBoard';
+ * @import { TileMap } from './TileMap';
+ */
+
+/**
+ * Represents one layer of a Parallax
+ */
 class ParallaxLayer
 {
+	/**
+	 * @property {WebGLTexture} texture - The texture of the layer
+	 */
 	texture = null;
+
+	/**
+	 * @property {number} width - The width of the layer
+	 */
 	width = 0;
+
+	/**
+	 * @property {number} height - The width of the layer
+	 */
 	height = 0;
+
+	/**
+	 * @property {number} offset - The offset of the layer
+	 */
 	offset = 0;
+
+	/**
+	 * @property {number} parallax - The parallax factor of the layer
+	 */
 	parallax = 0;
+
+	/**
+	 * @property {Properties} properties - The properties of the layer
+	 */
 	props = null;
 }
 
+/**
+ * Represents Parallax background
+ */
 export class Parallax
 {
+	/**
+	 * Construct a Parallax object
+	 * @param {object} param0 - Named params
+	 * @param {SpriteBoard} param0.spriteBoard - The SpriteBoard to render to
+	 * @param {TileMap} param0.map -The TileMap that owns the Parallax
+	 */
 	constructor({spriteBoard, map})
 	{
 		this[Bindable.Prevent] = true;
@@ -37,6 +78,10 @@ export class Parallax
 		this.y = 0;
 	}
 
+	/**
+	 * Get the Parallax ready to use
+	 * @returns {Promise<void>} - Resolves when the Parallax is ready
+	 */
 	assemble()
 	{
 		const gl = this.spriteBoard.gl2d.context;
@@ -82,6 +127,9 @@ export class Parallax
 		return Promise.all(loadSlices);
 	}
 
+	/**
+	 * Draw the Parallax
+	 */
 	draw()
 	{
 		if(!this.loaded)
@@ -139,6 +187,11 @@ export class Parallax
 		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
+	/**
+	 * Load an image and track the load as a Promise in `this.imagePromises[src]`
+	 * @param {string|URL} src - The image URL to load
+	 * @returns {Promise<HTMLImageElement>} - A promise that resolves to the loaded HTMLImageElement
+	 */
 	static loadImage(src)
 	{
 		if(!this.imagePromises)
@@ -162,6 +215,13 @@ export class Parallax
 		return this.imagePromises[src];
 	}
 
+	/**
+	 * Set the rectangle in the viewport for rendering
+	 * @param {number} x - The x value of the top/left of the render window
+	 * @param {number} y - The y value of the top/left of the render window
+	 * @param {number} width - The width of the render window
+	 * @param {number} height - The height of the render window
+	 */
 	setRectangle(x, y, width, height)
 	{
 		const gl = this.spriteBoard.gl2d.context;
