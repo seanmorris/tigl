@@ -1,7 +1,16 @@
 import { View } from 'curvature/base/View';
 
+/**
+ * @class OnScreenJoyPad
+ * Represents an on-screen jopypad
+ * @augments View
+ */
 export class OnScreenJoyPad extends View
 {
+	/**
+	 * Construct an OnScreenJoyPad object
+	 * @param {object} args - Default args
+	 */
 	constructor(args)
 	{
 		super(args);
@@ -33,6 +42,10 @@ export class OnScreenJoyPad extends View
 		this.draggingTouches = new Set;
 	}
 
+	/**
+	 * Start dragging the analog stick
+	 * @param {Event} event - The event being handled
+	 */
 	dragStick(event)
 	{
 		if(event.changedTouches)
@@ -57,6 +70,10 @@ export class OnScreenJoyPad extends View
 		};
 	}
 
+	/**
+	 * Move the analog stick
+	 * @param {Event} event - The event being handled
+	 */
 	moveStick(event)
 	{
 		if(this.args.dragging)
@@ -101,6 +118,10 @@ export class OnScreenJoyPad extends View
 		}
 	}
 
+	/**
+	 * Stop dragging the analog stick
+	 * @param {Event} event - The event being handled
+	 */
 	dropStick(event)
 	{
 		if(event.changedTouches)
@@ -126,11 +147,21 @@ export class OnScreenJoyPad extends View
 		this.args.y = 0;
 	}
 
+	/**
+	 * Stop pushing a button
+	 * @param {Event} event - The event being handled
+	 * @param {number} button - The id of the button to release
+	 */
 	releaseButton(event, button)
 	{
 		this.buttons[button] = -1;
 	}
 
+	/**
+	 * Start pushing a button
+	 * @param {Event} event - The event being handled
+	 * @param {number} button - The id of the button to press
+	 */
 	pressButton(event, button)
 	{
 		this.buttons[button] = this.buttons[button] || 0;
@@ -138,6 +169,10 @@ export class OnScreenJoyPad extends View
 
 	}
 
+	/**
+	 * Supress the context menu
+	 * @param {Event} event - The event being handled
+	 */
 	contextmenu(event)
 	{
 		console.log(event);

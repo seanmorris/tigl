@@ -11,6 +11,79 @@ import { parseColor } from '../sprite/parseColor';
 /**
  * @import { Entity } from "../model/Entity";
  * @import { Session } from "../model/Session";
+ * @import { TmxPropertyDefList } from './Properties';
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   class: string,
+ *   data: Array<number>,
+ *   width: number,
+ *   height: number,
+ *   name: string,
+ *   opacity: number,
+ *   properties: TmxPropertyDefList,
+ *   tintcolor: string,
+ *   type: "tilelayer",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ *  }} TmxTileLayer
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   name: string,
+ *   type: string,
+ *   visible: boolean,
+ *   width: number,
+ *   height: number,
+ *   x: number,
+ *   y: number,
+ *   point: true|undefined,
+ *   rotation: number,
+ *   properties: TmxPropertyDefList,
+ * }} TmxObjectDef
+ */
+
+/**
+ * @typedef {{
+ *   id: number
+ *   name: string,
+ *   drawOrder: string,
+ *   objects: Array<TmxObjectDef>,
+ *   opacity: number,
+ *   type: "objectgroup",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ * }} TmxObjectLayer
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   image: string,
+ *   imageWidth: number,
+ *   imageheight: number,
+ *   name: string,
+ *   offsetx: number,
+ *   offsety: number,
+ *   opacity: number,
+ *   parallaxx: number,
+ *   parallaxy: number,
+ *   properties: TmxPropertyDefList,
+ *   type: "imagelayer",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ * }} TmxImageLayer
+ */
+
+/**
+ * @typedef {TmxTileLayer|TmxObjectLayer|TmxImageLayer} TmxLayer
  */
 
 const cache = new Map;
@@ -633,7 +706,7 @@ export class TileMap
 
 	/**
 	 * Get the color of a point
-	 * @param {*} layer - The Tile Layer to sample
+	 * @param {TmxTileLayer} layer - The Tile Layer to sample
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
 	 * @returns {number|false} - Boolean or uint32 color(number))/no tile (false)
@@ -665,7 +738,7 @@ export class TileMap
 
 	/**
 	 * Get the tile for a given point
-	 * @param {*} layer - The tile layer to check
+	 * @param {TmxTileLayer} layer - The tile layer to check
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
 	 * @returns {null|number} The tile at the point or null if no tile exists there
@@ -700,7 +773,7 @@ export class TileMap
 	 * @param {number} w - The width of the rectangle to sample
 	 * @param {number} h - The height of the rectangle to sample
 	 * @param {number} delta -
-	 * @returns {*} - Array of pixel layers
+	 * @returns {Array<Uint8Array>} - Array of pixel layers
 	 */
 	getSlice(p, x, y, w, h, delta = 0)
 	{
@@ -777,7 +850,7 @@ export class TileMap
 
 	/**
 	 * Put a rectangular slice of a tile layer into a rendering buffer
-	 * @param {*} buffer = The rendering buffer
+	 * @param {Uint8Array} buffer = The rendering buffer
 	 * @param {number} width - The width of the rendering buffer
 	 * @param {number} layer - The layer to sample
 	 * @param {number} x - The x value of the top/left corner of the rectangle to sample

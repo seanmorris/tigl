@@ -21,8 +21,18 @@ const Application = {};
 Application.onScreenJoyPad = new OnScreenJoyPad;
 Application.keyboard = Keyboard.get();
 
+/**
+ * @class View
+ * Represents the main View for tigl
+ * @augments BaseView
+ */
 export class View extends BaseView
 {
+
+	/**
+	 * Construct a View object
+	 * @param {object} args - Default args
+	 */
 	constructor(args)
 	{
 		window.smProfiling = true;
@@ -195,6 +205,9 @@ export class View extends BaseView
 
 	}
 
+	/**
+	 * Runs once the View completes rendering
+	 */
 	onRendered()
 	{
 		const gameDef = {
@@ -271,6 +284,9 @@ export class View extends BaseView
 		update(performance.now());
 	}
 
+	/**
+	 * Runs on mousemove events
+	 */
 	mousemove()
 	{
 		// this.args.mouseClass = 'mouse-moved';
@@ -280,6 +296,11 @@ export class View extends BaseView
 		this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
 	}
 
+	/**
+	 * Resize the View
+	 * @param {number} x - The new width
+	 * @param {number} y - The new height
+	 */
 	resize(x, y)
 	{
 		const oldScale = this.session.spriteBoard.screenScale;
@@ -301,11 +322,19 @@ export class View extends BaseView
 		this.session.spriteBoard.resize();
 	}
 
+	/**
+	 * Handle scroll events
+	 * @param {Event} event - The event being handled
+	 */
 	scroll(event)
 	{
 		this.zoom(-Math.sign(event.deltaY));
 	}
 
+	/**
+	 * Zoom the View
+	 * @param {number} delta - How much to change the zoom
+	 */
 	zoom(delta)
 	{
 		if(!this.session)

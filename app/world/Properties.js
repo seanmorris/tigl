@@ -6,6 +6,8 @@
 /**
  * @typedef {{name: string, color: string, value: string}} TmxPropertyDef
  * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
+ * @typedef {Uint8ClampedArray} Color - 4 byte color
+ * @typedef {string|URL|Color} PropVal
  */
 
 /**
@@ -35,7 +37,7 @@ export class Properties
 	 * Get a property's value
 	 * @param {string} name - The name of the property
 	 * @param {number} index - The index of the value
-	 * @returns {any|void} - The value of the property
+	 * @returns {PropVal|void} - The value of the property
 	 */
 	get(name, index = 0)
 	{
@@ -98,7 +100,7 @@ export class Properties
 	/**
 	 * Get all values for a given property
 	 * @param {string} name - The name of the property
-	 * @returns {Array<any>} - The list of values
+	 * @returns {Array<PropVal>} - The list of values
 	 */
 	getAll(name)
 	{

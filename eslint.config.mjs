@@ -3,25 +3,25 @@ import { jsdoc } from 'eslint-plugin-jsdoc';
 
 export default [
 	{
-		// languageOptions: {
-		// 	globals: {
-		// 		...globals.browser,
-		// 	},
-		// },
+		languageOptions: {
+			globals: {
+				...globals.browser,
+			},
+		},
 		rules: {
 			"jsdoc/no-undefined-types": ["warn", {
 				"definedTypes": [
-					'CanvasRenderingContext2D',
 					'GLint',
-					'HTMLCanvasElement',
-					'WebGLProgram',
-					'WebGLBuffer',
-					'WebGLFramebuffer',
-					'WebGLUniformLocation',
-					'WebGLRenderingContext',
-					'WebGLShader',
-					'WebGLTexture',
-					'URL',
+					// 'CanvasRenderingContext2D',
+					// 'HTMLCanvasElement',
+					// 'WebGLProgram',
+					// 'WebGLBuffer',
+					// 'WebGLFramebuffer',
+					// 'WebGLUniformLocation',
+					// 'WebGLRenderingContext',
+					// 'WebGLShader',
+					// 'WebGLTexture',
+					// 'URL',
 				]
 			}],
 			"jsdoc/require-jsdoc": ["warn",{
@@ -37,7 +37,7 @@ export default [
 	},
 	jsdoc({ config: 'flat/recommended' }),
 	{
-		ignores: ['docs/**', 'scripts/**', 'app/inject/**', '.brunch/**'],
+		ignores: ['docs/**', 'scripts/**', 'app/inject/**', 'app/model/**', '.brunch/**'],
 	}
 ];
 

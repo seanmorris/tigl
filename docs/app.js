@@ -6211,6 +6211,9 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+/**
+ * Configure the application
+ */
 let Config = exports.Config = /*#__PURE__*/_createClass(function Config() {
   _classCallCheck(this, Config);
 });
@@ -6507,7 +6510,17 @@ function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf 
 const Application = {};
 Application.onScreenJoyPad = new _OnScreenJoyPad.OnScreenJoyPad();
 Application.keyboard = _Keyboard.Keyboard.get();
+
+/**
+ * @class View
+ * Represents the main View for tigl
+ * @augments BaseView
+ */
 let View = exports.View = /*#__PURE__*/function (_BaseView) {
+  /**
+   * Construct a View object
+   * @param {object} args - Default args
+   */
   function View(args) {
     var _this;
     _classCallCheck(this, View);
@@ -6627,6 +6640,10 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
     });
     return _this;
   }
+
+  /**
+   * Runs once the View completes rendering
+   */
   _inherits(View, _BaseView);
   return _createClass(View, [{
     key: "onRendered",
@@ -6684,6 +6701,10 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
       this.resize();
       update(performance.now());
     }
+
+    /**
+     * Runs on mousemove events
+     */
   }, {
     key: "mousemove",
     value: function mousemove() {
@@ -6692,6 +6713,12 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
       if (this.mouseTimer) clearTimeout(this.mouseTimer);
       this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
     }
+
+    /**
+     * Resize the View
+     * @param {number} x - The new width
+     * @param {number} y - The new height
+     */
   }, {
     key: "resize",
     value: function resize(x, y) {
@@ -6704,11 +6731,21 @@ let View = exports.View = /*#__PURE__*/function (_BaseView) {
       this.args.rheight = Math.trunc((y || document.body.clientHeight) / this.session.spriteBoard.zoomLevel);
       this.session.spriteBoard.resize();
     }
+
+    /**
+     * Handle scroll events
+     * @param {Event} event - The event being handled
+     */
   }, {
     key: "scroll",
     value: function scroll(event) {
       this.zoom(-Math.sign(event.deltaY));
     }
+
+    /**
+     * Zoom the View
+     * @param {number} delta - How much to change the zoom
+     */
   }, {
     key: "zoom",
     value: function zoom(delta) {
@@ -7103,6 +7140,20 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * @import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
+ * @import { Keyboard } from 'curvature/input/Keyboard'
+ */
+
+/**
+ * @typedef {{axes: {number: number}, buttons: {number: number}}} InputState
+ * @typedef {{
+ *   strongMagnitude: number,
+ *   weakMagnitude: number,
+ *   duration: number,
+ * }} rumbleOptions
+ */
+
 const keys = {
   'Space': 0,
   'Enter': 0,
@@ -7174,16 +7225,19 @@ const buttonRemap = {
   4: 1022,
   5: 1023
 };
+
+/**
+ * Represents a gamepad
+ */
 let Controller = exports.Controller = /*#__PURE__*/function () {
+  /**
+   * Construct a Controller object
+   * @param {object} param0 - Named params
+   * @param {number} param0.deadZone - The deadzone of the analog sticks
+   */
   function Controller(_ref) {
-    let _ref$keys = _ref.keys,
-      keys = _ref$keys === void 0 ? {} : _ref$keys,
-      _ref$deadZone = _ref.deadZone,
-      deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone,
-      _ref$gamepad = _ref.gamepad,
-      gamepad = _ref$gamepad === void 0 ? null : _ref$gamepad,
-      _ref$keyboard = _ref.keyboard,
-      keyboard = _ref$keyboard === void 0 ? null : _ref$keyboard;
+    let _ref$deadZone = _ref.deadZone,
+      deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone;
     _classCallCheck(this, Controller);
     this.deadZone = deadZone;
     Object.defineProperties(this, {
@@ -7201,6 +7255,12 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
     });
   }
+
+  /**
+   * Update the state
+   * @param {object} param0 - Named params
+   * @param {Gamepad} param0.gamepad - The HTML Gamepad object
+   */
   return _createClass(Controller, [{
     key: "update",
     value: function update() {
@@ -7247,12 +7307,26 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
         this.willRumble = false;
       }
     }
+
+    /**
+     * Rumble the gamepad
+     * @param {rumbleOptions|true} options - Rumble options
+     */
   }, {
     key: "rumble",
     value: function rumble() {
       let options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
       this.willRumble = options;
     }
+
+    /**
+     * Read input from gamepads, keyboard & onScreenJoyPad
+     * @param {object} param0 - Named params
+     * @param {OnScreenJoyPad} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
+     * @param {Keyboard} param0.keyboard - The Keyboard object to read input from
+     * @param {Keyboard} param0.gamepads - The Gamepad objects to read input from
+     * @returns {boolean} - Whether or not input was read from any source
+     */
   }, {
     key: "readInput",
     value: function readInput(_ref3) {
@@ -7476,6 +7550,12 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
       return tookInput;
     }
+
+    /**
+     * Tilt an axis
+     * @param {number} axisId - The ID of the axis to tilt
+     * @param {number} magnitude - How far the axis should tilt
+     */
   }, {
     key: "tilt",
     value: function tilt(axisId, magnitude) {
@@ -7486,6 +7566,12 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
       this.axes[axisId].tilt(magnitude);
     }
+
+    /**
+     * Press a button
+     * @param {number} buttonId - The ID of the button being pressed
+     * @param {number} pressure - How hard the button is being pressed
+     */
   }, {
     key: "press",
     value: function press(buttonId) {
@@ -7495,6 +7581,11 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
       this.buttons[buttonId].press(pressure);
     }
+
+    /**
+     * Release a button
+     * @param {number} buttonId - The ID of the button being released
+     */
   }, {
     key: "release",
     value: function release(buttonId) {
@@ -7503,6 +7594,11 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
       this.buttons[buttonId].release();
     }
+
+    /**
+     * Serialize the axes and buttons into something JSON serializable
+     * @returns {InputState} - The state of the axes & buttons
+     */
   }, {
     key: "serialize",
     value: function serialize() {
@@ -7519,6 +7615,11 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
         buttons: buttons
       };
     }
+
+    /**
+     * Set the Controller to a given InputState
+     * @param {InputState} input - The state to play back
+     */
   }, {
     key: "replay",
     value: function replay(input) {
@@ -7539,6 +7640,10 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
         }
       }
     }
+
+    /**
+     * Set the axes to neutral and release all buttons
+     */
   }, {
     key: "zero",
     value: function zero() {
@@ -7575,13 +7680,32 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * @typedef {[number, number, number]} LineIntersection
+ */
+/**
+ * Helper for some Geometric functions
+ */
 let Geometry = exports.Geometry = /*#__PURE__*/function () {
   function Geometry() {
     _classCallCheck(this, Geometry);
   }
   return _createClass(Geometry, null, [{
     key: "lineIntersectsLine",
-    value: function lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b) {
+    value:
+    /**
+     * Check if two lines intersect.
+     * @param {number} x1a - The x value of the start point of line A
+     * @param {number} y1a - The y value of the start point of line A
+     * @param {number} x2a - The x value of the end point of line A
+     * @param {number} y2a - The y value of the end point of line A
+     * @param {number} x1b - The x value of the start point of line B
+     * @param {number} y1b - The y value of the start point of line B
+     * @param {number} x2b - The x value of the end point of line B
+     * @param {number} y2b - The y value of the end point of line B
+     * @returns {LineIntersection|false} - The intersection point, or false if the lines do not intersect
+     */
+    function lineIntersectsLine(x1a, y1a, x2a, y2a, x1b, y1b, x2b, y2b) {
       const ax = x2a - x1a;
       const ay = y2a - y1a;
       const bx = x2b - x1b;
@@ -7626,25 +7750,53 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * Returns Arrays representing different Matrices
+ */
 let Matrix = exports.Matrix = /*#__PURE__*/function () {
   function Matrix() {
     _classCallCheck(this, Matrix);
   }
   return _createClass(Matrix, null, [{
     key: "identity",
-    value: function identity() {
+    value:
+    /**
+     * Returns the Identity matrix
+     * @returns {Array<Array<number>>} - the matrix
+     */
+    function identity() {
       return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
     }
+
+    /**
+     * Returns a translation matrix
+     * @param {number} dx - The x translation factor
+     * @param {number} dy - The y translation factor
+     * @returns {Array<Array<number>>} - the matrix
+     */
   }, {
     key: "translate",
     value: function translate(dx, dy) {
       return [[1, 0, dx], [0, 1, dy], [0, 0, 1]];
     }
+
+    /**
+     * Returns a scaling matrix
+     * @param {number} dx - The x scaling factor
+     * @param {number} dy - The y scaling factor
+     * @returns {Array<Array<number>>} - the matrix
+     */
   }, {
     key: "scale",
     value: function scale(dx, dy) {
       return [[dx, 0, 0], [0, dy, 0], [0, 0, 1]];
     }
+
+    /**
+     * Return a rotation matrix
+     * @param {number} theta - The angle to rotate by
+     * @returns {Array<Array<number>>} - the matrix
+     */
   }, {
     key: "rotate",
     value: function rotate(theta) {
@@ -7652,16 +7804,35 @@ let Matrix = exports.Matrix = /*#__PURE__*/function () {
       const c = Math.cos(theta);
       return [[c, -s, 0], [s, c, 0], [0, 0, 1]];
     }
+
+    /**
+     * Return an x-shearing matrix
+     * @param {number} s - The angle to shear by
+     * @returns {Array<Array<number>>} - the matrix
+     */
   }, {
     key: "shearX",
     value: function shearX(s) {
       return [[1, s, 0], [0, 1, 0], [0, 0, 1]];
     }
+
+    /**
+     * Return a y-shearing matrix
+     * @param {number} s - The angle to shear by
+     * @returns {Array<Array<number>>} - the matrix
+     */
   }, {
     key: "shearY",
     value: function shearY(s) {
       return [[1, 0, 0], [s, 1, 0], [0, 0, 1]];
     }
+
+    /**
+     * Multiply two matrices
+     * @param {Array<Array<number>>} matA - The first matrix to multiply
+     * @param {Array<Array<number>>} matB - The second matrix to multiply
+     * @returns {Array<Array<number>>} - the new matrix
+     */
   }, {
     key: "multiply",
     value: function multiply(matA, matB) {
@@ -7681,6 +7852,12 @@ let Matrix = exports.Matrix = /*#__PURE__*/function () {
       }
       return output;
     }
+
+    /**
+     * Compose multiple matrices into a single transformation matrix
+     * @param  {...Array<Array<number>>} mats - The matrices to compose
+     * @returns {Array<Array<number>>} - The resulting transformation matrix
+     */
   }, {
     key: "composite",
     value: function composite() {
@@ -7690,6 +7867,13 @@ let Matrix = exports.Matrix = /*#__PURE__*/function () {
       }
       return output;
     }
+
+    /**
+     * Transform points by a matrix
+     * @param {Array<number>} points - The points to transformq
+     * @param {Array<Array<number>>} matrix - The matrix to transform the points by
+     * @returns {Array<number>} - The transformed points
+     */
   }, {
     key: "transform",
     value: function transform(points, matrix) {
@@ -7881,6 +8065,9 @@ function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new T
 function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
 /**
  * @import { Entity } from "../model/Entity";
+ */
+/**
+ * Represents a QuadTree or a single cell from one
  */
 let QuadTree = exports.QuadTree = /*#__PURE__*/function (_Rectangle) {
   /**
@@ -8354,6 +8541,14 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
  * @import { World } from "../world/World";
  */
 
+/**
+ * @typedef {[number, number, number, number, TileMap]} TerrainPoint
+ * @typedef {[number, number, number]} EntityPoint
+ * @typedef {TerrainPoint|Set<TerrainPoint>|void} TerrainScanResult
+ * @typedef {Map<Entity,Array<EntityPoint>>} EntityScanResult
+ * @typedef {{terrain: TerrainScanResult, entities: EntityScanResult}} RaycastResult
+ */
+
 const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
@@ -8385,7 +8580,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {number} layerId - The id of the layer to scan
      * @param {Entity} castingEntity - The Entity casting the ray
-     * @returns
+     * @returns {RaycastResult} - The result of the raycast
      */
     function cast(world, startX, startY, endX, endY) {
       let rayFlags = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : this.DEFAULT_FLAGS;
@@ -8468,7 +8663,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {Entity} castingEntity - The Entity casting the ray
-     * @returns {Map<Entity,Array<number,number,number>>}
+     * @returns {EntityScanResult} - The result of the raycast
      */
   }, {
     key: "castEntity",
@@ -8557,7 +8752,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {number} layerId - The id of the layer to scan
-     * @returns {Array<number,number,number,number,TileMap>|Set<Array<number,number,number,number,TileMap>>|void} - The nearest point, all points, or length, depending on rayFlags
+     * @returns {TerrainScanResult} - The nearest point, all points, or length, depending on rayFlags
      */
   }, {
     key: "castTerrain",
@@ -8619,7 +8814,7 @@ let Ray = exports.Ray = /*#__PURE__*/function () {
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {number} layerId - The id of the layer to scan
-     * @returns {Set<Array<number,number,number,number,TileMap>>}
+     * @returns {Set<TerrainPoint>} - The result of the raycast
      */
   }, {
     key: "castTerrainInMap",
@@ -9037,7 +9232,28 @@ const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 const MAX_GRID_IDX = Math.pow(2, Math.log2(1 + Number.MAX_SAFE_INTEGER) - SUBGRID_BITS);
+
+/**
+ * @typedef {{
+ *   x1: number,
+ *   y1: number,
+ *   x2: number,
+ *   y2: number,
+ * }} RectangleLike
+ */
+
+/**
+ * Represents a Segment of an SMTree
+ */
 let Segment = /*#__PURE__*/function () {
+  /**
+   *
+   * @param {number} start - Where the segment starts
+   * @param {number} end - Where the segment ends
+   * @param {Segment} prev - Reference to the previous segment in the SMTree
+   * @param {number} dimension - Number of dimensions in the SMTree
+   * @param {number} depth - Depth (dimension) of this Segmment
+   */
   function Segment(start, end, prev) {
     let dimension = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
     let depth = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
@@ -9053,6 +9269,12 @@ let Segment = /*#__PURE__*/function () {
     }, depthSymbol, 1 + depth)) : null;
     this.prev = prev;
   }
+
+  /**
+   * Split a Segment into two Segments
+   * @param {number} at - The point to split at
+   * @returns {Array<Segment>} - An array containing the Segments that replaced this one (or the current Segment if not split)
+   */
   return _createClass(Segment, [{
     key: "split",
     value: function split(at) {
@@ -9083,6 +9305,11 @@ let Segment = /*#__PURE__*/function () {
       }
       return [a, b];
     }
+
+    /**
+     * Add a RectangleLike to the Segment
+     * @param {RectangleLike} rectangle - The RectangleLike to add
+     */
   }, {
     key: "add",
     value: function add(rectangle) {
@@ -9092,6 +9319,12 @@ let Segment = /*#__PURE__*/function () {
         this.subTree.add(rectangle);
       }
     }
+
+    /**
+     * Remove a RectangleLike from the Segment
+     * @param {RectangleLike} rectangle - The RectangleLike to remove
+     * @returns {boolean} - Whether the Segment is empty after the delete
+     */
   }, {
     key: "delete",
     value: function _delete(rectangle) {
@@ -9103,6 +9336,12 @@ let Segment = /*#__PURE__*/function () {
       const empty = !this.rectangles.size && this.start > -Infinity;
       return empty;
     }
+
+    /**
+     * Check if a RectangleLike is in the Segment
+     * @param {RectangleLike} rectangle - The RectangleLike to check
+     * @returns {void}
+     */
   }, {
     key: "has",
     value: function has(rectangle) {
@@ -9110,10 +9349,24 @@ let Segment = /*#__PURE__*/function () {
     }
   }]);
 }();
+/**
+ * Test if a given object is rectangle-like
+ * @param {object} object - The object to test
+ * @returns {boolean} - True if the object can be treated as a Rectangle
+ */
 const isRectangle = object => {
   return 'x1' in object && 'y1' in object && 'x2' in object && 'y2' in object && object.x1 < object.x2 && object.y1 < object.y2;
 };
+
+/**
+ * Represent a Segment Mapping Tree
+ */
 let SMTree = exports.SMTree = /*#__PURE__*/function () {
+  /**
+   * Construct an SMTree Object
+   * @param {object} args - Named param
+   * @param {number} args.dimension - The number of dimensions in the tree
+   */
   function SMTree() {
     let args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _defineProperty({
       dimension: 2
@@ -9125,6 +9378,12 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
     this.rectangles = new WeakSet();
     this.snapshots = new WeakMap();
   }
+
+  /**
+   * Add a RectangleLike to the SMTree
+   * @param {RectangleLike} rectangle - The RectangleLike to add
+   * @returns {void}
+   */
   return _createClass(SMTree, [{
     key: "add",
     value: function add(rectangle) {
@@ -9155,6 +9414,12 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
         this.segments[i].add(rectangle);
       }
     }
+
+    /**
+     * Remove a RectangleLike from the SMTree
+     * @param {RectangleLike} rectangle - The RectangleLike to remove
+     * @returns {false|number} - The number of Segments removed / false if RectangleLike is not in SMTree
+     */
   }, {
     key: "delete",
     value: function _delete(rectangle) {
@@ -9197,12 +9462,26 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       }
       return deleteCount;
     }
+
+    /**
+     * Move a RectangleLike in the SMTree
+     * @param {RectangleLike} rectangle - The RectangleLike to move
+     */
   }, {
     key: "move",
     value: function move(rectangle) {
       this.delete(rectangle);
       this.add(rectangle);
     }
+
+    /**
+     * Find a set of RectangleLikes in the SMTree by a given rectangle
+     * @param {number} x1 - The x value of the top/left
+     * @param {number} y1 - The y value of the top/left
+     * @param {number} x2 - The x value of the bottom/right
+     * @param {number} y2 - The y value of the bottom/right
+     * @returns {Set<RectangleLike>} - Set of RectangleLikes overlapping the given rectangle
+     */
   }, {
     key: "query",
     value: function query(x1, y1, x2, y2) {
@@ -9222,6 +9501,15 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       }
       return results;
     }
+
+    /**
+     * Find a set of RectangleLikes in the SMTree by a given line
+     * @param {number} x1 - The x value of the start point
+     * @param {number} y1 - The y value of the start point
+     * @param {number} x2 - The x value of the end point
+     * @param {number} y2 - The y value of the end point
+     * @returns {Set<RectangleLike>} - Set of RectangleLikes overlapping the given rectangle
+     */
   }, {
     key: "queryLine",
     value: function queryLine(x1, y1, x2, y2) {
@@ -9275,6 +9563,13 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       }
       return results;
     }
+
+    /**
+     * Split a Segment into two Segments
+     * @param {number} index - The index of the Segment to split
+     * @param {number} at - The point to split at
+     * @returns {void}
+     */
   }, {
     key: "splitSegment",
     value: function splitSegment(index, at) {
@@ -9284,6 +9579,12 @@ let SMTree = exports.SMTree = /*#__PURE__*/function () {
       const splitSegments = this.segments[index].split(at);
       this.segments.splice(index, 1, ...splitSegments);
     }
+
+    /**
+     * Find the segment occupying a given point
+     * @param {number} at - The point to search by
+     * @returns {number} - The index of the new segment, -1 if not found
+     */
   }, {
     key: "findSegment",
     value: function findSegment(at) {
@@ -10469,7 +10770,21 @@ function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !==
 function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
 function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
 function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+/**
+ * @import { Session } from "../session/Session";
+ */
+/**
+ * Spawns other Entities in a TileMap
+ */
 let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
+  /**
+   * Construct a Spawner object
+   * @param {object} spawnData - Named params
+   * @param {string} spawnData.spawnType - The `type` from the Entity definition
+   * @param {new () => any} spawnData.spawnClass - The class of the Entity controller object
+   * @param {Session} spawnData.session - The current Session
+   * @param {*} spawnData.props - Properties from TMJ TileMap
+   */
   function Spawner(spawnData) {
     var _spawnData$properties;
     var _this;
@@ -10483,6 +10798,10 @@ let Spawner = exports.Spawner = /*#__PURE__*/function (_Entity) {
     _this.flags |= _Entity2.Entity.E_STATIC;
     return _this;
   }
+
+  /**
+   * Tick the simulation once.
+   */
   _inherits(Spawner, _Entity);
   return _createClass(Spawner, [{
     key: "simulate",
@@ -10949,24 +11268,33 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Camera = void 0;
-function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-let Camera = exports.Camera = /*#__PURE__*/function () {
-  function Camera() {
-    _classCallCheck(this, Camera);
-  }
-  return _createClass(Camera, [{
-    key: "followEntity",
-    value: function followEntity(entity, xOffset, yOffset) {}
-  }]);
-}();
+/**
+ * Represents the Camera
+ */
+let Camera = exports.Camera = /*#__PURE__*/_createClass(function Camera() {
+  _classCallCheck(this, Camera);
+});
+/**
+ * @property {number} x - The x position of the Camera
+ */
 _defineProperty(Camera, "x", 0);
+/**
+ * @property {number} y - The y position of the Camera
+ */
 _defineProperty(Camera, "y", 0);
+/**
+ * @property {number} width - The width of the Camera
+ */
 _defineProperty(Camera, "width", 0);
+/**
+ * @property {number} height - The height of the Camera
+ */
 _defineProperty(Camera, "height", 0);
 });
 
@@ -11110,6 +11438,13 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
       gl.bindTexture(gl.TEXTURE_2D, null);
     });
   }
+
+  /**
+   * Modulo with consistent behavior in the negative numbers
+   * @param {number} a - The dividend
+   * @param {number} b - The modulus
+   * @returns {number} - The residue
+   */
   return _createClass(MapRenderer, [{
     key: "negSafeMod",
     value: function negSafeMod(a, b) {
@@ -11352,9 +11687,9 @@ let MapRenderer = exports.MapRenderer = /*#__PURE__*/function () {
       this.lastSliceKey = null;
       this.blankBuffer = new Uint32Array(this.width * this.height);
     }
-  }, {
-    key: "simulate",
-    value: function simulate() {}
+
+    // simulate()
+    // {}
 
     /**
      * Set the rectangle in the viewport for rendering
@@ -11394,16 +11729,51 @@ function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Can
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * @import { Properties } from '../world/Properties';
+ * @import { SpriteBoard } from './SpriteBoard';
+ * @import { TileMap } from './TileMap';
+ */
+/**
+ * Represents one layer of a Parallax
+ */
 let ParallaxLayer = /*#__PURE__*/_createClass(function ParallaxLayer() {
   _classCallCheck(this, ParallaxLayer);
+  /**
+   * @property {WebGLTexture} texture - The texture of the layer
+   */
   _defineProperty(this, "texture", null);
+  /**
+   * @property {number} width - The width of the layer
+   */
   _defineProperty(this, "width", 0);
+  /**
+   * @property {number} height - The width of the layer
+   */
   _defineProperty(this, "height", 0);
+  /**
+   * @property {number} offset - The offset of the layer
+   */
   _defineProperty(this, "offset", 0);
+  /**
+   * @property {number} parallax - The parallax factor of the layer
+   */
   _defineProperty(this, "parallax", 0);
+  /**
+   * @property {Properties} properties - The properties of the layer
+   */
   _defineProperty(this, "props", null);
 });
+/**
+ * Represents Parallax background
+ */
 let Parallax = exports.Parallax = /*#__PURE__*/function () {
+  /**
+   * Construct a Parallax object
+   * @param {object} param0 - Named params
+   * @param {SpriteBoard} param0.spriteBoard - The SpriteBoard to render to
+   * @param {TileMap} param0.map -The TileMap that owns the Parallax
+   */
   function Parallax(_ref) {
     let spriteBoard = _ref.spriteBoard,
       map = _ref.map;
@@ -11423,6 +11793,11 @@ let Parallax = exports.Parallax = /*#__PURE__*/function () {
     this.x = 0;
     this.y = 0;
   }
+
+  /**
+   * Get the Parallax ready to use
+   * @returns {Promise<void>} - Resolves when the Parallax is ready
+   */
   return _createClass(Parallax, [{
     key: "assemble",
     value: function assemble() {
@@ -11450,6 +11825,10 @@ let Parallax = exports.Parallax = /*#__PURE__*/function () {
       }));
       return Promise.all(loadSlices);
     }
+
+    /**
+     * Draw the Parallax
+     */
   }, {
     key: "draw",
     value: function draw() {
@@ -11485,9 +11864,23 @@ let Parallax = exports.Parallax = /*#__PURE__*/function () {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.bindTexture(gl.TEXTURE_2D, null);
     }
+
+    /**
+     * Load an image and track the load as a Promise in `this.imagePromises[src]`
+     * @param {string|URL} src - The image URL to load
+     * @returns {Promise<HTMLImageElement>} - A promise that resolves to the loaded HTMLImageElement
+     */
   }, {
     key: "setRectangle",
-    value: function setRectangle(x, y, width, height) {
+    value:
+    /**
+     * Set the rectangle in the viewport for rendering
+     * @param {number} x - The x value of the top/left of the render window
+     * @param {number} y - The y value of the top/left of the render window
+     * @param {number} width - The width of the render window
+     * @param {number} height - The height of the render window
+     */
+    function setRectangle(x, y, width, height) {
       const gl = this.spriteBoard.gl2d.context;
       const ratio = this.spriteBoard.width / width;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
@@ -11538,8 +11931,28 @@ function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = 
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * @import { Session } from "../session/Session";
+ * @import { SpriteBoard } from "./SpriteBoard";
+ */
+
 const rectMap = new WeakMap();
+
+/**
+ * Represents a Region of a TileMap
+ */
 let Region = exports.Region = /*#__PURE__*/function () {
+  /**
+   * Construct a Region object
+   * @param {object} param0 - Named params
+   * @param {number} param0.x - The x value of the top/left of the Region
+   * @param {number} param0.y - The y value of the top/left of the Region
+   * @param {number} param0.z - The z value of the Region (render order)
+   * @param {number} param0.width - The width of the Region
+   * @param {number} param0.height - The height of the Region
+   * @param {Session} param0.session - The current Session
+   * @param {SpriteBoard} param0.spriteBoard - The height of the Region
+   */
   function Region(_ref) {
     let x = _ref.x,
       y = _ref.y,
@@ -11572,6 +11985,12 @@ let Region = exports.Region = /*#__PURE__*/function () {
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, singlePixel);
   }
+
+  /**
+   * Move the Region object
+   * @param {number} x - The x value to shift by
+   * @param {number} y - The y value to shift by
+   */
   return _createClass(Region, [{
     key: "move",
     value: function move(x, y) {
@@ -11586,6 +12005,14 @@ let Region = exports.Region = /*#__PURE__*/function () {
       this.bounds.y1 += y;
       this.bounds.y2 += y;
     }
+
+    /**
+     * Resize the Region
+     * @param {number} w - The new width
+     * @param {number} h - The new height
+     * @param {number} cx - The x value to shift by
+     * @param {number} cy - The y value to shift by
+     */
   }, {
     key: "resize",
     value: function resize(w, h, cx, cy) {
@@ -11612,11 +12039,21 @@ let Region = exports.Region = /*#__PURE__*/function () {
       this.bounds.y1 = this.y;
       this.bounds.y2 = this.y + h;
     }
+
+    /**
+     * Tick the Region's simulation logic
+     * @param {number} delta - Number of ms since last tick
+     */
   }, {
     key: "simulate",
     value: function simulate(delta) {
       this.resize(this.width, this.originalHeight * (Math.sin(this.session.world.age / 3000) * 0.5 + 0.5), 1.0, 1.0);
     }
+
+    /**
+     * Render the Region
+     * @param {number} delta - Number of ms since last render
+     */
   }, {
     key: "draw",
     value: function draw(delta) {
@@ -11641,6 +12078,14 @@ let Region = exports.Region = /*#__PURE__*/function () {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.bindTexture(gl.TEXTURE_2D, null);
     }
+
+    /**
+     * Set the rectangle in the viewport for rendering
+     * @param {number} x - The x value of the top/left of the render window
+     * @param {number} y - The y value of the top/left of the render window
+     * @param {number} width - The width of the render window
+     * @param {number} height - The height of the render window
+     */
   }, {
     key: "setRectangle",
     value: function setRectangle(x, y, width, height) {
@@ -11663,7 +12108,13 @@ let Region = exports.Region = /*#__PURE__*/function () {
     }
   }], [{
     key: "fromRect",
-    value: function fromRect(rect) {
+    value:
+    /**
+     * Given a Rectangle, return a registered Region
+     * @param {Rectangle} rect - The Rectangle associated with a Region
+     * @returns {Region|undefined} - The Region registered to the Rectangle or undefined if not registered
+     */
+    function fromRect(rect) {
       return rectMap.get(rect);
     }
   }]);
@@ -11962,7 +12413,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 /**
  * @import { Session } from '../session/Session';
  * @import { World } from '../world/World';
-*/
+ */
 /**
  * Renders the whole game
  */
@@ -12256,7 +12707,34 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
 function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
 function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
 function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+/**
+ * @import { TileMap } from "../world/TileMap";
+ */
+/**
+ * @class SpriteSheet
+ * Represents a SpriteSheet
+ * @augments Tileset
+ */
 let SpriteSheet = exports.SpriteSheet = /*#__PURE__*/function (_Tileset) {
+  /**
+   * Construct a SpriteSheet object
+   * @param {object} tilesetData - Named params
+   * @param {string|URL} tilesetData.src - The URL of the Tileset to load
+   * @param {object} tilesetData.source - Alias of `src` for compatibility
+   * @param {TileMap|undefined} tilesetData.map - The TileMap this Tileset belongs to
+   * @param {number} tilesetData.firstgid - The first GID in this Tileset
+   * @param {number} tilesetData.columns - The number of columns in the Tileset
+   * @param {string|URL} tilesetData.image - The URL to the Tileset image
+   * @param {number} tilesetData.imageheight - The width of the Tileset image
+   * @param {number} tilesetData.imagewidth - The width of the Tileset image
+   * @param {number} tilesetData.margin - The around each tile
+   * @param {string} tilesetData.name - The name of the Tileset
+   * @param {number} tilesetData.spacing - The spacing between each tile
+   * @param {number} tilesetData.tilecount - The number of tiles
+   * @param {number} tilesetData.tilewidth - The width of one tile
+   * @param {number} tilesetData.tileheight - The height of one tile
+   * @param {Array<number>} tilesetData.tiles - The tile GIDs
+   */
   function SpriteSheet(tilesetData) {
     var _this;
     _classCallCheck(this, SpriteSheet);
@@ -12287,10 +12765,16 @@ let SpriteSheet = exports.SpriteSheet = /*#__PURE__*/function (_Tileset) {
     });
     return _this;
   }
+
+  /**
+   * Split the source image into frames
+   * @returns {void}
+   */
   _inherits(SpriteSheet, _Tileset);
   return _createClass(SpriteSheet, [{
     key: "processImage",
     value: function processImage() {
+      if (this.frames.length) return;
       this.canvas.width = this.image.width;
       this.canvas.height = this.image.height;
       this.context.drawImage(this.image, 0, 0);
@@ -12298,6 +12782,12 @@ let SpriteSheet = exports.SpriteSheet = /*#__PURE__*/function (_Tileset) {
         this.frames[i] = this.getFrame(i);
       }
     }
+
+    /**
+     * Get pixel data for a single frame
+     * @param {number} frameId - The id of the frame
+     * @returns {Uint8Array} - The pixel data
+     */
   }, {
     key: "getFrame",
     value: function getFrame(frameId) {
@@ -12340,7 +12830,35 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 const cache = new Map();
+
+/**
+ * @import { TileMap } from "../world/TileMap"
+ */
+
+/**
+ * Represents a Tileset
+ * Can load async or consume already loaded data
+ */
 let Tileset = exports.Tileset = /*#__PURE__*/function () {
+  /**
+   * Construct a Tileset object
+   * @param {object} param0 - Named params
+   * @param {string|URL} param0.src - The URL of the Tileset to load
+   * @param {object} param0.source - Alias of `src` for compatibility
+   * @param {TileMap|undefined} param0.map - The TileMap this Tileset belongs to
+   * @param {number} param0.firstgid - The first GID in this Tileset
+   * @param {number} param0.columns - The number of columns in the Tileset
+   * @param {string|URL} param0.image - The URL to the Tileset image
+   * @param {number} param0.imageheight - The width of the Tileset image
+   * @param {number} param0.imagewidth - The width of the Tileset image
+   * @param {number} param0.margin - The around each tile
+   * @param {string} param0.name - The name of the Tileset
+   * @param {number} param0.spacing - The spacing between each tile
+   * @param {number} param0.tilecount - The number of tiles
+   * @param {number} param0.tilewidth - The width of one tile
+   * @param {number} param0.tileheight - The height of one tile
+   * @param {Array<number>} param0.tiles - The tile GIDs
+   */
   function Tileset(_ref) {
     let source = _ref.source,
       src = _ref.src,
@@ -12354,8 +12872,8 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
       name = _ref.name,
       spacing = _ref.spacing,
       tilecount = _ref.tilecount,
-      tileheight = _ref.tileheight,
       tilewidth = _ref.tilewidth,
+      tileheight = _ref.tileheight,
       tiles = _ref.tiles;
     _classCallCheck(this, Tileset);
     this.firstGid = firstgid !== null && firstgid !== void 0 ? firstgid : 0;
@@ -12383,6 +12901,23 @@ let Tileset = exports.Tileset = /*#__PURE__*/function () {
       tiles: tiles
     });
   }
+
+  /**
+   * Load or parse a Tileset
+   * @param {object} param0 - Named params
+   * @param {string|URL} param0.src - The URL of the Tileset to load
+   * @param {number} param0.columns - The number of columns in the Tileset
+   * @param {string|URL} param0.image - The URL to the Tileset image
+   * @param {number} param0.imageheight - The width of the Tileset image
+   * @param {number} param0.imagewidth - The width of the Tileset image
+   * @param {number} param0.margin - The around each tile
+   * @param {string} param0.name - The name of the Tileset
+   * @param {number} param0.spacing - The spacing between each tile
+   * @param {number} param0.tilecount - The number of tiles
+   * @param {number} param0.tilewidth - The width of one tile
+   * @param {number} param0.tileheight - The height of one tile
+   * @param {Array<number>} param0.tiles - The tile GIDs
+   */
   return _createClass(Tileset, [{
     key: "getReady",
     value: async function getReady(_ref2) {
@@ -12500,7 +13035,16 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
 function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
 function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
 function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+/**
+ * @class OnScreenJoyPad
+ * Represents an on-screen jopypad
+ * @augments View
+ */
 let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
+  /**
+   * Construct an OnScreenJoyPad object
+   * @param {object} args - Default args
+   */
   function OnScreenJoyPad(args) {
     var _this;
     _classCallCheck(this, OnScreenJoyPad);
@@ -12526,6 +13070,11 @@ let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
     _this.draggingTouches = new Set();
     return _this;
   }
+
+  /**
+   * Start dragging the analog stick
+   * @param {Event} event - The event being handled
+   */
   _inherits(OnScreenJoyPad, _View);
   return _createClass(OnScreenJoyPad, [{
     key: "dragStick",
@@ -12545,6 +13094,11 @@ let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
         y: pos.clientY
       };
     }
+
+    /**
+     * Move the analog stick
+     * @param {Event} event - The event being handled
+     */
   }, {
     key: "moveStick",
     value: function moveStick(event) {
@@ -12572,6 +13126,11 @@ let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
         }
       }
     }
+
+    /**
+     * Stop dragging the analog stick
+     * @param {Event} event - The event being handled
+     */
   }, {
     key: "dropStick",
     value: function dropStick(event) {
@@ -12591,17 +13150,34 @@ let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
       this.args.x = 0;
       this.args.y = 0;
     }
+
+    /**
+     * Stop pushing a button
+     * @param {Event} event - The event being handled
+     * @param {number} button - The id of the button to release
+     */
   }, {
     key: "releaseButton",
     value: function releaseButton(event, button) {
       this.buttons[button] = -1;
     }
+
+    /**
+     * Start pushing a button
+     * @param {Event} event - The event being handled
+     * @param {number} button - The id of the button to press
+     */
   }, {
     key: "pressButton",
     value: function pressButton(event, button) {
       this.buttons[button] = this.buttons[button] || 0;
       this.buttons[button]++;
     }
+
+    /**
+     * Supress the context menu
+     * @param {Event} event - The event being handled
+     */
   }, {
     key: "contextmenu",
     value: function contextmenu(event) {
@@ -12629,14 +13205,26 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+/**
+ * Represents a Pallet to select classes by a predefined string
+ */
 let Pallet = exports.Pallet = /*#__PURE__*/function () {
   function Pallet() {
     _classCallCheck(this, Pallet);
+    /**
+     * @property {{string: new () => any}} objectPallet - Stores the classes by typeName
+     */
     _defineProperty(this, "objectPallet", {});
   }
   return _createClass(Pallet, [{
     key: "resolve",
-    value: async function resolve(typeName) {
+    value:
+    /**
+     * Resolve a class by `typeName`
+     * @param {string} typeName - The string that refers to a class in the Pallet
+     * @returns {new () => any} - The class
+     */
+    async function resolve(typeName) {
       if (typeName[0] === '@') {
         if (this.objectPallet[typeName]) {
           return this.objectPallet[typeName];
@@ -12645,6 +13233,12 @@ let Pallet = exports.Pallet = /*#__PURE__*/function () {
         return (await import(typeName)).default;
       }
     }
+
+    /**
+     * Resolve a class by `typeName`
+     * @param {string} typeName - The string that refers to a class in the Pallet
+     * @param {new () => any} spawnClass - The class to register
+     */
   }, {
     key: "register",
     value: function register(typeName, spawnClass) {
@@ -12672,9 +13266,15 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 /**
  * @import { Entity } from "../model/Entity";
  * @import { TileMap } from "./TileMap";
-*/
+ */
 /**
- * TMX-formatted Properties
+ * @typedef {{name: string, color: string, value: string}} TmxPropertyDef
+ * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
+ * @typedef {Uint8ClampedArray} Color - 4 byte color
+ * @typedef {string|URL|Color} PropVal
+ */
+/**
+ * Parses TMX-formatted Properties
  */
 let Properties = exports.Properties = /*#__PURE__*/function () {
   /**
@@ -12699,7 +13299,7 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
    * Get a property's value
    * @param {string} name - The name of the property
    * @param {number} index - The index of the value
-   * @returns {any|void} - The value of the property
+   * @returns {PropVal|void} - The value of the property
    */
   return _createClass(Properties, [{
     key: "get",
@@ -12724,7 +13324,7 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
 
     /**
      * Add one or more properties
-     * @param  {...any} properties - The properties to add (TMX format)
+     * @param  {TmxPropertyDefList} properties - The properties to add (TMX format)
      */
   }, {
     key: "add",
@@ -12752,7 +13352,7 @@ let Properties = exports.Properties = /*#__PURE__*/function () {
     /**
      * Get all values for a given property
      * @param {string} name - The name of the property
-     * @returns {Array<any>} - The list of values
+     * @returns {Array<PropVal>} - The list of values
      */
   }, {
     key: "getAll",
@@ -12790,6 +13390,79 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 /**
  * @import { Entity } from "../model/Entity";
  * @import { Session } from "../model/Session";
+ * @import { TmxPropertyDefList } from './Properties';
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   class: string,
+ *   data: Array<number>,
+ *   width: number,
+ *   height: number,
+ *   name: string,
+ *   opacity: number,
+ *   properties: TmxPropertyDefList,
+ *   tintcolor: string,
+ *   type: "tilelayer",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ *  }} TmxTileLayer
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   name: string,
+ *   type: string,
+ *   visible: boolean,
+ *   width: number,
+ *   height: number,
+ *   x: number,
+ *   y: number,
+ *   point: true|undefined,
+ *   rotation: number,
+ *   properties: TmxPropertyDefList,
+ * }} TmxObjectDef
+ */
+
+/**
+ * @typedef {{
+ *   id: number
+ *   name: string,
+ *   drawOrder: string,
+ *   objects: Array<TmxObjectDef>,
+ *   opacity: number,
+ *   type: "objectgroup",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ * }} TmxObjectLayer
+ */
+
+/**
+ * @typedef {{
+ *   id: number,
+ *   image: string,
+ *   imageWidth: number,
+ *   imageheight: number,
+ *   name: string,
+ *   offsetx: number,
+ *   offsety: number,
+ *   opacity: number,
+ *   parallaxx: number,
+ *   parallaxy: number,
+ *   properties: TmxPropertyDefList,
+ *   type: "imagelayer",
+ *   visible: boolean,
+ *   x: number,
+ *   y: number,
+ * }} TmxImageLayer
+ */
+
+/**
+ * @typedef {TmxTileLayer|TmxObjectLayer|TmxImageLayer} TmxLayer
  */
 
 const cache = new Map();
@@ -13279,7 +13952,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
 
     /**
      * Get the color of a point
-     * @param {*} layer - The Tile Layer to sample
+     * @param {TmxTileLayer} layer - The Tile Layer to sample
      * @param {number} x - The x value of the point
      * @param {number} y - The y value of the point
      * @returns {number|false} - Boolean or uint32 color(number))/no tile (false)
@@ -13304,7 +13977,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
 
     /**
      * Get the tile for a given point
-     * @param {*} layer - The tile layer to check
+     * @param {TmxTileLayer} layer - The tile layer to check
      * @param {number} x - The x value of the point
      * @param {number} y - The y value of the point
      * @returns {null|number} The tile at the point or null if no tile exists there
@@ -13333,7 +14006,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
      * @param {number} w - The width of the rectangle to sample
      * @param {number} h - The height of the rectangle to sample
      * @param {number} delta -
-     * @returns {*} - Array of pixel layers
+     * @returns {Array<Uint8Array>} - Array of pixel layers
      */
   }, {
     key: "getSlice",
@@ -13387,7 +14060,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
 
     /**
      * Put a rectangular slice of a tile layer into a rendering buffer
-     * @param {*} buffer = The rendering buffer
+     * @param {Uint8Array} buffer = The rendering buffer
      * @param {number} width - The width of the rendering buffer
      * @param {number} layer - The layer to sample
      * @param {number} x - The x value of the top/left corner of the rectangle to sample
@@ -13511,6 +14184,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
  * @import { Region } from "../model/Region"
  * @import { Session } from "../model/Session"
  * @import { Rectangle } from "../math/Rectangle"
+ * @import { RaycastResult, TerrainScanResult, EntityScanResult } from "../math/Ray"
  */
 
 const cache = new Map();
@@ -13786,7 +14460,7 @@ let World = exports.World = /*#__PURE__*/function () {
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {number} layerId - The id of the layer to scan
-     * @returns {*} - The result of the raycast
+     * @returns {RaycastResult} - The result of the raycast
      */
   }, {
     key: "castRay",
@@ -13804,7 +14478,7 @@ let World = exports.World = /*#__PURE__*/function () {
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
      * @param {number} layerId - The id of the layer to scan
-     * @returns {*} - The result of the raycast
+     * @returns {TerrainScanResult} - The result of the raycast
      */
   }, {
     key: "castTerrainRay",
@@ -13821,7 +14495,7 @@ let World = exports.World = /*#__PURE__*/function () {
      * @param {number} endX - The x value of the end point
      * @param {number} endY - The y value of the end point
      * @param {number} rayFlags - flags to affect raycast behavior
-     * @returns {*} - The result of the raycast
+     * @returns {EntityScanResult} - The result of the raycast
      */
   }, {
     key: "castEntityRay",

@@ -1,6 +1,20 @@
 import { Axis } from './Axis';
 import { Button } from './Button';
 
+/**
+ * @import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
+ * @import { Keyboard } from 'curvature/input/Keyboard'
+ */
+
+/**
+ * @typedef {{axes: {number: number}, buttons: {number: number}}} InputState
+ * @typedef {{
+ *   strongMagnitude: number,
+ *   weakMagnitude: number,
+ *   duration: number,
+ * }} rumbleOptions
+ */
+
 const keys = {
 	'Space': 0
 
@@ -96,9 +110,17 @@ const buttonRemap = {
 	, 5: 1023
 };
 
+/**
+ * Represents a gamepad
+ */
 export class Controller
 {
-	constructor({keys = {}, deadZone = 0, gamepad = null, keyboard = null})
+	/**
+	 * Construct a Controller object
+	 * @param {object} param0 - Named params
+	 * @param {number} param0.deadZone - The deadzone of the analog sticks
+	 */
+	constructor({deadZone = 0, /* keys = {}, gamepad = null, keyboard = null */})
 	{
 		this.deadZone = deadZone;
 
@@ -110,6 +132,11 @@ export class Controller
 		});
 	}
 
+	/**
+	 * Update the state
+	 * @param {object} param0 - Named params
+	 * @param {Gamepad} param0.gamepad - The HTML Gamepad object
+	 */
 	update({gamepad} = {})
 	{
 		for(const i in this.buttons)
@@ -165,11 +192,23 @@ export class Controller
 		}
 	}
 
+	/**
+	 * Rumble the gamepad
+	 * @param {rumbleOptions|true} options - Rumble options
+	 */
 	rumble(options = true)
 	{
 		this.willRumble = options;
 	}
 
+	/**
+	 * Read input from gamepads, keyboard & onScreenJoyPad
+	 * @param {object} param0 - Named params
+	 * @param {OnScreenJoyPad} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
+	 * @param {Keyboard} param0.keyboard - The Keyboard object to read input from
+	 * @param {Keyboard} param0.gamepads - The Gamepad objects to read input from
+	 * @returns {boolean} - Whether or not input was read from any source
+	 */
 	readInput({keyboard, onScreenJoyPad, gamepads = []})
 	{
 		const tilted   = {};
@@ -524,6 +563,11 @@ export class Controller
 		return tookInput;
 	}
 
+	/**
+	 * Tilt an axis
+	 * @param {number} axisId - The ID of the axis to tilt
+	 * @param {number} magnitude - How far the axis should tilt
+	 */
 	tilt(axisId, magnitude)
 	{
 		if(!this.axes[axisId])
@@ -534,6 +578,11 @@ export class Controller
 		this.axes[axisId].tilt(magnitude);
 	}
 
+	/**
+	 * Press a button
+	 * @param {number} buttonId - The ID of the button being pressed
+	 * @param {number} pressure - How hard the button is being pressed
+	 */
 	press(buttonId, pressure = 1)
 	{
 		if(!this.buttons[buttonId])
@@ -544,6 +593,10 @@ export class Controller
 		this.buttons[buttonId].press(pressure);
 	}
 
+	/**
+	 * Release a button
+	 * @param {number} buttonId - The ID of the button being released
+	 */
 	release(buttonId)
 	{
 		if(!this.buttons[buttonId])
@@ -554,6 +607,10 @@ export class Controller
 		this.buttons[buttonId].release();
 	}
 
+	/**
+	 * Serialize the axes and buttons into something JSON serializable
+	 * @returns {InputState} - The state of the axes & buttons
+	 */
 	serialize()
 	{
 		const buttons = {};
@@ -573,6 +630,10 @@ export class Controller
 		return {axes, buttons};
 	}
 
+	/**
+	 * Set the Controller to a given InputState
+	 * @param {InputState} input - The state to play back
+	 */
 	replay(input)
 	{
 		if(input.buttons)
@@ -602,6 +663,9 @@ export class Controller
 		}
 	}
 
+	/**
+	 * Set the axes to neutral and release all buttons
+	 */
 	zero()
 	{
 		for(const i in this.axes)

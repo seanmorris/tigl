@@ -9,6 +9,7 @@ import { Entity } from '../model/Entity';
  * @import { Region } from "../model/Region"
  * @import { Session } from "../model/Session"
  * @import { Rectangle } from "../math/Rectangle"
+ * @import { RaycastResult, TerrainScanResult, EntityScanResult } from "../math/Ray"
  */
 
 
@@ -351,7 +352,7 @@ export class World
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
-	 * @returns {*} - The result of the raycast
+	 * @returns {RaycastResult} - The result of the raycast
 	 */
 	castRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
@@ -374,7 +375,7 @@ export class World
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
-	 * @returns {*} - The result of the raycast
+	 * @returns {TerrainScanResult} - The result of the raycast
 	 */
 	castTerrainRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS, layerId = 0)
 	{
@@ -396,7 +397,7 @@ export class World
 	 * @param {number} endX - The x value of the end point
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
-	 * @returns {*} - The result of the raycast
+	 * @returns {EntityScanResult} - The result of the raycast
 	 */
 	castEntityRay(startX, startY, endX, endY, rayFlags = Ray.DEFAULT_FLAGS)
 	{
