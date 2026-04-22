@@ -17,7 +17,7 @@ export class Axis
 	 * Connstruct an Axis object
 	 * @param {object} param0 - Named params
 	 * @param {number} param0.deadZone - The size of the Axis' deadzone (inputs below this level are ignored)
-	 * @param {boolean} param0.proportional - UNUSED
+	 * @param {boolean} [param0.proportional] - UNUSED
 	 */
 	constructor({deadZone = 0, proportional = true})
 	{
@@ -43,8 +43,8 @@ export class Axis
 			magnitude = 0;
 		}
 
-		this.delta     = Number(magnitude - this.magnitude).toFixed(3) - 0;
-		this.magnitude = Number(magnitude).toFixed(3) - 0;
+		this.delta     = Number(Number(magnitude - this.magnitude).toFixed(3));
+		this.magnitude = Number(Number(magnitude).toFixed(3));
 	}
 
 	/**

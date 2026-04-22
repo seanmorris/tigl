@@ -22,7 +22,7 @@ export class MapRenderer
 	 */
 	constructor({spriteBoard, map, session})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 		this.spriteBoard = spriteBoard;
 		this.session = session;
 
@@ -45,15 +45,15 @@ export class MapRenderer
 
 		this.tileMapping = this.spriteBoard.gl2d.createTexture(1, 1);
 		this.tileTexture = this.spriteBoard.gl2d.createTexture(1, 1);
+
+		/** @type {{[key: string]: boolean}} */
 		this.priorityInitialized = {};
 
 		// this.renderPath = 'slice';
 		this.renderPath = session.hasWebgl2 ? 'webgl2' : 'canvas';
 		// this.renderPath = 'webgl2';
 
-		map.initialize();
-
-		map.ready.then(() => {
+		map.initialize().then(() => {
 			this.loaded = true;
 			this.tileWidth  = map.tileWidth;
 			this.tileHeight = map.tileHeight;
@@ -209,8 +209,11 @@ export class MapRenderer
 				const wc = Math.max(0, Math.min(tilesWide - xd, layer.width - xs));
 				const hc = Math.max(0, Math.min(tilesHigh - yd, layer.height - ys));
 
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_ROW_LENGTH, layer.width);
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, xs);
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_SKIP_ROWS, ys);
 
 				gl.texSubImage2D(
@@ -246,8 +249,11 @@ export class MapRenderer
 				gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 				gl.drawArrays(gl.TRIANGLES, 0, 6);
 
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+				// @ts-ignore
 				gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
 			}
 		}
@@ -352,7 +358,7 @@ export class MapRenderer
 				, tilesWide
 				, tilesHigh
 				, delta
-				, !!this.priorityInitialized[priority]
+				// , !!this.priorityInitialized[priority]
 			);
 
 			for(const tilePixels of tilePixelLayers)

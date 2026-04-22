@@ -109,7 +109,7 @@ export class Matrix
 			throw new Error('Incompatible matrices');
 		}
 
-		const output = Array(matA.length).fill().map(() => Array(matB[0].length).fill(0));
+		const output = Array(matA.length).fill(0).map(() => Array(matB[0].length).fill(0));
 
 		for(let i = 0; i < matA.length; i++)
 		{
@@ -144,9 +144,9 @@ export class Matrix
 
 	/**
 	 * Transform points by a matrix
-	 * @param {Array<number>} points - The points to transformq
+	 * @param {Array<number>|Float32Array} points - The points to transformq
 	 * @param {Array<Array<number>>} matrix - The matrix to transform the points by
-	 * @returns {Array<number>} - The transformed points
+	 * @returns {Float32Array} - The transformed points
 	 */
 	static transform(points, matrix)
 	{

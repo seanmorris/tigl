@@ -53,8 +53,8 @@ export class Button
 	 */
 	press(pressure)
 	{
-		this.delta    = Number(pressure - this.pressure).toFixed(3) - 0;
-		this.pressure = Number(pressure).toFixed(3) - 0;
+		this.delta    = Number(Number(pressure - this.pressure).toFixed(3));
+		this.pressure = Number(Number(pressure).toFixed(3));
 		this.active   = true;
 		this.time     = this.time > 0 ? this.time : 0;
 	}
@@ -69,7 +69,7 @@ export class Button
 		// 	return;
 		// }
 
-		this.delta    = Number(-this.pressure).toFixed(3) - 0;
+		this.delta    = Number(Number(-this.pressure).toFixed(3));
 		this.pressure = 0;
 		this.active   = false;
 	}

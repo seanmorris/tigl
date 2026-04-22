@@ -1,11 +1,11 @@
 import { View as BaseView } from 'curvature/base/View';
-import { Camera } from '../sprite/Camera';
-
-import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
 import { Keyboard } from 'curvature/input/Keyboard'
 
+import { Camera } from '../sprite/Camera';
+import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
+
 import { Session } from '../session/Session';
-import { Config } from 'Config';
+import { Config } from '../Config';
 
 import { PlayerController } from '../model/PlayerController';
 import { BallController }   from "../model/BallController";
@@ -15,6 +15,8 @@ import { BoxController }    from "../model/BoxController";
 import { MapMover } from "../model/MapMover";
 import { RopeController } from '../model/RopeController';
 
+import template from './view.tmp.html';
+console.log(template);
 
 const Application = {};
 
@@ -22,9 +24,16 @@ Application.onScreenJoyPad = new OnScreenJoyPad;
 Application.keyboard = Keyboard.get();
 
 /**
+ * @typedef {{
+ *   fps: number
+ * }} MainArgs
+ */
+
+/**
  * @class View
- * Represents the main View for tigl
  * @augments BaseView
+ * Represents the main View for tigl
+ * @property {MainArgs} args
  */
 export class View extends BaseView
 {
@@ -32,12 +41,13 @@ export class View extends BaseView
 	/**
 	 * Construct a View object
 	 * @param {object} args - Default args
+	 * @param {number} args.fps - Frames per second
 	 */
 	constructor(args)
 	{
 		window.smProfiling = true;
 		super(args);
-		this.template  = require('./view.tmp');
+		this.template  = template;
 		this.routes    = [];
 
 		this.keyboard  = Application.keyboard;
@@ -298,10 +308,10 @@ export class View extends BaseView
 
 	/**
 	 * Resize the View
-	 * @param {number} x - The new width
-	 * @param {number} y - The new height
+	 * @param {number|null} x - The new width
+	 * @param {number|null} y - The new height
 	 */
-	resize(x, y)
+	resize(x = null, y = null)
 	{
 		const oldScale = this.session.spriteBoard.screenScale;
 

@@ -10,15 +10,15 @@ import { World } from "../world/World";
 import { MotionGraph } from "../math/MotionGraph";
 import { Controller } from '../input/Controller';
 import { Pallet } from "../world/Pallet";
-import { parseColor } from "../sprite/parseColor";
 import { CursorController } from "../model/CursorController";
 
 /**
  * @import { Keyboard } from "curvature/input/Keyboard";
+ * @import { OnScreenJoyPad } from "../ui/OnScreenJoyPad";
  */
 
 const input = new URLSearchParams(location.search);
-const warpStart = input.has('start') ? input.get('start').split(',').map(Number) : false;
+const warpStart = input.has('start') ? (input.get('start') ?? '').split(',').map(Number) : false;
 
 /**
  * Represents a play-session
@@ -28,9 +28,9 @@ const warpStart = input.has('start') ? input.get('start').split(',').map(Number)
  * @param {number} sThen
  * @param {number} frameLock
  * @param {number} simulationLock
- * @param {Set} entities
- * @param {WeakSet} removed
- * @param {Set} awake
+ * @param {Set<Entity>} entities
+ * @param {WeakSet<Entity>} removed
+ * @param {Set<Entity>} awake
  * @param {boolean} paused
  * @param {boolean} loaded
  * @param {number} overscan
@@ -91,9 +91,10 @@ export class Session
 
 		this.keyboard = keyboard;
 
+		/** @type {OnScreenJoyPad} */
 		this.onScreenJoyPad = onScreenJoyPad;
 
-		this.world.ready.then(() => this.initialize({keyboard, onScreenJoyPad}));
+		this.world.ready.then(() => this.initialize(/*{keyboard, onScreenJoyPad}*/));
 
 		this.controller = new Controller({deadZone: 0.2});
 		this.controller.zero();
@@ -109,7 +110,7 @@ export class Session
 			this.gamepad = null;
 		});
 
-		this.mouse = {x: null, y: null};
+		this.mouse = {x: 0, y: 0};
 
 		element.addEventListener('mousemove', event => {
 			this.mouse.x = event.clientX;
@@ -119,11 +120,13 @@ export class Session
 
 		element.addEventListener('mousedown', event => {
 			event.preventDefault();
+			if(!this.cursor) return;
 			this.cursor.buttons = event.buttons;
 		});
 
 		element.addEventListener('mouseup', event => {
 			event.preventDefault();
+			if(!this.cursor) return;
 			this.cursor.buttons = event.buttons;
 		});
 
@@ -178,7 +181,7 @@ export class Session
 				// 		src: '/player.tsj'
 				// 	}),
 				// }),
-				camera: Camera,
+				// camera: Camera,
 			});
 
 			this.spriteBoard.following = this.player;
@@ -315,7 +318,7 @@ export class Session
 		);
 
 		entities.delete(player);
-		entities.delete(this.cursor);
+		this.cursor && entities.delete(this.cursor);
 
 		const sleeping = this.awake.difference(entities);
 
@@ -329,7 +332,7 @@ export class Session
 
 		this.simulateEntity(this.player, delta);
 		this.moveCursor(this.mouse.x, this.mouse.y);
-		this.simulateEntity(this.cursor, delta);
+		this.cursor && this.simulateEntity(this.cursor, delta);
 
 		return true;
 	}
@@ -394,6 +397,8 @@ export class Session
 	 */
 	moveCursor(clientX, clientY)
 	{
+		if(!this.cursor) return;
+
 		const screenX = -0.5 + (clientX / this.spriteBoard.width);
 		const screenY = -0.5 + (clientY / this.spriteBoard.height);
 

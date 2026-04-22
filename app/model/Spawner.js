@@ -5,9 +5,12 @@ import { Properties } from "../world/Properties";
 
 /**
  * @import { Session } from "../session/Session";
+ * @import { TileMap } from "../world/TileMap";
  */
 
 /**
+ * @class Spawner
+ * @property {TileMap} lastMap
  * Spawns other Entities in a TileMap
  */
 export class Spawner extends Entity

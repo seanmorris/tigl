@@ -15,6 +15,16 @@ const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BI
  */
 
 /**
+ * @typedef {{
+ *   x1: number,
+ *   y1: number,
+ *   x2: number,
+ *   y2: number,
+ * }} LineLike
+ */
+
+
+/**
  * Represents a Segment of an SMTree
  */
 class Segment
@@ -23,7 +33,7 @@ class Segment
 	 *
 	 * @param {number} start - Where the segment starts
 	 * @param {number} end - Where the segment ends
-	 * @param {Segment} prev - Reference to the previous segment in the SMTree
+	 * @param {Segment|null} prev - Reference to the previous segment in the SMTree
 	 * @param {number} dimension - Number of dimensions in the SMTree
 	 * @param {number} depth - Depth (dimension) of this Segmment
 	 */
@@ -130,7 +140,7 @@ class Segment
 	/**
 	 * Check if a RectangleLike is in the Segment
 	 * @param {RectangleLike} rectangle - The RectangleLike to check
-	 * @returns {void}
+	 * @returns {boolean}
 	 */
 	has(rectangle)
 	{
@@ -140,7 +150,7 @@ class Segment
 
 /**
  * Test if a given object is rectangle-like
- * @param {object} object - The object to test
+ * @param {RectangleLike|any} object - The object to test
  * @returns {boolean} - True if the object can be treated as a Rectangle
  */
 const isRectangle = object => {
@@ -338,7 +348,7 @@ export class SMTree
 	 * @param {number} y1 - The y value of the start point
 	 * @param {number} x2 - The x value of the end point
 	 * @param {number} y2 - The y value of the end point
-	 * @returns {Set<RectangleLike>} - Set of RectangleLikes overlapping the given rectangle
+	 * @returns {Map<RectangleLike,[number, number, number, number]>} - Mao of RectangleLikes overlapping the given rectangle to LineLikes inscribing RectangleLikes clipped to the given rectangle
 	 */
 	queryLine(x1, y1, x2, y2)
 	{

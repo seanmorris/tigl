@@ -3,11 +3,12 @@ import { Button } from './Button';
 
 /**
  * @import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
- * @import { Keyboard } from 'curvature/input/Keyboard'
+ * @import { Keyboard } from 'curvature/input/Keyboard';
  */
 
 /**
- * @typedef {{axes: {number: number}, buttons: {number: number}}} InputState
+ * @typedef {Gamepad|Keyboard|OnScreenJoyPad} InputDevice
+ * @typedef {{axes: Object<number?, number>, buttons: Object<number?, number>}} InputState
  * @typedef {{
  *   strongMagnitude: number,
  *   weakMagnitude: number,
@@ -15,6 +16,7 @@ import { Button } from './Button';
  * }} rumbleOptions
  */
 
+/** @type {{[key: string]: number|Array<number>}} */
 const keys = {
 	'Space': 0
 
@@ -82,25 +84,28 @@ const keys = {
 
 [...Array(12)].map((x,fn) => keys[ `F${fn}` ] = 2000 + fn);
 
+/** @type {{ [key: number]: string; }} */
 const axisMap = {
-	12:   -1
-	, 13: +1
-	, 14: -0
-	, 15: +0
+	12:   '-1'
+	, 13: '+1'
+	, 14: '-0'
+	, 15: '+0'
 
-	, 112: -2
-	, 113: +3
-	, 114: -3
-	, 115: +2
+	, 112: '-2'
+	, 113: '+3'
+	, 114: '-3'
+	, 115: '+2'
 };
 
+/** @type {{ [key: number]: number; }} */
 const buttonMap = {
-	'-6': 14
-	, '+6': 15
-	, '-7': 12
-	, '+7': 13
+	[-6]: 14
+	, [+6]: 15
+	, [-7]: 12
+	, [+7]: 13
 };
 
+/** @type {{ [key: number]: number; }} */
 const buttonRemap = {
 	0:   1200
 	, 1: 1201
@@ -116,6 +121,23 @@ const buttonRemap = {
 export class Controller
 {
 	/**
+	 * @property {{ number: Axis }} axes - The axes (analog sticks) on the controller
+	 * @type {{ [key: number]: Axis; }}
+	 */
+	axes = {};
+
+	/**
+	 * @property {{number: Button}} buttons - The buttons on the controller
+	 * @type {{ [key: number]: Button; }}
+	 */
+	buttons = {};
+
+	// /**
+	//  * @property {{string: number}} keys -
+	//  */
+	// keys;
+
+	/**
 	 * Construct a Controller object
 	 * @param {object} param0 - Named params
 	 * @param {number} param0.deadZone - The deadzone of the analog sticks
@@ -123,21 +145,14 @@ export class Controller
 	constructor({deadZone = 0, /* keys = {}, gamepad = null, keyboard = null */})
 	{
 		this.deadZone = deadZone;
-
-		Object.defineProperties(this, {
-			buttons:    { value: {} }
-			, pressure: { value: {} }
-			, axes:     { value: {} }
-			, keys:     { value: {} }
-		});
 	}
 
 	/**
 	 * Update the state
 	 * @param {object} param0 - Named params
-	 * @param {Gamepad} param0.gamepad - The HTML Gamepad object
+	 * @param {Gamepad|null} [param0.gamepad] - The HTML Gamepad object
 	 */
-	update({gamepad} = {})
+	update({gamepad} = {gamepad: null})
 	{
 		for(const i in this.buttons)
 		{
@@ -206,13 +221,18 @@ export class Controller
 	 * @param {object} param0 - Named params
 	 * @param {OnScreenJoyPad} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
 	 * @param {Keyboard} param0.keyboard - The Keyboard object to read input from
-	 * @param {Keyboard} param0.gamepads - The Gamepad objects to read input from
-	 * @returns {boolean} - Whether or not input was read from any source
+	 * @param {Array<Gamepad|null>} param0.gamepads - The Gamepad objects to read input from
+	 * @returns {Set<InputDevice>} - Set of devices input was taken from
 	 */
 	readInput({keyboard, onScreenJoyPad, gamepads = []})
 	{
+		/** @type {{[key: string]: boolean}} */
 		const tilted   = {};
+
+		/** @type {{[key: string]: boolean}} */
 		const pressed  = {};
+
+		/** @type {{[key: string]: boolean}} */
 		const released = {};
 
 		const tookInput = new Set;
@@ -499,12 +519,12 @@ export class Controller
 
 			if(!this.axes[axisId])
 			{
-				this.axes[axisId] = new Axis({deadZone:this.deadZone})
+				this.axes[axisId] = new Axis({deadZone: this.deadZone})
 			}
 
 			const axis = this.axes[axisId];
 
-			if(axis.magnitude && Math.sign(axisMove) !== Math.sign(axis.magnitude))
+			if(axis.magnitude && Math.sign(Number(axisMove)) !== Math.sign(axis.magnitude))
 			{
 				continue;
 			}
@@ -518,7 +538,7 @@ export class Controller
 			}
 			else
 			{
-				this.release(buttonId, pressure);
+				this.release(buttonId);
 				released[buttonId] = true;
 			}
 		}
@@ -555,7 +575,7 @@ export class Controller
 			}
 			else if(!pressed[abstractId])
 			{
-				this.release(abstractId, this.buttons[concreteId].pressure);
+				this.release(abstractId);
 				released[abstractId] = true;
 			}
 		}
@@ -565,7 +585,7 @@ export class Controller
 
 	/**
 	 * Tilt an axis
-	 * @param {number} axisId - The ID of the axis to tilt
+	 * @param {number|string} axisId - The ID of the axis to tilt
 	 * @param {number} magnitude - How far the axis should tilt
 	 */
 	tilt(axisId, magnitude)
@@ -580,7 +600,7 @@ export class Controller
 
 	/**
 	 * Press a button
-	 * @param {number} buttonId - The ID of the button being pressed
+	 * @param {number|string} buttonId - The ID of the button being pressed
 	 * @param {number} pressure - How hard the button is being pressed
 	 */
 	press(buttonId, pressure = 1)
@@ -595,7 +615,7 @@ export class Controller
 
 	/**
 	 * Release a button
-	 * @param {number} buttonId - The ID of the button being released
+	 * @param {number|string} buttonId - The ID of the button being released
 	 */
 	release(buttonId)
 	{
@@ -655,7 +675,7 @@ export class Controller
 		{
 			for(const i in input.axes)
 			{
-				if(input.axes[i].magnitude !== input.axes[i])
+				if(this.axes[i].magnitude !== input.axes[i])
 				{
 					this.tilt(i, input.axes[i]);
 				}
@@ -679,13 +699,13 @@ export class Controller
 		}
 	}
 
-	buttonIsMapped(buttonId)
-	{
-		return buttonId in buttonRemap;
-	}
+	// buttonIsMapped(buttonId)
+	// {
+	// 	return buttonId in buttonRemap;
+	// }
 
-	keyIsMapped(keyCode)
-	{
-		return keyCode in keys;
-	}
+	// keyIsMapped(keyCode)
+	// {
+	// 	return keyCode in keys;
+	// }
 }

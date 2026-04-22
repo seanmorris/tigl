@@ -1,11 +1,13 @@
-import { Bindable } from "curvature/base/Bindable";
-import { Rectangle } from "./Rectangle";
+import { Bindable } from "curvature/base/Bindable.js";
+import { Rectangle } from "./Rectangle.js";
 
 /**
  * @import { Entity } from "../model/Entity";
  */
 
 /**
+ * @class QuadTree
+ * @property {QuadTree} root
  * Represents a QuadTree or a single cell from one
  */
 export class QuadTree extends Rectangle
@@ -17,24 +19,43 @@ export class QuadTree extends Rectangle
 	 * @param {number} x2 - The x value of the bottom/right
 	 * @param {number} y2 - The y value of the bottom/right
 	 * @param {number} minSize - The minimum size of a cell
-	 * @param {QuadTree} parent - The parent cell (used internally to split the tree)
+	 * @param {QuadTree|null} parent - The parent cell (used internally to split the tree)
 	 */
 	constructor(x1, y1, x2, y2, minSize = 0, parent = null)
 	{
 		super(x1, y1, x2, y2);
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 		this.count = 0;
 		this.items = new Set;
 		this.split = false;
 		this.minSize = minSize || 10;
+
+		/** @type {Map<Entity,QuadTree>} */
 		this.backMap = parent ? parent.backMap : new Map
+
+		/** @type {QuadTree|null} */
 		this.parent = parent;
+
+		/** @type {QuadTree} */
 		this.root = parent ? parent.root : this;
 
-		this.ulCell = this.ulCache = null;
-		this.urCell = this.urCache = null;
-		this.blCell = this.blCache = null;
-		this.brCell = this.brCache = null;
+		/** @type {QuadTree|null} */
+		this.ulCell = null;
+		/** @type {QuadTree|null} */
+		this.urCell = null;
+		/** @type {QuadTree|null} */
+		this.blCell = null;
+		/** @type {QuadTree|null} */
+		this.brCell = null;
+
+		/** @type {WeakRef<QuadTree>|null} */
+		this.ulCache = null;
+		/** @type {WeakRef<QuadTree>|null} */
+		this.urCache = null;
+		/** @type {WeakRef<QuadTree>|null} */
+		this.blCache = null;
+		/** @type {WeakRef<QuadTree>|null} */
+		this.brCache = null;
 
 		this.xSide = 0;
 		this.ySide = 0;
@@ -47,7 +68,7 @@ export class QuadTree extends Rectangle
 	 * @param {QuadTree} parent - The parent cell
 	 * @param {0|1} xCell - 0 = left, 1 = right
 	 * @param {0|1} yCell - 0 = top, 1 = bottom
-	 * @param {WeakRef} cache - WeakRef cache to recover node before GC
+	 * @param {WeakRef<QuadTree>|null} cache - WeakRef cache to recover node before GC
 	 * @returns {QuadTree} - The leaf node
 	 */
 	static getLeaf(parent, xCell, yCell, cache = null)
@@ -125,6 +146,8 @@ export class QuadTree extends Rectangle
 			this.urCache = new WeakRef(this.urCell);
 			this.blCache = new WeakRef(this.blCell);
 			this.brCache = new WeakRef(this.brCell);
+
+			/** @type {QuadTree|null|undefined} */
 			let parent = this;
 
 			while(parent)
@@ -135,6 +158,7 @@ export class QuadTree extends Rectangle
 
 			for(const item of this.items)
 			{
+				/** @type {QuadTree|null|undefined} */
 				let parent = this;
 				let added = false;
 
@@ -166,6 +190,7 @@ export class QuadTree extends Rectangle
 		{
 			if(!this.items.has(entity))
 			{
+				/** @type {QuadTree|null|undefined} */
 				let parent = this;
 				while(parent)
 				{

@@ -5,11 +5,13 @@ import { Properties } from "../world/Properties";
 import { SpriteSheet } from "../sprite/SpriteSheet";
 
 /**
+ * @import { Session } from "../session/Session";
+ * @import { TmxPropertyDefList } from '../world/Properties';
  * @import { TileMap } from "../world/TileMap";
- * @import { Session } from "../world/World";
  */
 
 /**
+ * @class Entity
  * Represents an entity
  * @property {object} controller - The Entity controller object
  * @property {number} id - The ID of the Entity
@@ -51,22 +53,25 @@ export class Entity
 	 */
 	static E_STATIC = 0b1000_0000;
 
+	map;
+
 	/**
 	 * Construct an Entity object.
 	 * @param {object} entityData - Named params
-	 * @param {object} entityData.controller - The Entity Controller object
-	 * @param {new () => object} entityData.spawnClass - The SpawnClass of the Entity
 	 * @param {Session} entityData.session - The SpawnClass of the Entity
-	 * @param {object} entityData.inputManager - The inputManager for the Entity
-	 * @param {number} entityData.x - The x position of the Entity
-	 * @param {number} entityData.y - The y position of the Entity
-	 * @param {number} entityData.width - The width of the Entity
-	 * @param {number} entityData.height - The height  of the Entity
-	 * @param {number} entityData.xSpriteOffset - The x offset for the sprite
-	 * @param {number} entityData.ySpriteOffset - The y offset for the sprite
-	 * @param {number} entityData.id - The ID of the Entity
-	 * @param {number} entityData.properties - The raw properties of the Entity (TMX format)
-	 * @param {object} entityData.map - The tileMap that spawned the Entity
+	 * @param {object} [entityData.controller] - The Entity Controller object
+	 * @param {new () => object} [entityData.spawnClass] - The SpawnClass of the Entity
+	 * @param {object} [entityData.inputManager] - The inputManager for the Entity
+	 * @param {Sprite} [entityData.sprite] - The Sprite for the Entity
+	 * @param {number} [entityData.x] - The x position of the Entity
+	 * @param {number} [entityData.y] - The y position of the Entity
+	 * @param {number} [entityData.width] - The width of the Entity
+	 * @param {number} [entityData.height] - The height  of the Entity
+	 * @param {number} [entityData.xSpriteOffset] - The x offset for the sprite
+	 * @param {number} [entityData.ySpriteOffset] - The y offset for the sprite
+	 * @param {number} [entityData.id] - The ID of the Entity
+	 * @param {TmxPropertyDefList} [entityData.properties] - The raw properties of the Entity (TMX format)
+	 * @param {TileMap} [entityData.map] - The tileMap that spawned the Entity
 	 */
 	constructor(entityData)
 	{
@@ -106,14 +111,18 @@ export class Entity
 			// , color: spawnClass ? spawnClass.spriteColor : null
 			, spriteSheet: spawnClass
 				? new SpriteSheet({src: spawnClass.spriteSheet})
-				: null
+				: undefined
 			, width
 			, height
 		});
 
 		this.inputManager = inputManager;
+
+		/** @type {Session} */
 		this.session = session;
+
 		this.props = new Properties(entityData.properties ?? [], this);
+
 		this.entityData = entityData;
 
 		this.rect = new Rectangle(
@@ -156,8 +165,10 @@ export class Entity
 		const maps = world.getMapsForPoint(this.x, this.y);
 		// const firstMap = [...maps][0];
 
-		if(motionParent && !world.motionGraph.getParent(motionParent) && !maps.has(motionParent))
-		{
+		if(motionParent
+			&& !world.motionGraph.getParent(motionParent)
+			&& !maps.has(motionParent)
+		){
 			world.motionGraph.delete(this);
 		}
 

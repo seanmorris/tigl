@@ -4,14 +4,14 @@
 export class Pallet
 {
 	/**
-	 * @property {{string: new () => any}} objectPallet - Stores the classes by typeName
+	 * @type {{[key: string]: new () => any}} objectPallet - Stores the classes by typeName
 	 */
 	objectPallet = {};
 
 	/**
 	 * Resolve a class by `typeName`
 	 * @param {string} typeName - The string that refers to a class in the Pallet
-	 * @returns {new () => any} - The class
+	 * @returns {Promise<new () => any>} - The class
 	 */
 	async resolve(typeName)
 	{
@@ -24,7 +24,7 @@ export class Pallet
 		}
 		else if(typeName === 'http://' || typeName === 'https://')
 		{
-			return (await import(typeName)).default;
+			return (await import(/* webpackIgnore: true */typeName)).default;
 		}
 	}
 

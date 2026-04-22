@@ -1,27 +1,40 @@
 import { View } from 'curvature/base/View';
 
+import template from './onScreenJoyPad.tmp.html';
+console.log(template);
 /**
  * @class OnScreenJoyPad
  * Represents an on-screen jopypad
- * @augments View
  */
 export class OnScreenJoyPad extends View
 {
 	/**
 	 * Construct an OnScreenJoyPad object
-	 * @param {object} args - Default args
+	 * @param {object} [args] - Default args
 	 */
-	constructor(args)
+	constructor(args = undefined)
 	{
 		super(args);
-		this.template  = require('./onScreenJoyPad.tmp');
+
+		this.template  = template;
+
+		/** @type {{x: number, y: number}|false} */
 		this.dragStart = false;
+
+		/**
+		 * @type {{dragging: boolean, x: number, y: number, xx: number, yy: number}}
+		 */
+		this.args;
 
 		this.args.dragging  = false;
 		this.args.x = 0;
 		this.args.y = 0;
 
+		/** @type {{[key: number]: number}} */
 		this.buttons = [];
+
+		/** @type {number} */
+		this.limit;
 
 		window.addEventListener('mousemove', (event) => {
 			this.moveStick(event);
@@ -44,49 +57,55 @@ export class OnScreenJoyPad extends View
 
 	/**
 	 * Start dragging the analog stick
-	 * @param {Event} event - The event being handled
+	 * @param {MouseEvent|TouchEvent} event - The event being handled
 	 */
 	dragStick(event)
 	{
-		if(event.changedTouches)
+		event.preventDefault();
+
+		if(event instanceof TouchEvent)
 		{
 			const touches = new Set(event.changedTouches);
 			touches.forEach(touch => this.draggingTouches.add(touch.identifier));
+			const touch = event.touches[0];
+			this.dragStart = {
+				x:   touch.clientX
+				, y: touch.clientY
+			};
 		}
-
-		let pos = event;
-
-		event.preventDefault();
-
-		if(event.touches && event.touches[0])
+		else
 		{
-			pos = event.touches[0];
+			this.dragStart = {
+				x: event.clientX
+				, y: event.clientY
+			};
 		}
 
 		this.args.dragging = true;
-		this.dragStart     = {
-			x:   pos.clientX
-			, y: pos.clientY
-		};
 	}
 
 	/**
 	 * Move the analog stick
-	 * @param {Event} event - The event being handled
+	 * @param {MouseEvent|TouchEvent} event - The event being handled
 	 */
 	moveStick(event)
 	{
-		if(this.args.dragging)
+		if(this.args.dragging && this.dragStart)
 		{
+			/** @type {Event|Touch} */
 			let pos = event;
 
-			if(event.touches && event.touches[0])
+			if(event instanceof TouchEvent)
 			{
-				pos = event.touches[0];
+				const touch = event.touches[0];
+				this.args.xx = touch.clientX - this.dragStart.x;
+				this.args.yy = touch.clientY - this.dragStart.y;
 			}
-
-			this.args.xx = pos.clientX - this.dragStart.x;
-			this.args.yy = pos.clientY - this.dragStart.y;
+			else
+			{
+				this.args.xx = event.clientX - this.dragStart.x;
+				this.args.yy = event.clientY - this.dragStart.y;
+			}
 
 			this.limit = this.tags.joystick.offsetWidth * 0.5;
 
@@ -120,11 +139,17 @@ export class OnScreenJoyPad extends View
 
 	/**
 	 * Stop dragging the analog stick
-	 * @param {Event} event - The event being handled
+	 * @param {MouseEvent|TouchEvent} event - The event being handled
 	 */
 	dropStick(event)
 	{
-		if(event.changedTouches)
+		console.log(event);
+
+		this.args.dragging = false;
+		this.args.x = this.args.xx = 0;
+		this.args.y = this.args.yy = 0;
+
+		if(event instanceof TouchEvent)
 		{
 			let found = false;
 			for(const touch of event.changedTouches)
@@ -141,10 +166,6 @@ export class OnScreenJoyPad extends View
 				return;
 			}
 		}
-
-		this.args.dragging = false;
-		this.args.x = 0;
-		this.args.y = 0;
 	}
 
 	/**

@@ -1,10 +1,13 @@
-import { QuadTree } from "./QuadTree";
-import { Rectangle } from "./Rectangle";
+import { QuadTree } from "./QuadTree.js";
+import { Rectangle } from "./Rectangle.js";
 
 /**
  * @import { Entity } from "../model/Entity";
  */
 
+/**
+ * @type {WeakMap<Entity,Set<QuickTree>}
+ */
 const registry = new WeakMap();
 
 /**

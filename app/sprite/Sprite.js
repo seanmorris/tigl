@@ -8,6 +8,10 @@ import { Camera } from "./Camera";
  */
 
 /**
+ * @typedef {Uint8Array|Uint8ClampedArray|number[]} ColorBytes
+ */
+
+/**
  * Renders a bitmap from an image or spritesheet.
  * @property {number} x - The x position
  * @property {number} y - The y position
@@ -41,29 +45,30 @@ export class Sprite
 	/**
 	 * Construct a Sprite object
 	 * @param {object} param0 - Named params
-	 * @param {string} param0.src - Image URL to generate a Sprite
-	 * @param {string} param0.color - Color to use if no image is provided
-	 * @param {string} param0.pixels - NOT USED
+	 * @param {string} [param0.src] - Image URL to generate a Sprite
+	 * @param {ColorBytes} [param0.color] - Color to use if no image is provided
+	 * @param {string} [param0.pixels] - NOT USED
 	 * @param {Session} param0.session - Session associated with the sprite
-	 * @param {SpriteSheet} param0.spriteSheet - SpriteSheet used to render the sprite
-	 * @param {number} param0.x - The x position
-	 * @param {number} param0.y - The y position
-	 * @param {number} param0.z - The z position (render order)
+	 * @param {SpriteSheet} [param0.spriteSheet] - SpriteSheet used to render the sprite
+	 * @param {number} [param0.x] - The x position
+	 * @param {number} [param0.y] - The y position
+	 * @param {number} [param0.z] - The z position (render order)
 	 * @param {number} param0.width - The on-screen width
 	 * @param {number} param0.height - The on-screen height
-	 * @param {number} param0.originalWidth - The original width of the sprite (used for tiling)
-	 * @param {number} param0.originalHeight - The original height of the sprite (used for tiling)
-	 * @param {boolean} param0.tiled - Whether to tile the sprite
+	 * @param {number} [param0.originalWidth] - The original width of the sprite (used for tiling)
+	 * @param {number} [param0.originalHeight] - The original height of the sprite (used for tiling)
+	 * @param {boolean} [param0.tiled] - Whether to tile the sprite
 	 */
 	constructor({src, color, pixels, session, spriteSheet, x, y, z, width, height, originalWidth, originalHeight, tiled = false})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 
 		this.x = x || 0;
 		this.y = y || 0;
 		this.z = z || 0;
 
-		this.currentAnimation = null;
+		/** @type {string} */
+		this.currentAnimation = '';
 
 		this.width  = width  || 32;
 		this.height = height || 32;
@@ -86,6 +91,8 @@ export class Sprite
 		this.yCenter = 1.0;
 
 		this.visible = false;
+
+		/** @type {WebGLTexture[]} */
 		this.textures = [];
 		this.currentDelay = 0;
 		this.currentFrame = 0;

@@ -1,30 +1,34 @@
 /**
+ * @typedef {number} GLint
+ */
+
+/**
  * Wraps a WebGLProgram
  */
 class Program
 {
 	/**
-	 * @property {CanvasRenderingContext2D} context - Rendering context from canvas
+	 * @property {WebGLRenderingContext} context - Rendering context from canvas
 	 */
-	context = null;
+	context;
 
 	/**
 	 * @property {WebGLProgram} program - The WebGLProgram object
 	 */
-	program = null;
+	program;
 
 	/**
-	 * @property { {[string]: GLint} } attributes - Attributes keyed by name
+	 * @type { {[key: string]: GLint} } attributes - Attributes keyed by name
 	 */
 	attributes = {};
 
 	/**
-	 * @property { {[string]: WebGLBuffer} } buffers - Attribute buffers keyed by name
+	 * @type { {[key: string]: WebGLBuffer} } buffers - Attribute buffers keyed by name
 	 */
 	buffers = {};
 
 	/**
-	 * @property { {[string]: WebGLUniformLocation} } uniforms - Uniform locations keyed by name
+	 * @type { {[key: string]: WebGLUniformLocation} } uniforms - Uniform locations keyed by name
 	 */
 	uniforms = {};
 
@@ -115,7 +119,11 @@ class Program
 	 */
 	uniformF(name, ...floats)
 	{
+		if(!floats.length || floats.length > 4) throw new Error('Bad uniform count!');
+
 		const gl = this.context;
+
+		// @ts-ignore
 		gl[`uniform${floats.length}f`](this.uniforms[name], ...floats);
 	}
 
@@ -126,7 +134,11 @@ class Program
 	 */
 	uniformI(name, ...ints)
 	{
+		if(!ints.length || ints.length > 4) throw new Error('Bad uniform count!');
+
 		const gl = this.context;
+
+		// @ts-ignore
 		gl[`uniform${ints.length}i`](this.uniforms[name], ...ints);
 	}
 }
@@ -149,30 +161,27 @@ export class Gl2d
 		{
 			this.context = this.element.getContext('webgl');
 		}
+
+		if(!this.context)
+		{
+			throw new Error('Could not instantiate WebGL renderer.');
+		}
 	}
 
 	/**
-	 * Create a new fragment or vertex shader
-	 * @param {string} location - The shader location
-	 * @returns {WebGLShader|void} - The shader
+	 * Create a new vertex shader
+	 * @param {string} source - The shader source
+	 * @throws {Error} Will throw an error is the shader source is not valid
+	 * @returns {WebGLShader} - The shader
 	 */
-	createShader(location)
+	createVertexShader(source)
 	{
-		const extension = location.substring(location.lastIndexOf('.')+1);
-		let   type = null;
+		const shader = this.context.createShader(this.context.VERTEX_SHADER);
 
-		switch(extension.toUpperCase())
+		if(!shader)
 		{
-			case 'VERT':
-				type = this.context.VERTEX_SHADER;
-				break;
-			case 'FRAG':
-				type = this.context.FRAGMENT_SHADER;
-				break;
+			throw new Error('Could not compile vertex shader');
 		}
-
-		const shader = this.context.createShader(type);
-		const source = require(location);
 
 		this.context.shaderSource(shader, source);
 		this.context.compileShader(shader);
@@ -186,9 +195,37 @@ export class Gl2d
 			return shader;
 		}
 
-		console.error(this.context.getShaderInfoLog(shader));
+		throw new Error(this.context.getShaderInfoLog(shader) ?? 'Unexpected error.');
+	}
 
-		this.context.deleteShader(shader);
+	/**
+	 * Create a new fragment shader
+	 * @param {string} source - The shader source
+	 * @throws {Error} Will throw an error is the shader source is not valid
+	 * @returns {WebGLShader} - The shader
+	 */
+	createFragmentShader(source)
+	{
+		const shader = this.context.createShader(this.context.FRAGMENT_SHADER);
+
+		if(!shader)
+		{
+			throw new Error('Could not compile fragment shader');
+		}
+
+		this.context.shaderSource(shader, source);
+		this.context.compileShader(shader);
+
+		const success = this.context.getShaderParameter(
+			shader, this.context.COMPILE_STATUS
+		);
+
+		if(success)
+		{
+			return shader;
+		}
+
+		throw new Error(this.context.getShaderInfoLog(shader) ?? 'Unexpected error.');
 	}
 
 	/**

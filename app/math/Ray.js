@@ -1,5 +1,5 @@
-import { Entity } from "../model/Entity";
-import { Geometry } from "./Geometry";
+import { Entity } from "../model/Entity.js";
+import { Geometry } from "./Geometry.js";
 
 /**
  * @import { TileMap } from "../world/TileMap";
@@ -9,9 +9,9 @@ import { Geometry } from "./Geometry";
 /**
  * @typedef {[number, number, number, number, TileMap]} TerrainPoint
  * @typedef {[number, number, number]} EntityPoint
- * @typedef {TerrainPoint|Set<TerrainPoint>|void} TerrainScanResult
+ * @typedef {TerrainPoint|Set<TerrainPoint>|number|null} TerrainScanResult
  * @typedef {Map<Entity,Array<EntityPoint>>} EntityScanResult
- * @typedef {{terrain: TerrainScanResult, entities: EntityScanResult}} RaycastResult
+ * @typedef {{terrain: TerrainScanResult, entities: EntityScanResult, hit: boolean, d: number}} RaycastResult
  */
 
 const SUBGRID_BITS = 8;
@@ -19,6 +19,7 @@ const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 const MAX_GRID_IDX = 2 ** (Math.log2( 1 + Number.MAX_SAFE_INTEGER ) - SUBGRID_BITS);
 
+/** @type {(subb: number, pred: number) => number} */
 const mod = (subj, pred) => ((subj % pred) + pred) % pred;
 
 /**
@@ -75,7 +76,7 @@ export class Ray
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
 	 * @param {number} layerId - The id of the layer to scan
-	 * @param {Entity} castingEntity - The Entity casting the ray
+	 * @param {Entity|null} castingEntity - The Entity casting the ray
 	 * @returns {RaycastResult} - The result of the raycast
 	 */
 	static cast(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0, castingEntity = null)
@@ -167,7 +168,7 @@ export class Ray
 	 * @param {number} endX - The x value of the end point
 	 * @param {number} endY - The y value of the end point
 	 * @param {number} rayFlags - flags to affect raycast behavior
-	 * @param {Entity} castingEntity - The Entity casting the ray
+	 * @param {Entity|null} castingEntity - The Entity casting the ray
 	 * @returns {EntityScanResult} - The result of the raycast
 	 */
 	static castEntity(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, castingEntity = null)
@@ -299,21 +300,23 @@ export class Ray
 	 */
 	static castTerrain(world, startX, startY, endX, endY, rayFlags = this.DEFAULT_FLAGS, layerId = 0)
 	{
+		/** @type Set<TerrainPoint> */
+		let pointsSet = new Set();
 		const mapSegments = world.mapTree.queryLine(startX, startY, endX, endY);
-		let points = new Set();
 
 		for(const [rect, segment] of mapSegments)
 		{
 			const map = world.rectMap.get(rect);
-			points = points.union(this.castTerrainInMap(map, ...segment, rayFlags, layerId));
+			pointsSet = pointsSet.union(this.castTerrainInMap(map, ...segment, rayFlags, layerId));
 		}
 
 		if(rayFlags & this.T_ALL_POINTS)
 		{
-			return points;
+			return pointsSet;
 		}
 
-		points = [...points];
+		/** @type TerrainPoint[] */
+		const points = [...pointsSet];
 
 		const distSquares = new Array(points.length);
 
@@ -341,7 +344,7 @@ export class Ray
 
 		if(Math.sqrt(minDistSq) > hypot)
 		{
-			return;
+			return null;
 		}
 
 		if(nearest)
@@ -448,6 +451,7 @@ export class Ray
 				py = vert[1];
 			}
 
+			/** @type Set<TerrainPoint> */
 			const points = new Set([ [px, py, 0, layerId, tileMap] ]);
 
 			if(window.smDebug)
@@ -626,5 +630,3 @@ export class Ray
 		return new Set([... solidX ? [solidX] : [], ... solidY ? [solidY] : []]);
 	}
 }
-
-window.Ray = Ray;

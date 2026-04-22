@@ -1,3 +1,9 @@
+/**
+ * Returns the y value given an x from a rounded-square wave function defined by r.
+ * @param {number} x - The x value to sample
+ * @param {number} r - The roundedness value
+ * @returns {number} - The y value
+ */
 export const roundedSquareWave = (x, r = 0) => {
 
 	// Fractional exponents don't play nice with

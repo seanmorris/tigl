@@ -6,12 +6,20 @@ import { Ray } from "../math/Ray";
 import { Entity } from '../model/Entity';
 
 /**
- * @import { Region } from "../model/Region"
- * @import { Session } from "../model/Session"
+ * @import { Region } from "../sprite/Region"
+ * @import { Session } from "../session/Session"
  * @import { Rectangle } from "../math/Rectangle"
  * @import { RaycastResult, TerrainScanResult, EntityScanResult } from "../math/Ray"
  */
 
+/**
+ * @typedef {{
+ *   async: boolean,
+ *   maps: {
+ *     fileName: string|URL,
+ *   }[]
+ * }} TmxWorldDef
+ */
 
 const cache = new Map;
 
@@ -38,9 +46,12 @@ export class World
 	constructor({src, session})
 	{
 		// this[Bindable.Prevent] = true;
-		this.src = new URL(src, location);
+		this.src = new URL(src, location.href);
 		this.ready = this.getReady(this.src);
+
+		/** @type {TileMap[]} */
 		this.maps = [];
+
 		this.motionGraph = new MotionGraph;
 		this.rectMap = new Map;
 		this.mapRects = new Map;
@@ -63,7 +74,7 @@ export class World
 	/**
 	 * Load & initialize the world from a URL
 	 * @param {string|URL} src - The URL of the World data to load
-	 * @returns {Promise<void>}
+	 * @returns {Promise<Promise<*>>}
 	 */
 	async getReady(src)
 	{
@@ -72,6 +83,7 @@ export class World
 			cache.set(src, fetch(src));
 		}
 
+		/** @type {TmxWorldDef} */
 		const worldData = await (await cache.get(src)).clone().json();
 
 		return await Promise.all(worldData.maps.map((m, i) => {
@@ -145,7 +157,7 @@ export class World
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
 	 * @param {number} z - The layer id to check
-	 * @returns {Set<Entity>|number|false|void} - The Set of Entities at the point, or the tile ID at the point (if solid), or false if space
+	 * @returns {Set<Entity>|number|boolean|null|void} - The Set of Entities at the point, or the tile ID at the point (if solid), or false if space
 	 */
 	getSolid(x, y, z)
 	{
@@ -161,7 +173,7 @@ export class World
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
 	 * @param {number} z - The layer id to check
-	 * @returns {number|false} - The tile ID at the point (if solid), false if space
+	 * @returns {number|boolean|null} - The tile ID at the point (if solid), false if space
 	 */
 	getSolidTerrain(x, y, z)
 	{
@@ -171,7 +183,9 @@ export class World
 		{
 			const solid = map.getSolid(x, y, z);
 
-			if(solid)
+			if(solid === false) continue;
+
+			if(solid === true || solid > 0)
 			{
 				return solid;
 			}
@@ -185,7 +199,7 @@ export class World
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
 	 * @param {number} z - The layer id to check
-	 * @returns {null|number} The tile at the point or null if no tile exists there
+	 * @returns {number|boolean|null} The tile at the point or null if no tile exists there
 	 */
 	getCollisionTile(x, y, z)
 	{
@@ -195,7 +209,9 @@ export class World
 		{
 			const tile = map.getCollisionTile(x, y, z);
 
-			if(tile > 0)
+			if(tile === false) continue;
+
+			if(tile === true || tile > 0)
 			{
 				return tile;
 			}
@@ -406,7 +422,6 @@ export class World
 			, startX
 			, startY
 			, endX
-			, endY
 			, endY
 			, rayFlags
 		);

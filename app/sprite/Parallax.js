@@ -3,7 +3,7 @@ import { Bindable } from 'curvature/base/Bindable';
 /**
  * @import { Properties } from '../world/Properties';
  * @import { SpriteBoard } from './SpriteBoard';
- * @import { TileMap } from './TileMap';
+ * @import { TileMap } from '../world/TileMap';
  */
 
 /**
@@ -12,32 +12,32 @@ import { Bindable } from 'curvature/base/Bindable';
 class ParallaxLayer
 {
 	/**
-	 * @property {WebGLTexture} texture - The texture of the layer
+	 * @type {WebGLTexture|null} texture - The texture of the layer
 	 */
 	texture = null;
 
 	/**
-	 * @property {number} width - The width of the layer
+	 * @type {number} width - The width of the layer
 	 */
 	width = 0;
 
 	/**
-	 * @property {number} height - The width of the layer
+	 * @type {number} height - The width of the layer
 	 */
 	height = 0;
 
 	/**
-	 * @property {number} offset - The offset of the layer
+	 * @type {number} offset - The offset of the layer
 	 */
 	offset = 0;
 
 	/**
-	 * @property {number} parallax - The parallax factor of the layer
+	 * @type {number} parallax - The parallax factor of the layer
 	 */
 	parallax = 0;
 
 	/**
-	 * @property {Properties} properties - The properties of the layer
+	 * @type {Properties|null} properties - The properties of the layer
 	 */
 	props = null;
 }
@@ -55,7 +55,7 @@ export class Parallax
 	 */
 	constructor({spriteBoard, map})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 		this.spriteBoard = spriteBoard;
 
 		const gl = this.spriteBoard.gl2d.context;
@@ -65,7 +65,10 @@ export class Parallax
 
 		this.height = 0;
 
+		/** @type {Array<ParallaxLayer>} */
 		this.parallaxLayers = [];
+
+		/** @type {Array<WebGLTexture>} */
 		this.textures = [];
 
 		this.ready = map.ready.then(() => this.assemble(map)).then(() => {
@@ -80,11 +83,14 @@ export class Parallax
 
 	/**
 	 * Get the Parallax ready to use
-	 * @returns {Promise<void>} - Resolves when the Parallax is ready
+	 * @returns {Promise<Array<void>>} - Resolves when the Parallax is ready
 	 */
 	assemble()
 	{
 		const gl = this.spriteBoard.gl2d.context;
+
+		/** @type { typeof Parallax } */
+		this.constructor;
 
 		const loadSlices = this.map.imageLayers.map(
 			(layerData, index) => this.constructor.loadImage(new URL(layerData.image, this.map.src)).then(image => {
@@ -173,7 +179,7 @@ export class Parallax
 				, anchor
 				, layer.width * zoom
 				, layer.height * zoom
-				, layer.width
+				// , layer.width
 			);
 
 			gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
@@ -194,17 +200,22 @@ export class Parallax
 	 */
 	static loadImage(src)
 	{
+		/** @type {{[key: string]: Promise<HTMLImageElement>}} */
+		this.imagePromises;
+
 		if(!this.imagePromises)
 		{
 			this.imagePromises = {};
 		}
+
+		src = String(src);
 
 		if(this.imagePromises[src])
 		{
 			return this.imagePromises[src];
 		}
 
-		this.imagePromises[src] = new Promise((accept, reject)=>{
+		this.imagePromises[src] = new Promise(accept=>{
 			const image = new Image();
 			image.src   = src;
 			image.addEventListener('load', (event)=>{

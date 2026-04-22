@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"checkJs": true,
+		"target": "ESNext",
+		"module": "esnext",
+		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"maxNodeModuleJsDepth": 0,
+		"strict": true,
+	},
+	"include": ["app/**/*", "./*.mjs"],
+}

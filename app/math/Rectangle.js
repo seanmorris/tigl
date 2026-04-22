@@ -106,7 +106,10 @@ export class Rectangle
 			return;
 		}
 
-		return new (this.constructor)(
+		/** @type { typeof Rectangle } */
+		this.constructor;
+
+		return new this.constructor(
 			Math.max(this.x1, other.x1), Math.max(this.y1, other.y1)
 			, Math.min(this.x2, other.x2), Math.min(this.y2, other.y2)
 		);

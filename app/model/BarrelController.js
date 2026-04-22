@@ -1,6 +1,8 @@
 import { Ray } from "../math/Ray";
 import { Entity } from "./Entity";
 
+/** @import { TerrainPoint } from "../math/Ray"; */
+
 export class BarrelController
 {
 	static spriteImage = '/barrel.png';
@@ -119,6 +121,7 @@ export class BarrelController
 
 		if(!entity.grounded && entity.ySpeed >= 0)
 		{
+			/** @type TerrainPoint|void */
 			const groundSnapper = Ray.castTerrain(
 				world
 				, entity.x
@@ -141,7 +144,7 @@ export class BarrelController
 		if(children)
 		for(const child of children)
 		{
-			child.sprite.z = this.y + 1;
+			child.sprite.z = entity.sprite.z - 1;
 		}
 
 		this.pushedBy = null;

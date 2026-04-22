@@ -1,5 +1,4 @@
 import { Bindable } from "curvature/base/Bindable";
-import { SpriteSheet } from "./SpriteSheet";
 import { Matrix } from "../math/Matrix";
 import { Camera } from "./Camera";
 import { Rectangle } from "../math/Rectangle";
@@ -39,7 +38,7 @@ export class Region
 	 */
 	constructor({x, y, z, width, height, session, spriteBoard})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 
 		this.x = x || 0;
 		this.y = y || 0;
@@ -73,6 +72,8 @@ export class Region
 		rectMap.set(this.rect, this);
 
 		this.spriteBoard = spriteBoard;
+
+		/** @type {Session} */
 		this.session = session;
 		this.region = [0, 1, 1, 1];
 

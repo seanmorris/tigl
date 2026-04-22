@@ -1,10 +1,10 @@
 /**
- * @import { Entity } from "../model/Entity";
  * @import { TileMap } from "./TileMap";
+ * @import { Entity } from "../model/Entity";
  */
 
 /**
- * @typedef {{name: string, color: string, value: string}} TmxPropertyDef
+ * @typedef {{type: string, name: string, color: string, value: string}} TmxPropertyDef
  * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
  * @typedef {Uint8ClampedArray} Color - 4 byte color
  * @typedef {string|URL|Color} PropVal
@@ -17,12 +17,13 @@ export class Properties
 {
 	/**
 	 * Construct a Properties object
-	 * @param {object} properties - Raw TMX propeties
+	 * @param {TmxPropertyDefList} properties - Raw TMX propeties
 	 * @param {Entity|TileMap} owner - The owner Entity or TileMap
-	 * @param {object} defaults - Default values
+	 * @param {TmxPropertyDefList} defaults - Default values
 	 */
 	constructor(properties, owner, defaults = [])
 	{
+		/** @type {{[key: string]: Array<PropVal>}} */
 		this.properties = {};
 		this.owner = owner;
 		this.add(...properties);
@@ -85,9 +86,9 @@ export class Properties
 					break;
 
 				case 'file':
-						this.properties[ property.name ].push([
+						this.properties[ property.name ].push(
 							new URL(property.value, this.owner.src)
-						]);
+						);
 
 						break;
 

@@ -1,0 +1,22 @@
+<canvas
+	cv-ref = "canvas:curvature/base/Tag"
+	cv-on  = "wheel:scroll(event):p;mousemove"
+	class  = "[[mouseClass]]"
+></canvas>
+
+<div class = "hud fps">[[sps]] simulations/s / [[simulationLock]]
+[[fps]] frames/s      / [[frameLock]]
+
+Res [[rwidth]] x [[rheight]]
+    [[width]] x [[height]]
+
+Cam <span>[[camX]]</span> x <span>[[camY]]</span>
+Pos <span>[[posX]]</span> x <span>[[posY]]</span>
+
+𝚫 Sim:   Pg Up / Dn
+𝚫 Frame: Home / End
+𝚫 Scale: + / -
+</div>
+<div class = "reticle"></div>
+
+[[joypad]]

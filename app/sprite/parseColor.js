@@ -1,3 +1,8 @@
+/**
+ * Parse a color string into a set of bytes
+ * @param {string} colorString
+ * @returns {Uint8ClampedArray|void}
+ */
 export const parseColor = colorString => {
 	if(colorString[0] === '#')
 	{

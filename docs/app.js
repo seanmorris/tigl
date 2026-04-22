@@ -6481,9 +6481,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.View = void 0;
 var _View = require("curvature/base/View");
+var _Keyboard = require("curvature/input/Keyboard");
 var _Camera = require("../sprite/Camera");
 var _OnScreenJoyPad = require("../ui/OnScreenJoyPad");
-var _Keyboard = require("curvature/input/Keyboard");
 var _Session = require("../session/Session");
 var _Config = require("Config");
 var _PlayerController = require("../model/PlayerController");
@@ -6979,7 +6979,7 @@ let Axis = exports.Axis = /*#__PURE__*/function () {
    * Connstruct an Axis object
    * @param {object} param0 - Named params
    * @param {number} param0.deadZone - The size of the Axis' deadzone (inputs below this level are ignored)
-   * @param {boolean} param0.proportional - UNUSED
+   * @param {boolean} [param0.proportional] - UNUSED
    */
   function Axis(_ref) {
     let _ref$deadZone = _ref.deadZone,
@@ -7013,8 +7013,8 @@ let Axis = exports.Axis = /*#__PURE__*/function () {
       } else {
         magnitude = 0;
       }
-      this.delta = Number(magnitude - this.magnitude).toFixed(3) - 0;
-      this.magnitude = Number(magnitude).toFixed(3) - 0;
+      this.delta = Number(Number(magnitude - this.magnitude).toFixed(3));
+      this.magnitude = Number(Number(magnitude).toFixed(3));
     }
 
     /**
@@ -7138,15 +7138,17 @@ var _Button = require("./Button");
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /**
  * @import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
- * @import { Keyboard } from 'curvature/input/Keyboard'
+ * @import { Keyboard } from 'curvature/input/Keyboard';
  */
 
 /**
- * @typedef {{axes: {number: number}, buttons: {number: number}}} InputState
+ * @typedef {Gamepad|Keyboard|OnScreenJoyPad} InputDevice
+ * @typedef {{axes: Object<number?, number>, buttons: Object<number?, number>}} InputState
  * @typedef {{
  *   strongMagnitude: number,
  *   weakMagnitude: number,
@@ -7230,6 +7232,11 @@ const buttonRemap = {
  * Represents a gamepad
  */
 let Controller = exports.Controller = /*#__PURE__*/function () {
+  // /**
+  //  * @property {{string: number}} keys -
+  //  */
+  // keys;
+
   /**
    * Construct a Controller object
    * @param {object} param0 - Named params
@@ -7239,12 +7246,19 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
     let _ref$deadZone = _ref.deadZone,
       deadZone = _ref$deadZone === void 0 ? 0 : _ref$deadZone;
     _classCallCheck(this, Controller);
+    /**
+     * @property {{ number: Axis }} axes - The axes (analog sticks) on the controller
+     * @type {{ [key: number]: Button; }}
+     */
+    _defineProperty(this, "axes", void 0);
+    /**
+     * @property {{number: Button}} buttons - The buttons on the controller
+     * @type {{ [key: number]: Button; }}
+     */
+    _defineProperty(this, "buttons", void 0);
     this.deadZone = deadZone;
     Object.defineProperties(this, {
       buttons: {
-        value: {}
-      },
-      pressure: {
         value: {}
       },
       axes: {
@@ -7264,7 +7278,9 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
   return _createClass(Controller, [{
     key: "update",
     value: function update() {
-      let _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      let _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
+          gamepad: null
+        },
         gamepad = _ref2.gamepad;
       for (const i in this.buttons) {
         const button = this.buttons[i];
@@ -7324,8 +7340,8 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
      * @param {object} param0 - Named params
      * @param {OnScreenJoyPad} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
      * @param {Keyboard} param0.keyboard - The Keyboard object to read input from
-     * @param {Keyboard} param0.gamepads - The Gamepad objects to read input from
-     * @returns {boolean} - Whether or not input was read from any source
+     * @param {Array<Gamepad>} param0.gamepads - The Gamepad objects to read input from
+     * @returns {Set<InputDevice>} - Set of devices input was taken from
      */
   }, {
     key: "readInput",
@@ -7514,7 +7530,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
           });
         }
         const axis = this.axes[axisId];
-        if (axis.magnitude && Math.sign(axisMove) !== Math.sign(axis.magnitude)) {
+        if (axis.magnitude && Math.sign(Number(axisMove)) !== Math.sign(axis.magnitude)) {
           continue;
         }
         const pressure = Math.abs(axis.magnitude);
@@ -7522,7 +7538,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
           this.press(buttonId, pressure);
           pressed[buttonId] = true;
         } else {
-          this.release(buttonId, pressure);
+          this.release(buttonId);
           released[buttonId] = true;
         }
       }
@@ -7544,7 +7560,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
           this.press(abstractId, this.buttons[concreteId].pressure);
           pressed[abstractId] = true;
         } else if (!pressed[abstractId]) {
-          this.release(abstractId, this.buttons[concreteId].pressure);
+          this.release(abstractId);
           released[abstractId] = true;
         }
       }
@@ -7553,7 +7569,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
 
     /**
      * Tilt an axis
-     * @param {number} axisId - The ID of the axis to tilt
+     * @param {number|string} axisId - The ID of the axis to tilt
      * @param {number} magnitude - How far the axis should tilt
      */
   }, {
@@ -7569,7 +7585,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
 
     /**
      * Press a button
-     * @param {number} buttonId - The ID of the button being pressed
+     * @param {number|string} buttonId - The ID of the button being pressed
      * @param {number} pressure - How hard the button is being pressed
      */
   }, {
@@ -7584,7 +7600,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
 
     /**
      * Release a button
-     * @param {number} buttonId - The ID of the button being released
+     * @param {number|string} buttonId - The ID of the button being released
      */
   }, {
     key: "release",
@@ -7634,7 +7650,7 @@ let Controller = exports.Controller = /*#__PURE__*/function () {
       }
       if (input.axes) {
         for (const i in input.axes) {
-          if (input.axes[i].magnitude !== input.axes[i]) {
+          if (this.axes[i].magnitude !== input.axes[i]) {
             this.tilt(i, input.axes[i]);
           }
         }
@@ -7909,18 +7925,15 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
  * @import { TileMap } from "../world/TileMap"
  */
 /**
+ * @class MotionGraph
  * Tracks the parent/child relationships of movable objects in the world.
  */
 let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
   function MotionGraph() {
     _classCallCheck(this, MotionGraph);
-    /**
-     * @property {WeakMap<Entity,MotionGraph>} backmap - Maps objects back to MotionGraphs they're in.
-     */
+    /** @property {WeakMap<Entity,MotionGraph>} backmap - Maps objects back to MotionGraphs they're in. */
     _defineProperty(this, "backmap", new WeakMap());
-    /**
-     * @property {Map<Entity,Entity|TileMap>} entities - Maps objects back to MotionGraphs they're in.
-     */
+    /** @property {Map<Entity,Entity|TileMap>} entities - Maps objects back to MotionGraphs they're in. */
     _defineProperty(this, "entities", new Map());
   }
   return _createClass(MotionGraph, [{
@@ -7928,8 +7941,8 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
     value:
     /**
      * Attach an entity to a motion parent
-     * @param {Entity} entity - The child Entity
-     * @param {Entity|TileMap} parent - The parent
+     * @param {Entity|Region} entity - The child Entity
+     * @param {Entity|Region|TileMap} parent - The parent
      */
     function add(entity, parent) {
       if (this.backmap.has(entity)) {
@@ -7940,6 +7953,9 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
       }
       this.entities.get(parent).add(entity);
       this.backmap.set(entity, parent);
+
+      /** @type { typeof MotionGraph } */
+      this.constructor;
       if (!this.constructor.globalMap.has(entity)) {
         this.constructor.globalMap.set(entity, new Set());
       }
@@ -7948,8 +7964,8 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
 
     /**
      * Return the motion parent for an Entity
-     * @param {Entity} entity - The child to select a parent by
-     * @returns {Entity|TileMap} - The motion parent of the child
+     * @param {Entity|Region} entity - The child to select a parent by
+     * @returns {Entity|Region|TileMap} - The motion parent of the child
      */
   }, {
     key: "getParent",
@@ -7959,8 +7975,8 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
 
     /**
      * Return the Entities for a motion parent
-     * @param {Entity|TileMap} parent - The motion parent to select children by
-     * @returns {Set<Entity>} - The children of the parent
+     * @param {Entity|Region|TileMap} parent - The motion parent to select children by
+     * @returns {Set<Entity|Region>} - The children of the parent
      */
   }, {
     key: "getChildren",
@@ -7970,7 +7986,7 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
 
     /**
      * Remove an entity from a motion parent
-     * @param {Entity} entity - The Entity to remove
+     * @param {Entity|Region} entity - The Entity to remove
      * @returns {void}
      */
   }, {
@@ -7985,7 +8001,7 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
 
     /**
      * Remove an entity from all MotionGraphs motion parents
-     * @param {Entity} entity - The Entity to remove
+     * @param {Entity|Region|TileMap} entity - The Entity to remove
      * @returns {void}
      */
   }, {
@@ -7993,7 +8009,7 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
     value:
     /**
      * Move the chidlren of a motion parent
-     * @param {Entity|TileMap} parent - The parent to select children by
+     * @param {Entity|Region|TileMap} parent - The parent to select children by
      * @param {number} x - The x offset
      * @param {number} y - The y offset
      * @returns {Set<Entity>} - The children that moved
@@ -8036,9 +8052,7 @@ let MotionGraph = exports.MotionGraph = /*#__PURE__*/function () {
     }
   }]);
 }();
-/**
- * @property {WeakMap<Entity,MotionGraph>} globalMap - Maps objects back to MotionGraphs they're in.
- */
+/** @property {WeakMap<Entity,MotionGraph>} globalMap - Maps objects back to MotionGraphs they're in. */
 _defineProperty(MotionGraph, "globalMap", new WeakMap());
 });
 
@@ -9000,10 +9014,9 @@ _defineProperty(Ray, "E_SOLID", 32);
  * @property {number} E_NO_MINK - Disable Minkowski expansion for entity raycasts
  */
 _defineProperty(Ray, "DEFAULT_FLAGS", 0);
-window.Ray = Ray;
 });
 
-require.register("math/Rectangle.js", function(exports, require, module) {
+;require.register("math/Rectangle.js", function(exports, require, module) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -10078,7 +10091,8 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /**
  * @import { TileMap } from "../world/TileMap";
- * @import { Session } from "../world/World";
+ * @import { Session } from "../session/Session";
+ * @import { TmxPropertyDefList } from '../world/Properties';
  */
 /**
  * Represents an entity
@@ -10120,7 +10134,7 @@ let Entity = exports.Entity = /*#__PURE__*/function () {
    * @param {number} entityData.xSpriteOffset - The x offset for the sprite
    * @param {number} entityData.ySpriteOffset - The y offset for the sprite
    * @param {number} entityData.id - The ID of the Entity
-   * @param {number} entityData.properties - The raw properties of the Entity (TMX format)
+   * @param {TmxPropertyDefList} entityData.properties - The raw properties of the Entity (TMX format)
    * @param {object} entityData.map - The tileMap that spawned the Entity
    */
   function Entity(entityData) {
@@ -13038,19 +13052,24 @@ function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf 
 /**
  * @class OnScreenJoyPad
  * Represents an on-screen jopypad
- * @augments View
  */
 let OnScreenJoyPad = exports.OnScreenJoyPad = /*#__PURE__*/function (_View) {
   /**
    * Construct an OnScreenJoyPad object
    * @param {object} args - Default args
    */
-  function OnScreenJoyPad(args) {
+  function OnScreenJoyPad() {
     var _this;
+    let args = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
     _classCallCheck(this, OnScreenJoyPad);
     _this = _callSuper(this, OnScreenJoyPad, [args]);
     _this.template = require('./onScreenJoyPad.tmp');
     _this.dragStart = false;
+
+    /**
+    	 * @type {{dragging: boolean, x: number, y: number}}
+     */
+    _this.args;
     _this.args.dragging = false;
     _this.args.x = 0;
     _this.args.y = 0;
@@ -13222,7 +13241,7 @@ let Pallet = exports.Pallet = /*#__PURE__*/function () {
     /**
      * Resolve a class by `typeName`
      * @param {string} typeName - The string that refers to a class in the Pallet
-     * @returns {new () => any} - The class
+     * @returns {Promise<new () => any>} - The class
      */
     async function resolve(typeName) {
       if (typeName[0] === '@') {
@@ -13268,7 +13287,7 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
  * @import { TileMap } from "./TileMap";
  */
 /**
- * @typedef {{name: string, color: string, value: string}} TmxPropertyDef
+ * @typedef {{type: string, name: string, color: string, value: string}} TmxPropertyDef
  * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
  * @typedef {Uint8ClampedArray} Color - 4 byte color
  * @typedef {string|URL|Color} PropVal
@@ -13389,7 +13408,7 @@ function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" 
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /**
  * @import { Entity } from "../model/Entity";
- * @import { Session } from "../model/Session";
+ * @import { Session } from "../session/Session";
  * @import { TmxPropertyDefList } from './Properties';
  */
 
@@ -13523,6 +13542,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
    * @param {number} mapData.y -The y position of the TileMap in the World
    * @param {number} mapData.width - The width of the TileMap
    * @param {number} mapData.height - The height of the TileMap
+   * @param {TmxPropertyDefList} [mapData.properties] - The property list of the TileMap
    */
   function TileMap(mapData) {
     var _mapData$properties;
@@ -13533,7 +13553,8 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       y = mapData.y,
       width = mapData.width,
       height = mapData.height;
-    _Bindable.Bindable.Prevent && (this[_Bindable.Bindable.Prevent] = true);
+
+    // Bindable.Prevent && (this[Bindable.Prevent] = true);
     this.src = fileName;
     this.backgroundColor = null;
     this.tileCount = 0;
@@ -13742,6 +13763,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
         const tileValues = new Uint32Array(layer.data.map(Number));
         const tilePixels = new Uint8ClampedArray(tileValues.buffer);
         for (const i in tileValues) {
+          const ii = Number(i);
           const rotatedTile = tileValues[i];
           const tile = rotatedTile & 0x0FFFFFFF;
           const flip = tilePixels[i * 4 + 3];
@@ -13780,8 +13802,8 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
             }
             const tree = this.animationTrees.get(layer);
             const frames = this.animatedTiles.get(rotatedTile);
-            const x = i % this.width;
-            const y = Math.floor(i / this.width);
+            const x = ii % this.width;
+            const y = Math.floor(ii / this.width);
             const animation = new Animation({
               frames: frames,
               x: x,
@@ -13980,7 +14002,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
      * @param {TmxTileLayer} layer - The tile layer to check
      * @param {number} x - The x value of the point
      * @param {number} y - The y value of the point
-     * @returns {null|number} The tile at the point or null if no tile exists there
+     * @returns {boolean|number} The tile at the point or null if no tile exists there
      */
   }, {
     key: "getTileFromLayer",
@@ -14062,7 +14084,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
      * Put a rectangular slice of a tile layer into a rendering buffer
      * @param {Uint8Array} buffer = The rendering buffer
      * @param {number} width - The width of the rendering buffer
-     * @param {number} layer - The layer to sample
+     * @param {TmxTileLayer} layer - The layer to sample
      * @param {number} x - The x value of the top/left corner of the rectangle to sample
      * @param {number} y - The y value of the top/left corner of the rectangle to sample
      * @param {number} w - The width of the rectangle to sample
@@ -14103,7 +14125,7 @@ let TileMap = exports.TileMap = /*#__PURE__*/function () {
       c.width = this.tileWidth;
       c.height = this.tileHeight;
       cc.putImageData(imageData, 0, 0);
-      return c.toDataURL();
+      return new URL(c.toDataURL());
     }
 
     /**
@@ -14181,8 +14203,8 @@ function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), 
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /**
- * @import { Region } from "../model/Region"
- * @import { Session } from "../model/Session"
+ * @import { Region } from "../sprite/Region"
+ * @import { Session } from "../session/Session"
  * @import { Rectangle } from "../math/Rectangle"
  * @import { RaycastResult, TerrainScanResult, EntityScanResult } from "../math/Ray"
  */
@@ -14213,7 +14235,7 @@ let World = exports.World = /*#__PURE__*/function () {
       session = _ref.session;
     _classCallCheck(this, World);
     // this[Bindable.Prevent] = true;
-    this.src = new URL(src, location);
+    this.src = new URL(src, location.href);
     this.ready = this.getReady(this.src);
     this.maps = [];
     this.motionGraph = new _MotionGraph.MotionGraph();

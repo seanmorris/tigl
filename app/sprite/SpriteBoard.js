@@ -5,7 +5,9 @@ import { Parallax } from './Parallax';
 
 import { Gl2d } from '../gl2d/Gl2d';
 import { Camera } from './Camera';
-import { Region } from './Region';
+
+import VertexShader from './texture.vert';
+import FragmentShader from './texture.frag';
 
 /**
  * @import { Session } from '../session/Session';
@@ -76,8 +78,8 @@ export class SpriteBoard
 		this.renderMode = 0;
 
 		this.drawProgram = this.gl2d.createProgram({
-			vertexShader: this.gl2d.createShader('sprite/texture.vert')
-			, fragmentShader: this.gl2d.createShader('sprite/texture.frag')
+			vertexShader: this.gl2d.createVertexShader(VertexShader)
+			, fragmentShader: this.gl2d.createFragmentShader(FragmentShader)
 			, attributes
 			, uniforms
 		});
@@ -248,21 +250,7 @@ export class SpriteBoard
 
 		let sprites = [...this.sprites];
 
-		sprites.sort((a,b) => {
-			const az = a.z ?? a.y ?? undefined;
-			const bz = b.z ?? b.y ?? undefined;
-			if(az === undefined)
-			{
-				return -1;
-			}
-
-			if(bz === undefined)
-			{
-				return 1;
-			}
-
-			return az - bz;
-		});
+		sprites.sort((a, b) => b.z - a.z || a.y - b.y);
 
 		this.parallax && this.parallax.draw();
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'background'));

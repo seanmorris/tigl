@@ -11,17 +11,6 @@ export default [
 		rules: {
 			"jsdoc/no-undefined-types": ["warn", {
 				"definedTypes": [
-					'GLint',
-					// 'CanvasRenderingContext2D',
-					// 'HTMLCanvasElement',
-					// 'WebGLProgram',
-					// 'WebGLBuffer',
-					// 'WebGLFramebuffer',
-					// 'WebGLUniformLocation',
-					// 'WebGLRenderingContext',
-					// 'WebGLShader',
-					// 'WebGLTexture',
-					// 'URL',
 				]
 			}],
 			"jsdoc/require-jsdoc": ["warn",{

@@ -10,7 +10,7 @@ import { parseColor } from '../sprite/parseColor';
 
 /**
  * @import { Entity } from "../model/Entity";
- * @import { Session } from "../model/Session";
+ * @import { Session } from "../session/Session";
  * @import { TmxPropertyDefList } from './Properties';
  */
 
@@ -55,10 +55,12 @@ import { parseColor } from '../sprite/parseColor';
  *   drawOrder: string,
  *   objects: Array<TmxObjectDef>,
  *   opacity: number,
+ *   properties: TmxPropertyDefList,
  *   type: "objectgroup",
  *   visible: boolean,
  *   x: number,
  *   y: number,
+ *   tintcolor: string
  * }} TmxObjectLayer
  */
 
@@ -79,11 +81,33 @@ import { parseColor } from '../sprite/parseColor';
  *   visible: boolean,
  *   x: number,
  *   y: number,
+ *   tintcolor: string
  * }} TmxImageLayer
  */
 
 /**
  * @typedef {TmxTileLayer|TmxObjectLayer|TmxImageLayer} TmxLayer
+ */
+
+/**
+ * @typedef {{
+ *   class: string,
+ *   layers: TmxLayer[],
+ *   properties: TmxPropertyDefList,
+ *   backgroundcolor: string,
+ *   tilesets: TmxTilesetDef[],
+ *   width: number,
+ *   height: number,
+ *   tilewidth: number,
+ *   tileheight: number,
+ * }} TmxTileMap
+ */
+
+/**
+ * @typedef {{
+ *   source: string,
+ *   firstgif: number,
+ * }} TmxTilesetDef
  */
 
 const cache = new Map;
@@ -141,13 +165,14 @@ export class TileMap
 {
 	/**
 	 * Construct a TileMap object.
-	 * @param {object} mapData - Named params
-	 * @param {string} mapData.fileName -The filename/URL of the TileMap
-	 * @param {Session} mapData.session -The current Session
-	 * @param {number} mapData.x -The x position of the TileMap in the World
-	 * @param {number} mapData.y -The y position of the TileMap in the World
-	 * @param {number} mapData.width - The width of the TileMap
-	 * @param {number} mapData.height - The height of the TileMap
+	 * @param {object} [mapData] - Named params
+	 * @param {string|URL} [mapData.fileName] -The filename/URL of the TileMap
+	 * @param {Session} [mapData.session] -The current Session
+	 * @param {number} [mapData.x] -The x position of the TileMap in the World
+	 * @param {number} [mapData.y] -The y position of the TileMap in the World
+	 * @param {number} [mapData.width] - The width of the TileMap
+	 * @param {number} [mapData.height] - The height of the TileMap
+	 * @param {TmxPropertyDefList} [mapData.properties] - The property list of the TileMap
 	 */
 	constructor(mapData)
 	{
@@ -160,7 +185,7 @@ export class TileMap
 			, height
 		} = mapData;
 
-		Bindable.Prevent && (this[Bindable.Prevent] = true);
+		// Bindable.Prevent && (this[Bindable.Prevent] = true);
 		this.src = fileName;
 		this.backgroundColor = null;
 		this.tileCount = 0;
@@ -191,6 +216,8 @@ export class TileMap
 		this.pixels = null;
 		this.values = null;
 		this.image = document.createElement('img');
+
+		/** @type {Session} */
 		this.session = session;
 		this.entityDefs = {};
 
@@ -202,8 +229,13 @@ export class TileMap
 		this.xOrigin = x;
 		this.yOrigin = y;
 
+		/** @type {Array<TmxTileLayer>} */
 		this.tileLayers   = [];
+
+		/** @type {Array<TmxImageLayer>} */
 		this.imageLayers  = [];
+
+		/** @type {Array<TmxObjectLayer>} */
 		this.objectLayers = [];
 
 		this.visible = false;
@@ -218,7 +250,10 @@ export class TileMap
 		this.animatedTiles = new Map;
 		this.animations = new Map;
 
+		/** @type {{[key: string]: string}} */
 		this.lastSliceKeys = {};
+
+		/** @type {{[key: string]: Array<Uint8Array>}} */
 		this.lastSlices = {};
 
 		// this.ready = this.getReady(fileName);
@@ -292,15 +327,21 @@ export class TileMap
 
 		// await new Promise(a => setTimeout(a, 500));
 
+		/** @type {TmxTileMap} */
 		const mapData = await (await cache.get(src)).clone().json();
 
 		this.props.add(...mapData.properties ?? []);
 
 		mapData.layers.forEach(layer => {
-			layer.data = new Uint32Array(layer.data);
+			if(layer.type === 'tilelayer')
+			{
+				layer.data = new Uint32Array(layer.data);
+			}
+
 			layer.props = new Properties(layer.properties ?? [], this, layer.type !== 'tilelayer' ? [] : [
 				{name: 'priority', type: 'string', value: 'background'}
 			]);
+
 			layer.tintcolor = layer.tintcolor
 				? parseColor(layer.tintcolor)
 				: new Uint8ClampedArray([255, 255, 255, 255]);
@@ -435,9 +476,10 @@ export class TileMap
 
 			for(const i in tileValues)
 			{
+				const ii = Number(i);
 				const rotatedTile = tileValues[i];
 				const tile = rotatedTile & 0x0FFFFFFF;
-				const flip = tilePixels[i * 4 + 3];
+				const flip = tilePixels[ii * 4 + 3];
 
 				if(this.animatedTiles.has(tile) && !this.animatedTiles.has(rotatedTile))
 				{
@@ -494,8 +536,8 @@ export class TileMap
 					const tree = this.animationTrees.get(layer);
 					const frames = this.animatedTiles.get(rotatedTile);
 
-					const x = i % this.width;
-					const y = Math.floor(i / this.width);
+					const x = ii % this.width;
+					const y = Math.floor(ii / this.width);
 
 					const animation = new Animation({frames, x, y});
 
@@ -741,7 +783,7 @@ export class TileMap
 	 * @param {TmxTileLayer} layer - The tile layer to check
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
-	 * @returns {null|number} The tile at the point or null if no tile exists there
+	 * @returns {boolean|number} The tile at the point or null if no tile exists there
 	 */
 	getTileFromLayer(layer, x, y)
 	{
@@ -852,7 +894,7 @@ export class TileMap
 	 * Put a rectangular slice of a tile layer into a rendering buffer
 	 * @param {Uint8Array} buffer = The rendering buffer
 	 * @param {number} width - The width of the rendering buffer
-	 * @param {number} layer - The layer to sample
+	 * @param {TmxTileLayer} layer - The layer to sample
 	 * @param {number} x - The x value of the top/left corner of the rectangle to sample
 	 * @param {number} y - The y value of the top/left corner of the rectangle to sample
 	 * @param {number} w - The width of the rectangle to sample
@@ -900,7 +942,7 @@ export class TileMap
 
 		cc.putImageData(imageData, 0, 0);
 
-		return c.toDataURL();
+		return new URL(c.toDataURL());
 	}
 
 	/**
