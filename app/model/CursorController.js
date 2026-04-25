@@ -6,22 +6,22 @@ export class CursorController
 {
 	create(entity, entityData)
 	{
-		entity.buttons = 0;
+		// entity.session.mouse.buttons = 0;
 	}
 
 	destroy(entity){}
 
 	simulate(entity, delta)
 	{
-		if(entity.buttons)
+		if(entity.session.mouse.buttons)
 		{
 			entity.sprite.changeAnimation('pressing');
-			// console.log(entity.buttons);
+			// console.log(entity.session.mouse.buttons);
 			const others = entity.session.world.getEntitiesForPoint(entity.x, entity.y);
 
 			for(const other of others)
 			{
-				other.ySpeed = -20;
+				other.controller.ySpeed = -20;
 				other.y--;
 			}
 		}
@@ -33,7 +33,7 @@ export class CursorController
 
 	collide(entity, other)
 	{
-		// if(entity.buttons)
+		// if(entity.session.mouse.buttons)
 		// {
 		// 	other.ySpeed = -20;
 		// 	other.y--;

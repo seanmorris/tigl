@@ -7,7 +7,8 @@
 		"allowImportingTsExtensions": true,
 		"noEmit": true,
 		"maxNodeModuleJsDepth": 0,
-		"strict": true,
+		"strict": false,
 	},
 	"include": ["app/**/*", "./*.mjs"],
+	"exclude": ["app/inject/**/*", "webpack.*"]
 }

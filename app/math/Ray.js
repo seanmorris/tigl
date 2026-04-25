@@ -10,8 +10,17 @@ import { Geometry } from "./Geometry.js";
  * @typedef {[number, number, number, number, TileMap]} TerrainPoint
  * @typedef {[number, number, number]} EntityPoint
  * @typedef {TerrainPoint|Set<TerrainPoint>|number|null} TerrainScanResult
- * @typedef {Map<Entity,Array<EntityPoint>>} EntityScanResult
- * @typedef {{terrain: TerrainScanResult, entities: EntityScanResult, hit: boolean, d: number}} RaycastResult
+ * @typedef {Map<Entity,EntityPoint>} EntityScanResult
+ * @typedef {{
+ *   terrain: TerrainScanResult,
+ *   entities: EntityScanResult,
+ *   hit: boolean,
+ *   d: number,
+ *   x?: number,
+ *   y?: number,
+ *   t?: number,
+ *   layerId?: number
+ * }} RaycastResult
  */
 
 const SUBGRID_BITS = 8;
@@ -93,9 +102,12 @@ export class Ray
 		const entities = this.castEntity(world, startX, startY, endX, endY, rayFlags & this.E_NO_MINK, castingEntity);
 
 		let hit = false;
+
+		/** @type {TerrainScanResult|EntityPoint} */
 		let nearest = terrain;
 		let minDist = Infinity;
-		if(rayFlags & this.T_ALL_POINTS)
+
+		if(rayFlags & this.T_ALL_POINTS && terrain instanceof Set)
 		{
 			for(const point of terrain)
 			{
@@ -108,7 +120,7 @@ export class Ray
 				}
 			}
 		}
-		else if(rayFlags & this.T_GET_LENGTH)
+		else if(rayFlags & this.T_GET_LENGTH && typeof terrain === 'number')
 		{
 			nearest = [cos * terrain, sin * terrain, terrain/hypot];
 			minDist = Math.hypot(startY - nearest[1], startX - nearest[0]);
@@ -151,9 +163,19 @@ export class Ray
 			}
 		}
 
-		if(nearest)
+		if(nearest && typeof nearest === 'object')
 		{
-			return {terrain, entities, x: nearest[0], y: nearest[1], hit, t: nearest[2], d: minDist, layerId: nearest[3], ...nearest};
+			return {
+				terrain,
+				entities,
+				x: nearest[0],
+				y: nearest[1],
+				hit,
+				t: nearest[2],
+				d: minDist,
+				layerId: nearest[3],
+				...nearest
+			};
 		}
 
 		return {terrain, entities, hit, d: Number.isFinite(minDist) ? minDist : hypot};
@@ -467,10 +489,16 @@ export class Ray
 
 		const initMode = startTile === null ? 0 : 1;
 
+		/** @type {number|boolean} */
 		let modeX = initMode;
+
+		/** @type {number|boolean} */
 		let modeY = initMode;
 
+		/** @type {number|boolean} */
 		let oldModeX = false;
+
+		/** @type {number|boolean} */
 		let oldModeY = false;
 
 		let bf = 1;
@@ -484,7 +512,10 @@ export class Ray
 		let rayX = checkX * sx;
 		let rayY = checkY * sy;
 
+		/** @type {TerrainPoint|null} */
 		let solidX = null;
+
+		/** @type {TerrainPoint|null} */
 		let solidY = null;
 
 		if(window.smDebug) window.debugPoints = [];

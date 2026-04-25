@@ -45,16 +45,16 @@ export class Sprite
 	/**
 	 * Construct a Sprite object
 	 * @param {object} param0 - Named params
-	 * @param {string} [param0.src] - Image URL to generate a Sprite
+	 * @param {Session} param0.session - Session associated with the sprite
+	 * @param {string|URL} [param0.src] - Image URL to generate a Sprite
 	 * @param {ColorBytes} [param0.color] - Color to use if no image is provided
 	 * @param {string} [param0.pixels] - NOT USED
-	 * @param {Session} param0.session - Session associated with the sprite
 	 * @param {SpriteSheet} [param0.spriteSheet] - SpriteSheet used to render the sprite
 	 * @param {number} [param0.x] - The x position
 	 * @param {number} [param0.y] - The y position
 	 * @param {number} [param0.z] - The z position (render order)
-	 * @param {number} param0.width - The on-screen width
-	 * @param {number} param0.height - The on-screen height
+	 * @param {number} [param0.width] - The on-screen width
+	 * @param {number} [param0.height] - The on-screen height
 	 * @param {number} [param0.originalWidth] - The original width of the sprite (used for tiling)
 	 * @param {number} [param0.originalHeight] - The original height of the sprite (used for tiling)
 	 * @param {boolean} [param0.tiled] - Whether to tile the sprite
@@ -108,7 +108,7 @@ export class Sprite
 		// this.NORTH	= this.UP;
 
 		// this.region = [0, 0, 0, 1];
-		// this.tint = [255, 255, 255, 255];
+		// this.tint = [255, 0, 0, 255];
 
 		this.spriteBoard = session.spriteBoard;
 
@@ -155,11 +155,14 @@ export class Sprite
 				this.originalWidth = originalWidth ?? this.width;
 				this.originalHeight = originalHeight ?? this.height;
 
-				this.texture = this.createTexture( spriteSheet.getFrame(0) );
+				const firstFrame = spriteSheet.getFrame(0);
+
+				if(firstFrame) this.texture = this.createTexture( firstFrame );
 
 				for(let i = 0; i < spriteSheet.tileCount; i++)
 				{
-					this.textures[i] = this.createTexture( spriteSheet.getFrame(i) );
+					const frame = spriteSheet.getFrame(i);
+					if(frame) this.textures[i] = this.createTexture(frame);
 				}
 
 				this.changeAnimation('default');
@@ -219,7 +222,7 @@ export class Sprite
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.drawBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-		this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {3: 1}));
+		// this.spriteBoard.drawProgram.uniformF('u_region', ...Object.assign(this.region || [0, 0, 0], {3: 1}));
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.spriteBoard.effectBuffer);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -253,7 +256,7 @@ export class Sprite
 
 	/**
 	 * Create a new texture given an array of pixel values
-	 * @param {Uint8Array} pixels - The pixels to use for the texture
+	 * @param {Uint8Array|Uint8ClampedArray} pixels - The pixels to use for the texture
 	 * @returns {WebGLTexture} - The texture
 	 */
 	createTexture(pixels)

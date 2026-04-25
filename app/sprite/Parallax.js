@@ -71,7 +71,7 @@ export class Parallax
 		/** @type {Array<WebGLTexture>} */
 		this.textures = [];
 
-		this.ready = map.ready.then(() => this.assemble(map)).then(() => {
+		this.ready = map.ready.then(() => this.assemble()).then(() => {
 			this.loaded = true;
 		});
 

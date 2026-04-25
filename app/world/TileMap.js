@@ -12,19 +12,21 @@ import { parseColor } from '../sprite/parseColor';
  * @import { Entity } from "../model/Entity";
  * @import { Session } from "../session/Session";
  * @import { TmxPropertyDefList } from './Properties';
+ * @import { Color } from '../sprite/parseColor';
  */
 
 /**
  * @typedef {{
  *   id: number,
  *   class: string,
- *   data: Array<number>,
+ *   data: Uint32Array,
  *   width: number,
  *   height: number,
  *   name: string,
  *   opacity: number,
  *   properties: TmxPropertyDefList,
- *   tintcolor: string,
+ *   props: Properties
+ *   tintcolor: Color|void,
  *   type: "tilelayer",
  *   visible: boolean,
  *   x: number,
@@ -45,6 +47,7 @@ import { parseColor } from '../sprite/parseColor';
  *   point: true|undefined,
  *   rotation: number,
  *   properties: TmxPropertyDefList,
+ *   props: Properties
  * }} TmxObjectDef
  */
 
@@ -56,11 +59,12 @@ import { parseColor } from '../sprite/parseColor';
  *   objects: Array<TmxObjectDef>,
  *   opacity: number,
  *   properties: TmxPropertyDefList,
+ *   props: Properties
  *   type: "objectgroup",
  *   visible: boolean,
  *   x: number,
  *   y: number,
- *   tintcolor: string
+ *   tintcolor: Color|void
  * }} TmxObjectLayer
  */
 
@@ -77,11 +81,12 @@ import { parseColor } from '../sprite/parseColor';
  *   parallaxx: number,
  *   parallaxy: number,
  *   properties: TmxPropertyDefList,
+ *   props: Properties
  *   type: "imagelayer",
  *   visible: boolean,
  *   x: number,
  *   y: number,
- *   tintcolor: string
+ *   tintcolor: Color|void
  * }} TmxImageLayer
  */
 
@@ -165,9 +170,9 @@ export class TileMap
 {
 	/**
 	 * Construct a TileMap object.
-	 * @param {object} [mapData] - Named params
-	 * @param {string|URL} [mapData.fileName] -The filename/URL of the TileMap
-	 * @param {Session} [mapData.session] -The current Session
+	 * @param {object} mapData - Named params
+	 * @param {string|URL} mapData.fileName -The filename/URL of the TileMap
+	 * @param {Session} mapData.session -The current Session
 	 * @param {number} [mapData.x] -The x position of the TileMap in the World
 	 * @param {number} [mapData.y] -The y position of the TileMap in the World
 	 * @param {number} [mapData.width] - The width of the TileMap
@@ -187,7 +192,9 @@ export class TileMap
 
 		// Bindable.Prevent && (this[Bindable.Prevent] = true);
 		this.src = fileName;
-		this.backgroundColor = null;
+
+		/** @type {Color|void} */
+		this.backgroundColor = undefined;
 		this.tileCount = 0;
 
 		this.x = x;
@@ -229,13 +236,16 @@ export class TileMap
 		this.xOrigin = x;
 		this.yOrigin = y;
 
-		/** @type {Array<TmxTileLayer>} */
+		/** @type {TmxTileLayer[]} */
 		this.tileLayers   = [];
 
-		/** @type {Array<TmxImageLayer>} */
+		/** @type {TmxTileLayer[]} */
+		this.collisionLayers   = [];
+
+		/** @type {TmxImageLayer[]} */
 		this.imageLayers  = [];
 
-		/** @type {Array<TmxObjectLayer>} */
+		/** @type {TmxObjectLayer[]} */
 		this.objectLayers = [];
 
 		this.visible = false;
@@ -338,36 +348,52 @@ export class TileMap
 				layer.data = new Uint32Array(layer.data);
 			}
 
-			layer.props = new Properties(layer.properties ?? [], this, layer.type !== 'tilelayer' ? [] : [
-				{name: 'priority', type: 'string', value: 'background'}
-			]);
+			layer.props = new Properties(
+				layer.properties ?? [],
+				this,
+				layer.type !== 'tilelayer'
+					? []
+					: [{name: 'priority', type: 'string', value: 'background'}]
+			);
 
 			layer.tintcolor = layer.tintcolor
 				? parseColor(layer.tintcolor)
 				: new Uint8ClampedArray([255, 255, 255, 255]);
 		})
 
-		this.collisionLayers = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class === 'collision');
-		this.tileLayers   = mapData.layers.filter(layer => layer.type === 'tilelayer' && layer.class !== 'collision');
-		this.imageLayers  = mapData.layers.filter(layer => layer.type === 'imagelayer');
-		this.objectLayers = mapData.layers.filter(layer => layer.type === 'objectgroup');
-		this.backgroundColor = mapData.backgroundcolor;
+		this.collisionLayers = mapData.layers.filter(
+			/** @type {(layer: TmxLayer) => layer is TmxTileLayer} */
+			layer => layer.type === 'tilelayer' && layer.class === 'collision');
 
-		if(this.props.has('backgroundColor'))
+		this.tileLayers = mapData.layers.filter(
+			/** @type {(layer: TmxLayer) => layer is TmxTileLayer} */
+			layer => layer.type === 'tilelayer' && layer.class !== 'collision'
+		);
+
+		this.imageLayers = mapData.layers.filter(
+			layer => layer.type === 'imagelayer'
+		);
+
+		this.objectLayers = mapData.layers.filter(
+			layer => layer.type === 'objectgroup'
+		);
+
+		const bgColor = this.props.get('backgroundColor');
+
+		if(bgColor && !(bgColor instanceof URL))
 		{
-			this.backgroundColor = this.props.get('backgroundColor');
+			this.backgroundColor = parseColor(bgColor);
 		}
 
 		const tilesets = mapData.tilesets.map(tilesetData => {
 			if(tilesetData.source)
 			{
-				tilesetData.source = new URL(tilesetData.source, src).href;
+				return new Tileset({...tilesetData, source: new URL(tilesetData.source, src).href});
 			}
 			else
 			{
-				tilesetData.map = this;
+				return new Tileset({...tilesetData, map: this});
 			}
-			return new Tileset(tilesetData);
 		});
 
 		this.width  = mapData.width;
@@ -636,11 +662,11 @@ export class TileMap
 				const spawner = new Spawner({
 					spawnType: entityDef.type
 					, spawnClass
-					, entityDef
-					, ...entityDef
-					, spriteBoard: this.session.spriteBoard
 					, session: this.session
-					, world: this.session.world
+					, ...entityDef
+					, entityDef
+					// , spriteBoard: this.session.spriteBoard
+					// , world: this.session.world
 					, map: this
 				});
 
@@ -719,7 +745,7 @@ export class TileMap
 	 */
 	getColor(x, y, z = 0)
 	{
-		return this.getPixel(this.tileLayers[z], x, y, z);
+		return this.getPixel(this.tileLayers[z], x, y);
 	}
 
 	/**
@@ -741,7 +767,7 @@ export class TileMap
 			return false;
 		}
 
-		const pixel = this.getPixel(this.collisionLayers[z], x, y, z);
+		const pixel = this.getPixel(this.collisionLayers[z], x, y);
 
 		return pixel;
 	}
@@ -783,7 +809,7 @@ export class TileMap
 	 * @param {TmxTileLayer} layer - The tile layer to check
 	 * @param {number} x - The x value of the point
 	 * @param {number} y - The y value of the point
-	 * @returns {boolean|number} The tile at the point or null if no tile exists there
+	 * @returns {number|false} The tile at the point or null if no tile exists there
 	 */
 	getTileFromLayer(layer, x, y)
 	{

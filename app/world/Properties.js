@@ -1,12 +1,12 @@
 /**
  * @import { TileMap } from "./TileMap";
  * @import { Entity } from "../model/Entity";
+ * @import { Color } from '../sprite/parseColor';
  */
 
 /**
- * @typedef {{type: string, name: string, color: string, value: string}} TmxPropertyDef
+ * @typedef {{type: string, name: string, color?: string, value: string}} TmxPropertyDef
  * @typedef {Array<TmxPropertyDef>} TmxPropertyDefList
- * @typedef {Uint8ClampedArray} Color - 4 byte color
  * @typedef {string|URL|Color} PropVal
  */
 

@@ -1,17 +1,21 @@
 /**
+ * @import { SpawnClass } from "../model/Entity";
+ */
+
+/**
  * Represents a Pallet to select classes by a predefined string
  */
 export class Pallet
 {
 	/**
-	 * @type {{[key: string]: new () => any}} objectPallet - Stores the classes by typeName
+	 * @type {{[key: string]: SpawnClass}} objectPallet - Stores the classes by typeName
 	 */
 	objectPallet = {};
 
 	/**
 	 * Resolve a class by `typeName`
 	 * @param {string} typeName - The string that refers to a class in the Pallet
-	 * @returns {Promise<new () => any>} - The class
+	 * @returns {Promise<SpawnClass>} - The class
 	 */
 	async resolve(typeName)
 	{
@@ -31,7 +35,7 @@ export class Pallet
 	/**
 	 * Resolve a class by `typeName`
 	 * @param {string} typeName - The string that refers to a class in the Pallet
-	 * @param {new () => any} spawnClass - The class to register
+	 * @param {SpawnClass} spawnClass - The class to register
 	 */
 	register(typeName, spawnClass)
 	{

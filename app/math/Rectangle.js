@@ -1,4 +1,8 @@
 /**
+ * @import { RectangleLike } from '../math/SMTree';
+ */
+
+/**
  * Represents a Rectangle
  */
 export class Rectangle
@@ -46,7 +50,7 @@ export class Rectangle
 
 	/**
 	 * Check if a Rectangle overlaps another Rectangle
-	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @param {Rectangle|RectangleLike} other - The other Rectangle to compare against
 	 * @returns {boolean} - Whether the Rectangle contains the point
 	 */
 	isOverlapping(other)
@@ -66,7 +70,7 @@ export class Rectangle
 
 	/**
 	 * Check if a Rectangle is flush with another Rectangle (one edge is equal)
-	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @param {Rectangle|RectangleLike} other - The other Rectangle to compare against
 	 * @returns {boolean} - Whether the Rectangle contains the point
 	 */
 	isFlushWith(other)
@@ -96,7 +100,7 @@ export class Rectangle
 
 	/**
 	 * Find the intersecting sub-Rectangle of two Rectangles
-	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @param {Rectangle|RectangleLike} other - The other Rectangle to compare against
 	 * @returns {Rectangle|void} - The Rectangle representing the intersection
 	 */
 	intersection(other)
@@ -117,7 +121,7 @@ export class Rectangle
 
 	/**
 	 * Check if `other` is entirely INSIDE the current Rectangle
-	 * @param {Rectangle} other - The other Rectangle to compare against
+	 * @param {Rectangle|RectangleLike} other - The other Rectangle to compare against
 	 * @returns {boolean} - Whether `other` is completely INSIDE the current Rectangle
 	 */
 	isInside(other)
@@ -140,7 +144,7 @@ export class Rectangle
 
 	/**
 	 * Clone a Rectangle object
-	 * @param {Rectangle} rectangle - The other Rectangle to compare against
+	 * @param {Rectangle|RectangleLike} rectangle - The other Rectangle to compare against
 	 * @returns {Rectangle} - A Rectangle of the same dimensions as the current Rectangle
 	 */
 	static clone(rectangle)
@@ -155,7 +159,7 @@ export class Rectangle
 
 	/**
 	 * Perform Minkowski-expansion of two Rectangles
-	 * @param {Rectangle} other - The other Rectangle to expand by
+	 * @param {Rectangle|RectangleLike} other - The other Rectangle to expand by
 	 * @param {number} cxa - The x value of the current rectangle
 	 * @param {number} cya - The y value of the current rectangle
 	 * @param {number} cxb - The x value of `other`

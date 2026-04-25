@@ -16,7 +16,6 @@ import { MapMover } from "../model/MapMover";
 import { RopeController } from '../model/RopeController';
 
 import template from './view.tmp.html';
-console.log(template);
 
 const Application = {};
 
@@ -25,8 +24,29 @@ Application.keyboard = Keyboard.get();
 
 /**
  * @typedef {{
- *   fps: number
+ *   joypad?: OnScreenJoyPad|void,
+ *   keyboard?: Keyboard|void,
+ *   fps?: string,
+ *   sps?: string,
+ *   camX?: string,
+ *   camY?: string,
+ *   posX?: string,
+ *   posY?: string,
+ *   width?: number,
+ *   height?: number,
+ *   rwidth?: number,
+ *   rheight?: number,
+ *   showEditor?: boolean,
+ *   mouseClass?: string,
+ *   frameLock?: number,
+ *   simulationLock?: number,
  * }} MainArgs
+ */
+
+/**
+ * @typedef {{
+ *   canvas: {element: HTMLCanvasElement}
+ * }} MainTags
  */
 
 /**
@@ -37,11 +57,9 @@ Application.keyboard = Keyboard.get();
  */
 export class View extends BaseView
 {
-
 	/**
 	 * Construct a View object
-	 * @param {object} args - Default args
-	 * @param {number} args.fps - Frames per second
+	 * @param {MainArgs} args - Default args
 	 */
 	constructor(args)
 	{
@@ -54,13 +72,18 @@ export class View extends BaseView
 		this.speed     = 24;
 		this.maxSpeed  = this.speed;
 
+		/** @type {MainArgs} */
+		this.args;
+
+		/** @type {MainTags} */
+		this.tags;
+
 		this.args.joypad = Application.onScreenJoyPad;
 
-		this.args.fps  = 0;
-		this.args.sps  = 0;
-
-		this.args.camX = 0;
-		this.args.camY = 0;
+		this.args.fps  = String(0);
+		this.args.sps  = String(0);
+		this.args.camX = String(0);
+		this.args.camY = String(0);
 
 		this.args.showEditor = false;
 
@@ -334,7 +357,7 @@ export class View extends BaseView
 
 	/**
 	 * Handle scroll events
-	 * @param {Event} event - The event being handled
+	 * @param {WheelEvent} event - The event being handled
 	 */
 	scroll(event)
 	{

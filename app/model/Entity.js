@@ -3,11 +3,32 @@ import { Rectangle } from "../math/Rectangle";
 import { Sprite } from '../sprite/Sprite';
 import { Properties } from "../world/Properties";
 import { SpriteSheet } from "../sprite/SpriteSheet";
+import { Region } from "../sprite/Region";
 
 /**
  * @import { Session } from "../session/Session";
  * @import { TmxPropertyDefList } from '../world/Properties';
  * @import { TileMap } from "../world/TileMap";
+ * @import { Color } from '../sprite/parseColor';
+ */
+
+/**
+ * @typedef {{
+ *   create: (subject: object) => void
+ *   simulate: (subject: object, delta: number) => void
+ *   collide: (subject: object) => void
+ *   sleep: (subject: object) => void
+ *   wakeup: (subject: object) => void
+ *   destroy: (subject: object) => void
+ * }} Controller
+ */
+
+/**
+ * @typedef { {new (): Controller} & {
+ *   spriteSheet: string|URL
+ *   spriteImage: string|URL
+ *   spriteColor: Color
+ * }} SpawnClass
  */
 
 /**
@@ -59,8 +80,9 @@ export class Entity
 	 * Construct an Entity object.
 	 * @param {object} entityData - Named params
 	 * @param {Session} entityData.session - The SpawnClass of the Entity
+	 * @param {TileMap} entityData.map - The tileMap that spawned the Entity
 	 * @param {object} [entityData.controller] - The Entity Controller object
-	 * @param {new () => object} [entityData.spawnClass] - The SpawnClass of the Entity
+	 * @param {SpawnClass} [entityData.spawnClass] - The SpawnClass of the Entity
 	 * @param {object} [entityData.inputManager] - The inputManager for the Entity
 	 * @param {Sprite} [entityData.sprite] - The Sprite for the Entity
 	 * @param {number} [entityData.x] - The x position of the Entity
@@ -71,7 +93,6 @@ export class Entity
 	 * @param {number} [entityData.ySpriteOffset] - The y offset for the sprite
 	 * @param {number} [entityData.id] - The ID of the Entity
 	 * @param {TmxPropertyDefList} [entityData.properties] - The raw properties of the Entity (TMX format)
-	 * @param {TileMap} [entityData.map] - The tileMap that spawned the Entity
 	 */
 	constructor(entityData)
 	{
@@ -137,10 +158,13 @@ export class Entity
 
 		this.fresh = true;
 		this.map = entityData.map;
+		this.lastMap = this.map;
 		this.currentMap = this.map;
 		this.grounded = false;
 
 		this.controller && this.controller.create(this, this.entityData);
+
+		this.src = this.map.src;
 	}
 
 	/**
@@ -166,8 +190,8 @@ export class Entity
 		// const firstMap = [...maps][0];
 
 		if(motionParent
+			&& (motionParent instanceof Entity || motionParent instanceof Region)
 			&& !world.motionGraph.getParent(motionParent)
-			&& !maps.has(motionParent)
 		){
 			world.motionGraph.delete(this);
 		}
@@ -202,7 +226,7 @@ export class Entity
 	/**
 	 * Handle two Entities colliding
 	 * @param {Entity} other - The other entity in the collision
-	 * @param {[number, number]} point - The point where collision was detected
+	 * @param {[number, number, ...any]} point - The point where collision was detected
 	 */
 	collide(other, point)
 	{

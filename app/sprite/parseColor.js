@@ -1,31 +1,48 @@
 /**
- * Parse a color string into a set of bytes
- * @param {string} colorString
- * @returns {Uint8ClampedArray|void}
+ * @typedef {Uint8ClampedArray} Color - 4 byte color
  */
-export const parseColor = colorString => {
-	if(colorString[0] === '#')
+
+/**
+ * Parse a color string into a set of bytes
+ * @param {string|Color|Number[]} colorVal
+ * @returns {Color|void}
+ */
+export const parseColor = colorVal => {
+	if(ArrayBuffer.isView(colorVal) && !(colorVal instanceof DataView))
 	{
-		colorString = colorString.substr(1);
+		return new Uint8ClampedArray(colorVal.buffer);
 	}
 
-	if(colorString.length === 6)
+	if(Array.isArray(colorVal))
 	{
-		return new Uint8ClampedArray([
-			parseInt(colorString.substr(0 ,2), 16),
-			parseInt(colorString.substr(2 ,2), 16),
-			parseInt(colorString.substr(4 ,2), 16),
-			255,
-		]);
+		return new Uint8ClampedArray(colorVal);
 	}
 
-	if(colorString.length === 8)
+	if(typeof colorVal === 'string')
 	{
-		return new Uint8ClampedArray([
-			parseInt(colorString.substr(2 ,2), 16),
-			parseInt(colorString.substr(4 ,2), 16),
-			parseInt(colorString.substr(6 ,2), 16),
-			parseInt(colorString.substr(0 ,2), 16),
-		]);
+		if(colorVal[0] === '#')
+		{
+			colorVal = colorVal.substr(1);
+		}
+
+		if(colorVal.length === 6)
+		{
+			return new Uint8ClampedArray([
+				parseInt(colorVal.substr(0 ,2), 16),
+				parseInt(colorVal.substr(2 ,2), 16),
+				parseInt(colorVal.substr(4 ,2), 16),
+				255,
+			]);
+		}
+
+		if(colorVal.length === 8)
+		{
+			return new Uint8ClampedArray([
+				parseInt(colorVal.substr(2 ,2), 16),
+				parseInt(colorVal.substr(4 ,2), 16),
+				parseInt(colorVal.substr(6 ,2), 16),
+				parseInt(colorVal.substr(0 ,2), 16),
+			]);
+		}
 	}
 };

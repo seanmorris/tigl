@@ -1,7 +1,6 @@
 import { View } from 'curvature/base/View';
-
 import template from './onScreenJoyPad.tmp.html';
-console.log(template);
+
 /**
  * @class OnScreenJoyPad
  * Represents an on-screen jopypad
@@ -21,10 +20,11 @@ export class OnScreenJoyPad extends View
 		/** @type {{x: number, y: number}|false} */
 		this.dragStart = false;
 
-		/**
-		 * @type {{dragging: boolean, x: number, y: number, xx: number, yy: number}}
-		 */
+		/** @type {{dragging: boolean, x: number, y: number, xx: number, yy: number}} */
 		this.args;
+
+		/** @type {{joystick: HTMLElement}} */
+		this.tags;
 
 		this.args.dragging  = false;
 		this.args.x = 0;
@@ -143,8 +143,6 @@ export class OnScreenJoyPad extends View
 	 */
 	dropStick(event)
 	{
-		console.log(event);
-
 		this.args.dragging = false;
 		this.args.x = this.args.xx = 0;
 		this.args.y = this.args.yy = 0;

@@ -170,7 +170,8 @@ export class SMTree
 	/**
 	 * Construct an SMTree Object
 	 * @param {object} args - Named param
-	 * @param {number} args.dimension - The number of dimensions in the tree
+	 * @propperty {number} dimension - The number of dimensions in the tree
+	 * @propperty {number} [depthSymbol] - The depth of the layer
 	 */
 	constructor(args = {dimension: 2, [depthSymbol]: 0})
 	{

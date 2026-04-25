@@ -6,6 +6,7 @@ import { Rectangle } from "../math/Rectangle";
 /**
  * @import { Session } from "../session/Session";
  * @import { SpriteBoard } from "./SpriteBoard";
+ * @import { RectangleLike } from '../math/SMTree';
  */
 
 const rectMap = new WeakMap;
@@ -17,7 +18,7 @@ export class Region
 {
 	/**
 	 * Given a Rectangle, return a registered Region
-	 * @param {Rectangle} rect - The Rectangle associated with a Region
+	 * @param {Rectangle|RectangleLike} rect - The Rectangle associated with a Region
 	 * @returns {Region|undefined} - The Region registered to the Rectangle or undefined if not registered
 	 */
 	static fromRect(rect)
@@ -30,7 +31,7 @@ export class Region
 	 * @param {object} param0 - Named params
 	 * @param {number} param0.x - The x value of the top/left of the Region
 	 * @param {number} param0.y - The y value of the top/left of the Region
-	 * @param {number} param0.z - The z value of the Region (render order)
+	 * @param {number} [param0.z] - The z value of the Region (render order)
 	 * @param {number} param0.width - The width of the Region
 	 * @param {number} param0.height - The height of the Region
 	 * @param {Session} param0.session - The current Session

@@ -12,6 +12,8 @@ import FragmentShader from './texture.frag';
 /**
  * @import { Session } from '../session/Session';
  * @import { World } from '../world/World';
+ * @import { TileMap } from '../world/TileMap';
+ * @import { Entity } from '../model/Entity';
  */
 
 /**
@@ -27,12 +29,13 @@ export class SpriteBoard
 	 */
 	constructor({element, session})
 	{
-		this[Bindable.Prevent] = true;
+		// this[Bindable.Prevent] = true;
 
 		this.session = session;
 
 		this.maps = [];
 
+		/** @type {TileMap|null} */
 		this.currentMap = null;
 		this.sprites = new Set;
 		this.regions = new Set;
@@ -94,6 +97,8 @@ export class SpriteBoard
 		this.effectBuffer = this.gl2d.createFramebuffer(this.effectLayer);
 
 		this.mapRenderers = new Map;
+
+		/** @type {Entity|null} */
 		this.following = null;
 	}
 
@@ -212,7 +217,7 @@ export class SpriteBoard
 			gl.bindTexture(gl.TEXTURE_2D, this.skyTexture);
 
 			const color = this.currentMap.props.get('backgroundColorUpper');
-			const split = Math.min(1, Math.max(0, this.currentMap.props.get('backgroundSplit') ?? 0.5));
+			const split = Math.min(1, Math.max(0, Number(this.currentMap.props.get('backgroundSplit') ?? 0.5)));
 
 			const r = (0 + color[0]);
 			const b = (0 + color[1]);
@@ -294,10 +299,10 @@ export class SpriteBoard
 
 	/**
 	 * Resize the render window
-	 * @param {number} width - The new width of the render window
-	 * @param {number} height - The new height of the render window
+	 * @param {number|null} width - The new width of the render window
+	 * @param {number|null} height - The new height of the render window
 	 */
-	resize(width, height)
+	resize(width = null, height = null)
 	{
 		const gl = this.gl2d.context;
 

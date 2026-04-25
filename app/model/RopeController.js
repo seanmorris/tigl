@@ -8,23 +8,22 @@ export class RopeController
 	create(entity, entityData)
 	{
 		this.width = 1;
-		window.e = entity;
 
 		const world = entity.session.world;
 
-		window.smDebug = true;
+		// window.smDebug = true;
 
 		// console.log(Ray.castTerrain(
 		// 	world, 64, 500, 1024, 500, 0
 		// ));
 
-		console.log(Ray.castTerrain(
-			// world, 64, 466, 1024, 466, 0
-			// world, 990, 466, 0, 466, 0
-			world, 64, 466, 990, 466, 0
-		));
+		// console.log(Ray.castTerrain(
+		// 	// world, 64, 466, 1024, 466, 0
+		// 	// world, 990, 466, 0, 466, 0
+		// 	world, 64, 466, 990, 466, 0
+		// ));
 
-		window.smDebug = false;
+		// window.smDebug = false;
 	}
 
 	destroy(entity){}

@@ -11,6 +11,7 @@ import { MotionGraph } from "../math/MotionGraph";
 import { Controller } from '../input/Controller';
 import { Pallet } from "../world/Pallet";
 import { CursorController } from "../model/CursorController";
+import { Mouse } from "../input/Mouse";
 
 /**
  * @import { Keyboard } from "curvature/input/Keyboard";
@@ -39,7 +40,7 @@ const warpStart = input.has('start') ? (input.get('start') ?? '').split(',').map
  * @param {SpriteBoard} spriteBoard
  * @param {World} world
  * @param {Keyboard} keyboard
- * @param {object} OnScreenJoyPad
+ * @param {OnScreenJoyPad|void} OnScreenJoyPad
  * @param {{x: number, y: number}} mouse
  */
 export class Session
@@ -49,7 +50,7 @@ export class Session
 	 * @param {object} param0 - Named params
 	 * @param {HTMLCanvasElement} param0.element - The canvas element to render to
 	 * @param {Keyboard} param0.keyboard - The keyboard object to take input from
-	 * @param {object} param0.onScreenJoyPad - The onScreenJoyPad object to take input from
+	 * @param {OnScreenJoyPad|void} param0.onScreenJoyPad - The onScreenJoyPad object to take input from
 	 * @param {string|URL} param0.worldSrc - The URL of the World to load
 	 * @param {object} param0.mapPallet - Pallet of maps for dynamic loading
 	 * @param {object} param0.entityPallet - Pallet of Entity classes for dynamic loading
@@ -91,7 +92,6 @@ export class Session
 
 		this.keyboard = keyboard;
 
-		/** @type {OnScreenJoyPad} */
 		this.onScreenJoyPad = onScreenJoyPad;
 
 		this.world.ready.then(() => this.initialize(/*{keyboard, onScreenJoyPad}*/));
@@ -110,29 +110,7 @@ export class Session
 			this.gamepad = null;
 		});
 
-		this.mouse = {x: 0, y: 0};
-
-		element.addEventListener('mousemove', event => {
-			this.mouse.x = event.clientX;
-			this.mouse.y = event.clientY;
-			this.moveCursor(this.mouse.x, this.mouse.y);
-		});
-
-		element.addEventListener('mousedown', event => {
-			event.preventDefault();
-			if(!this.cursor) return;
-			this.cursor.buttons = event.buttons;
-		});
-
-		element.addEventListener('mouseup', event => {
-			event.preventDefault();
-			if(!this.cursor) return;
-			this.cursor.buttons = event.buttons;
-		});
-
-		element.addEventListener('contextmenu', event => {
-			event.preventDefault();
-		});
+		this.mouse = new Mouse(element, this);
 	}
 
 	/**
@@ -144,7 +122,7 @@ export class Session
 
 		if(warpStart)
 		{
-			const maps = this.world.getMapsForPoint(...warpStart);
+			const maps = this.world.getMapsForPoint(warpStart[0], warpStart[1]);
 
 			maps.forEach(map => map.initialize());
 		}
@@ -175,6 +153,7 @@ export class Session
 				x: startX,
 				y: startY,
 				inputManager: this.controller,
+				map,
 				// sprite: new Sprite({
 				// 	session: this,
 				// 	spriteSheet: new SpriteSheet({
@@ -203,6 +182,7 @@ export class Session
 				height: 1,
 				xSpriteOffset: 16,
 				ySpriteOffset: 32,
+				map,
 			});
 
 			this.addEntity(this.cursor);

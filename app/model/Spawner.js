@@ -6,6 +6,7 @@ import { Properties } from "../world/Properties";
 /**
  * @import { Session } from "../session/Session";
  * @import { TileMap } from "../world/TileMap";
+ * @import { SpawnClass } from "./Entity";
  */
 
 /**
@@ -19,9 +20,12 @@ export class Spawner extends Entity
 	 * Construct a Spawner object
 	 * @param {object} spawnData - Named params
 	 * @param {string} spawnData.spawnType - The `type` from the Entity definition
-	 * @param {new () => any} spawnData.spawnClass - The class of the Entity controller object
+	 * @param {SpawnClass} spawnData.spawnClass - The class of the Entity controller object
 	 * @param {Session} spawnData.session - The current Session
-	 * @param {*} spawnData.props - Properties from TMJ TileMap
+	 * @param {TileMap} spawnData.map - The current Session
+	 * @param {object} spawnData.entityDef - The current Session
+	 * @param {object} spawnData.properties - Properties from TMJ TileMap
+	 * @param {number} [spawnData.gid] - gid of the tile to use for the sprite
 	 */
 	constructor(spawnData)
 	{
@@ -34,12 +38,16 @@ export class Spawner extends Entity
 		this.props = new Properties(spawnData.properties ?? [], this);
 
 		this.flags |= Entity.E_STATIC;
+
+		/** @type {TileMap|null} */
+		this.lastMap = null;
 	}
 
 	/**
 	 * Tick the simulation once.
+	 * @param {number} delta
 	 */
-	simulate()
+	simulate(delta)
 	{
 		const spawnClass = this.spawnData.spawnClass;
 		const entityDef = {...this.spawnData.entityDef};
@@ -109,6 +117,6 @@ export class Spawner extends Entity
 		map.entities.set(entity.id, entity);
 		this.session.addEntity(entity);
 		this.session.removeEntity(this);
-		super.simulate();
+		super.simulate(delta);
 	}
 }

@@ -6,7 +6,7 @@ import { Rectangle } from "./Rectangle.js";
  */
 
 /**
- * @type {WeakMap<Entity,Set<QuickTree>}
+ * @type {WeakMap<Entity,Set<QuickTree>>}
  */
 const registry = new WeakMap();
 

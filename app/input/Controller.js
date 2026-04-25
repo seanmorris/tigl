@@ -219,8 +219,8 @@ export class Controller
 	/**
 	 * Read input from gamepads, keyboard & onScreenJoyPad
 	 * @param {object} param0 - Named params
-	 * @param {OnScreenJoyPad} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
-	 * @param {Keyboard} param0.keyboard - The Keyboard object to read input from
+	 * @param {OnScreenJoyPad|void} param0.onScreenJoyPad - The OnScreenJoyPad objects to read input from
+	 * @param {Keyboard|void} param0.keyboard - The Keyboard object to read input from
 	 * @param {Array<Gamepad|null>} param0.gamepads - The Gamepad objects to read input from
 	 * @returns {Set<InputDevice>} - Set of devices input was taken from
 	 */
@@ -480,7 +480,7 @@ export class Controller
 				this.buttons[inputId] = new Button;
 			}
 
-			const axis   = axisMap[ inputId ];
+			const axis   = Number(axisMap[ inputId ]);
 			const value  = Math.sign(1/axis);
 			const axisId = Math.abs(axis);
 
