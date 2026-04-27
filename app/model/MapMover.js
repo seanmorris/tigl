@@ -8,6 +8,7 @@ export class MapMover
 {
 	create(map)
 	{
+		this.xOriginal = map.x;
 		this.yOriginal = map.y;
 	}
 
@@ -15,6 +16,10 @@ export class MapMover
 	{
 		if(map.props.get('yOscillate'))
 		{
+			// map.x = Math.round((this.xOriginal + 10) * SUBGRID_SIZE) * SUBGRID_INVR;
+			// map.y = Math.round((this.yOriginal + 10) * SUBGRID_SIZE) * SUBGRID_INVR;
+			// return;
+
 			const range = map.props.get('yOscillate');
 			const delay = map.props.get('delay');
 			const age = map.session.world.age;

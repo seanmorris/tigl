@@ -74,9 +74,11 @@ export class Session
 		this.frameLock = 60;
 		this.simulationLock = 60;
 
-		this.entities  = new Set;
+		this.entities = new Set;
 		this.removed = new WeakSet;
 		this.awake = new Set;
+
+		this.particles = new Set;
 
 		this.paused = false;
 		this.loaded = false;
@@ -91,7 +93,7 @@ export class Session
 		this.spriteBoard.loadWorld(this.world);
 
 		this.keyboard = keyboard;
-
+		this.mouse = new Mouse(element, this);
 		this.onScreenJoyPad = onScreenJoyPad;
 
 		this.world.ready.then(() => this.initialize(/*{keyboard, onScreenJoyPad}*/));
@@ -109,8 +111,6 @@ export class Session
 			if(!this.gamepad) return;
 			this.gamepad = null;
 		});
-
-		this.mouse = new Mouse(element, this);
 	}
 
 	/**
@@ -167,7 +167,7 @@ export class Session
 			this.addEntity(this.player);
 
 			this.cursor = new Entity({
-				controller: new CursorController,
+				spawnClass: CursorController,
 				x: startX,
 				y: startY,
 				session: this,
@@ -308,11 +308,14 @@ export class Session
 			this.awake.delete(entity);
 		});
 
-		entities.forEach(entity => this.simulateEntity(entity, delta));
-
-		this.simulateEntity(this.player, delta);
 		this.moveCursor(this.mouse.x, this.mouse.y);
 		this.cursor && this.simulateEntity(this.cursor, delta);
+
+		entities.forEach(entity => this.simulateEntity(entity, delta));
+
+		this.particles.forEach(p => p.simulate(delta));
+
+		this.simulateEntity(this.player, delta);
 
 		return true;
 	}

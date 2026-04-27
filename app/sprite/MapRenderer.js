@@ -154,6 +154,15 @@ export class MapRenderer
 
 		if(this.renderPath === 'webgl2')
 		{
+			this.map.animate(
+				xTile
+				, yTile
+				, tilesWide
+				, tilesHigh
+				, delta
+				, priority
+			);
+
 			for(const layer of this.map.tileLayers)
 			{
 				if(layer.props.get('priority') !== priority)
@@ -350,7 +359,6 @@ export class MapRenderer
 
 		if(this.renderPath === 'canvas')
 		{
-
 			const tilePixelLayers = this.map.getSlice(
 				priority
 				, xTile

@@ -42,32 +42,37 @@ export class Ray
 	static T_LAST_EMPTY = 0b0000_0001;
 
 	/**
-	 * @property {number} T_ALL_POINTS - Return all solid points rather than the nearest
+	 * @property {number} T_ALL_POINTS - Return all points scanned rather than the nearest
 	 */
 	static T_ALL_POINTS = 0b0000_0010;
 
 	/**
+	 * @property {number} T_ALL_SOLID_POINTS - Return all solid points rather than the nearest
+	 */
+	static T_ALL_SOLID_POINTS = 0b0000_0100;
+
+	/**
 	 * @property {number} T_SNAP_TO_INT - Snap the return point to the edge of the pixel
 	 */
-	static T_SNAP_TO_INT = 0b0000_0100;
+	static T_SNAP_TO_INT = 0b0000_1000;
 
 	/**
 	 * @property {number} T_GET_LENGTH - Return the length of the ray instead of the point
 	 */
-	static T_GET_LENGTH = 0b0000_1000;
+	static T_GET_LENGTH = 0b0001_0000;
 
 	/**
 	 * @property {number} E_NO_MINK - Disable Minkowski expansion for entity raycasts
 	 */
-	static E_NO_MINK = 0b0001_0000;
+	static E_NO_MINK = 0b0010_0000;
 
 	/**
 	 * @property {number} E_SOLID - Only scan for solid/platform entities
 	 */
-	static E_SOLID = 0b0010_0000;
+	static E_SOLID = 0b0100_0000;
 
 	/**
-	 * @property {number} E_NO_MINK - Disable Minkowski expansion for entity raycasts
+	 * @property {number} DEFAULT_FLAGS - Default flags when param is not supplied.
 	 */
 	static DEFAULT_FLAGS = 0b0000_0000;
 
@@ -107,7 +112,7 @@ export class Ray
 		let nearest = terrain;
 		let minDist = Infinity;
 
-		if(rayFlags & this.T_ALL_POINTS && terrain instanceof Set)
+		if(rayFlags & (this.T_ALL_POINTS | this.T_ALL_SOLID_POINTS) && terrain instanceof Set)
 		{
 			for(const point of terrain)
 			{
@@ -201,35 +206,6 @@ export class Ray
 		const sizeX = Math.max(320, Math.abs(startX - endX));
 		const sizeY = Math.max(320, Math.abs(startY - endY));
 
-		if(false)
-		{
-			if(-MAX_GRID_IDX > startX || startX >= MAX_GRID_IDX ) throw new Error(`startX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
-			if(-MAX_GRID_IDX > startY || startY >= MAX_GRID_IDX ) throw new Error(`startY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
-			if(-MAX_GRID_IDX > endX || endX >= MAX_GRID_IDX ) throw new Error(`endX must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
-			if(-MAX_GRID_IDX > endY || endY >= MAX_GRID_IDX ) throw new Error(`endY must be within [${-MAX_GRID_IDX}, ${MAX_GRID_IDX})`);
-
-			const qStartX = Math.trunc(startX * SUBGRID_SIZE) * SUBGRID_INVR;
-			const qStartY = Math.trunc(startY * SUBGRID_SIZE) * SUBGRID_INVR;
-
-			const qEndX = Math.trunc(endX * SUBGRID_SIZE) * SUBGRID_INVR;
-			const qEndY = Math.trunc(endY * SUBGRID_SIZE) * SUBGRID_INVR;
-
-			const dx = qEndX - qStartX;
-			const dy = qEndY - qStartY;
-
-			const hypot = Math.hypot(dy, dx);
-
-			const maps = world.getMapsForPoint(startX, startY);
-
-			for(const map of maps)
-			{
-				const tree = map.quadTree;
-				const leaf = tree.findLeaf(startX, startY);
-
-				console.log(leaf);
-			}
-		}
-
 		const candidates = world.getEntitiesForRect(centerX, centerY, sizeX, sizeY);
 		const collisions = new Map;
 
@@ -285,7 +261,9 @@ export class Ray
 				const x2 = points[i + 2];
 				const y2 = points[i + 3];
 
-				const intersection = Geometry.lineIntersectsLine(x1, y1, x2, y2, startX, startY, endX, endY);
+				const intersection = Geometry.lineIntersectsLine(
+					startX, startY, endX, endY, x1, y1, x2, y2
+				);
 
 				if(intersection)
 				{
@@ -332,7 +310,7 @@ export class Ray
 			pointsSet = pointsSet.union(this.castTerrainInMap(map, ...segment, rayFlags, layerId));
 		}
 
-		if(rayFlags & this.T_ALL_POINTS)
+		if(rayFlags & (this.T_ALL_POINTS | this.T_ALL_SOLID_POINTS))
 		{
 			return pointsSet;
 		}
@@ -520,6 +498,8 @@ export class Ray
 
 		if(window.smDebug) window.debugPoints = [];
 
+		const allPoints = new Set;
+
 		let iterations = 0;
 		while( (ox && Math.abs(rayX) <= hypot) || (oy && Math.abs(rayY) <= hypot) )
 		{
@@ -538,8 +518,8 @@ export class Ray
 				if(!modeX && oldModeX)
 				{
 					bf = sx < 0
-						? (qStartX + -checkX + 1) % bs
-						: (qStartX + checkX) % bs
+						? mod(qStartX + -checkX + (1/256) + -xOff,  bs)
+						: mod(bs - ((qStartX + checkX + -xOff)), bs)
 				}
 
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
@@ -579,7 +559,14 @@ export class Ray
 					}
 
 					solidX = [px, py, pt, layerId, tileMap];
+
+					allPoints.add([px, py, pt, layerId, tileMap, 3]);
+
 					break;
+				}
+				else if(rayFlags & this.T_ALL_POINTS)
+				{
+					allPoints.add([px, py, pt, layerId, tileMap, 1]);
 				}
 
 				checkX += bf;
@@ -594,14 +581,14 @@ export class Ray
 				let px = qStartX + pt * dx;
 
 				oldModeY = modeY;
-				modeY = tileMap.getCollisionTile(px, py, layerId)
+				modeY = tileMap.getCollisionTile(px, py, layerId);
 				bf = modeY ? 1 : bs;
 
 				if(!modeY && oldModeY)
 				{
 					bf = sy < 0
-						? (qStartY + -checkY + 1) % bs
-						: (qStartY + checkY) % bs;
+						? mod(qStartY + -checkY + (1/256) + -yOff, bs)
+						: mod(bs - ((qStartY + checkY + -yOff)), bs);
 				}
 
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);
@@ -642,7 +629,13 @@ export class Ray
 
 					solidY = [px, py, pt, layerId, tileMap];
 
+					allPoints.add([px, py, pt, layerId, tileMap, 4]);
+
 					break;
+				}
+				else if(rayFlags & this.T_ALL_POINTS)
+				{
+					allPoints.add([px, py, pt, layerId, tileMap, 2]);
 				}
 
 				checkY += bf;
@@ -650,6 +643,11 @@ export class Ray
 			}
 
 			iterations++;
+		}
+
+		if(rayFlags & this.T_ALL_POINTS)
+		{
+			return allPoints;
 		}
 
 		if(window.smDebug)

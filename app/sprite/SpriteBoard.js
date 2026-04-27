@@ -263,6 +263,8 @@ export class SpriteBoard
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
 		this.regions.forEach(r => r.draw());
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'foreground'));
+		this.session.particles.forEach(p => p.sprite.draw(delta));
+
 
 		// Set the rectangle for both layers
 		this.setRectangle(

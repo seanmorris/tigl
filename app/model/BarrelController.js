@@ -34,6 +34,9 @@ export class BarrelController
 
 		const world = entity.session.world;
 
+		let lSensor = world.getSolid(entity.x + entity.width * -0.5 + -1, entity.y + -8);
+		let rSensor = world.getSolid(entity.x + entity.width * +0.5, entity.y + -8);
+
 		if(!world.getSolidTerrain(entity.x, entity.y + 1))
 		{
 			this.ySpeed = Math.min(8, this.ySpeed + 0.5);
@@ -53,14 +56,21 @@ export class BarrelController
 			const min  = 0.5 * (other.width + entity.width) + Math.abs(other.controller.xSpeed);
 			const side = Math.sign(entity.x - other.x);
 
-			this.xSpeed = (min - dist) * side;
+			const newXSpeed = (min - dist) * side;
 
-			if(dist < min * 0.75)
+			if(newXSpeed)
 			{
-				this.ySpeed = Math.max(-2, this.ySpeed - 1);
-				this.xSpeed = -other.controller.xDirection;
+				this.xSpeed = newXSpeed;
+			}
+
+			if(other.grounded && (lSensor || rSensor) && dist < min * 0.75)
+			{
+				this.ySpeed = Math.max(-3, this.ySpeed - 1);
+				// this.xSpeed = -this.xSpeed;
 			}
 		}
+
+		if(lSensor && this.xSpeed < 0 || rSensor && this.xSpeed > 0) this.xSpeed = 0;
 
 		if(this.xSpeed || this.ySpeed)
 		{

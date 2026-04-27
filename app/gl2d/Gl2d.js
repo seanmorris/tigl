@@ -255,6 +255,7 @@ export class Gl2d
 		const texture = gl.createTexture();
 
 		gl.bindTexture(gl.TEXTURE_2D, texture);
+
 		gl.texImage2D(
 			gl.TEXTURE_2D
 			, 0
@@ -272,6 +273,8 @@ export class Gl2d
 
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+		gl.bindTexture(gl.TEXTURE_2D, null);
 
 		return texture;
 	}

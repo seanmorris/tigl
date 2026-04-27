@@ -184,7 +184,7 @@ export class Rectangle
 
 	/**
 	 * Break the Rectangle into a set of points representing its bounds
-	 * @returns {Array<number>} - A list of points representing the lines
+	 * @returns {[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]} - A list of 8 points representing the lines
 	 */
 	toLines()
 	{

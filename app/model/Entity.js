@@ -4,6 +4,7 @@ import { Sprite } from '../sprite/Sprite';
 import { Properties } from "../world/Properties";
 import { SpriteSheet } from "../sprite/SpriteSheet";
 import { Region } from "../sprite/Region";
+import { parseColor } from '../sprite/parseColor';
 
 /**
  * @import { Session } from "../session/Session";
@@ -24,12 +25,31 @@ import { Region } from "../sprite/Region";
  */
 
 /**
- * @typedef { {new (): Controller} & {
- *   spriteSheet: string|URL
- *   spriteImage: string|URL
- *   spriteColor: Color
- * }} SpawnClass
+ * @typedef {{
+ *   create: (subject: Entity, entityData: object) => void
+ *   simulate: (subject: Entity, delta: number) => void
+ *   collide: (subject: Entity) => void
+ *   sleep: (subject: Entity) => void
+ *   wakeup: (subject: Entity) => void
+ *   destroy: (subject: Entity) => void
+ * }} EntityController
  */
+
+/**
+ * @typedef { {new (): Controller} & {
+ *   spriteSheet?: string|URL
+*   spriteImage?: string|URL
+*   spriteColor?: Color|number[]
+* }} SpawnClass
+*/
+
+/**
+ * @typedef { {new (): EntityController} & {
+ *   spriteSheet?: string|URL
+*   spriteImage?: string|URL
+*   spriteColor?: Color|number[]
+* }} EntitySpawnClass
+*/
 
 /**
  * @class Entity
@@ -82,7 +102,7 @@ export class Entity
 	 * @param {Session} entityData.session - The SpawnClass of the Entity
 	 * @param {TileMap} entityData.map - The tileMap that spawned the Entity
 	 * @param {object} [entityData.controller] - The Entity Controller object
-	 * @param {SpawnClass} [entityData.spawnClass] - The SpawnClass of the Entity
+	 * @param {EntitySpawnClass} [entityData.spawnClass] - The SpawnClass of the Entity
 	 * @param {object} [entityData.inputManager] - The inputManager for the Entity
 	 * @param {Sprite} [entityData.sprite] - The Sprite for the Entity
 	 * @param {number} [entityData.x] - The x position of the Entity
@@ -92,6 +112,7 @@ export class Entity
 	 * @param {number} [entityData.xSpriteOffset] - The x offset for the sprite
 	 * @param {number} [entityData.ySpriteOffset] - The y offset for the sprite
 	 * @param {number} [entityData.id] - The ID of the Entity
+	 * @param {number} [entityData.gid] - gid of the tile to use for the sprite
 	 * @param {TmxPropertyDefList} [entityData.properties] - The raw properties of the Entity (TMX format)
 	 */
 	constructor(entityData)
@@ -99,11 +120,9 @@ export class Entity
 		// this[Bindable.Prevent] = true;
 
 		const {
-			controller
-			, spawnClass
+			spawnClass
 			, session
 			, inputManager
-			, sprite
 			, x = 0
 			, y = 0
 			, width = 32
@@ -112,8 +131,8 @@ export class Entity
 			, ySpriteOffset = 0
 		} = entityData;
 
-		this.controller = controller;
-		this.id = entityData.id;
+		this.controller = new spawnClass;
+		this.id = entityData.id ?? crypto.randomUUID();
 
 		this.xSpriteOffset = xSpriteOffset;
 		this.ySpriteOffset = ySpriteOffset;
@@ -125,6 +144,57 @@ export class Entity
 
 		this.width  = width;
 		this.height = height;
+
+		this.props = new Properties(entityData.properties ?? [], this);
+
+		let sprite = entityData.sprite;
+
+		if(!sprite)
+		{
+			if(spawnClass.spriteSheet)
+			{
+				sprite = new Sprite({
+					session: entityData.session
+					, spriteSheet: new SpriteSheet({
+						src: spawnClass.spriteSheet
+					})
+				});
+			}
+			else if(spawnClass.spriteImage)
+			{
+				sprite = new Sprite({
+					session: entityData.session
+					, src: spawnClass.spriteImage
+					, tiled: true
+				});
+			}
+			else if(entityData.gid)
+			{
+				sprite = new Sprite({
+					session: entityData.session
+					, src: entityData.map.getTileImage(entityData.gid)
+					, tiled: true
+				});
+			}
+			else if(this.props.has('color'))
+			{
+				sprite = new Sprite({
+					session: entityData.session
+					, color: parseColor( this.props.get('color') )
+					// , width: this.width
+					// , height: this.height
+				});
+			}
+			else if(spawnClass.spriteColor)
+			{
+				sprite = new Sprite({
+					session: entityData.session
+					, color: spawnClass.spriteColor
+					, width: this.width
+					, height: this.height
+				});
+			}
+		}
 
 		this.sprite = sprite || new Sprite({
 			session
@@ -141,8 +211,6 @@ export class Entity
 
 		/** @type {Session} */
 		this.session = session;
-
-		this.props = new Properties(entityData.properties ?? [], this);
 
 		this.entityData = entityData;
 
@@ -190,8 +258,8 @@ export class Entity
 		// const firstMap = [...maps][0];
 
 		if(motionParent
-			&& (motionParent instanceof Entity || motionParent instanceof Region)
 			&& !world.motionGraph.getParent(motionParent)
+			&& !maps.has(motionParent)
 		){
 			world.motionGraph.delete(this);
 		}

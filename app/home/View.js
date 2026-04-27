@@ -294,6 +294,15 @@ export class View extends BaseView
 				this.args.sps = (1000 / delta).toFixed(0);
 				sThen = now;
 				acc -= fpsInv;
+
+				if(this.session.paused)
+				{
+					this.args.mouseClass = 'mouse-moved';
+				}
+				else
+				{
+					this.args.mouseClass = 'mouse-idle'
+				}
 			}
 
 			this.session.draw(now);
@@ -324,9 +333,9 @@ export class View extends BaseView
 	{
 		// this.args.mouseClass = 'mouse-moved';
 
-		if(this.mouseTimer) clearTimeout(this.mouseTimer);
+		// if(this.mouseTimer) clearTimeout(this.mouseTimer);
 
-		this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
+		// this.mouseTimer = this.onTimeout(500, () => this.args.mouseClass = 'mouse-idle');
 	}
 
 	/**

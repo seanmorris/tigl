@@ -168,6 +168,8 @@ export class Sprite
 				this.changeAnimation('default');
 			});
 		}
+
+		gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 
 	/**
@@ -344,8 +346,8 @@ export class Sprite
 
 		const t = Matrix.transform(points, Matrix.composite(
 			Matrix.translate(xOff + -width * 0.5, yOff)
-			, Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
 			, Matrix.rotate(this.theta)
+			, Matrix.scale(this.scale * this.scaleX, this.scale * this.scaleY)
 			, Matrix.shearX(this.shearX2)
 			, Matrix.shearY(this.shearY)
 			, Matrix.shearX(this.shearX)

@@ -628,7 +628,10 @@ export class TileMap
 			for(const entityDef of entityDefs)
 			{
 				this.entityDefs[ entityDef.id ] = {...entityDef};
+			}
 
+			for(const entityDef of entityDefs)
+			{
 				entityDef.x += this.xOrigin;
 				entityDef.y += this.yOrigin;
 
@@ -711,6 +714,39 @@ export class TileMap
 			this.rect.y2 = this.y + this.height * this.tileHeight;
 
 			world.mapTree.move(world.mapRects.get(this));
+		}
+	}
+
+	/**
+	 * Animate a section of the map.
+	 * @param {number} x - The x value of the top/left corner of the rectangle to animate
+	 * @param {number} y - The y value of the top/left corner of the rectangle to animate
+	 * @param {number} w - The width of the rectangle to animate
+	 * @param {number} h - The height of the rectangle to animate
+	 * @param {number} delta - time in ms since last animation
+	 */
+	animate(x, y, w, h, delta, priority)
+	{
+		for(const l in this.tileLayers)
+		{
+			const layer = this.tileLayers[l];
+
+			if(priority !== layer.props.get('priority'))
+			{
+				continue;
+			}
+
+			const tree = this.animationTrees.get(layer);
+
+			if(tree)
+			{
+				const animations = tree.select(x, y, x + w, y + h);
+				for(const animation of animations)
+				{
+					const pos = animation.x + animation.y * this.width;
+					layer.data[pos] = animation.animate(delta);
+				}
+			}
 		}
 	}
 
@@ -830,7 +866,7 @@ export class TileMap
 		const tileX = Math.floor(localX / this.tileWidth);
 		const tileY = Math.floor(localY / this.tileHeight);
 
-		return -1 + layer.data[tileX + tileY * this.width];
+		return Math.max(0, -1 + layer.data[tileX + tileY * this.width]);
 	}
 
 	/**

@@ -1,3 +1,9 @@
+/**
+ * @import { Rectangle } from "./Rectangle";
+ */
+
+import { Geometry } from "./Geometry.js";
+
 const depthSymbol = Symbol('depth');
 
 const SUBGRID_BITS = 8;
@@ -353,61 +359,91 @@ export class SMTree
 	 */
 	queryLine(x1, y1, x2, y2)
 	{
-		let invX = false, invY = false;
-		if(x1 > x2) [x1, x2, invX] = [x2, x1, true];
-		if(y1 > y2) [y1, y2, invY] = [y2, y1, true];
-
 		const dx = x2 - x1;
 		const dy = y2 - y1;
-		const ror = dy / dx;
-		const inv = dx / dy;
 
-		let index = this.findSegment(x1);
-		let xCurrent = x1;
-		let yCurrent = y1;
+		const ror = dy / dx;
+
+		let startSegment = this.findSegment(x1);
+		let endSegment = this.findSegment(x2);
+
+		/** @type {Set<Rectangle>} */
 		let rects = new Set;
 		const results = new Map;
 
-		do
+		const xDir = Math.sign(x2 - x1) || 1;
+		const yDir = Math.sign(y2 - y1) || 1;
+
+		const xCrossings = [x1];
+		const yCrossings = [y1];
+
+		for(let i = startSegment; i != endSegment + xDir; i += xDir)
 		{
-			const segment = this.segments[index];
-			const xToEnd = Math.min(segment.end, x2) - xCurrent;
-			xCurrent += xToEnd;
-			yCurrent = Number.isFinite(ror) ? yCurrent + xToEnd * ror : y2
-			index++;
+			const xc = xDir > 0 ? this.segments[i].end : this.segments[i].start;
 
-			const subIndex = segment.subTree.findSegment(yCurrent);
-			const subSegment = segment.subTree.segments[subIndex];
+			if(!isFinite(xc)) break;
 
-			rects = rects.union(subSegment.rectangles);
+			const yc = y1 + dy * (dx ? ((xc - x1) / dx) : 0);
+
+			xCrossings.push(xc);
+			yCrossings.push(yc);
 		}
-		while(xCurrent < x2);
+
+		for(let i = 0; i < xCrossings.length -1; i++)
+		{
+			const index = this.findSegment(xCrossings[i]);
+			const segment = this.segments[index];
+
+			const subIndexStart = segment.subTree.findSegment(yCrossings[i]);
+			const subIndexEnd = segment.subTree.findSegment(yCrossings[i + 1]);
+
+			let j = subIndexStart
+
+			do
+			{
+				const subSegment = segment.subTree.segments[j];
+
+				rects = rects.union(subSegment.rectangles);
+
+				if(j === subIndexEnd) break;
+
+				j += yDir;
+			}
+			while(j != subIndexEnd);
+		}
 
 		for(const rect of rects)
 		{
-			let ax = Math.max(x1, rect.x1);
-			let bx = Math.min(x2, rect.x2);
-			let ay = Number.isFinite(ror) ? y1 + (ax - x1) * ror : Math.max(y1, rect.y1);
-			let by = Number.isFinite(ror) ? y1 + (bx - x1) * ror : Math.min(y2, rect.y2);
+			const lines = rect.toLines();
 
-			if(ay < rect.y1)
+			let near = rect.contains(x1, y1) ? [x1, y1, 0] : null;
+			let far = rect.contains(x2, y2) ? [x2, y2, 1] : null;
+
+			if(!near || !far)
+			for(let i = 0; i < 16; i += 4)
 			{
-				ax += (rect.y1 - ay) * inv;
-				ay = rect.y1
+				const [x1b, y1b, x2b, y2b] = lines.slice(i, i + 4);
+
+				const intersection = Geometry.lineIntersectsLine(
+					x1, y1, x2, y2, x1b, y1b, x2b, y2b
+				);
+
+				if(intersection)
+				{
+					if(!near || near[2] > intersection[2])
+					{
+						if(near) far = near;
+						near = intersection;
+					}
+					else if(!far || far[2] > intersection[2])
+					{
+						far = intersection;
+					}
+				}
 			}
 
-			if(by > rect.y2)
-			{
-				bx += (rect.y2 - by) * inv;
-				by = rect.y2;
-			}
-
-			results.set(rect, [
-				invX ? bx : ax
-				, invY ? by : ay
-				, invX ? ax : bx
-				, invY ? ay : by
-			]);
+			if(near || far)
+			results.set(rect, [near[0], near[1], far[0], far[1]]);
 		}
 
 		return results;
