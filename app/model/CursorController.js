@@ -12,7 +12,6 @@ export class CursorController
 	create(entity, entityData)
 	{
 		this.rope = new Entity({
-			controller: new RopeController,
 			spawnClass: RopeController,
 			session: entity.session,
 			x: entity.x,

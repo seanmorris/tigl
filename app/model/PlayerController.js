@@ -279,73 +279,29 @@ export class PlayerController
 				}
 			}
 
-			// console.time('tcast');
+			// console.time('Raycast');
 
-			const terrain = Ray.castTerrain(
+			const gOff = entity.grounded ? -1 : 0;
+
+			const rc = Ray.cast(
 				world
 				, entity.x
-				, entity.y + -1
+				, entity.y + gOff
 				, entity.x + this.xSpeed
-				, entity.y + this.ySpeed + -1
-				, Ray.T_SNAP_TO_INT
-			);
-
-			// console.timeEnd('tcast');
-
-			const solidEntities = Ray.castEntity(
-				world
-				, entity.x
-				, entity.y
-				, entity.x + this.xSpeed
-				, entity.y + this.ySpeed
+				, entity.y + this.ySpeed + gOff
 				, Ray.E_SOLID
-				, entity
 			);
 
-			let minDist = Infinity;
+			// console.timeEnd('Raycast');
 
-			if(solidEntities.size)
-			for(const [solid, point] of solidEntities.entries())
+			if(rc.hit)
 			{
-				if((solid.flags & Entity.E_SOLID))
+				if(!rc.entity || !(rc.entity.flags & Entity.E_PLATFORM) || (rc.entity.y - rc.entity.height > entity.y))
 				{
-					const [x,y,t] = point;
-
-					if(t < minDist)
-					{
-						minDist = t;
-
-						const solidTop = solid.y + -solid.height;
-						const solidLeft = solid.x + -solid.width * 0.5;
-						const solidRight = solid.x + solid.width * 0.5;
-
-						const myTop = entity.y + -entity.height;
-
-						if(entity.x >= solidLeft && entity.x <= solidRight)
-						{
-							if(Math.sign(solid.y - entity.y) === Math.sign(this.ySpeed))
-							{
-								entity.y = y;
-								this.ySpeed = 0;
-							}
-						}
-
-						if(entity.y > solidTop && myTop < solid.y)
-						{
-							if(Math.sign(solid.x - entity.x) === Math.sign(this.xSpeed))
-							{
-								entity.x = x;
-								this.xSpeed = 0;
-							}
-						}
-					}
+					this.xSpeed = rc[0] - entity.x;
+					this.ySpeed = rc[1] - entity.y;
+					entity.currentMap = rc[4];
 				}
-			}
-			else if(terrain)
-			{
-				this.xSpeed = terrain[0] - entity.x;
-				this.ySpeed = terrain[1] - entity.y;
-				entity.currentMap = terrain[4];
 			}
 
 			entity.x += this.xSpeed;
@@ -356,23 +312,25 @@ export class PlayerController
 
 		if(!entity.grounded && this.ySpeed >= 0)
 		{
-			const groundSnapper = Ray.castTerrain(
+			const grc = Ray.cast(
 				world
 				, entity.x
 				, entity.y
 				, entity.x
 				, entity.y + Math.max(this.ySpeed, 6)
-				, Ray.T_SNAP_TO_INT
+				, Ray.E_SOLID
 			);
 
-			if(groundSnapper)
+			if(grc.hit)
 			{
-				this.ySpeed = 0;
-				entity.y = groundSnapper[1];
-				entity.currentMap = groundSnapper[4];
-				entity.grounded = true;
-
-				snapped = true;
+				if(!grc.entity || !(grc.entity.flags & Entity.E_PLATFORM) || (grc.entity.y - grc.entity.height > entity.y))
+				{
+					this.ySpeed = 0;
+					entity.y = grc[1];
+					entity.currentMap = grc[4];
+					entity.grounded = true;
+					snapped = true;
+				}
 			}
 		}
 

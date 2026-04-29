@@ -29,3 +29,4 @@ tmp/
 public/
 
 *.tiled-session
+.env

@@ -7,12 +7,13 @@ import { Geometry } from "./Geometry.js";
  */
 
 /**
- * @typedef {[number, number, number, number, TileMap]} TerrainPoint
+ * @typedef {[number, number, number, number, TileMap, ...*]} TerrainPoint
  * @typedef {[number, number, number]} EntityPoint
  * @typedef {TerrainPoint|Set<TerrainPoint>|number|null} TerrainScanResult
  * @typedef {Map<Entity,EntityPoint>} EntityScanResult
  * @typedef {{
  *   terrain: TerrainScanResult,
+ *   entity: Entity|null,
  *   entities: EntityScanResult,
  *   hit: boolean,
  *   d: number,
@@ -136,6 +137,8 @@ export class Ray
 			hit = true;
 		}
 
+		let hitEntity = null;
+
 		for(const [entity, point] of entities.entries())
 		{
 			const dist = Math.hypot(startY - point[1], startX - point[0]);
@@ -162,6 +165,7 @@ export class Ray
 
 			if(dist < minDist)
 			{
+				hitEntity = entity;
 				nearest = point;
 				minDist = dist;
 				hit = true;
@@ -172,6 +176,7 @@ export class Ray
 		{
 			return {
 				terrain,
+				entity: hitEntity,
 				entities,
 				x: nearest[0],
 				y: nearest[1],
@@ -183,7 +188,7 @@ export class Ray
 			};
 		}
 
-		return {terrain, entities, hit, d: Number.isFinite(minDist) ? minDist : hypot};
+		return {terrain, entity: hitEntity, entities, hit, d: Number.isFinite(minDist) ? minDist : hypot};
 
 	}
 
@@ -248,7 +253,10 @@ export class Ray
 
 			if(rect.contains(startX, startY))
 			{
-				collisions.set(candidate, [startX, startY, 0, 0]);
+				if(!(candidate.flags & Entity.E_PLATFORM) || startY < endY)
+				{
+					collisions.set(candidate, [startX, startY, 0, 0]);
+				}
 				continue;
 			}
 

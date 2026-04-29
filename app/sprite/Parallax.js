@@ -127,8 +127,8 @@ export class Parallax
 
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-			}
-		));
+			})
+		);
 
 		return Promise.all(loadSlices);
 	}

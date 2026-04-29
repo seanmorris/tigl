@@ -13,16 +13,16 @@ export class BoxController
 
 	create(entity, entityData)
 	{
-		if(entityData.gid)
-		{
-			entity.x += entityData.width * 0.5;
-			// entity.y += -1;
-		}
-		else
-		{
-			entity.x += entityData.width * 0.5;
-			entity.y += entityData.height;
-		}
+		// if(entityData.gid)
+		// {
+		// 	entity.x += entityData.width * 0.5;
+		// 	// entity.y += -1;
+		// }
+		// else
+		// {
+		// 	entity.x += entityData.width * 0.5;
+		// 	entity.y += entityData.height;
+		// }
 
 		this.xOriginal = entity.x;
 		this.yOriginal = entity.y;

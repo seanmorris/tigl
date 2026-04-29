@@ -53,15 +53,26 @@ export class Spawner extends Entity
 		const spawnClass = this.spawnData.spawnClass;
 		const entityDef = {...this.spawnData.entityDef};
 
+		if(entityDef.gid)
+		{
+			this.x += entityDef.width * 0.5;
+			this.y += -1;
+		}
+		else
+		{
+			this.x += entityDef.width * 0.5;
+			this.y += entityDef.height;
+		}
+
 		const map = this.spawnData.map;
 
 		const entity = new Entity({
 			spawnClass
 			, session: this.session
+			, ...entityDef
 			, x: this.x
 			, y: this.y
 			, map
-			, ...entityDef
 		});
 
 		this.session.world.motionGraph.add(entity, map);

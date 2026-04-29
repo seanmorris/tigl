@@ -254,6 +254,9 @@ export class SpriteBoard
 		this.drawProgram.uniformF('u_size', Camera.width, Camera.height);
 
 		let sprites = [...this.sprites];
+		let particles = [...this.session.particles];
+
+		particles.sort((a,b) => a.sprite.z -b.sprite.z);
 
 		sprites.sort((a, b) => b.z - a.z || a.y - b.y);
 
@@ -263,7 +266,7 @@ export class SpriteBoard
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'midground'));
 		this.regions.forEach(r => r.draw());
 		this.mapRenderers.forEach(mr => mr.draw(delta, 'foreground'));
-		this.session.particles.forEach(p => p.sprite.draw(delta));
+		particles.forEach(p => p.sprite.draw(delta));
 
 
 		// Set the rectangle for both layers

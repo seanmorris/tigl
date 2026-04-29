@@ -17,7 +17,7 @@ import { parseColor } from '../sprite/parseColor';
  * @typedef {{
  *   create: (subject: object) => void
  *   simulate: (subject: object, delta: number) => void
- *   collide: (subject: object) => void
+ *   collide: (subject: object, other: object, point: [number, number, ...*]) => void
  *   sleep: (subject: object) => void
  *   wakeup: (subject: object) => void
  *   destroy: (subject: object) => void
@@ -28,7 +28,7 @@ import { parseColor } from '../sprite/parseColor';
  * @typedef {{
  *   create: (subject: Entity, entityData: object) => void
  *   simulate: (subject: Entity, delta: number) => void
- *   collide: (subject: Entity) => void
+*   collide: (subject: Entity, other: Entity, point: [number, number, ...*]) => void
  *   sleep: (subject: Entity) => void
  *   wakeup: (subject: Entity) => void
  *   destroy: (subject: Entity) => void

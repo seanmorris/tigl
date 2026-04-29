@@ -75,11 +75,11 @@ export class RopeController
 					entity.session.particles.delete(this.particles[i]);
 				}
 
-				let color = [255,255,0,255];
+				let color = [255,255,0,240];
 
 				if(aPoints[i][5] === 2)
 				{
-					color = [255,0,255,255];
+					color = [255,0,255,240];
 				}
 
 				if(aPoints[i][5] === 3)
@@ -111,6 +111,7 @@ export class RopeController
 
 				this.particles[i].x = aPoints[i][0];
 				this.particles[i].y = aPoints[i][1];
+				this.particles[i].sprite.z = i;
 			}
 
 			for(let i = points.size; i < this.particles.length; i++)
@@ -124,6 +125,7 @@ export class RopeController
 			world
 			, entity.x, entity.y
 			, this.endX, this.endY
+			, Ray.T_SNAP_TO_INT
 		);
 		// console.timeEnd('Raycast');
 
@@ -151,6 +153,7 @@ export class RopeController
 			this.endParticle.sprite.scale = 3;
 			this.endParticle.x = endPoint[0];
 			this.endParticle.y = endPoint[1];
+			this.endParticle.sprite.z = points.size;
 		}
 		else if(this.endParticle)
 		{
