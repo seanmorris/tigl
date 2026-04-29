@@ -77,20 +77,20 @@ export class Properties
 			{
 				case 'color':
 					this.properties[ property.name ].push(new Uint8ClampedArray([
-						parseInt(property.value.substr(3 ,2), 16),
-						parseInt(property.value.substr(5 ,2), 16),
-						parseInt(property.value.substr(7 ,2), 16),
-						parseInt(property.value.substr(1 ,2), 16),
+						parseInt(property.value.substr(3 ,2), 16)
+						, parseInt(property.value.substr(5 ,2), 16)
+						, parseInt(property.value.substr(7 ,2), 16)
+						, parseInt(property.value.substr(1 ,2), 16)
 					]));
 
 					break;
 
 				case 'file':
-						this.properties[ property.name ].push(
-							new URL(property.value, this.owner.src)
-						);
+					this.properties[ property.name ].push(
+						new URL(property.value, this.owner.src)
+					);
 
-						break;
+					break;
 
 				default:
 					this.properties[ property.name ].push(property.value);

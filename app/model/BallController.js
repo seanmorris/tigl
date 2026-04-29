@@ -1,7 +1,18 @@
+/**
+ *
+ */
 export class BallController
 {
+	/**
+	 *
+	 */
 	static spriteImage = './sphere.png';
 
+	/**
+	 *
+	 * @param entity
+	 * @param entityData
+	 */
 	create(entity, entityData)
 	{
 		entity.xSpeed = 0;
@@ -11,8 +22,16 @@ export class BallController
 		entity.width  = 32;
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	destroy(entity){}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	simulate(entity)
 	{
 		const world = entity.session.world;
@@ -64,7 +83,21 @@ export class BallController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 * @param other
+	 * @param point
+	 */
 	collide(entity, other, point){}
+	/**
+	 *
+	 * @param entity
+	 */
 	sleep(entity){}
+	/**
+	 *
+	 * @param entity
+	 */
 	wakeup(entity){}
 }

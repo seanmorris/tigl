@@ -168,9 +168,9 @@ export class Controller
 			if(typeof this.willRumble !== 'object')
 			{
 				this.willRumble = {
-					duration:        1000,
-					strongMagnitude: 1.0,
-					weakMagnitude:   1.0,
+					duration:        1000
+					, strongMagnitude: 1.0
+					, weakMagnitude:   1.0
 				};
 			}
 
@@ -188,9 +188,10 @@ export class Controller
 					{
 						return;
 					}
+
 					gamepad.vibrationActuator.playEffect("dual-rumble", {
 						duration: 0, weakMagnitude: 0, strongMagnitude: 0
-					})
+					});
 				};
 
 				setTimeout(stopVibing, this.willRumble.duration + -1);
@@ -461,7 +462,7 @@ export class Controller
 
 				if(onScreenJoyPad.buttons[i] === 1)
 				{
-					this.press(i)
+					this.press(i);
 					pressed[i] = true;
 				}
 				else if(onScreenJoyPad.buttons[i] === -1)
@@ -519,7 +520,7 @@ export class Controller
 
 			if(!this.axes[axisId])
 			{
-				this.axes[axisId] = new Axis({deadZone: this.deadZone})
+				this.axes[axisId] = new Axis({deadZone: this.deadZone});
 			}
 
 			const axis = this.axes[axisId];

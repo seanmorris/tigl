@@ -147,42 +147,42 @@ export class Session
 			const startY = warpStart[1] ?? startDef.y;
 
 			this.player = new Entity({
-				controller: new playerClass,
-				spawnClass: playerClass,
-				session: this,
-				x: startX,
-				y: startY,
-				inputManager: this.controller,
-				map,
-				// sprite: new Sprite({
-				// 	session: this,
-				// 	spriteSheet: new SpriteSheet({
+				controller: new playerClass
+				, spawnClass: playerClass
+				, session: this
+				, x: startX
+				, y: startY
+				, inputManager: this.controller
+				, map
+				// , sprite: new Sprite({
+				// 	session: this
+				// 	, spriteSheet: new SpriteSheet({
 				// 		src: '/player.tsj'
-				// 	}),
-				// }),
-				// camera: Camera,
+				// 	})
+				// })
+				// , camera: Camera
 			});
 
 			this.spriteBoard.following = this.player;
 			this.addEntity(this.player);
 
 			this.cursor = new Entity({
-				spawnClass: CursorController,
-				x: startX,
-				y: startY,
-				session: this,
-				sprite: new Sprite({
+				spawnClass: CursorController
+				, x: startX
+				, y: startY
+				, session: this
+				, sprite: new Sprite({
 					// color: parseColor('00FFFF'),
-					spriteSheet: new SpriteSheet({src: '/cursor.tsj'}),
-					session: this,
-					width: 32,
-					height: 32,
-				}),
-				width: 1,
-				height: 1,
-				xSpriteOffset: 16,
-				ySpriteOffset: 32,
-				map,
+					spriteSheet: new SpriteSheet({src: '/cursor.tsj'})
+					, session: this
+					, width: 32
+					, height: 32
+				})
+				, width: 1
+				, height: 1
+				, xSpriteOffset: 16
+				, ySpriteOffset: 32
+				, map
 			});
 
 			this.addEntity(this.cursor);

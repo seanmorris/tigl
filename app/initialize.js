@@ -15,5 +15,5 @@ Router.listen(view, {
 
 document.addEventListener('DOMContentLoaded', () => {
 	// importMapper.register();
-	view.render(document.body)
+	view.render(document.body);
 });

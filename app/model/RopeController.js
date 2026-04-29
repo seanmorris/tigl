@@ -6,11 +6,22 @@ import { Particle } from "./Particle";
  * @import { Entity } from "./Entity";
  */
 
+/**
+ *
+ */
 export class RopeController
 {
 	// static spriteImage = './rope.png';
+	/**
+	 *
+	 */
 	static spriteColor = [0, 255, 0, 96];
 
+	/**
+	 *
+	 * @param entity
+	 * @param entityData
+	 */
 	create(entity, entityData)
 	{
 		this.width = entity.sprite.width = 4;
@@ -32,6 +43,10 @@ export class RopeController
 		this.endParticle = null;
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	destroy(entity){}
 
 	/**
@@ -93,9 +108,9 @@ export class RopeController
 				}
 
 				this.particles[i] = new Particle({
-					x: aPoints[i][0],
-					y: aPoints[i][1],
-					sprite: new Sprite({
+					x: aPoints[i][0]
+					, y: aPoints[i][1]
+					, sprite: new Sprite({
 						session: entity.session
 						, color
 						, width: 1
@@ -134,9 +149,9 @@ export class RopeController
 			if(!this.endParticle)
 			{
 				this.endParticle = new Particle({
-					x: endPoint[0],
-					y: endPoint[1],
-					sprite: new Sprite({
+					x: endPoint[0]
+					, y: endPoint[1]
+					, sprite: new Sprite({
 						session: entity.session
 						, color: [255, 0, 0, 240]
 						, width: 1
@@ -163,18 +178,36 @@ export class RopeController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 * @param other
+	 * @param point
+	 */
 	collide(entity, other, point){}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	sleep(entity)
 	{
 		console.log(this);
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	wakeup(entity)
 	{
 		console.log(this);
 	}
 
+	/**
+	 *
+	 * @param session
+	 */
 	reset(session)
 	{
 		this.particles.forEach(p => session.particles.delete(p));

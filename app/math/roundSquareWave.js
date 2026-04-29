@@ -24,4 +24,4 @@ export const roundedSquareWave = (x, r = 0) => {
 	const u = (s + t) * 0.5;
 
 	return (i + j) * 0.5 / u;
-}
+};

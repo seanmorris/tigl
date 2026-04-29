@@ -3,8 +3,8 @@ import common from './webpack.common.mjs';
 
 /** @type {Partial<any>} */
 const prodConfig = {
-	mode: 'production',
-	devtool: 'source-map',
+	mode: 'production'
+	, devtool: 'source-map'
 };
 
 export default merge(common, prodConfig);

@@ -7,18 +7,26 @@ const BUTTON_LEFT = 0x1;
 const BUTTON_RIGHT = 0x2;
 const BUTTON_MIDDLE = 0x4;
 
+/**
+ *
+ */
 export class CursorController
 {
+	/**
+	 *
+	 * @param entity
+	 * @param entityData
+	 */
 	create(entity, entityData)
 	{
 		this.rope = new Entity({
-			spawnClass: RopeController,
-			session: entity.session,
-			x: entity.x,
-			y: entity.y,
-			endX: entity.x + -64,
-			endY: entity.y + -64,
-			map: entity.map,
+			spawnClass: RopeController
+			, session: entity.session
+			, x: entity.x
+			, y: entity.y
+			, endX: entity.x + -64
+			, endY: entity.y + -64
+			, map: entity.map
 		});
 
 		entity.session.addEntity(this.rope);
@@ -29,8 +37,17 @@ export class CursorController
 		console.log(this.rope);
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	destroy(entity){}
 
+	/**
+	 *
+	 * @param entity
+	 * @param delta
+	 */
 	simulate(entity, delta)
 	{
 		// this.rope.x = entity.x;
@@ -64,7 +81,20 @@ export class CursorController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 * @param other
+	 */
 	collide(entity, other){}
+	/**
+	 *
+	 * @param entity
+	 */
 	sleep(entity){}
+	/**
+	 *
+	 * @param entity
+	 */
 	wakeup(entity){}
 }

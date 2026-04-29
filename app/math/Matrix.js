@@ -10,9 +10,9 @@ export class Matrix
 	static identity()
 	{
 		return [
-			[1, 0, 0],
-			[0, 1, 0],
-			[0, 0, 1],
+			[1, 0, 0]
+			, [0, 1, 0]
+			, [0, 0, 1]
 		];
 	}
 
@@ -25,9 +25,9 @@ export class Matrix
 	static translate(dx, dy)
 	{
 		return [
-			[1, 0, dx],
-			[0, 1, dy],
-			[0, 0,  1],
+			[1, 0, dx]
+			, [0, 1, dy]
+			, [0, 0,  1]
 		];
 	}
 
@@ -40,9 +40,9 @@ export class Matrix
 	static scale(dx, dy)
 	{
 		return [
-			[dx, 0, 0],
-			[0, dy, 0],
-			[0, 0,  1],
+			[dx, 0, 0]
+			, [0, dy, 0]
+			, [0, 0,  1]
 		];
 	}
 
@@ -57,9 +57,9 @@ export class Matrix
 		const c = Math.cos(theta);
 
 		return [
-			[c, -s, 0],
-			[s,  c, 0],
-			[0,  0, 1],
+			[c, -s, 0]
+			, [s,  c, 0]
+			, [0,  0, 1]
 		];
 	}
 
@@ -71,9 +71,9 @@ export class Matrix
 	static shearX(s)
 	{
 		return [
-			[1, s, 0],
-			[0, 1, 0],
-			[0, 0, 1],
+			[1, s, 0]
+			, [0, 1, 0]
+			, [0, 0, 1]
 		];
 	}
 
@@ -85,9 +85,9 @@ export class Matrix
 	static shearY(s)
 	{
 		return [
-			[1, 0, 0],
-			[s, 1, 0],
-			[0, 0, 1],
+			[1, 0, 0]
+			, [s, 1, 0]
+			, [0, 0, 1]
 		];
 	}
 
@@ -162,7 +162,7 @@ export class Matrix
 					point[0] * row[0]
 					+ point[1] * row[1]
 					+ point[2] * row[2]
-				)
+				);
 			}
 		}
 

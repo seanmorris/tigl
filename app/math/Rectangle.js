@@ -194,10 +194,10 @@ export class Rectangle
 		const y2 = this.y2;
 
 		return [
-			x1, y1, x2, y1, // Top
-			x2, y1, x2, y2, // Right
-			x1, y2, x2, y2, // Bottom
-			x1, y1, x1, y2, // Left
+			x1, y1, x2, y1 // Top
+			, x2, y1, x2, y2 // Right
+			, x1, y2, x2, y2 // Bottom
+			, x1, y1, x1, y2 // Left
 		];
 	}
 
@@ -211,46 +211,46 @@ export class Rectangle
 		if(dim === 2)
 		{
 			return [
-				this.x1, this.y1,
-				this.x2, this.y1,
-				this.x1, this.y2,
-				this.x1, this.y2,
-				this.x2, this.y1,
-				this.x2, this.y2,
+				this.x1, this.y1
+				, this.x2, this.y1
+				, this.x1, this.y2
+				, this.x1, this.y2
+				, this.x2, this.y1
+				, this.x2, this.y2
 			];
 		}
 
 		if(dim === 3)
 		{
 			return [
-				this.x1, this.y1, 1,
-				this.x2, this.y1, 1,
-				this.x1, this.y2, 1,
-				this.x1, this.y2, 1,
-				this.x2, this.y1, 1,
-				this.x2, this.y2, 1,
+				this.x1, this.y1, 1
+				, this.x2, this.y1, 1
+				, this.x1, this.y2, 1
+				, this.x1, this.y2, 1
+				, this.x2, this.y1, 1
+				, this.x2, this.y2, 1
 			];
 		}
 
 		if(dim === 4)
 		{
 			return [
-				this.x1, this.y1, 0, 1,
-				this.x2, this.y1, 0, 1,
-				this.x1, this.y2, 0, 1,
-				this.x1, this.y2, 0, 1,
-				this.x2, this.y1, 0, 1,
-				this.x2, this.y2, 0, 1,
+				this.x1, this.y1, 0, 1
+				, this.x2, this.y1, 0, 1
+				, this.x1, this.y2, 0, 1
+				, this.x1, this.y2, 0, 1
+				, this.x2, this.y1, 0, 1
+				, this.x2, this.y2, 0, 1
 			];
 		}
 
 		return [
-			this.x1, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): []),
-			this.x2, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): []),
-			this.x1, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): []),
-			this.x1, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): []),
-			this.x2, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): []),
-			this.x2, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): []),
+			this.x1, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): [])
+			, this.x2, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): [])
+			, this.x1, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): [])
+			, this.x1, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): [])
+			, this.x2, this.y1, ...(dim > 2 ? Array(-2+dim).fill(0): [])
+			, this.x2, this.y2, ...(dim > 2 ? Array(-2+dim).fill(0): [])
 		];
 	}
 }

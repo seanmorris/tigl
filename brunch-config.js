@@ -11,22 +11,22 @@ module.exports.plugins = {
 	babel: {
 		presets:   [
 			['@babel/preset-env', {
-				useBuiltIns: false,
-				targets: {browsers: ['>0.25%', 'not ie 11', 'not op_mini all', 'not dead']},
-				exclude: [
-					'@babel/plugin-transform-template-literals',
-					'@babel/plugin-transform-arrow-functions',
-					'@babel/plugin-transform-block-scoping',
-					'@babel/plugin-transform-for-of',
-					'@babel/plugin-transform-spread',
+				useBuiltIns: false
+				, targets: {browsers: ['>0.25%', 'not ie 11', 'not op_mini all', 'not dead']}
+				, exclude: [
+					'@babel/plugin-transform-template-literals'
+					, '@babel/plugin-transform-arrow-functions'
+					, '@babel/plugin-transform-block-scoping'
+					, '@babel/plugin-transform-for-of'
+					, '@babel/plugin-transform-spread'
 				]
 			}]
 		]
 		, plugins: []
 	}
 	, raw: {
-		pattern: /\.(html|svg)$/,
-		wrapper: content => `module.exports = ${JSON.stringify(content)}`
+		pattern: /\.(html|svg)$/
+		, wrapper: content => `module.exports = ${JSON.stringify(content)}`
 	}
 	, preval:{
 		tokens: { BUILD_TIME: ()=> Date.now() }

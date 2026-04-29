@@ -138,7 +138,7 @@ export class World
 	{
 		const result = new Set;
 		const rects = this.mapTree.query(
-			  x + -w * 0.5
+			x + -w * 0.5
 			, y + -h * 0.5
 			, x + w * 0.5
 			, y + h * 0.5
@@ -288,7 +288,7 @@ export class World
 
 			result = result.union(
 				tilemap.selectEntities(
-					  x + -w * 0.5
+					x + -w * 0.5
 					, y + -h * 0.5
 					, x + w * 0.5
 					, y + h * 0.5

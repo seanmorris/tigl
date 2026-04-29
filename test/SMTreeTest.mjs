@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
 
-import { SMTree } from '../app/math/SMTree.js'
-import { Rectangle } from '../app/math/Rectangle.js'
+import { SMTree } from '../app/math/SMTree.js';
+import { Rectangle } from '../app/math/Rectangle.js';
 
 test('Can instantiate SMTree', () => {
 	const tree = new SMTree;
@@ -30,8 +30,8 @@ test('Can query an nonempty SMTree', () => {
 
 test('Can find two non overlapping rects in a field', () => {
 	const tree = new SMTree;
-	const a = new Rectangle(-100, -100, -10, 100)
-	const b = new Rectangle(10, -100, 100, 100)
+	const a = new Rectangle(-100, -100, -10, 100);
+	const b = new Rectangle(10, -100, 100, 100);
 
 	tree.add(b);
 	tree.add(a);
@@ -61,8 +61,8 @@ test('Can find two non overlapping rects in a field', () => {
 
 test('Can find two overlapping rects in a field', () => {
 	const tree = new SMTree;
-	const a = new Rectangle(-100, -100, 10, 100)
-	const b = new Rectangle(-10, -100, 100, 100)
+	const a = new Rectangle(-100, -100, 10, 100);
+	const b = new Rectangle(-10, -100, 100, 100);
 
 	tree.add(b);
 	tree.add(a);

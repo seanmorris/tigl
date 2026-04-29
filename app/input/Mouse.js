@@ -1,5 +1,13 @@
+/**
+ *
+ */
 export class Mouse
 {
+	/**
+	 *
+	 * @param element
+	 * @param session
+	 */
 	constructor(element, session)
 	{
 		this.x = 0;
@@ -34,6 +42,9 @@ export class Mouse
 		element.addEventListener('contextmenu', this.onMenu);
 	}
 
+	/**
+	 *
+	 */
 	detatch()
 	{
 		this.element.removeEventListener('mousemove', this.onMoved);

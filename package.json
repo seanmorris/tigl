@@ -8,6 +8,8 @@
 	"scripts": {
 		"start": "webpack serve --config ./webpack.dev.mjs",
 		"build": "webpack --config webpack.prod.mjs",
+		"lint": "eslint app/**/*.js eslint.config.mjs",
+		"lint:fix": "eslint app/**/*.js eslint.config.mjs --fix",
 		"test": "node --test test/*"
 	},
 	"dependencies": {

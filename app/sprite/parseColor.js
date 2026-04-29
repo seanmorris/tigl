@@ -4,7 +4,7 @@
 
 /**
  * Parse a color string into a set of bytes
- * @param {string|Color|Number[]} colorVal
+ * @param {string | Color | number[]} colorVal
  * @returns {Color|void}
  */
 export const parseColor = colorVal => {
@@ -28,20 +28,20 @@ export const parseColor = colorVal => {
 		if(colorVal.length === 6)
 		{
 			return new Uint8ClampedArray([
-				parseInt(colorVal.substr(0 ,2), 16),
-				parseInt(colorVal.substr(2 ,2), 16),
-				parseInt(colorVal.substr(4 ,2), 16),
-				255,
+				parseInt(colorVal.substr(0 ,2), 16)
+				, parseInt(colorVal.substr(2 ,2), 16)
+				, parseInt(colorVal.substr(4 ,2), 16)
+				, 255
 			]);
 		}
 
 		if(colorVal.length === 8)
 		{
 			return new Uint8ClampedArray([
-				parseInt(colorVal.substr(2 ,2), 16),
-				parseInt(colorVal.substr(4 ,2), 16),
-				parseInt(colorVal.substr(6 ,2), 16),
-				parseInt(colorVal.substr(0 ,2), 16),
+				parseInt(colorVal.substr(2 ,2), 16)
+				, parseInt(colorVal.substr(4 ,2), 16)
+				, parseInt(colorVal.substr(6 ,2), 16)
+				, parseInt(colorVal.substr(0 ,2), 16)
 			]);
 		}
 	}

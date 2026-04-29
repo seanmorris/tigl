@@ -5,12 +5,26 @@ const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 
+/**
+ *
+ */
 export class BoxController
 {
+	/**
+	 *
+	 */
 	static spriteColor = [0, 0, 0, 255];
 
+	/**
+	 *
+	 */
 	frames = 0;
 
+	/**
+	 *
+	 * @param entity
+	 * @param entityData
+	 */
 	create(entity, entityData)
 	{
 		// if(entityData.gid)
@@ -42,8 +56,17 @@ export class BoxController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	destroy(entity){}
 
+	/**
+	 *
+	 * @param entity
+	 * @param delta
+	 */
 	simulate(entity, delta)
 	{
 		entity.sprite.width  = entity.width;
@@ -101,7 +124,19 @@ export class BoxController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	collide(entity){}
+	/**
+	 *
+	 * @param entity
+	 */
 	sleep(entity){}
+	/**
+	 *
+	 * @param entity
+	 */
 	wakeup(entity){}
 }

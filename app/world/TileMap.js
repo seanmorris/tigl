@@ -359,7 +359,7 @@ export class TileMap
 			layer.tintcolor = layer.tintcolor
 				? parseColor(layer.tintcolor)
 				: new Uint8ClampedArray([255, 255, 255, 255]);
-		})
+		});
 
 		this.collisionLayers = mapData.layers.filter(
 			/** @type {(layer: TmxLayer) => layer is TmxTileLayer} */
@@ -518,7 +518,7 @@ export class TileMap
 					{
 						frames.forEach(f => {
 							f.tileid &= 0x00FFFFFF;
-							f.tileid |= (0b1111_1110 << 24)
+							f.tileid |= (0b1111_1110 << 24);
 						});
 					}
 
@@ -526,7 +526,7 @@ export class TileMap
 					{
 						frames.forEach(f => {
 							f.tileid &= 0x00FFFFFF;
-							f.tileid |= (0b1111_1101 << 24)
+							f.tileid |= (0b1111_1101 << 24);
 						});
 					}
 
@@ -534,7 +534,7 @@ export class TileMap
 					{
 						frames.forEach(f => {
 							f.tileid &= 0x00FFFFFF;
-							f.tileid |= (0b1111_1011 << 24)
+							f.tileid |= (0b1111_1011 << 24);
 						});
 					}
 
@@ -542,7 +542,7 @@ export class TileMap
 					{
 						frames.forEach(f => {
 							f.tileid &= 0x00FFFFFF;
-							f.tileid |= (0b1111_0111 << 24)
+							f.tileid |= (0b1111_0111 << 24);
 						});
 					}
 				}
@@ -676,7 +676,7 @@ export class TileMap
 				this.session.world.motionGraph.add(spawner, this);
 				spawner.lastMap = this;
 				this.session.addEntity(spawner);
-				this.addEntity(spawner)
+				this.addEntity(spawner);
 			}
 		}
 	}
@@ -724,6 +724,7 @@ export class TileMap
 	 * @param {number} w - The width of the rectangle to animate
 	 * @param {number} h - The height of the rectangle to animate
 	 * @param {number} delta - time in ms since last animation
+	 * @param priority
 	 */
 	animate(x, y, w, h, delta, priority)
 	{
@@ -911,7 +912,7 @@ export class TileMap
 				pixelLayers.push(new Uint8Array(pixels.buffer));
 			}
 
-			this.lastSliceKeys[p] = sliceKey
+			this.lastSliceKeys[p] = sliceKey;
 			this.lastSlices[p] = pixelLayers;
 		}
 		else
@@ -1055,7 +1056,7 @@ export class TileMap
 			return results;
 		}
 
-		const searchRect = new Rectangle(x1, y1, x2, y2)
+		const searchRect = new Rectangle(x1, y1, x2, y2);
 		const rects = this.regionTree.query(x1, y1, x2, y2);
 		rects.forEach(r => {
 			if(!searchRect.isOverlapping(r))

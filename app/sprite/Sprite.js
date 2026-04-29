@@ -315,12 +315,12 @@ export class Sprite
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.spriteBoard.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0, 0.0,
-			xra, 0.0,
-			0.0, yra,
-			0.0, yra,
-			xra, 0.0,
-			xra, yra,
+			0.0, 0.0
+			, xra, 0.0
+			, 0.0, yra
+			, 0.0, yra
+			, xra, 0.0
+			, xra, yra
 		]), gl.STATIC_DRAW);
 
 		// const zoom = this.spriteBoard.zoomLevel;
@@ -331,12 +331,12 @@ export class Sprite
 		const y2 = y + height;
 
 		const points = new Float32Array([
-			x1, y1,
-			x2, y1,
-			x1, y2,
-			x1, y2,
-			x2, y1,
-			x2, y2,
+			x1, y1
+			, x2, y1
+			, x1, y2
+			, x1, y2
+			, x2, y1
+			, x2, y2
 		]);
 
 		const xOff = x + width  * this.xCenter;

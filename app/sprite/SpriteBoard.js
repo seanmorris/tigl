@@ -402,12 +402,12 @@ export class SpriteBoard
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_texCoord);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			0.0, 0.0,
-			1.0, 0.0,
-			0.0, 1.0,
-			0.0, 1.0,
-			1.0, 0.0,
-			1.0, 1.0,
+			0.0, 0.0
+			, 1.0, 0.0
+			, 0.0, 1.0
+			, 0.0, 1.0
+			, 1.0, 0.0
+			, 1.0, 1.0
 		]), gl.STATIC_DRAW);
 
 		const x1 = x;
@@ -417,12 +417,12 @@ export class SpriteBoard
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.drawProgram.buffers.a_position);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-			x1, y1,
-			x2, y1,
-			x1, y2,
-			x1, y2,
-			x2, y1,
-			x2, y2,
+			x1, y1
+			, x2, y1
+			, x1, y2
+			, x1, y2
+			, x2, y1
+			, x2, y2
 		]), gl.STREAM_DRAW);
 	}
 }

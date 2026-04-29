@@ -50,8 +50,21 @@ export class Tileset
 	 * @param {Array<Tile>} [param0.tiles] - The tile GIDs
 	 */
 	constructor({
-		source, src, map, firstgid, columns, image, imageheight, imagewidth
-		, margin , name, spacing, tilecount, tilewidth, tileheight, tiles
+		source
+		, src
+		, map
+		, firstgid
+		, columns
+		, image
+		, imageheight
+		, imagewidth
+		, margin
+		, name
+		, spacing
+		, tilecount
+		, tilewidth
+		, tileheight
+		, tiles
 	}){
 		this.firstGid = firstgid ?? 0;
 		this.tileCount  = tilecount ?? 0;
@@ -71,8 +84,18 @@ export class Tileset
 		this.animations = {};
 
 		this.ready = this.getReady({
-			src, columns, image, imageheight, imagewidth, margin
-			, name, spacing, tilecount, tileheight, tilewidth, tiles
+			src
+			, columns
+			, image
+			, imageheight
+			, imagewidth
+			, margin
+			, name
+			, spacing
+			, tilecount
+			, tileheight
+			, tilewidth
+			, tiles
 		});
 	}
 
@@ -93,8 +116,18 @@ export class Tileset
 	 * @param {Array<Tile>} [param0.tiles] - The tile GIDs
 	 */
 	async getReady({
-		src, columns, image, imageheight, imagewidth, margin, name
-		, spacing, tilecount, tileheight, tilewidth, tiles
+		src
+		, columns
+		, image
+		, imageheight
+		, imagewidth
+		, margin
+		, name
+		, spacing
+		, tilecount
+		, tileheight
+		, tilewidth
+		, tiles
 	}){
 		if(src)
 		{
@@ -109,8 +142,18 @@ export class Tileset
 				throw new Error('Could not load Tileset.');
 			}
 
-			({columns, image, imageheight, imagewidth, margin, name,
-				spacing, tilecount, tileheight, tilewidth, tiles
+			({
+				columns
+				, image
+				, imageheight
+				, imagewidth
+				, margin
+				, name
+				, spacing
+				, tilecount
+				, tileheight
+				, tilewidth
+				, tiles
 			} = await loadMain.clone().json());
 
 			if(tiles)

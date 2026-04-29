@@ -28,7 +28,7 @@ import { parseColor } from '../sprite/parseColor';
  * @typedef {{
  *   create: (subject: Entity, entityData: object) => void
  *   simulate: (subject: Entity, delta: number) => void
-*   collide: (subject: Entity, other: Entity, point: [number, number, ...*]) => void
+ *   collide: (subject: Entity, other: Entity, point: [number, number, ...*]) => void
  *   sleep: (subject: Entity) => void
  *   wakeup: (subject: Entity) => void
  *   destroy: (subject: Entity) => void
@@ -38,18 +38,18 @@ import { parseColor } from '../sprite/parseColor';
 /**
  * @typedef { {new (): Controller} & {
  *   spriteSheet?: string|URL
-*   spriteImage?: string|URL
-*   spriteColor?: Color|number[]
-* }} SpawnClass
-*/
+ *   spriteImage?: string|URL
+ *   spriteColor?: Color|number[]
+ * }} SpawnClass
+ */
 
 /**
  * @typedef { {new (): EntityController} & {
  *   spriteSheet?: string|URL
-*   spriteImage?: string|URL
-*   spriteColor?: Color|number[]
-* }} EntitySpawnClass
-*/
+ *   spriteImage?: string|URL
+ *   spriteColor?: Color|number[]
+ * }} EntitySpawnClass
+ */
 
 /**
  * @class Entity
@@ -94,6 +94,9 @@ export class Entity
 	 */
 	static E_STATIC = 0b1000_0000;
 
+	/**
+	 *
+	 */
 	map;
 
 	/**

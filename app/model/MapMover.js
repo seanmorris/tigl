@@ -4,14 +4,26 @@ const SUBGRID_BITS = 8;
 const SUBGRID_SIZE = 1 << SUBGRID_BITS;
 const SUBGRID_INVR = 1 / SUBGRID_SIZE;
 
+/**
+ *
+ */
 export class MapMover
 {
+	/**
+	 *
+	 * @param map
+	 */
 	create(map)
 	{
 		this.xOriginal = map.x;
 		this.yOriginal = map.y;
 	}
 
+	/**
+	 *
+	 * @param map
+	 * @param delta
+	 */
 	simulate(map, delta)
 	{
 		if(map.props.get('yOscillate'))

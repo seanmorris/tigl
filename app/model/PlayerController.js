@@ -4,12 +4,27 @@ import { Entity } from "./Entity";
 const fireRegion  = [1, 0, 0];
 const waterRegion = [0, 1, 1];
 
+/**
+ *
+ */
 export class PlayerController
 {
+	/**
+	 *
+	 */
 	static spriteSheet = '/player.tsj';
+	/**
+	 *
+	 */
 	static spriteColor = [0, 255, 255, 255];
 
+	/**
+	 *
+	 */
 	xSpeed = 0;
+	/**
+	 *
+	 */
 	ySpeed = 0;
 
 	/**
@@ -137,7 +152,6 @@ export class PlayerController
 					world.motionGraph.add(entity, solidEntity);
 				}
 			}
-
 		}
 		else if(maps.has(this.lastMap))
 		{

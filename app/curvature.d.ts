@@ -1,5 +1,6 @@
 declare module 'curvature/base/Bindable' {
-	declare class Bindable {
+	declare class Bindable
+	{
 		static Prevent: Symbol;
 	};
 
@@ -11,7 +12,8 @@ declare module 'curvature/base/Bindable.js' {
 }
 
 declare module 'curvature/input/Keyboard' {
-	declare class Keyboard {
+	declare class Keyboard
+	{
 		static get(): Keyboard;
 		getKeyCode(string): number;
 		update(); void;
@@ -22,7 +24,8 @@ declare module 'curvature/input/Keyboard' {
 }
 
 declare module 'curvature/base/View' {
-	declare class View {
+	declare class View
+	{
 		constructor(args?:object, mainView?:View): View;
 		args: object;
 		tags: object;

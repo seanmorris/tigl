@@ -3,10 +3,21 @@ import { Entity } from "./Entity";
 
 /** @import { TerrainPoint } from "../math/Ray"; */
 
+/**
+ *
+ */
 export class BarrelController
 {
+	/**
+	 *
+	 */
 	static spriteImage = '/barrel.png';
 
+	/**
+	 *
+	 * @param entity
+	 * @param entityData
+	 */
 	create(entity, entityData)
 	{
 		this.xSpeed = 0;
@@ -23,10 +34,18 @@ export class BarrelController
 		entity.flags |= Entity.E_PLATFORM;
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	destroy(entity)
 	{
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	simulate(entity)
 	{
 		if(Math.abs(this.xSpeed) < 0.01) this.xSpeed = 0;
@@ -159,6 +178,12 @@ export class BarrelController
 		this.pushedBy = null;
 	}
 
+	/**
+	 *
+	 * @param entity
+	 * @param other
+	 * @param point
+	 */
 	collide(entity, other, point)
 	{
 		if(other.y <= entity.y + - entity.height)
@@ -173,14 +198,26 @@ export class BarrelController
 		}
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	sleep(entity)
 	{
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	wakeup(entity)
 	{
 	}
 
+	/**
+	 *
+	 * @param entity
+	 */
 	stop(entity)
 	{
 		if(this.xSpeed > 10)

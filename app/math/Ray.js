@@ -175,15 +175,15 @@ export class Ray
 		if(nearest && typeof nearest === 'object')
 		{
 			return {
-				terrain,
-				entity: hitEntity,
-				entities,
-				x: nearest[0],
-				y: nearest[1],
-				hit,
-				t: nearest[2],
-				d: minDist,
-				layerId: nearest[3],
+				terrain
+				, entity: hitEntity
+				, entities
+				, x: nearest[0]
+				, y: nearest[1]
+				, hit
+				, t: nearest[2]
+				, d: minDist
+				, layerId: nearest[3],
 				...nearest
 			};
 		}
@@ -336,7 +336,7 @@ export class Ray
 
 		for(const p in points)
 		{
-			distSquares[p] = (points[p][0] - qStartX) ** 2 + (points[p][1] - qStartY) **2
+			distSquares[p] = (points[p][0] - qStartX) ** 2 + (points[p][1] - qStartY) **2;
 		}
 
 		const minDistSq = Math.min(...distSquares);
@@ -527,7 +527,7 @@ export class Ray
 				{
 					bf = sx < 0
 						? mod(qStartX + -checkX + (1/256) + -xOff,  bs)
-						: mod(bs - ((qStartX + checkX + -xOff)), bs)
+						: mod(bs - ((qStartX + checkX + -xOff)), bs);
 				}
 
 				if(window.smDebug) window.debugPoints.push([px, py, pt, layerId]);

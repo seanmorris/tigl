@@ -1,5 +1,5 @@
 import { View as BaseView } from 'curvature/base/View';
-import { Keyboard } from 'curvature/input/Keyboard'
+import { Keyboard } from 'curvature/input/Keyboard';
 
 import { Camera } from '../sprite/Camera';
 import { OnScreenJoyPad } from '../ui/OnScreenJoyPad';
@@ -290,7 +290,7 @@ export class View extends BaseView
 
 			while(acc >= 980/60)
 			{
-				this.session.simulate(fpsInv)
+				this.session.simulate(fpsInv);
 				this.args.sps = (1000 / delta).toFixed(0);
 				sThen = now;
 				acc -= fpsInv;
@@ -301,7 +301,7 @@ export class View extends BaseView
 				}
 				else
 				{
-					this.args.mouseClass = 'mouse-idle'
+					this.args.mouseClass = 'mouse-idle';
 				}
 			}
 

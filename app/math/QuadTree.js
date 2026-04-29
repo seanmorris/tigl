@@ -31,7 +31,7 @@ export class QuadTree extends Rectangle
 		this.minSize = minSize || 10;
 
 		/** @type {Map<Entity,QuadTree>} */
-		this.backMap = parent ? parent.backMap : new Map
+		this.backMap = parent ? parent.backMap : new Map;
 
 		/** @type {QuadTree|null} */
 		this.parent = parent;

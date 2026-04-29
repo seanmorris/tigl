@@ -203,10 +203,10 @@ export class SMTree
 		this.rectangles.add(rectangle);
 
 		this.snapshots.set(rectangle, {
-			x1: rectangle.x1,
-			y1: rectangle.y1,
-			x2: rectangle.x2,
-			y2: rectangle.y2,
+			x1: rectangle.x1
+			, y1: rectangle.y1
+			, x2: rectangle.x2
+			, y2: rectangle.y2
 		});
 
 		const rectMin = this.depth === 0 ? rectangle.x1 : rectangle.y1;
@@ -274,7 +274,7 @@ export class SMTree
 			if(segment.has(rectangle))
 			{
 				segment.delete(rectangle);
-				deleteCount++
+				deleteCount++;
 			}
 
 			if(segment.rectangles.size !== prev.rectangles.size)
@@ -397,7 +397,7 @@ export class SMTree
 			const subIndexStart = segment.subTree.findSegment(yCrossings[i]);
 			const subIndexEnd = segment.subTree.findSegment(yCrossings[i + 1]);
 
-			let j = subIndexStart
+			let j = subIndexStart;
 
 			do
 			{

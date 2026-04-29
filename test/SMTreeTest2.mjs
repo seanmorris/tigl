@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
 
-import { SMTree } from '../app/math/SMTree.js'
-import { Rectangle } from '../app/math/Rectangle.js'
+import { SMTree } from '../app/math/SMTree.js';
+import { Rectangle } from '../app/math/Rectangle.js';
 test('Pathological tiny query crosses many local slabs', () => {
 	const tree = new SMTree;
 	const count = 200;
@@ -75,11 +75,11 @@ test('Pathological tiny query crosses many local slabs', () => {
 	assert(total === count * 200, 'SMTree repeated queries should return all rectangles.');
 
 	console.log({
-		count,
-		xSegments: tree.segments.length,
-		xSlabsTouched: xEnd - xStart + 1,
-		maxYSlabsTouched,
-		totalQueryMs: t1 - t0,
-		avgQueryMs: (t1 - t0) / 200
+		count
+		, xSegments: tree.segments.length
+		, xSlabsTouched: xEnd - xStart + 1
+		, maxYSlabsTouched
+		, totalQueryMs: t1 - t0
+		, avgQueryMs: (t1 - t0) / 200
 	});
 });
