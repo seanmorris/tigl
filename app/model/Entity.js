@@ -183,6 +183,7 @@ export class Entity
 			{
 				sprite = new Sprite({
 					session: entityData.session
+					// @ts-ignore
 					, color: parseColor( this.props.get('color') )
 					// , width: this.width
 					// , height: this.height
@@ -261,7 +262,9 @@ export class Entity
 		// const firstMap = [...maps][0];
 
 		if(motionParent
+			// @ts-ignore
 			&& !world.motionGraph.getParent(motionParent)
+			// @ts-ignore
 			&& !maps.has(motionParent)
 		){
 			world.motionGraph.delete(this);

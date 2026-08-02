@@ -160,12 +160,12 @@ void main() {
       return;
     }
 
-    vec4 tile = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
+    vec4 tileInfo = texture2D(u_tileMapping, v_texCoord * vec2(1.0, -1.0) + vec2(0.0, 1.0));
 
-    int lo = int(tile.r * 255.0);
-    int hi = int(tile.g * 255.0);
-    int vh = int(tile.b * 255.0);
-    int vv = int(tile.a * 255.0);
+    int lo = int(tileInfo.r * 255.0);
+    int hi = int(tileInfo.g * 255.0);
+    int vh = int(tileInfo.b * 255.0);
+    int vv = int(tileInfo.a * 255.0);
 
     int tileNumber = hi * 256 + lo;
 
@@ -176,7 +176,7 @@ void main() {
 
     // Mode 3 uses the tile number for the red/green channels
     if (u_renderMode == 3) {
-      gl_FragColor = tile;
+      gl_FragColor = tileInfo;
       gl_FragColor.b = 0.5;
       gl_FragColor.a = 1.0;
       return;

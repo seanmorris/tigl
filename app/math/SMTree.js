@@ -391,7 +391,7 @@ export class SMTree
 
 		for(let i = 0; i < xCrossings.length -1; i++)
 		{
-			const index = this.findSegment(xCrossings[i]);
+			const index = this.findSegment(xCrossings[i] + 0.0001 * Math.sign(dx));
 			const segment = this.segments[index];
 
 			const subIndexStart = segment.subTree.findSegment(yCrossings[i]);

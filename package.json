@@ -16,6 +16,7 @@
 		"curvature": "^0.0.68-f",
 		"import-mapper": "^0.0.4",
 		"libtuple": "^1.0.0",
+		"weakermap": "^0.0.11",
 		"webpack": "^5.106.1"
 	},
 	"devDependencies": {
